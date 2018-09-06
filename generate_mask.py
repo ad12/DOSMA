@@ -3,9 +3,7 @@ import os
 
 import models
 
-import utils
-import dess_utils
-import im_utils
+from utils import dess_utils, im_utils, dicom_utils
 
 
 def generate_mask(dicom_path, save_path, tissue_strs, dicom_ext, echos):
@@ -18,13 +16,13 @@ def generate_mask(dicom_path, save_path, tissue_strs, dicom_ext, echos):
 
     :rtype: a dictionary of tissues to 3D binary masks
     """
-    volume, _ = utils.load_dicom(dicom_path, dicom_ext)
+    volume, _ = dicom_utils.load_dicom(dicom_path, dicom_ext)
 
-    subvolumes = utils.split_volume(volume, echos)
+    subvolumes = dicom_utils.split_volume(volume, echos)
 
     # Use first echo for segmentation
     volume = subvolumes[0]
-    volume = utils.whiten_volume(volume)
+    volume = dicom_utils.whiten_volume(volume)
 
     masks = dict()
 
@@ -55,7 +53,7 @@ def calculate_t2_maps(dicom_path, save_path, dicom_ext, masks):
     """
     print('')
     print('Calculating T2 map...')
-    volume, ref_dicom = utils.load_dicom(dicom_path, dicom_ext)
+    volume, ref_dicom = dicom_utils.load_dicom(dicom_path, dicom_ext)
 
     t2_map = dess_utils.calc_t2_map(volume, ref_dicom)
 

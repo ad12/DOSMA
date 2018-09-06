@@ -2,8 +2,7 @@ import numpy as np
 import math
 from pydicom.tag import Tag
 
-import utils
-
+from utils import dicom_utils
 
 # DESS DICOM header keys
 DESS_GL_AREA_TAG = Tag(0x001910b6)
@@ -29,7 +28,7 @@ def calc_t2_map(dicom_array, ref_dicom):
     r, c, num_slices = dicom_array.shape
 
     # Split echos
-    subvolumes = utils.split_volume(dicom_array, 2)
+    subvolumes = dicom_utils.split_volume(dicom_array, 2)
     echo_1 = subvolumes[0]
     echo_2 = subvolumes[1]
 

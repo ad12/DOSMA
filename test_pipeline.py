@@ -1,13 +1,10 @@
 import unittest
 import models
 import keras.backend as K
-import generate_mask
 import numpy as np
 import scipy.io as sio
 
-import utils
-import dess_utils
-
+from utils import dess_utils, dicom_utils
 
 DICOMS_PATH = './dicoms/10263603'
 DESS_003_DICOM_PATH = './dicoms/003'
@@ -38,8 +35,8 @@ class ModelsTest(unittest.TestCase):
 
     def test_keras_version_models(self):
         """Test keras/keras2 models produce the same output"""
-        volume, _ = utils.load_dicom(DICOMS_PATH)
-        volume = utils.whiten_volume(volume)
+        volume, _ = dicom_utils.load_dicom(DICOMS_PATH)
+        volume = dicom_utils.whiten_volume(volume)
         im_shape = volume.shape
         # reshape volume to be (slice, x, y, 1)
         v = np.transpose(volume, (2, 0, 1))
@@ -63,8 +60,8 @@ class ModelsTest(unittest.TestCase):
 
     def test_batch_size(self):
         """Test if batch size makes a difference on the output"""
-        volume, _ = utils.load_dicom(DICOMS_PATH)
-        volume = utils.whiten_volume(volume)
+        volume, _ = dicom_utils.load_dicom(DICOMS_PATH)
+        volume = dicom_utils.whiten_volume(volume)
         im_shape = volume.shape
         # reshape volume to be (slice, x, y, 1)
         v = np.transpose(volume, (2, 0, 1))
@@ -154,7 +151,7 @@ class T2_Map_Test(unittest.TestCase):
 
         # calculate t2 map
         dicom_ext = 'dcm'
-        dicom_array, ref_dicom = utils.load_dicom(DESS_003_DICOM_PATH, dicom_ext)
+        dicom_array, ref_dicom = dicom_utils.load_dicom(DESS_003_DICOM_PATH, dicom_ext)
         py_t2_map = dess_utils.calc_t2_map(dicom_array, ref_dicom)
 
         # need to convert all np.nan values to 0 before comparing
