@@ -1,8 +1,7 @@
-import os
-import numpy as np
 import argparse
+import os
+
 import models
-import SimpleITK as sitk
 
 import utils
 import dess_utils
@@ -58,7 +57,7 @@ def calculate_t2_maps(dicom_path, save_path, dicom_ext, masks):
     print('Calculating T2 map...')
     volume, ref_dicom = utils.load_dicom(dicom_path, dicom_ext)
 
-    t2_map = dess_utils.calc_dess_t2_map(volume, ref_dicom)
+    t2_map = dess_utils.calc_t2_map(volume, ref_dicom)
 
     t2_vals = dict()
     for tissue in masks.keys():
