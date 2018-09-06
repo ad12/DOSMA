@@ -1,0 +1,11 @@
+# project files
+**/.idea
+
+# cache files
+**/__pycache__
+
+# weights files
+**/weights
+
+#dicoms
+**/dicoms
