@@ -21,7 +21,7 @@ def calc_t2_map(dicom_array, ref_dicom):
                         (echo 1 = dicom_array[:,:,0::2], echo 2 = dicom_array[:,:,1::2])
     :param ref_dicom: a pydicom reference/header
 
-    :return: 2D numpy array with values (0, 100] and np.nans
+    :rtype: 2D numpy array with values (0, 100] and np.nans
     """
     if len(dicom_array.shape) != 3:
         raise ValueError("dicom_array must be 3D volume")
