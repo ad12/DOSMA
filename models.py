@@ -8,6 +8,7 @@ from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, concatena
 from keras.layers import BatchNormalization as BN
 import keras.backend as K
 
+
 # List of tissues that can be segmented
 FEMORAL_CARTILAGE_STR = 'fc'
 MENISCUS_STR = 'men'
@@ -27,6 +28,7 @@ WEIGHTS_DICT = {FEMORAL_CARTILAGE_STR: os.path.join(__ABS_DIR__, 'weights/unet_2
 DEFAULT_INPUT_SIZE = (288, 288, 1)
 
 BATCH_SIZE = 32
+
 
 def unet_2d_model_keras2(input_size):
     """Generate Unet 2D model compatible with Keras 2
@@ -221,8 +223,8 @@ def generate_mask(volume, tissue):
 
     :rtype: binarized (0,1) uint8 3D numpy array of shape volume.shape
 
-    @:raise ValueError if volume is not 3D numpy array
-    @:raise ValueError if tissue is not a string or not in list permitted tissues
+    :raise ValueError if volume is not 3D numpy array
+    :raise ValueError if tissue is not a string or not in list permitted tissues
 
     """
 
