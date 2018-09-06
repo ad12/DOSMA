@@ -5,18 +5,24 @@ from pydicom.tag import Tag
 import utils
 
 
-NUM_ECHOS = 2
-
-
 # DESS DICOM header keys
 DESS_GL_AREA_TAG = Tag(0x001910b6)
 DESS_TG_TAG = Tag(0x001910b7)
 
+# DESS constants
+NUM_ECHOS = 2
 T1 = 1.2
 D = 1.25*1e-9
 
 
 def calc_t2_map(dicom_array, ref_dicom):
+    """ Calculate t2 map
+    :param dicom_array: 3D numpy array in dual echo format
+                        (echo 1 = dicom_array[:,:,0::2], echo 2 = dicom_array[:,:,1::2])
+    :param ref_dicom: a pydicom reference/header
+
+    :return: 2D numpy array with values (0, 100] and np.nans
+    """
     if len(dicom_array.shape) != 3:
         raise ValueError("dicom_array must be 3D volume")
 

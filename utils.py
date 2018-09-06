@@ -75,8 +75,7 @@ def whiten_volume(x):
 
 
 def split_volume(volume, echos=1):
-    """
-    Split volume of multiple echos into multiple subvolumes of same echo
+    """Split volume of multiple echos into multiple subvolumes of same echo
 
     Required:
     :param volume: 3D numpy array of muliple-echos
@@ -84,7 +83,9 @@ def split_volume(volume, echos=1):
     Optional:
     :param echos: The number of echos in the volume
 
-    :return: list of numpy arrays (subvolumes)
+    :rtype: list of numpy arrays (subvolumes)
+
+    :raises ValueError if volume is not 3D, echos <= 0, or not equal number of slices per echo
 
     Usage:
     DESS has 2 echos - "split_volume(volume, 2)" --> [echo1, echo2]

@@ -3,16 +3,19 @@ import os
 import numpy as np
 import SimpleITK as sitk
 
+TIFF_EXTENSION = '.tiff'
+TIFF_EXTENSION = '.tif'
+
 # depth first = (slices, x, y)
 # else (x, y, slices)
 DEPTH_FIRST = False
 
 
 def check_dir(dir_path):
-    """
-    If directory does not exist, make directory
+    """If directory does not exist, make directory
     :param dir_path: path to directory
-    :return: path to directory
+
+    :rtype: a string
     """
     if not os.path.isdir(dir_path):
         os.makedirs(dir_path)
@@ -20,10 +23,9 @@ def check_dir(dir_path):
 
 
 def write_2d(dir_path, mask):
-    """
-    Save ground truth mask to directory
+    """Save mask to directory
     :param dir_path: path to directory
-    :param y_true: numpy array of ground truth labels
+    :param mask: a 3D numpy array
     """
 
     depth_index = 0 if DEPTH_FIRST else 2
@@ -37,11 +39,20 @@ def write_2d(dir_path, mask):
         cv2.imwrite(os.path.join(dir_path, slice_name), im)
 
 
-def write_3d(mask_filepath, mask):
+def write_3d(filepath, mask):
+    """ Write mask as 3d image
+    :param filepath: filepath to save mask
+    :param mask: a 3D numpy array
+
+    :raises ValueError if format is not tiff
+    """
+    if not filepath.endswith(TIFF_EXTENSION):
+        raise ValueError('Filepath must have %s extension' % TIFF_EXTENSION)
+
     # no permute if depth first
     permute_order = [0, 1, 2] if DEPTH_FIRST else [2, 0, 1]
 
     visual_mask = np.asarray(mask * 255, np.uint8)
     visual_mask = np.transpose(visual_mask, permute_order)
     img = sitk.GetImageFromArray(visual_mask)
-    sitk.WriteImage(img, mask_filepath)
+    sitk.WriteImage(img, filepath)
