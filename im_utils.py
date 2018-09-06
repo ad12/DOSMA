@@ -4,7 +4,7 @@ import numpy as np
 import SimpleITK as sitk
 
 TIFF_EXTENSION = '.tiff'
-TIFF_EXTENSION = '.tif'
+TIF_EXTENSION = '.tif'
 
 # depth first = (slices, x, y)
 # else (x, y, slices)
