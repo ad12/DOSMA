@@ -9,9 +9,9 @@ import utils
 import dess_utils
 
 
-DICOMS_PATH = '../dicoms/10263603'
-DESS_003_DICOM_PATH = '../dicoms/003'
-DESS_003_T2_MAP_PATH = '../dicoms/003_t2_map.mat'
+DICOMS_PATH = './dicoms/10263603'
+DESS_003_DICOM_PATH = './dicoms/003'
+DESS_003_T2_MAP_PATH = './dicoms/003_t2_map.mat'
 DECIMAL_PRECISION = 3 # (+/- 0.001)
 
 
