@@ -69,6 +69,7 @@ def calc_t2_map(dicom_array, ref_dicom):
 
     return t2map
 
+
 def circle_fit(x,y):
     ###
     # this function fit a circle given (x,y) scatter points in a plane.
@@ -129,7 +130,7 @@ def get_t2_and_unroll(t2_map, mask):
     # As final step, the arrays are resized to fit [512,512] resolution.
     #
     # INPUT:
-    #
+    #   TODO: by default t2 maps have nan values - we should handle these by clipping possibly?
     #   t2_map..........................numpy array (n,n,nb_slices) which contains the T2 map
     #   mask............................numpy array (n,n,nb_slices) which contains the segmentation mask
     #
@@ -143,12 +144,21 @@ def get_t2_and_unroll(t2_map, mask):
     #                                   ...considering the DEEP layers
     ###
 
+    if (t2_map.shape != mask.shape):
+        raise ValueError('t2_map and mask must have same shape')
+
+    if (len(t2_map.shape) != 3):
+        raise ValueError('t2_map and mask must be 3D')
+
+    num_slices = t2_map.shape[2]
+
     ## STEP 1: PROJECTING AND CYLINDRICAL FIT
 
     thikness_divisor = 0.5
 
     segmented_T2maps = np.multiply(mask, t2_map)                                                                        # apply binary mask
 
+    #TODO: determine what clipping points should be
     segmented_T2maps = np.clip(segmented_T2maps, 0, 80)                                                                 # eliminate non physiological high T2 values
 
     segmented_T2maps_projected = np.max(segmented_T2maps, 2)                                                            # Project segmented T2maps on sagittal axis
@@ -161,12 +171,12 @@ def get_t2_and_unroll(t2_map, mask):
 
     nb_bins = 72
 
-    Unrolled_Cartilage = np.float32(np.zeros((t2_map.shape[2], nb_bins)))
+    Unrolled_Cartilage = np.float32(np.zeros((num_slices, nb_bins)))
 
-    Sup_layer = np.float32(np.zeros((t2_map.shape[2], nb_bins)))
-    Deep_layer = np.float32(np.zeros((t2_map.shape[2], nb_bins)))
+    Sup_layer = np.float32(np.zeros((num_slices, nb_bins)))
+    Deep_layer = np.float32(np.zeros((num_slices, nb_bins)))
 
-    for i in np.array(range(t2_map.shape[2])):
+    for i in np.array(range(num_slices)):
 
         segmented_T2maps_slice = segmented_T2maps[:, :, i]
 
@@ -218,8 +228,7 @@ def get_t2_and_unroll(t2_map, mask):
             Deep_layer[i, np.int((angle + 180) / 5 + 1)] = np.mean(binned_deep[:, 2], axis=0)
 
     ## STEP 3: RESIZE DATA TO [512,512] DIMENSION
-
-
+    # TODO: is resizing required? can we keep them in the same dimensions as the input
     Unrolled_Cartilage_res = resize(Unrolled_Cartilage, (512, 512), order=1, preserve_range=True)
     Sup_layer_res = resize(Sup_layer, (512, 512), order=1, preserve_range=True)
     Deep_layer_res = resize(Deep_layer, (512, 512), order=1, preserve_range=True)
