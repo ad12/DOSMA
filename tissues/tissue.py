@@ -46,7 +46,8 @@ class Tissue(ABC):
         # Find weights file with NAME in the filename, like 'fc_weights.h5'
         files = os.listdir(weights_dir)
         weights_file = None
-        for file in files:
+        for f in files:
+            file = os.path.join(weights_dir, f)
             if os.path.isfile(file) and file.endswith(WEIGHTS_FILE_EXT) and self.NAME in file:
                 if weights_file is not None:
                     raise ValueError('There are multiple weights files, please remove duplicates')

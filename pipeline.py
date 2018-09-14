@@ -29,45 +29,56 @@ ACTION_KEY = 'action'
 
 SEGMENTATION_MODEL_KEY = 'model'
 SEGMENTATION_WEIGHTS_DIR_KEY = 'weights-dir'
-SEGMENTATION_BATCH_SIZE = 'batch-size'
+SEGMENTATION_BATCH_SIZE_KEY = 'batch-size'
 
+TISSUES_KEY = 'tissues'
 
 def add_segmentation_subparser(parser):
     parser_segment = parser.add_parser('segment')
     parser_segment.add_argument('--%s' % SEGMENTATION_MODEL_KEY, choices=SUPPORTED_MODELS, nargs=1)
     parser_segment.add_argument('--%s' % SEGMENTATION_WEIGHTS_DIR_KEY, type=str, nargs=1,
                                      help='path to directory with weights')
-    parser_segment.add_argument('--%s' % SEGMENTATION_BATCH_SIZE, metavar='B', type=int, default=32, nargs='?',
-                                     help='batch size for inference. Default: 32')
+    parser_segment.add_argument('--%s' % SEGMENTATION_BATCH_SIZE_KEY, metavar='B', type=int, default=32, nargs='?',
+                                help='batch size for inference. Default: 32')
+
 
 def handle_segmentation(vargin, scan):
     tissues = vargin['tissues']
 
     for tissue in tissues:
+        tissue.find_weights(vargin[SEGMENTATION_WEIGHTS_DIR_KEY])
         # Load model
+        dims = scan.get_dimensions()
+        input_shape = (dims[0], dims[1], 1)
         model = get_model(vargin[SEGMENTATION_MODEL_KEY],
-                          input_shape=scan.get_dimensions(),
+                          input_shape=input_shape,
                           weights_path=tissue.weights_filepath)
+        model.batch_size = vargin[SEGMENTATION_BATCH_SIZE_KEY]
         scan.segment(model, tissue)
 
+
 def handle_t2_analysis(scan):
-    pass
+    scan.generate_t2_map()
+
 
 def handle_dess(vargin):
     scan = Dess(dicom_path=vargin[DICOM_KEY], dicom_ext=vargin[EXT_KEY])
-    if (vargin[ACTION_KEY] == 'segment'):
+    if (vargin[ACTION_KEY] is not None and vargin[ACTION_KEY] == 'segment'):
         handle_segmentation(vargin, scan)
 
     if vargin[T2_KEY]:
         handle_t2_analysis(scan)
-    print('hello')
+
+    return scan
 
 
 def handle_cubequant(vargin):
     pass
 
+
 def handle_cones(vargin):
     pass
+
 
 def parse_args():
     """Parse arguments given through command line (argv)
@@ -149,6 +160,7 @@ def parse_args():
     vargin['tissues'] = [FemoralCartilage()]
     # Call func for specific scan (dess, cubequant, cones, etc)
     args.func(vargin)
+
 
 if __name__ == '__main__':
     parse_args()
