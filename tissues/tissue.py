@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 import os
-from utils import im_utils
+from utils import im_utils, io_utils
+from utils.quant_vals import QuantitativeValue
+import cv2
+
 
 WEIGHTS_FILE_EXT = 'h5'
 
@@ -11,7 +14,7 @@ class Tissue(ABC):
     def __init__(self, weights_dir = None):
         self.regions = None
         self.mask = None
-        self.quant_vals = None
+        self.quant_vals = dict()
         self.weights_filepath = None
 
         if (weights_dir is not None):
@@ -27,14 +30,17 @@ class Tissue(ABC):
         pass
 
     @abstractmethod
-    def calc_quant_vals(self, map, mask=None):
+    def calc_quant_vals(self, quant_map, map_type):
         """
         Get quantitative values for tissue
-        :param map: a 3D numpy array for quantitative measures (t2, t2*, t1-rho, etc)
-        :param mask: a 3D binary numpy array if split_regions is not called
+        :param quant_map: a 3D numpy array for quantitative measures (t2, t2*, t1-rho, etc)
+        :param map_type: an enum instance of QuantitativeValue
         :return: a dictionary of quantitative values, save in quant_vals
         """
         pass
+
+    def __store_quant_vals__(self, quant_map, quant_df, map_type):
+        self.quant_vals[map_type.name] = (quant_map, quant_df)
 
     def find_weights(self, weights_dir):
         """
@@ -60,11 +66,29 @@ class Tissue(ABC):
 
     def save_data(self, dirpath):
         dirpath = os.path.join(dirpath, self.NAME)
+        io_utils.check_dir(dirpath)
 
-        # save mask
-        mask_filepath = os.path.join(dirpath, '%s.%s' % ('mask', 'tiff'))
-        im_utils.write_3d(mask_filepath, self.mask)
+        # TODO: save mask in nifti format
 
-        # TODO: save quantitative maps
+        q_names = []
+        dfs = []
 
-        # TODO: write quantitative values as table
+        quant_dir_path = os.path.join(dirpath, 'quant_vals')
+        io_utils.check_dir(quant_dir_path)
+
+        for quant_val in QuantitativeValue:
+            q_names.append(quant_val.name)
+            dfs.append(self.quant_vals[1])
+
+            map_filepath = os.path.join(quant_dir_path, quant_val.name + '.tiff')
+            q_map = self.quant_vals[0]
+            cv2.imwrite(map_filepath, q_map)
+
+        io_utils.save_tables(os.path.join(quant_dir_path, 'data.xlsx'), dfs, q_names)
+
+    def load_data(self, dirpath):
+        # load mask, if no mask exists stop loading information
+        pass
+
+    def __data_filename__(self):
+        return '%s.%s' % (self.NAME, io_utils.DATA_EXT)

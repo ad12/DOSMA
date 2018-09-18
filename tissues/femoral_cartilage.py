@@ -1,22 +1,47 @@
 import numpy as np
 from tissues.tissue import Tissue
 
+from utils import io_utils
 from utils.geometry_utils import circle_fit, cart2pol
+from skimage.transform import resize
+import scipy.io as sio
+import pandas as pd
+import os
+
+__MASK_KEY__ = 'mask'
+__T2_DATA_KEY__ = 't2_data'
+__T1_RHO_DATA_KEY__ = 't1_rho_data'
+__T2_STAR_DATA_KEY__ = 't2_star_data'
+QUANTITATIVE_VALUES_KEYS = [__T1_RHO_DATA_KEY__, __T2_DATA_KEY__, __T2_STAR_DATA_KEY__]
 
 
 class FemoralCartilage(Tissue):
     ID = 1
     NAME = 'fc'
 
-    # Region keys
-    DEEP_MEDIAL_REGION_KEY = 'deep_medial'
-    DEEP_CENTRAL_REGION_KEY = 'deep_central'
-    DEEP_LATERAL_REGION_KEY = 'deep_lateral'
-    SUPERFICIAL_MEDIAL_REGION_KEY = 'superficial_medial'
-    SUPERFICIAL_CENTRAL_REGION_KEY = 'superficial_central'
-    SUPERFICIAL_LATERAL_REGION_KEY = 'superficial_lateral'
+    # Axial keys
+    DEEP_KEY = 'deep'
+    SUPERFICIAL_KEY = 'superficial'
+    AXIAL_KEYS = [DEEP_KEY, SUPERFICIAL_KEY]
 
-    def get_t2_and_unroll(self, t2_map):
+    # Coronal Keys
+    ANTERIOR_KEY = 'anterior'
+    CENTRAL_KEY = 'central'
+    POSTERIOR_KEY = 'posterior'
+    CORONAL_KEYS = [ANTERIOR_KEY, CENTRAL_KEY, POSTERIOR_KEY]
+
+    # Saggital Keys
+    MEDIAL_KEY = 'medial'
+    LATERAL_KEY = 'lateral'
+    SAGGITAL_KEYS = [ANTERIOR_KEY, CENTRAL_KEY, POSTERIOR_KEY]
+
+
+    def __init__(self, weights_dir=None):
+        super().__init__(weights_dir=weights_dir)
+        self.regions = {}
+
+
+    def unroll(self, map):
 
         ## UNROLLING CARTILAGE T2 MAPS
         #
@@ -29,7 +54,6 @@ class FemoralCartilage(Tissue):
         # INPUT:
         #   TODO: by default t2 maps have nan values - we should handle these by clipping possibly?
         #   t2_map..........................numpy array (n,n,nb_slices) which contains the T2 map
-        #   mask............................numpy array (n,n,nb_slices) which contains the segmentation mask
         #
         # OUTPUT:
         #
@@ -43,19 +67,19 @@ class FemoralCartilage(Tissue):
 
         mask = self.mask
 
-        if (t2_map.shape != mask.shape):
+        if (map.shape != mask.shape):
             raise ValueError('t2_map and mask must have same shape')
 
-        if (len(t2_map.shape) != 3):
+        if (len(map.shape) != 3):
             raise ValueError('t2_map and mask must be 3D')
 
-        num_slices = t2_map.shape[2]
+        num_slices = map.shape[2]
 
         ## STEP 1: PROJECTING AND CYLINDRICAL FIT
 
         thikness_divisor = 0.5
 
-        segmented_T2maps = np.multiply(mask, t2_map)  # apply binary mask
+        segmented_T2maps = np.multiply(mask, map)  # apply binary mask
 
         segmented_T2maps_projected = np.max(segmented_T2maps, 2)  # Project segmented T2maps on sagittal axis
 
@@ -133,9 +157,29 @@ class FemoralCartilage(Tissue):
         return Unrolled_Cartilage_res, Sup_layer_res, Deep_layer_res
 
     def split_regions(self, mask):
-        #TODO: implement spliting regions
+        #TODO: implement spliting region
         pass
 
-    def calc_quant_vals(self, map, mask=None):
-        # TODO: implement getting quantitative values for regions regions
-        pass
+    def calc_quant_vals(self, quant_map, map_type):
+        mask = self.mask
+        unrolled, deep, superficial = self.unroll(quant_map)
+        # TODO: identify pixels in deep and superficial that are anterior/central/posterior and medial/lateral
+        # Replace strings with values - eg. DMA = 'deep, medial, anterior'
+        tissue_values = [['DMA', 'DMC', 'DMP'], ['DLA', 'DLC', 'DLP'], ['SMA', 'SMC', 'SMP'], ['SLA', 'SLC', 'SLP']]
+        depth_keys = np.array(['deep', 'deep', 'superficial', 'superficial'])
+        coronal_keys = np.array(['medial', 'lateral'] * 2)
+        sagital_keys = ['anterior', 'central', 'posterior']
+        df = pd.DataFrame(data=np.transpose(tissue_values), index=sagital_keys, columns=pd.MultiIndex.from_tuples(zip(depth_keys, coronal_keys)))
+
+        self.__store_quant_vals__(quant_map, df, map_type)
+
+
+    def save_data(self, dirpath):
+        data = dict()
+        data.update(self.quant_vals)
+        data.update({__MASK_KEY__: self.mask})
+
+        # Save to h5 file
+        io_utils.save_h5(os.path.join(dirpath, self.__data_filename__()), data)
+
+

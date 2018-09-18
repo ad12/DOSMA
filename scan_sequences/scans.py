@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 from utils import dicom_utils
 import numpy as np
+from utils import io_utils
+
 
 class ScanSequence(ABC):
-
+    NAME = ''
     def __init__(self, dicom_path, dicom_ext=None):
         self.tissues = []
         self.dicom_path = dicom_path
@@ -26,6 +28,17 @@ class ScanSequence(ABC):
             raise ValueError('Tissue already exists')
 
         self.tissues.append(new_tissue)
+
+    def __data_filename__(self):
+        return '%s.%s' % (self.NAME, io_utils.DATA_EXT)
+
+    @abstractmethod
+    def save_data(self, save_dirpath):
+        pass
+
+    @abstractmethod
+    def load_data(self, load_dirpath):
+        pass
 
 
 class TargetSequence(ScanSequence):
