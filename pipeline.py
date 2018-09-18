@@ -97,6 +97,7 @@ def parse_args():
                         help='path to segmented mask')
     parser.add_argument('-s', '--%s' % SAVE_KEY, metavar='S', type=str, default='', nargs='?',
                         help='path to directory to save mask. Default: D')
+
     # If user wants to filter by extension, allow them to specify extension
     parser.add_argument('-e', '--%s' % EXT_KEY, metavar='E', type=str, default=None, nargs='?',
                         help='extension of dicom files')
@@ -157,7 +158,9 @@ def parse_args():
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
 
+    # TODO: Add support for multiple tissues
     vargin['tissues'] = [FemoralCartilage()]
+
     # Call func for specific scan (dess, cubequant, cones, etc)
     args.func(vargin)
 
