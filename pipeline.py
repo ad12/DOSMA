@@ -69,6 +69,10 @@ def handle_dess(vargin):
     if vargin[T2_KEY]:
         handle_t2_analysis(scan)
 
+    scan.save_data(vargin[SAVE_KEY])
+    for tissue in scan.tissues:
+        tissue.save_data(vargin[SAVE_KEY])
+
     return scan
 
 
@@ -159,10 +163,14 @@ def parse_args():
         os.makedirs(save_path)
 
     # TODO: Add support for multiple tissues
-    vargin['tissues'] = [FemoralCartilage()]
+    tissues = [FemoralCartilage()]
+    vargin['tissues'] = tissues
 
     # Call func for specific scan (dess, cubequant, cones, etc)
-    args.func(vargin)
+    scan = args.func(vargin)
+    scan.save_data(save_path)
+    for tissue in tissues:
+        tissue.save_data(save_path)
 
 
 if __name__ == '__main__':

@@ -3,7 +3,7 @@ import os
 from utils import im_utils, io_utils
 from utils.quant_vals import QuantitativeValue
 import cv2
-
+import nibabel as nib
 
 WEIGHTS_FILE_EXT = 'h5'
 
@@ -65,26 +65,29 @@ class Tissue(ABC):
         self.weights_filepath = weights_file
 
     def save_data(self, dirpath):
-        dirpath = os.path.join(dirpath, self.NAME)
         io_utils.check_dir(dirpath)
-
-        # TODO: save mask in nifti format
+        # TODO: save mask in nifti format at path dirpath/tissue.nii
+        mask_img = nib.Nifti1Image(self.mask, affine=None)
+        mask_img.to_filename(os.path.join(dirpath, '%s.nii' % self.NAME))
 
         q_names = []
         dfs = []
 
-        quant_dir_path = os.path.join(dirpath, 'quant_vals')
-        io_utils.check_dir(quant_dir_path)
+        dirpath = os.path.join(dirpath, self.NAME)
+        io_utils.check_dir(dirpath)
 
         for quant_val in QuantitativeValue:
+            if (quant_val.name not in self.quant_vals):
+                continue
             q_names.append(quant_val.name)
             dfs.append(self.quant_vals[1])
 
-            map_filepath = os.path.join(quant_dir_path, quant_val.name + '.tiff')
+            map_filepath = os.path.join(dirpath, quant_val.name + '.tiff')
             q_map = self.quant_vals[0]
             cv2.imwrite(map_filepath, q_map)
 
-        io_utils.save_tables(os.path.join(quant_dir_path, 'data.xlsx'), dfs, q_names)
+        if (len(dfs) > 0):
+            io_utils.save_tables(os.path.join(dirpath, 'data.xlsx'), dfs, q_names)
 
     def load_data(self, dirpath):
         # load mask, if no mask exists stop loading information
