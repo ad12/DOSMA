@@ -173,7 +173,6 @@ class FemoralCartilage(Tissue):
 
         self.__store_quant_vals__(quant_map, df, map_type)
 
-
     def save_data(self, dirpath):
         data = dict()
         data.update(self.quant_vals)
