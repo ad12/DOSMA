@@ -123,7 +123,7 @@ class Dess(TargetSequence):
         return t2map
 
     def save_data(self, save_dirpath):
-        data = {__T2_MAP_KEY__: self.t2map}
+        data = {__T2_MAP_KEY__: self.t2map, }
         io_utils.save_h5(os.path.join(save_dirpath, self.__data_filename__()), data)
 
     def load_data(self, load_dirpath):

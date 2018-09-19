@@ -80,6 +80,7 @@ class NonTargetSequence(ScanSequence):
         """
         Register this scan to the target scan
         :param target: a 3D numpy volume that will serve as the base for registration
+                        (should be segmented slices if multiecho)
         :return:
         """
         pass

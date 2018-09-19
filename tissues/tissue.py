@@ -4,6 +4,7 @@ from utils import im_utils, io_utils
 from utils.quant_vals import QuantitativeValue
 import cv2
 import nibabel as nib
+import numpy as np
 
 WEIGHTS_FILE_EXT = 'h5'
 
@@ -12,7 +13,7 @@ class Tissue(ABC):
     NAME = ''
 
     def __init__(self, weights_dir = None):
-        self.regions = None
+        self.regions = dict()
         self.mask = None
         self.quant_vals = dict()
         self.weights_filepath = None
@@ -64,10 +65,11 @@ class Tissue(ABC):
 
         self.weights_filepath = weights_file
 
+        return weights_file
+
     def save_data(self, dirpath):
         io_utils.check_dir(dirpath)
-        # TODO: save mask in nifti format at path dirpath/tissue.nii
-        mask_img = nib.Nifti1Image(self.mask, affine=None)
+        mask_img = nib.Nifti2Image(self.mask, affine=None)
         mask_img.to_filename(os.path.join(dirpath, '%s.nii' % self.NAME))
 
         q_names = []
@@ -91,7 +93,13 @@ class Tissue(ABC):
 
     def load_data(self, dirpath):
         # load mask, if no mask exists stop loading information
-        pass
+        mask_filepath = os.path.join(dirpath, '%s.nii' % self.NAME)
+        if not os.path.isfile(mask_filepath):
+            raise FileNotFoundError('File \'%s\' does not exist' % mask_filepath)
+
+        mask_img = nib.load(os.path.join(dirpath, '%s.nii' % self.NAME))
+        self.mask = np.array(mask_img.dataobj)
+
 
     def __data_filename__(self):
         return '%s.%s' % (self.NAME, io_utils.DATA_EXT)

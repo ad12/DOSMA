@@ -60,6 +60,8 @@ def handle_segmentation(vargin, scan):
 def handle_t2_analysis(scan):
     scan.generate_t2_map()
 
+def handle_t1_rho_analysis(scan):
+    scan.generate_t1_rho_map()
 
 def handle_dess(vargin):
     scan = Dess(dicom_path=vargin[DICOM_KEY], dicom_ext=vargin[EXT_KEY])
@@ -69,6 +71,15 @@ def handle_dess(vargin):
     if vargin[T2_KEY]:
         handle_t2_analysis(scan)
 
+    return scan
+
+
+def handle_cubequant(vargin):
+    scan = Dess(dicom_path=vargin[DICOM_KEY], dicom_ext=vargin[EXT_KEY])
+
+    if vargin[T1_RHO_Key]:
+        handle_t1_rho_analysis(scan)
+
     scan.save_data(vargin[SAVE_KEY])
     for tissue in scan.tissues:
         tissue.save_data(vargin[SAVE_KEY])
@@ -76,12 +87,14 @@ def handle_dess(vargin):
     return scan
 
 
-def handle_cubequant(vargin):
-    pass
-
-
 def handle_cones(vargin):
     pass
+
+
+def save_info(dirpath, scan):
+    scan.save_data(dirpath)
+    for tissue in scan.tissues:
+        tissue.save_data(dirpath)
 
 
 def parse_args():
@@ -98,7 +111,7 @@ def parse_args():
     parser.add_argument('-d', '--%s' % DICOM_KEY, metavar='D', type=str, nargs=1,
                         help='path to directory storing dicom files')
     parser.add_argument('-m', '--%s' % MASK_KEY, metavar='M', type=str, default='', nargs='?',
-                        help='path to segmented mask')
+                        help='path to directory storing mask')
     parser.add_argument('-s', '--%s' % SAVE_KEY, metavar='S', type=str, default='', nargs='?',
                         help='path to directory to save mask. Default: D')
 
@@ -164,13 +177,15 @@ def parse_args():
 
     # TODO: Add support for multiple tissues
     tissues = [FemoralCartilage()]
+    if vargin[MASK_KEY]:
+        for tissue in tissues:
+            tissue.load_data(vargin[MASK_KEY])
     vargin['tissues'] = tissues
 
     # Call func for specific scan (dess, cubequant, cones, etc)
     scan = args.func(vargin)
-    scan.save_data(save_path)
-    for tissue in tissues:
-        tissue.save_data(save_path)
+    save_info(vargin[SAVE_KEY], scan)
+
 
 
 if __name__ == '__main__':

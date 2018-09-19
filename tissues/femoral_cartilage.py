@@ -35,12 +35,6 @@ class FemoralCartilage(Tissue):
     LATERAL_KEY = 'lateral'
     SAGGITAL_KEYS = [ANTERIOR_KEY, CENTRAL_KEY, POSTERIOR_KEY]
 
-
-    def __init__(self, weights_dir=None):
-        super().__init__(weights_dir=weights_dir)
-        self.regions = {}
-
-
     def unroll(self, map):
 
         ## UNROLLING CARTILAGE T2 MAPS

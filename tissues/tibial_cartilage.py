@@ -1,7 +1,8 @@
 import numpy as np
 from tissues.tissue import Tissue
 
-class FemoralCartilage(Tissue):
+
+class TibialCartilage(Tissue):
     ID = 2
     NAME = 'tc'
 
