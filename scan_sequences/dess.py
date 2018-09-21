@@ -17,6 +17,7 @@ class Dess(TargetSequence):
 
     # DESS constants
     __NUM_ECHOS__ = 2
+    __VOLUME_DIMENSIONS__ = 3
     __T1__ = 1.2
     __D__ = 1.25 * 1e-9
 
@@ -27,9 +28,30 @@ class Dess(TargetSequence):
 
     def __init__(self, dicom_path, dicom_ext=None):
         super().__init__(dicom_path, dicom_ext)
-        self.subvolumes = dicom_utils.split_volume(self.volume, echos=self.__NUM_ECHOS__)
+        self.ref_dicom = self.refs_dicom[0]
+        self.subvolumes = self.split_volume()
         if not self.validate_dess():
             raise ValueError('dicoms in \'%s\' are not acquired from DESS sequence' % self.dicom_path)
+
+    def split_volume(self):
+        volume = self.volume
+        echos = self.__NUM_ECHOS__
+
+        if len(volume.shape) != self.__VOLUME_DIMENSIONS__:
+            raise ValueError(
+                "Dimension Error: input has %d dimensions. Expected %d" % (volume.ndims, self.__VOLUME_DIMENSIONS__))
+        if echos <= 0:
+            raise ValueError('There must be at least 1 echo per volume')
+
+        depth = volume.shape[2]
+        if depth % echos != 0:
+            raise ValueError('Number of slices per echo must be the same')
+
+        sub_volumes = []
+        for i in range(echos):
+            sub_volumes.append(volume[:, :, i::echos])
+
+        return sub_volumes
 
     def validate_dess(self):
         """

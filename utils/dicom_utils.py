@@ -54,12 +54,14 @@ def load_dicom(dicom_path, dicom_ext=None):
 
     dicom_array = np.zeros(pixelDims, dtype=ref_dicom.pixel_array.dtype)
 
+    refs_dicom = []
     for dicom_filename in lstFilesDCM:
         # read the file
         ds = pydicom.read_file(dicom_filename, force=True)
+        refs_dicom.append(ds)
         dicom_array[:, :, lstFilesDCM.index(dicom_filename)] = ds.pixel_array
 
-    return dicom_array, ref_dicom
+    return dicom_array, refs_dicom
 
 
 def whiten_volume(x):
@@ -72,35 +74,3 @@ def whiten_volume(x):
 
     # Add epsilon to avoid dividing by 0
     return (x - np.mean(x)) / (np.std(x) + __EPSILON__)
-
-
-def split_volume(volume, echos=1):
-    """Split volume of multiple echos into multiple subvolumes of same echo
-
-    Required:
-    :param volume: 3D numpy array of muliple-echos
-
-    Optional:
-    :param echos: The number of echos in the volume
-
-    :rtype: list of numpy arrays (subvolumes)
-
-    :raises ValueError if volume is not 3D, echos <= 0, or not equal number of slices per echo
-
-    Usage:
-    DESS has 2 echos - "split_volume(volume, 2)" --> [echo1, echo2]
-    """
-    if (len(volume.shape) != __VOLUME_DIMENSIONS__):
-        raise ValueError("Dimension Error: input has %d dimensions. Expected %d" % (volume.ndims, __VOLUME_DIMENSIONS__))
-    if (echos <= 0):
-        raise ValueError('There must be at least 1 echo per volume')
-
-    depth = volume.shape[2]
-    if (depth % echos != 0):
-        raise ValueError('Number of slices per echo must be the same')
-
-    sub_volumes = []
-    for i in range(echos):
-        sub_volumes.append(volume[:, :, i::echos])
-
-    return sub_volumes

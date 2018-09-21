@@ -6,7 +6,8 @@ from utils import io_utils
 
 class ScanSequence(ABC):
     NAME = ''
-    def __init__(self, dicom_path, dicom_ext=None):
+
+    def __init__(self, dicom_path=None, dicom_ext=None):
         self.tissues = []
         self.dicom_path = dicom_path
         self.dicom_ext = dicom_ext
@@ -17,7 +18,7 @@ class ScanSequence(ABC):
         dicom_path = self.dicom_path
         dicom_ext = self.dicom_ext
 
-        self.volume, self.ref_dicom = dicom_utils.load_dicom(dicom_path, dicom_ext)
+        self.volume, self.refs_dicom = dicom_utils.load_dicom(dicom_path, dicom_ext)
 
     def get_dimensions(self):
         return self.volume.shape

@@ -2,7 +2,7 @@ import h5py
 import pickle
 import os
 import pandas as pd
-
+import SimpleITK as sitk
 
 DATA_EXT = 'data'
 INFO_EXT = 'info'
@@ -78,4 +78,34 @@ def save_tables(filepath, data_frames, sheet_names=None):
         df.to_excel(writer, sheet_names[i])
 
     writer.save()
+
+
+def save_nifti(filepath, img_array, dicom_header=None):
+    check_dir(os.path.dirname(filepath))
+    image = sitk.GetImageFromArray(img_array)
+
+    writer = sitk.ImageFileWriter()
+    writer.SetFileName(filepath)
+    writer.Execute(image)
+
+
+def load_nifti(filepath):
+    reader = sitk.ImageFileReader()
+    reader.SetFileName(filepath)
+    image = reader.Execute()
+
+    return sitk.GetArrayFromImage(image)
+
+
+if __name__ == '__main__':
+    from scan_sequences.cube_quant import CubeQuant
+    cq = CubeQuant('../dicoms/healthy07/008', 'dcm')
+    img_arr = cq.volume
+    save_nifti('test.nii', img_arr)
+    img_loaded = load_nifti('test.nii')
+
+    print(img_arr.shape)
+    print(img_loaded.shape)
+
+    assert (img_arr == img_loaded).all()
 
