@@ -8,6 +8,18 @@ DATA_EXT = 'data'
 INFO_EXT = 'info'
 
 
+def get_subdirs(dirpath):
+    if not os.path.isdir(dirpath):
+        raise NotADirectoryError('%s not a directory' % dirpath)
+
+    subdirs =[]
+    for file in os.listdir(dirpath):
+        possible_dir = os.path.join(dirpath, file)
+        if os.path.isdir(possible_dir):
+            subdirs.append(file)
+
+    return subdirs
+
 def check_dir(dir_path):
     """
     If directory does not exist, make directory

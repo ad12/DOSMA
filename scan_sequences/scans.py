@@ -12,7 +12,8 @@ class ScanSequence(ABC):
         self.dicom_path = dicom_path
         self.dicom_ext = dicom_ext
 
-        self.__load_dicom__()
+        if dicom_path is not None:
+            self.__load_dicom__()
 
     def __load_dicom__(self):
         dicom_path = self.dicom_path
@@ -66,15 +67,6 @@ class TargetSequence(ScanSequence):
 
 
 class NonTargetSequence(ScanSequence):
-
-    @abstractmethod
-    def intraregister(self, subvolumes):
-        """
-        Register subvolumes to each other
-        :param subvolumes:
-        :return:
-        """
-        pass
 
     @abstractmethod
     def interregister(self, target):

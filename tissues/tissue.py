@@ -8,6 +8,7 @@ import numpy as np
 
 WEIGHTS_FILE_EXT = 'h5'
 
+
 class Tissue(ABC):
     ID = -1  # should be unique to all tissues, and should not change
     NAME = ''
@@ -79,8 +80,9 @@ class Tissue(ABC):
         io_utils.check_dir(dirpath)
 
         for quant_val in QuantitativeValue:
-            if (quant_val.name not in self.quant_vals):
+            if quant_val.name not in self.quant_vals:
                 continue
+
             q_names.append(quant_val.name)
             dfs.append(self.quant_vals[1])
 
@@ -88,7 +90,7 @@ class Tissue(ABC):
             q_map = self.quant_vals[0]
             cv2.imwrite(map_filepath, q_map)
 
-        if (len(dfs) > 0):
+        if len(dfs) > 0:
             io_utils.save_tables(os.path.join(dirpath, 'data.xlsx'), dfs, q_names)
 
     def load_data(self, dirpath):

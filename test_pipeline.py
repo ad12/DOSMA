@@ -116,10 +116,6 @@ class CubeQuantTest(unittest.TestCase):
         scan = pipeline.handle_cubequant(vargin)
 
 
-
-
-
-
-
 if __name__ == '__main__':
-    unittest.main()
+    #unittest.main()
+    cq = CubeQuant('./dicoms/healthy07/008', 'dcm')
