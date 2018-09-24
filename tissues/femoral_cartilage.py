@@ -19,21 +19,20 @@ class FemoralCartilage(Tissue):
     ID = 1
     NAME = 'fc'
 
-    # Axial keys
-    DEEP_KEY = 'deep'
-    SUPERFICIAL_KEY = 'superficial'
-    AXIAL_KEYS = [DEEP_KEY, SUPERFICIAL_KEY]
-
     # Coronal Keys
-    ANTERIOR_KEY = 'anterior'
-    CENTRAL_KEY = 'central'
-    POSTERIOR_KEY = 'posterior'
+    ANTERIOR_KEY = 0
+    CENTRAL_KEY = 1
+    POSTERIOR_KEY = 2
     CORONAL_KEYS = [ANTERIOR_KEY, CENTRAL_KEY, POSTERIOR_KEY]
 
     # Saggital Keys
-    MEDIAL_KEY = 'medial'
-    LATERAL_KEY = 'lateral'
+    MEDIAL_KEY = 0
+    LATERAL_KEY = 1
     SAGGITAL_KEYS = [ANTERIOR_KEY, CENTRAL_KEY, POSTERIOR_KEY]
+
+    def __init__(self, weights_dir = None):
+        super().__init__(weights_dir=weights_dir)
+        self.regions_mask = None
 
     def unroll(self, map):
 
@@ -157,13 +156,42 @@ class FemoralCartilage(Tissue):
         pass
 
     def calc_quant_vals(self, quant_map, map_type):
+        """
+        Calculate quantitative values and store in excel file
+        :param quant_map: The 3D volume of quantitative values
+        :param map_type: A QuantitativeValue instance
+        :return:
+        """
+        if self.mask is None or self.regions_mask is None:
+            raise ValueError('Please call split_regions first')
+
         mask = self.mask
-        unrolled, deep, superficial = self.unroll(quant_map)
+        coronal_region_mask = self.regions_mask(..., 0)
+        sagital_region_mask = self.regions_mask(..., 1)
+
+        total, deep, superficial = self.unroll(self.mask * quant_map)
         # TODO: identify pixels in deep and superficial that are anterior/central/posterior and medial/lateral
         # Replace strings with values - eg. DMA = 'deep, medial, anterior'
-        tissue_values = [['DMA', 'DMC', 'DMP'], ['DLA', 'DLC', 'DLP'], ['SMA', 'SMC', 'SMP'], ['SLA', 'SLC', 'SLP']]
-        depth_keys = np.array(['deep', 'deep', 'superficial', 'superficial'])
-        coronal_keys = np.array(['medial', 'lateral'] * 2)
+        tissue_values = [['DMA', 'DMC', 'DMP'], ['DLA', 'DLC', 'DLP'],
+                         ['SMA', 'SMC', 'SMP'], ['SLA', 'SLC', 'SLP'],
+                         ['TMA', 'TMC', 'TMP'], ['TLA', 'TLC', 'TLP']]
+        tissue_values = []
+        for axial_map in [total, deep, superficial]:
+            for coronal in [self.MEDIAL_KEY, self.LATERAL_KEY]:
+                coronal_list = []
+                for sagital in [self.ANTERIOR_KEY, self.CENTRAL_KEY, self.POSTERIOR_KEY]:
+                    curr_region_mask = (coronal_region_mask == coronal) * (sagital_region_mask == sagital) * axial_map
+
+                    # discard all values that are 0
+                    curr_region_mask[curr_region_mask == 0] = np.nan
+                    c_mean = np.nanmean(curr_region_mask)
+                    c_std = np.nanstd(curr_region_mask)
+                    coronal_list.append('%0.2f +/- %0.2f' % (c_mean, c_std))
+
+                tissue_values.append(coronal_list)
+
+        depth_keys = np.array(['total', 'total', 'deep', 'deep', 'superficial', 'superficial'])
+        coronal_keys = np.array(['medial', 'lateral'] * 3)
         sagital_keys = ['anterior', 'central', 'posterior']
         df = pd.DataFrame(data=np.transpose(tissue_values), index=sagital_keys, columns=pd.MultiIndex.from_tuples(zip(depth_keys, coronal_keys)))
 
