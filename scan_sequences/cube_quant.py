@@ -13,6 +13,7 @@ __EXPECTED_NUM_SPIN_LOCK_TIMES__ = 4
 __R_SQUARED_THRESHOLD__ = 0.9
 __INITIAL_P0_VALS__ = (1.0, 30.0)
 
+
 class CubeQuant(NonTargetSequence):
     NAME = 'cube_quant'
 
@@ -88,7 +89,20 @@ class CubeQuant(NonTargetSequence):
         map_unfiltered = vals.reshape(original_shape)
         r_squared = r_squared.reshape(original_shape)
 
-        return map_unfiltered * (r_squared > __R_SQUARED_THRESHOLD__)
+        t1rho_map = map_unfiltered * (r_squared > __R_SQUARED_THRESHOLD__)
+        # Filter calculated T2 values that are below 0ms and over 100ms
+        t1rho_map[t1rho_map < self.__T2_LOWER_BOUND__] = 0.0
+        t1rho_map[t1rho_map > self.__T2_UPPER_BOUND__] = 0.0
+        t1rho_map[np.isnan(t1rho_map)] = 0.0
+        t1rho_map[np.isinf(t1rho_map)] = 0.0
+
+        t2map = np.around(t1rho_map, self.__T2_DECIMAL_PRECISION__)
+
+        self.t1rho_map = t1rho_map
+
+
+
+        return t1rho_map
 
     def __intraregister__(self, subvolumes):
         """
@@ -135,13 +149,22 @@ class CubeQuant(NonTargetSequence):
         return {'BASE': (ordered_spin_lock_times[0], spin_lock_nii_files[0]),
                 'FILES': intraregistered_files}
 
-    def load_data(self, load_dirpath):
-        pass
-
     def save_data(self, save_dirpath):
-        pass
+        data = {qv.QuantitativeValue.T1_RHO.name: self.t2map}
+        io_utils.save_h5(os.path.join(save_dirpath, self.__data_filename__()), data)
+
+    def load_data(self, load_dirpath):
+        data = io_utils.load_h5(os.path.join(load_dirpath, self.__data_filename__()))
+        self.t2map = data[qv.QuantitativeValue.T1_RHO.name]
+
 
 if __name__ == '__main__':
-    cq = CubeQuant('../dicoms/healthy07/008', 'dcm')
+    import os
+
+    #os.environ['DYLD_LIBRARY_PATH'] = "/Users/arjundesai/elastix/lib"
+    #print(os.environ['DYLD_LIBRARY_PATH'])
+
+    cq = CubeQuant('../dicoms/healthy07/008', 'dcm', './')
+
 
 

@@ -4,9 +4,8 @@ from pydicom.tag import Tag
 
 from scan_sequences.scans import TargetSequence
 from utils import dicom_utils, im_utils, io_utils
+from utils.quant_vals import QuantitativeValue
 
-__T2_MAP_KEY__ = 't2_map'
-__MASK_KEY__ = 'mask'
 
 class Dess(TargetSequence):
     NAME = 'dess'
@@ -145,9 +144,9 @@ class Dess(TargetSequence):
         return t2map
 
     def save_data(self, save_dirpath):
-        data = {__T2_MAP_KEY__: self.t2map, }
+        data = {QuantitativeValue.T2.name: self.t2map}
         io_utils.save_h5(os.path.join(save_dirpath, self.__data_filename__()), data)
 
     def load_data(self, load_dirpath):
         data = io_utils.load_h5(os.path.join(load_dirpath, self.__data_filename__()))
-        self.t2map = data[__T2_MAP_KEY__]
+        self.t2map = data[QuantitativeValue.T2.name]

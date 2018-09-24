@@ -2,6 +2,7 @@ from enum import Enum
 import scipy.optimize as sop
 import numpy as np
 
+
 class QuantitativeValue(Enum):
     T1_RHO = 1
     T2 = 2

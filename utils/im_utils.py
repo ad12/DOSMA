@@ -2,6 +2,7 @@ import cv2
 import os
 import numpy as np
 import SimpleITK as sitk
+from utils import io_utils
 
 TIFF_EXTENSION = '.tiff'
 TIF_EXTENSION = '.tif'
@@ -9,17 +10,6 @@ TIF_EXTENSION = '.tif'
 # depth first = (slices, x, y)
 # else (x, y, slices)
 DEPTH_FIRST = False
-
-
-def check_dir(dir_path):
-    """If directory does not exist, make directory
-    :param dir_path: path to directory
-
-    :rtype: a string
-    """
-    if not os.path.isdir(dir_path):
-        os.makedirs(dir_path)
-    return dir_path
 
 
 def write_2d(dir_path, mask):
@@ -30,7 +20,7 @@ def write_2d(dir_path, mask):
 
     depth_index = 0 if DEPTH_FIRST else 2
 
-    dir_path = check_dir(dir_path)
+    dir_path = io_utils.check_dir(dir_path)
     y_true = np.squeeze(mask) * 255
     num_slices = y_true.shape[depth_index]
     for i in range(num_slices):

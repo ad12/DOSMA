@@ -8,6 +8,14 @@ DATA_EXT = 'data'
 INFO_EXT = 'info'
 
 
+def get_metadata_dirpath(dirpath):
+    return check_dir(os.path.join(dirpath, 'metadata'))
+
+
+def get_visualization_dirpath(dirpath):
+    return check_dir(os.path.join(dirpath, 'visualization'))
+
+
 def get_subdirs(dirpath):
     if not os.path.isdir(dirpath):
         raise NotADirectoryError('%s not a directory' % dirpath)
@@ -19,6 +27,7 @@ def get_subdirs(dirpath):
             subdirs.append(file)
 
     return subdirs
+
 
 def check_dir(dir_path):
     """

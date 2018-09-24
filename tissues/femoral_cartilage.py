@@ -152,6 +152,8 @@ class FemoralCartilage(Tissue):
 
     def split_regions(self, mask):
         #TODO: implement spliting region
+        # 1. unroll the mask
+        # 2.
         pass
 
     def calc_quant_vals(self, quant_map, map_type):

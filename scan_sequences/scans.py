@@ -101,7 +101,8 @@ class NonTargetSequence(ScanSequence):
 
         # number of spin lock times should go evenly into subvolume
         if (len(refs_dicom) % num_echo_times) != 0:
-            raise ValueError('Uneven number of dicom files - %d dicoms, %d spin lock times/echos' % (len(refs_dicom), num_echo_times))
+            raise ValueError('Uneven number of dicom files - %d dicoms, %d spin lock times/echos' % (len(refs_dicom),
+                                                                                                     num_echo_times))
 
         num_slices_per_subvolume = len(refs_dicom) / num_echo_times
 

@@ -31,6 +31,9 @@ SEGMENTATION_MODEL_KEY = 'model'
 SEGMENTATION_WEIGHTS_DIR_KEY = 'weights-dir'
 SEGMENTATION_BATCH_SIZE_KEY = 'batch-size'
 
+TARGET_SCAN_KEY = ['target-scan', 'ts']
+TARGET_MASK_KEY = ['target-mask', 'tm']
+
 TISSUES_KEY = 'tissues'
 
 def add_segmentation_subparser(parser):
@@ -40,6 +43,15 @@ def add_segmentation_subparser(parser):
                                      help='path to directory with weights')
     parser_segment.add_argument('--%s' % SEGMENTATION_BATCH_SIZE_KEY, metavar='B', type=int, default=32, nargs='?',
                                 help='batch size for inference. Default: 32')
+
+def add_interregister_subparser(parser):
+    parser_interregister = parser.add_parser('interregister')
+    parser_interregister.add_argument('--%s' % TARGET_MASK_KEY, choices=SUPPORTED_MODELS, nargs=1)
+    parser_interregister.add_argument('--%s' % SEGMENTATION_WEIGHTS_DIR_KEY, type=str, nargs=1,
+                                     help='path to directory with weights')
+    parser_interregister.add_argument('--%s' % SEGMENTATION_BATCH_SIZE_KEY, metavar='B', type=int, default=32, nargs='?',
+                                help='batch size for inference. Default: 32')
+
 
 
 def handle_segmentation(vargin, scan):
@@ -123,11 +135,11 @@ def parse_args():
     subparsers = parser.add_subparsers(help='sub-command help', dest=SCAN_KEY)
 
     # DESS parser
-    parser_DESS = subparsers.add_parser(DESS_SCAN_KEY, help='analyze DESS sequence')
-    parser_DESS.add_argument('-%s' % T2_KEY, action='store_const', default=False, const=True, help='do t2 analysis')
-    subparsers_DESS = parser_DESS.add_subparsers(help='sub-command help', dest=ACTION_KEY)
+    parser_dess = subparsers.add_parser(DESS_SCAN_KEY, help='analyze DESS sequence')
+    parser_dess.add_argument('-%s' % T2_KEY, action='store_const', default=False, const=True, help='do t2 analysis')
+    subparsers_DESS = parser_dess.add_subparsers(help='sub-command help', dest=ACTION_KEY)
     add_segmentation_subparser(subparsers_DESS)
-    parser_DESS.set_defaults(func=handle_dess)
+    parser_dess.set_defaults(func=handle_dess)
 
     # Cubequant parser
     parser_cubequant = subparsers.add_parser(CUBEQUANT_SCAN_KEYS[0],
@@ -138,6 +150,13 @@ def parse_args():
                                   default=False,
                                   const=True,
                                   help='do t1-rho analysis')
+
+    parser_cubequant.add_argument('-%s' % TARGET_MASK_KEY,
+                                  nargs='?',
+                                  default=None,
+                                  help='mask of segmented sequence')
+
+    parser_cubequant.set_defaults(func=handle_cubequant)
 
     # Cones parser
     parser_cubequant = subparsers.add_parser(CONES_KEY, help='analyze cones sequence')
