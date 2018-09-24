@@ -120,6 +120,5 @@ if __name__ == '__main__':
     #unittest.main()
     import os
 
-    os.environ['DYLD_LIBRARY_PATH'] = "/Users/arjundesai/elastix/lib"
     print(os.environ['DYLD_LIBRARY_PATH'])
     cq = CubeQuant('./dicoms/healthy07/008', 'dcm', './')
