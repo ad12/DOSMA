@@ -2,6 +2,7 @@ import unittest
 import keras.backend as K
 import numpy as np
 import scipy.io as sio
+import os
 
 import pipeline
 from tissues.femoral_cartilage import FemoralCartilage
@@ -10,10 +11,12 @@ from scan_sequences.cube_quant import CubeQuant
 DESS_003_DICOM_PATH = './dicoms/003'
 DESS_003_T2_MAP_PATH = './dicoms/003_t2_map.mat'
 
-CUBEQUANT_DICOM_PATH = ''
+DESS_DICOM_PATH = './dicoms/healthy07/007'
+CUBEQUANT_DICOM_PATH = './dicoms/healthy07/008'
+
 CUBEQUANT_T1_RHO_MAP_PATH = ''
 
-DECIMAL_PRECISION = 1 # (+/- 0.1ms)
+DECIMAL_PRECISION = 1  # (+/- 0.1ms)
 
 
 class DessTest(unittest.TestCase):
@@ -99,6 +102,20 @@ class DessTest(unittest.TestCase):
 
 
 class CubeQuantTest(unittest.TestCase):
+
+    # @classmethod
+    # def setUpClass(cls):
+    #     # launch dess
+    #     super(CubeQuantTest, cls).setUpClass()
+    #
+    #     dt = DessTest()
+    #     dess_vargin = dt.get_vargin()
+    #     dess_vargin[pipeline.DICOM_KEY] = DESS_DICOM_PATH
+    #     dess_vargin[pipeline.SAVE_KEY] = DESS_DICOM_PATH
+    #
+    #     scan = pipeline.handle_dess(dess_vargin)
+    #     pipeline.save_info(dess_vargin[pipeline.SAVE_KEY], scan)
+
     def setUp(self):
         print("Testing: ", self._testMethodName)
 
@@ -109,16 +126,53 @@ class CubeQuantTest(unittest.TestCase):
         vargin[pipeline.SAVE_KEY] = CUBEQUANT_DICOM_PATH
         vargin[pipeline.EXT_KEY] = 'dcm'
         vargin[pipeline.T1_RHO_Key] = False
+        vargin[pipeline.INTERREGISTERED_FILES_DIR_KEY] = None
+        vargin[pipeline.ACTION_KEY] = None
+        vargin[pipeline.TARGET_SCAN_KEY] = None
+        vargin[pipeline.TARGET_MASK_KEY] = None
+
         return vargin
 
-    def test_registration(self):
+    def test_init_cubequant(self):
+        cq = CubeQuant(CUBEQUANT_DICOM_PATH, 'dcm', './')
+
+    def base_interregister(self, mask_path=None):
+        # Interregister cubequant files
         vargin = self.get_vargin()
+        vargin[pipeline.ACTION_KEY] = 'interregister'
+        vargin[pipeline.TARGET_SCAN_KEY] = os.path.join(DESS_DICOM_PATH, 'dess-interregister.nii')
+        vargin[pipeline.TARGET_MASK_KEY] = mask_path
+
         scan = pipeline.handle_cubequant(vargin)
+        pipeline.save_info(vargin[pipeline.SAVE_KEY], scan)
+
+        return scan
+
+    def test_interregister_no_mask(self):
+        self.base_interregister()
+
+    def test_interregister_mask(self):
+        # Interregister cubequant files using mask
+        # assume dess segmentation exists
+        self.base_interregister(os.path.join(DESS_DICOM_PATH, 'fc.nii'))
+
+    def test_load_interregister(self):
+        # make sure subvolumes are the same
+        base_scan = self.base_interregister(os.path.join(DESS_DICOM_PATH, 'fc.nii'))
+
+        vargin = self.get_vargin()
+        vargin[pipeline.INTERREGISTERED_FILES_DIR_KEY] = ''
+        load_scan = pipeline.handle_cubequant(vargin)
+
+        # subvolume lengths must be the same
+        assert(len(base_scan.subvolumes) == len(load_scan.subvolumes))
+
+        for i in range(len(base_scan.subvolumes)):
+            assert np.array_equal(base_scan.subvolumes[i], load_scan.subvolumes[i])
+
+
 
 
 if __name__ == '__main__':
-    #unittest.main()
-    import os
+    unittest.main()
 
-    print(os.environ['DYLD_LIBRARY_PATH'])
-    cq = CubeQuant('./dicoms/healthy07/008', 'dcm', './')

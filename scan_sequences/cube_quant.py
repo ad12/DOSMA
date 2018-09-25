@@ -8,6 +8,7 @@ import scipy.ndimage as sni
 import numpy as np
 import file_constants as fc
 from utils import quant_vals as qv
+import shutil
 
 __EXPECTED_NUM_SPIN_LOCK_TIMES__ = 4
 __R_SQUARED_THRESHOLD__ = 0.9
@@ -20,6 +21,7 @@ class CubeQuant(NonTargetSequence):
     def __init__(self, dicom_path=None, dicom_ext=None, save_dir=None, interregistered_volumes_path=''):
         super().__init__(dicom_path, dicom_ext)
         self.subvolumes = None
+        self.t1rho_map = None
 
         if dicom_path is not None:
             self.save_dir = save_dir
@@ -39,28 +41,46 @@ class CubeQuant(NonTargetSequence):
         files = self.intraregistered_data['FILES']
 
         interregistered_dirpath = os.path.join(self.intermediate_save_dir, 'interregistered')
+        temp_interregistered_dirpath = os.path.join(self.temp_path, 'interregistered')
 
         # Register base image to the target image
         reg = Registration()
         reg.inputs.fixed_image = target
         reg.inputs.moving_image = base_image
-        reg.inputs.output_path = os.path.join(self.intermediate_save_dir,
-                                              '%03d' % base_spin_lock_time)
+        output_path = io_utils.check_dir(os.path.join(temp_interregistered_dirpath,
+                                              '%03d' % base_spin_lock_time))
+        reg.inputs.output_path = output_path
         reg.inputs.parameters = [fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE]
 
         if mask is not None:
             reg.inputs.moving_mask = sni.gaussian_filter(np.asarray(mask, dtype=np.float32))
 
-        transformation = reg.run()
+        reg_output = reg.run()
+        reg_output = reg_output.outputs
+        transformation_files = reg_output.transform
+        warped_files = [reg_output.warped_file]
 
         # Load the transformation file. Apply same transform to the remaining images
         for spin_lock_time, filename in files:
-            reg = ApplyWarp()
-            reg.inputs.moving_image = filename
-            reg.inputs.transform_file = transformation[0]
-            reg.output_path = io_utils.check_dir(os.path.join(interregistered_dirpath,
+            warped_file = ''
+            for f in transformation_files:
+                reg = ApplyWarp()
+                reg.inputs.moving_image = filename
+
+                reg.inputs.transform_file = f
+                reg.output_path = io_utils.check_dir(os.path.join(temp_interregistered_dirpath,
                                                               '%03d' % spin_lock_time))
-            reg.run()
+                reg_output = reg.run()
+                warped_file = reg_output.outputs.warped_file
+
+            assert warped_file != ''
+
+            # append the last warped file - this has all the transforms applied
+            warped_files.append(warped_file)
+
+        # copy each of the interregistered warped files to their own output
+        for warped_file in warped_files:
+            shutil.copyfile(warped_file, interregistered_dirpath)
 
         self.subvolumes = self.__load_interregistered_files__(interregistered_dirpath)
 
@@ -100,8 +120,6 @@ class CubeQuant(NonTargetSequence):
 
         self.t1rho_map = t1rho_map
 
-
-
         return t1rho_map
 
     def __intraregister__(self, subvolumes):
@@ -112,6 +130,10 @@ class CubeQuant(NonTargetSequence):
         """
         if subvolumes is None:
             raise ValueError('subvolumes must be dict()')
+
+        print('==' * 40)
+        print('Intraregistering...')
+        print('==' * 40)
 
         # temporarily save subvolumes as nifti file
         ordered_spin_lock_times = natsorted(list(subvolumes.keys()))
@@ -142,29 +164,25 @@ class CubeQuant(NonTargetSequence):
                                                                      'intraregistered',
                                                                      '%03d' % spin_lock_time))
             reg.inputs.parameters = [fc.ELASTIX_AFFINE_PARAMS_FILE]
-            transform, warped_file, _, _ = reg.run()
 
+            print('Registering %s --> %s' % (str(spin_lock_time), str(ordered_spin_lock_times[0])))
+            with io_utils.suppress_stdout():
+                tmp = reg.run()
+
+            warped_file = tmp.outputs.warped_file
             intraregistered_files.append((spin_lock_time, warped_file))
 
         return {'BASE': (ordered_spin_lock_times[0], spin_lock_nii_files[0]),
                 'FILES': intraregistered_files}
 
     def save_data(self, save_dirpath):
-        data = {qv.QuantitativeValue.T1_RHO.name: self.t2map}
+        data = {qv.QuantitativeValue.T1_RHO.name: self.t1rho_map}
         io_utils.save_h5(os.path.join(save_dirpath, self.__data_filename__()), data)
 
     def load_data(self, load_dirpath):
         data = io_utils.load_h5(os.path.join(load_dirpath, self.__data_filename__()))
-        self.t2map = data[qv.QuantitativeValue.T1_RHO.name]
+        self.t1rho_map = data[qv.QuantitativeValue.T1_RHO.name]
 
-
-if __name__ == '__main__':
-    import os
-
-    #os.environ['DYLD_LIBRARY_PATH'] = "/Users/arjundesai/elastix/lib"
-    #print(os.environ['DYLD_LIBRARY_PATH'])
-
-    cq = CubeQuant('../dicoms/healthy07/008', 'dcm', './')
 
 
 

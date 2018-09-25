@@ -29,6 +29,7 @@ class Dess(TargetSequence):
         super().__init__(dicom_path, dicom_ext)
         self.ref_dicom = self.refs_dicom[0]
         self.subvolumes = self.split_volume()
+        self.t2map = None
         if not self.validate_dess():
             raise ValueError('dicoms in \'%s\' are not acquired from DESS sequence' % self.dicom_path)
 
@@ -146,6 +147,10 @@ class Dess(TargetSequence):
     def save_data(self, save_dirpath):
         data = {QuantitativeValue.T2.name: self.t2map}
         io_utils.save_h5(os.path.join(save_dirpath, self.__data_filename__()), data)
+
+        # write first echo as nii file for registration
+        nii_registration_filepath = os.path.join(save_dirpath, '%s-interregister.nii' % self.NAME)
+        io_utils.save_nifti(nii_registration_filepath, self.subvolumes[0])
 
     def load_data(self, load_dirpath):
         data = io_utils.load_h5(os.path.join(load_dirpath, self.__data_filename__()))

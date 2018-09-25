@@ -6,6 +6,7 @@ import os
 
 from models.get_model import SUPPORTED_MODELS
 from scan_sequences.dess import Dess
+from scan_sequences.cube_quant import CubeQuant
 from models.get_model import get_model
 from tissues.femoral_cartilage import FemoralCartilage
 
@@ -31,10 +32,12 @@ SEGMENTATION_MODEL_KEY = 'model'
 SEGMENTATION_WEIGHTS_DIR_KEY = 'weights-dir'
 SEGMENTATION_BATCH_SIZE_KEY = 'batch-size'
 
-TARGET_SCAN_KEY = ['target-scan', 'ts']
-TARGET_MASK_KEY = ['target-mask', 'tm']
+TARGET_SCAN_KEY = 'ts'
+TARGET_MASK_KEY = 'tm'
+INTERREGISTERED_FILES_DIR_KEY = 'd'
 
 TISSUES_KEY = 'tissues'
+
 
 def add_segmentation_subparser(parser):
     parser_segment = parser.add_parser('segment')
@@ -44,14 +47,18 @@ def add_segmentation_subparser(parser):
     parser_segment.add_argument('--%s' % SEGMENTATION_BATCH_SIZE_KEY, metavar='B', type=int, default=32, nargs='?',
                                 help='batch size for inference. Default: 32')
 
+
 def add_interregister_subparser(parser):
     parser_interregister = parser.add_parser('interregister')
-    parser_interregister.add_argument('--%s' % TARGET_MASK_KEY, choices=SUPPORTED_MODELS, nargs=1)
-    parser_interregister.add_argument('--%s' % SEGMENTATION_WEIGHTS_DIR_KEY, type=str, nargs=1,
-                                     help='path to directory with weights')
-    parser_interregister.add_argument('--%s' % SEGMENTATION_BATCH_SIZE_KEY, metavar='B', type=int, default=32, nargs='?',
-                                help='batch size for inference. Default: 32')
-
+    parser_interregister.add_argument('-%s' % TARGET_SCAN_KEY,
+                                      type=str,
+                                      default=None,
+                                      nargs='1')
+    parser_interregister.add_argument('-%s' % TARGET_MASK_KEY,
+                                      type=str,
+                                      nargs='?',
+                                      default=None,
+                                      help='path to target mask')
 
 
 def handle_segmentation(vargin, scan):
@@ -72,12 +79,14 @@ def handle_segmentation(vargin, scan):
 def handle_t2_analysis(scan):
     scan.generate_t2_map()
 
+
 def handle_t1_rho_analysis(scan):
     scan.generate_t1_rho_map()
 
+
 def handle_dess(vargin):
     scan = Dess(dicom_path=vargin[DICOM_KEY], dicom_ext=vargin[EXT_KEY])
-    if (vargin[ACTION_KEY] is not None and vargin[ACTION_KEY] == 'segment'):
+    if vargin[ACTION_KEY] is not None and vargin[ACTION_KEY] == 'segment':
         handle_segmentation(vargin, scan)
 
     if vargin[T2_KEY]:
@@ -87,14 +96,16 @@ def handle_dess(vargin):
 
 
 def handle_cubequant(vargin):
-    scan = Dess(dicom_path=vargin[DICOM_KEY], dicom_ext=vargin[EXT_KEY])
+    scan = CubeQuant(dicom_path=vargin[DICOM_KEY],
+                     dicom_ext=vargin[EXT_KEY],
+                     save_dir=vargin[SAVE_KEY],
+                     interregistered_volumes_path=vargin[INTERREGISTERED_FILES_DIR_KEY])
+
+    if vargin[ACTION_KEY] is not None and vargin[ACTION_KEY] == 'interregister':
+        scan.interregister(vargin[TARGET_SCAN_KEY], vargin[TARGET_MASK_KEY])
 
     if vargin[T1_RHO_Key]:
         handle_t1_rho_analysis(scan)
-
-    scan.save_data(vargin[SAVE_KEY])
-    for tissue in scan.tissues:
-        tissue.save_data(vargin[SAVE_KEY])
 
     return scan
 
@@ -137,8 +148,8 @@ def parse_args():
     # DESS parser
     parser_dess = subparsers.add_parser(DESS_SCAN_KEY, help='analyze DESS sequence')
     parser_dess.add_argument('-%s' % T2_KEY, action='store_const', default=False, const=True, help='do t2 analysis')
-    subparsers_DESS = parser_dess.add_subparsers(help='sub-command help', dest=ACTION_KEY)
-    add_segmentation_subparser(subparsers_DESS)
+    subparsers_dess = parser_dess.add_subparsers(help='sub-command help', dest=ACTION_KEY)
+    add_segmentation_subparser(subparsers_dess)
     parser_dess.set_defaults(func=handle_dess)
 
     # Cubequant parser
@@ -150,12 +161,14 @@ def parse_args():
                                   default=False,
                                   const=True,
                                   help='do t1-rho analysis')
+    parser_cubequant.add_argument('-%s' % INTERREGISTERED_FILES_DIR_KEY,
+                                      type=str,
+                                      nargs='?',
+                                      default=None,
+                                      help='path to interregistered files. If specified, no need to interregister')
 
-    parser_cubequant.add_argument('-%s' % TARGET_MASK_KEY,
-                                  nargs='?',
-                                  default=None,
-                                  help='mask of segmented sequence')
-
+    subparsers_cubequant = parser_cubequant.add_subparsers(help='sub-command help', dest=ACTION_KEY)
+    add_interregister_subparser(subparsers_cubequant)
     parser_cubequant.set_defaults(func=handle_cubequant)
 
     # Cones parser
@@ -204,6 +217,8 @@ def parse_args():
     # Call func for specific scan (dess, cubequant, cones, etc)
     scan = args.func(vargin)
     save_info(vargin[SAVE_KEY], scan)
+
+
 
 
 

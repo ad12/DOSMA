@@ -1,8 +1,10 @@
 import h5py
 import pickle
-import os
+import os, sys
 import pandas as pd
 import SimpleITK as sitk
+
+from contextlib import contextmanager
 
 DATA_EXT = 'data'
 INFO_EXT = 'info'
@@ -69,6 +71,9 @@ def save_h5(filepath, data_dict):
     check_dir(os.path.dirname(filepath))
     with h5py.File(filepath, 'w') as f:
         for key in data_dict.keys():
+            if data_dict[key] is None or not data_dict[key]:
+                continue
+
             f.create_dataset(str(key), data=data_dict[key])
 
 
@@ -116,6 +121,17 @@ def load_nifti(filepath):
     image = reader.Execute()
 
     return sitk.GetArrayFromImage(image)
+
+
+@contextmanager
+def suppress_stdout():
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:
+            yield
+        finally:
+            sys.stdout = old_stdout
 
 
 if __name__ == '__main__':

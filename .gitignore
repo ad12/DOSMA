@@ -11,4 +11,12 @@
 **/dicoms
 
 **/elastix_params
+
+# test data files
 **/temp
+**/ex_patient
+
+
+# ignore local files
+libANNlib.dylib
+debug_runs.py
