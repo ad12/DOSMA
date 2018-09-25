@@ -6,6 +6,8 @@ import os
 import file_constants as fc
 from time import gmtime, strftime
 from natsort import natsorted
+import re
+
 
 class ScanSequence(ABC):
     NAME = ''
@@ -121,18 +123,30 @@ class NonTargetSequence(ScanSequence):
         if 'interregistered' not in interregistered_dirpath:
             raise ValueError('Invalid path for loading %s interregistered files' % self.NAME)
 
-        subdirs = io_utils.get_subdirs(interregistered_dirpath)
-        subdirs = natsorted(subdirs)
+        subfiles = os.listdir(interregistered_dirpath)
+        subfiles = natsorted(subfiles)
+
+        if len(subfiles) == 0:
+            raise ValueError('No interregistered files found')
 
         spin_lock_times = []
         subvolumes = []
-        for subdir in subdirs:
-            spin_lock_times.append(float(subdir))
-            filepath = os.path.join(interregistered_dirpath, subdir, 'output.nii')
+        for subfile in subfiles:
+            subfile_nums = re.findall(r"[-+]?\d*\.\d+|\d+", subfile)
+            if len(subfile_nums) == 0:
+                raise ValueError('%s is not an interregisterd \'.gz.nii\' file.' % subfile)
+
+            subfile_num = float(subfile_nums[0])
+            spin_lock_times.append(subfile_num)
+
+            filepath = os.path.join(interregistered_dirpath, subfile)
             subvolume_arr = io_utils.load_nifti(filepath)
             subvolumes.append(subvolume_arr)
 
         assert len(spin_lock_times) == len(subvolumes), "Number of subvolumes mismatch"
+
+        if len(subvolumes) == 0:
+            raise ValueError('No interregistered files found')
 
         subvolumes_dict = dict()
         for i in range(len(spin_lock_times)):

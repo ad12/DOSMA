@@ -149,7 +149,7 @@ class Dess(TargetSequence):
         io_utils.save_h5(os.path.join(save_dirpath, self.__data_filename__()), data)
 
         # write first echo as nii file for registration
-        nii_registration_filepath = os.path.join(save_dirpath, '%s-interregister.nii' % self.NAME)
+        nii_registration_filepath = os.path.join(save_dirpath, '%s-interregister.nii.gz' % self.NAME)
         io_utils.save_nifti(nii_registration_filepath, self.subvolumes[0])
 
     def load_data(self, load_dirpath):

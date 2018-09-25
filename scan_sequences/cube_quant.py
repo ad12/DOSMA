@@ -14,6 +14,9 @@ __EXPECTED_NUM_SPIN_LOCK_TIMES__ = 4
 __R_SQUARED_THRESHOLD__ = 0.9
 __INITIAL_P0_VALS__ = (1.0, 30.0)
 
+__T1_RHO_LOWER_BOUND__ = 0
+__T1_RHO_UPPER_BOUND__ = np.inf
+__T1_RHO_DECIMAL_PRECISION__ = 1
 
 class CubeQuant(NonTargetSequence):
     NAME = 'cube_quant'
@@ -23,64 +26,91 @@ class CubeQuant(NonTargetSequence):
         self.subvolumes = None
         self.t1rho_map = None
 
-        if dicom_path is not None:
+        if dicom_path is not None and not interregistered_volumes_path:
             self.save_dir = save_dir
 
             self.subvolumes = self.__split_volumes__(__EXPECTED_NUM_SPIN_LOCK_TIMES__)
             self.intermediate_save_dir = os.path.join(self.save_dir, self.NAME)
             self.intraregistered_data = self.__intraregister__(self.subvolumes)
-
         elif interregistered_volumes_path:
+            print('')
+            print('%s - Loading interregistered volumes' % self.NAME)
+            print('Path: %s' % interregistered_volumes_path)
             self.subvolumes = self.__load_interregistered_files__(interregistered_volumes_path)
 
         if self.subvolumes is None:
             raise ValueError('Either dicom_path or interregistered_volumes_path must be specified')
 
-    def interregister(self, target, mask=None):
+    def interregister(self, target_path, mask_path=None):
         base_spin_lock_time, base_image = self.intraregistered_data['BASE']
         files = self.intraregistered_data['FILES']
 
-        interregistered_dirpath = os.path.join(self.intermediate_save_dir, 'interregistered')
-        temp_interregistered_dirpath = os.path.join(self.temp_path, 'interregistered')
+        interregistered_dirpath = io_utils.check_dir(os.path.join(self.intermediate_save_dir, 'interregistered'))
+        temp_interregistered_dirpath = io_utils.check_dir(os.path.join(self.temp_path, 'interregistered'))
+
+        print('')
+        print('==' * 40)
+        print('Interregistering...')
+        print('Target: %s' % target_path)
+        if mask_path is not None:
+            print('Mask: %s' % mask_path)
+        print('==' * 40)
+
+        # get number of slices
+        volume_shape = self.subvolumes[base_spin_lock_time].shape
 
         # Register base image to the target image
+        print('Registering %s (base image)' % base_image)
         reg = Registration()
-        reg.inputs.fixed_image = target
+        reg.inputs.fixed_image = target_path
         reg.inputs.moving_image = base_image
-        output_path = io_utils.check_dir(os.path.join(temp_interregistered_dirpath,
-                                              '%03d' % base_spin_lock_time))
-        reg.inputs.output_path = output_path
+        reg.inputs.output_path = io_utils.check_dir(os.path.join(temp_interregistered_dirpath,
+                                                                 '%03d' % base_spin_lock_time))
         reg.inputs.parameters = [fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE]
 
-        if mask is not None:
-            reg.inputs.moving_mask = sni.gaussian_filter(np.asarray(mask, dtype=np.float32))
+        if mask_path is not None:
+            mask = io_utils.load_nifti(mask_path)
+            mask_shape = mask.shape
+            mask = sni.zoom(mask, (volume_shape[0] / mask_shape[0],
+                                   volume_shape[1] / mask_shape[1],
+                                   volume_shape[2] / mask_shape[2]))
 
+            assert mask.shape == volume_shape, 'Shape mismatch - mask: %s, volume: %s' % (str(mask.shape), str(volume_shape))
+            moving_mask = np.asarray(sni.gaussian_filter(np.asarray(mask, dtype=np.float32), sigma=3.0) > 0.5, dtype=np.int8)
+            moving_mask_filepath = os.path.join(temp_interregistered_dirpath, 'dilated-mask.nii.gz')
+            io_utils.save_nifti(moving_mask_filepath, moving_mask)
+            reg.inputs.moving_mask = moving_mask_filepath
+
+        reg.terminal_output = 'none'
         reg_output = reg.run()
         reg_output = reg_output.outputs
         transformation_files = reg_output.transform
-        warped_files = [reg_output.warped_file]
+        warped_files = [(base_spin_lock_time, reg_output.warped_file)]
 
         # Load the transformation file. Apply same transform to the remaining images
         for spin_lock_time, filename in files:
+            print('Applying transform %s' % filename)
             warped_file = ''
             for f in transformation_files:
                 reg = ApplyWarp()
                 reg.inputs.moving_image = filename
 
                 reg.inputs.transform_file = f
-                reg.output_path = io_utils.check_dir(os.path.join(temp_interregistered_dirpath,
-                                                              '%03d' % spin_lock_time))
+                reg.inputs.output_path = io_utils.check_dir(os.path.join(temp_interregistered_dirpath,
+                                                                  '%03d' % spin_lock_time))
+                reg.terminal_output = 'none'
                 reg_output = reg.run()
                 warped_file = reg_output.outputs.warped_file
 
             assert warped_file != ''
 
             # append the last warped file - this has all the transforms applied
-            warped_files.append(warped_file)
+            warped_files.append((spin_lock_time, warped_file))
 
         # copy each of the interregistered warped files to their own output
-        for warped_file in warped_files:
-            shutil.copyfile(warped_file, interregistered_dirpath)
+
+        for spin_lock_time, warped_file in warped_files:
+            shutil.copyfile(warped_file, os.path.join(interregistered_dirpath, '%s.nii.gz' % str(spin_lock_time)))
 
         self.subvolumes = self.__load_interregistered_files__(interregistered_dirpath)
 
@@ -111,12 +141,12 @@ class CubeQuant(NonTargetSequence):
 
         t1rho_map = map_unfiltered * (r_squared > __R_SQUARED_THRESHOLD__)
         # Filter calculated T2 values that are below 0ms and over 100ms
-        t1rho_map[t1rho_map < self.__T2_LOWER_BOUND__] = 0.0
-        t1rho_map[t1rho_map > self.__T2_UPPER_BOUND__] = 0.0
+        t1rho_map[t1rho_map < __T1_RHO_LOWER_BOUND__] = 0.0
+        t1rho_map[t1rho_map > __T1_RHO_UPPER_BOUND__] = 0.0
         t1rho_map[np.isnan(t1rho_map)] = 0.0
         t1rho_map[np.isinf(t1rho_map)] = 0.0
 
-        t2map = np.around(t1rho_map, self.__T2_DECIMAL_PRECISION__)
+        t1rho_map = np.around(t1rho_map, __T1_RHO_DECIMAL_PRECISION__)
 
         self.t1rho_map = t1rho_map
 
@@ -131,6 +161,7 @@ class CubeQuant(NonTargetSequence):
         if subvolumes is None:
             raise ValueError('subvolumes must be dict()')
 
+        print('')
         print('==' * 40)
         print('Intraregistering...')
         print('==' * 40)
@@ -143,7 +174,7 @@ class CubeQuant(NonTargetSequence):
         spin_lock_nii_files = []
         count = 1
         for spin_lock_time in ordered_spin_lock_times:
-            filepath = os.path.join(raw_volumes_base_path, '%03d' % count + '.nii')
+            filepath = os.path.join(raw_volumes_base_path, '%03d' % count + '.nii.gz')
             spin_lock_nii_files.append(filepath)
 
             io_utils.save_nifti(filepath, subvolumes[spin_lock_time])
@@ -164,10 +195,9 @@ class CubeQuant(NonTargetSequence):
                                                                      'intraregistered',
                                                                      '%03d' % spin_lock_time))
             reg.inputs.parameters = [fc.ELASTIX_AFFINE_PARAMS_FILE]
-
+            reg.terminal_output = 'none'
             print('Registering %s --> %s' % (str(spin_lock_time), str(ordered_spin_lock_times[0])))
-            with io_utils.suppress_stdout():
-                tmp = reg.run()
+            tmp = reg.run()
 
             warped_file = tmp.outputs.warped_file
             intraregistered_files.append((spin_lock_time, warped_file))

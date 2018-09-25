@@ -1,10 +1,10 @@
 import h5py
 import pickle
-import os, sys
+import os
 import pandas as pd
 import SimpleITK as sitk
 
-from contextlib import contextmanager
+import warnings
 
 DATA_EXT = 'data'
 INFO_EXT = 'info'
@@ -106,32 +106,23 @@ def save_tables(filepath, data_frames, sheet_names=None):
     writer.save()
 
 
-def save_nifti(filepath, img_array, dicom_header=None):
+def save_nifti(filepath, img_array):
+    assert filepath.endswith('.nii.gz')
+    if img_array is None or len(img_array.shape) < 2:
+        warnings.warn('%s not saved. Input array is None' % img_array)
+        return
+
     check_dir(os.path.dirname(filepath))
     image = sitk.GetImageFromArray(img_array)
 
-    writer = sitk.ImageFileWriter()
-    writer.SetFileName(filepath)
-    writer.Execute(image)
+    sitk.WriteImage(image, filepath)
 
 
 def load_nifti(filepath):
-    reader = sitk.ImageFileReader()
-    reader.SetFileName(filepath)
-    image = reader.Execute()
+    assert filepath.endswith('.nii.gz')
+    image = sitk.ReadImage(filepath)
 
     return sitk.GetArrayFromImage(image)
-
-
-@contextmanager
-def suppress_stdout():
-    with open(os.devnull, "w") as devnull:
-        old_stdout = sys.stdout
-        sys.stdout = devnull
-        try:
-            yield
-        finally:
-            sys.stdout = old_stdout
 
 
 if __name__ == '__main__':

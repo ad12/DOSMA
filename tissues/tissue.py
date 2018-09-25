@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
 import os
-from utils import im_utils, io_utils
+from utils import io_utils
 from utils.quant_vals import QuantitativeValue
 import cv2
-import nibabel as nib
 import numpy as np
 
 WEIGHTS_FILE_EXT = 'h5'
@@ -70,8 +69,10 @@ class Tissue(ABC):
 
     def save_data(self, dirpath):
         io_utils.check_dir(dirpath)
-        mask_img = nib.Nifti2Image(self.mask, affine=None)
-        mask_img.to_filename(os.path.join(dirpath, '%s.nii' % self.NAME))
+
+        if self.mask:
+            mask_filepath = os.path.join(dirpath, '%s.nii.gz' % self.NAME)
+            io_utils.save_nifti(mask_filepath, self.mask)
 
         q_names = []
         dfs = []
@@ -95,12 +96,12 @@ class Tissue(ABC):
 
     def load_data(self, dirpath):
         # load mask, if no mask exists stop loading information
-        mask_filepath = os.path.join(dirpath, '%s.nii' % self.NAME)
+        mask_filepath = os.path.join(dirpath, '%s.nii.gz' % self.NAME)
         if not os.path.isfile(mask_filepath):
             raise FileNotFoundError('File \'%s\' does not exist' % mask_filepath)
 
-        mask_img = nib.load(os.path.join(dirpath, '%s.nii' % self.NAME))
-        self.mask = np.array(mask_img.dataobj)
+        filepath = os.path.join(dirpath, '%s.nii.gz' % self.NAME)
+        self.mask = io_utils.load_nifti(filepath)
 
 
     def __data_filename__(self):

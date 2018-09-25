@@ -2,7 +2,7 @@
 Main file for scan pipeline - handle argparse
 """
 import argparse
-import os
+import os, time
 
 from models.get_model import SUPPORTED_MODELS
 from scan_sequences.dess import Dess
@@ -14,6 +14,7 @@ from tissues.femoral_cartilage import FemoralCartilage
 DICOM_KEY = 'dicom'
 MASK_KEY = 'mask'
 SAVE_KEY = 'save'
+LOAD_KEY = 'load'
 EXT_KEY = 'ext'
 GPU_KEY = 'gpu'
 
@@ -80,7 +81,12 @@ def handle_t2_analysis(scan):
     scan.generate_t2_map()
 
 
-def handle_t1_rho_analysis(scan):
+def handle_t1_rho_analysis(scan, load_dir):
+    if not load_dir:
+        raise ValueError('Must provide %s for directory to masks' % LOAD_KEY)
+
+    print('\nCalculating T1_rho')
+
     scan.generate_t1_rho_map()
 
 
@@ -101,11 +107,13 @@ def handle_cubequant(vargin):
                      save_dir=vargin[SAVE_KEY],
                      interregistered_volumes_path=vargin[INTERREGISTERED_FILES_DIR_KEY])
 
+    scan.tissues = vargin['tissues']
+
     if vargin[ACTION_KEY] is not None and vargin[ACTION_KEY] == 'interregister':
         scan.interregister(vargin[TARGET_SCAN_KEY], vargin[TARGET_MASK_KEY])
 
     if vargin[T1_RHO_Key]:
-        handle_t1_rho_analysis(scan)
+        handle_t1_rho_analysis(scan, vargin[LOAD_KEY])
 
     return scan
 
@@ -161,6 +169,11 @@ def parse_args():
                                   default=False,
                                   const=True,
                                   help='do t1-rho analysis')
+    parser_cubequant.add_argument('-%s' % LOAD_KEY,
+                                  default=None,
+                                  type=str,
+                                  nargs='?',
+                                  help='path where masks are located')
     parser_cubequant.add_argument('-%s' % INTERREGISTERED_FILES_DIR_KEY,
                                       type=str,
                                       nargs='?',
@@ -176,6 +189,7 @@ def parse_args():
     parser_cubequant.add_argument('-%s' % T2_STAR_KEY, action='store_const', default=False, const=True,
                                   help='do t2* analysis')
 
+    start_time = time.time()
     args = parser.parse_args()
     vargin = vars(args)
 
@@ -217,6 +231,8 @@ def parse_args():
     # Call func for specific scan (dess, cubequant, cones, etc)
     scan = args.func(vargin)
     save_info(vargin[SAVE_KEY], scan)
+
+    print('Time Elapsed: %0.2f seconds' % (time.time() - start_time))
 
 
 
