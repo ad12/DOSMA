@@ -28,7 +28,7 @@ class FemoralCartilage(Tissue):
     # Saggital Keys
     MEDIAL_KEY = 0
     LATERAL_KEY = 1
-    SAGGITAL_KEYS = [ANTERIOR_KEY, CENTRAL_KEY, POSTERIOR_KEY]
+    SAGGITAL_KEYS = [MEDIAL_KEY, LATERAL_KEY]
 
     def __init__(self, weights_dir = None):
         super().__init__(weights_dir=weights_dir)
@@ -158,7 +158,7 @@ class FemoralCartilage(Tissue):
     def calc_quant_vals(self, quant_map, map_type):
         """
         Calculate quantitative values and store in excel file
-        :param quant_map: The 3D volume of quantitative values
+        :param quant_map: The 3D volume of quantitative values (np.nan for all pixels that are not accurate)
         :param map_type: A QuantitativeValue instance
         :return:
         """
@@ -183,7 +183,6 @@ class FemoralCartilage(Tissue):
                     curr_region_mask = (coronal_region_mask == coronal) * (sagital_region_mask == sagital) * axial_map
 
                     # discard all values that are 0
-                    curr_region_mask[curr_region_mask == 0] = np.nan
                     c_mean = np.nanmean(curr_region_mask)
                     c_std = np.nanstd(curr_region_mask)
                     coronal_list.append('%0.2f +/- %0.2f' % (c_mean, c_std))

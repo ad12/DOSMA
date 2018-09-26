@@ -21,7 +21,7 @@ class Dess(TargetSequence):
     __D__ = 1.25 * 1e-9
 
     # Clipping bounds for t2
-    __T2_LOWER_BOUND__ = 0.1
+    __T2_LOWER_BOUND__ = 0
     __T2_UPPER_BOUND__ = 100
     __T2_DECIMAL_PRECISION__ = 1 # 0.1 ms
 
@@ -135,10 +135,9 @@ class Dess(TargetSequence):
         t2map = np.nan_to_num(t2map)
 
         # Filter calculated T2 values that are below 0ms and over 100ms
-        t2map[t2map < self.__T2_LOWER_BOUND__] = 0.0
-        t2map[t2map > self.__T2_UPPER_BOUND__] = 0.0
-        t2map[np.isnan(t2map)] = 0.0
-        t2map[np.isinf(t2map)] = 0.0
+        t2map[t2map <= self.__T2_LOWER_BOUND__] = np.nan
+        t2map[t2map > self.__T2_UPPER_BOUND__] = np.nan
+        t2map[np.isinf(t2map)] = np.nan
 
         t2map = np.around(t2map, self.__T2_DECIMAL_PRECISION__)
 

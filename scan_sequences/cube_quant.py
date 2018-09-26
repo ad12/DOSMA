@@ -9,6 +9,8 @@ import numpy as np
 import file_constants as fc
 from utils import quant_vals as qv
 import shutil
+import warnings
+
 
 __EXPECTED_NUM_SPIN_LOCK_TIMES__ = 4
 __R_SQUARED_THRESHOLD__ = 0.9
@@ -31,7 +33,7 @@ class CubeQuant(NonTargetSequence):
             self.save_dir = save_dir
 
             self.subvolumes = self.__split_volumes__(__EXPECTED_NUM_SPIN_LOCK_TIMES__)
-            self.intermediate_save_dir = self.__save_dir__()
+            self.intermediate_save_dir = self.__save_dir__(save_dir)
             self.intraregistered_data = self.__intraregister__(self.subvolumes)
         elif interregistered_volumes_path:
             print('')
@@ -69,20 +71,20 @@ class CubeQuant(NonTargetSequence):
         reg.inputs.parameters = [fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE]
 
         if mask_path is not None:
-            raise ValueError('Moving mask not supported')
-            # mask, mask_spacing = io_utils.load_nifti(mask_path)
-            # mask_shape = mask.shape
-            # mask = sni.zoom(mask, (volume_shape[0] / mask_shape[0],
-            #                        volume_shape[1] / mask_shape[1],
-            #                        volume_shape[2] / mask_shape[2]))
-            #
-            # assert mask.shape == volume_shape, 'Shape mismatch - mask: %s, volume: %s' % (str(mask.shape), str(volume_shape))
-            # moving_mask = np.asarray(sni.gaussian_filter(np.asarray(mask, dtype=np.float32), sigma=3.0) > 0.5, dtype=np.int8)
-            # moving_mask_filepath = os.path.join(temp_interregistered_dirpath, 'dilated-mask.nii.gz')
-            # io_utils.save_nifti(moving_mask_filepath, moving_mask, self.pixel_spacing)
-            # reg.inputs.moving_mask = moving_mask_filepath
+            #raise ValueError('Moving mask not supported')
+            mask, mask_spacing = io_utils.load_nifti(mask_path)
+            mask_shape = mask.shape
+            mask = sni.zoom(mask, (volume_shape[0] / mask_shape[0],
+                                   volume_shape[1] / mask_shape[1],
+                                   volume_shape[2] / mask_shape[2]))
 
-        reg.terminal_output = 'none'
+            assert mask.shape == volume_shape, 'Shape mismatch - mask: %s, volume: %s' % (str(mask.shape), str(volume_shape))
+            moving_mask = np.asarray(sni.gaussian_filter(np.asarray(mask, dtype=np.float32), sigma=3.0) > 0.5, dtype=np.int8)
+            fixed_mask_filepath = os.path.join(temp_interregistered_dirpath, 'dilated-mask.nii.gz')
+            io_utils.save_nifti(fixed_mask_filepath, moving_mask, self.pixel_spacing)
+            reg.inputs.fixed_mask = fixed_mask_filepath
+
+        #reg.terminal_output = 'none'
         reg_output = reg.run()
         reg_output = reg_output.outputs
         transformation_files = reg_output.transform
@@ -134,16 +136,17 @@ class CubeQuant(NonTargetSequence):
         r_squared = np.zeros(svs[0].shape)
         svs = np.concatenate(svs)
 
+        warned_negative = False
         for i in range(vals.shape[1]):
-            # if (svs[..., i] < 0).any():
-            #     print(i)
-            #     raise ValueError('Array contains negative values: %s' % str(svs[..., i]))
+            if (svs[..., i] < 0).any() and not warned_negative:
+                warned_negative = True
+                warnings.warn("Negative values found. Failure in monoexponential fit will result in t1_rho=np.nan")
 
             try:
                 params, r2 = qv.fit_mono_exp(spin_lock_times, svs[..., i], p0=__INITIAL_P0_VALS__)
                 t1_rho = params[-1]
             except RuntimeError:
-                t1_rho, r2 = (0.0, 0.0)
+                t1_rho, r2 = (np.nan, 0.0)
 
             vals[..., i] = t1_rho
             r_squared[..., i] = r2
@@ -153,11 +156,10 @@ class CubeQuant(NonTargetSequence):
 
         t1rho_map = map_unfiltered * (r_squared > __R_SQUARED_THRESHOLD__)
 
-        # Filter calculated T2 values that are below 0ms and over 100ms
-        t1rho_map[t1rho_map < __T1_RHO_LOWER_BOUND__] = 0.0
-        t1rho_map[t1rho_map > __T1_RHO_UPPER_BOUND__] = 0.0
-        t1rho_map[np.isnan(t1rho_map)] = 0.0
-        t1rho_map[np.isinf(t1rho_map)] = 0.0
+        # Filter calculated T1-rho values that are below 0ms and over 100ms
+        t1rho_map[t1rho_map <= __T1_RHO_LOWER_BOUND__] = np.nan
+        t1rho_map[t1rho_map > __T1_RHO_UPPER_BOUND__] = np.nan
+        t1rho_map[np.isinf(t1rho_map)] = np.nan
 
         t1rho_map = np.around(t1rho_map, __T1_RHO_DECIMAL_PRECISION__)
 
@@ -185,14 +187,11 @@ class CubeQuant(NonTargetSequence):
 
         # Use first spin lock time as a basis for registration
         spin_lock_nii_files = []
-        count = 1
         for spin_lock_time in ordered_spin_lock_times:
-            filepath = os.path.join(raw_volumes_base_path, '%03d' % count + '.nii.gz')
+            filepath = os.path.join(raw_volumes_base_path, '%03d' % spin_lock_time + '.nii.gz')
             spin_lock_nii_files.append(filepath)
 
             io_utils.save_nifti(filepath, subvolumes[spin_lock_time], self.pixel_spacing)
-
-            count += 1
 
         target_filepath = spin_lock_nii_files[0]
 

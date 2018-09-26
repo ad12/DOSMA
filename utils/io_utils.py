@@ -120,6 +120,7 @@ def save_nifti(filepath, img_array, spacing):
 
     image = sitk.GetImageFromArray(img_array)
     image.SetSpacing(spacing)
+    image.SetDirection((-0.0, 0.0, -1.0, 1.0, 0.0, 0.0, 0.0, -1.0, 0.0))
 
     check_dir(os.path.dirname(filepath))
 

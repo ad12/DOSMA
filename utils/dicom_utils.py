@@ -46,11 +46,9 @@ def load_dicom(dicom_path, dicom_ext=None):
     pixelDims = (int(ref_dicom.Rows), int(ref_dicom.Columns), len(lstFilesDCM))
 
     # Load spacing values (in mm)
-    pixelSpacing = (float(ref_dicom.PixelSpacing[0]), float(ref_dicom.PixelSpacing[1]), float(ref_dicom.SliceThickness))
-
-    x = np.arange(0.0, (pixelDims[0] + 1) * pixelSpacing[0], pixelSpacing[0])
-    y = np.arange(0.0, (pixelDims[1] + 1) * pixelSpacing[1], pixelSpacing[1])
-    z = np.arange(0.0, (pixelDims[2] + 1) * pixelSpacing[2], pixelSpacing[2])
+    pixelSpacing = (float(ref_dicom.PixelSpacing[0]),
+                    float(ref_dicom.PixelSpacing[1]),
+                    float(ref_dicom.SpacingBetweenSlices))
 
     dicom_array = np.zeros(pixelDims, dtype=ref_dicom.pixel_array.dtype)
 

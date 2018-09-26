@@ -107,18 +107,18 @@ class DessTest(unittest.TestCase):
 
 class CubeQuantTest(unittest.TestCase):
 
-    # @classmethod
-    # def setUpClass(cls):
-    #     # launch dess as initializer for registration (only need to call this once per session)
-    #     super(CubeQuantTest, cls).setUpClass()
-    #
-    #     dt = DessTest()
-    #     dess_vargin = dt.get_vargin()
-    #     dess_vargin[pipeline.DICOM_KEY] = DESS_DICOM_PATH
-    #     dess_vargin[pipeline.SAVE_KEY] = SAVE_PATH
-    #
-    #     scan = pipeline.handle_dess(dess_vargin)
-    #     pipeline.save_info(dess_vargin[pipeline.SAVE_KEY], scan)
+    @classmethod
+    def setUpClass(cls):
+        # launch dess as initializer for registration (only need to call this once per session)
+        super(CubeQuantTest, cls).setUpClass()
+
+        dt = DessTest()
+        dess_vargin = dt.get_vargin()
+        dess_vargin[pipeline.DICOM_KEY] = DESS_DICOM_PATH
+        dess_vargin[pipeline.SAVE_KEY] = SAVE_PATH
+
+        scan = pipeline.handle_dess(dess_vargin)
+        pipeline.save_info(dess_vargin[pipeline.SAVE_KEY], scan)
 
     def setUp(self):
         print("Testing: ", self._testMethodName)
@@ -157,11 +157,9 @@ class CubeQuantTest(unittest.TestCase):
         self.base_interregister()
 
     def test_interregister_mask(self):
-        # TODO: Issue #2 - too many samples map outside moving image buffer
-        pass
         # Interregister cubequant files using mask
         # assume dess segmentation exists
-        #self.base_interregister(os.path.join(DESS_DICOM_PATH, './fc.nii.gz'))
+        self.base_interregister('./dicoms/healthy07/data/fc.nii.gz')
 
     def test_load_interregister(self):
         # make sure subvolumes are the same
@@ -193,6 +191,22 @@ class CubeQuantTest(unittest.TestCase):
 
         assert scan.t1rho_map is not None
 
+    def test_dicom_negative(self):
+        """Load dicoms and see if any negative values exist"""
+        arr, _, _ = dicom_utils.load_dicom(CUBEQUANT_DICOM_PATH, 'dcm')
+
+        assert np.sum(arr < 0) == 0, "No dicom values should be negative"
+
+    def test_baseline_raw_negative(self):
+        base_filepath = './dicoms/healthy07/cubequant_elastix_baseline/raw/%03d.nii.gz'
+        spin_lock_times = [1, 10, 30, 60]
+
+        for sl in spin_lock_times:
+            filepath = base_filepath % sl
+            arr, _ = io_utils.load_nifti(filepath)
+
+            assert np.sum(arr < 0) == 0, "Failed %03d: no values should be negative" % sl
+
 
 class UtilsTest(unittest.TestCase):
     def setUp(self):
@@ -211,6 +225,18 @@ class UtilsTest(unittest.TestCase):
 
         assert (arr == arr2).all(), "Saved and loaded array must be the same"
         assert spacing == spacing2, "spacing should agree"
+
+class ExportTest(unittest.TestCase):
+    def setUp(self):
+        print("Testing: ", self._testMethodName)
+
+    def test_load_modified_mask(self):
+        filepath = './dicoms/healthy07/data/fc_modified.nii.gz'
+        arr2, spacing2 = io_utils.load_nifti(filepath)
+
+        print(arr2.shape)
+        print(spacing2)
+
 
 
 if __name__ == '__main__':
