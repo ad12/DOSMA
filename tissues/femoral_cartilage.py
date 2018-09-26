@@ -175,8 +175,7 @@ class FemoralCartilage(Tissue):
 
             # Split map in anterior, central and posterior regions
             anterior_mask = np.transpose(np.copy(unrolled_mask))[0:np.int(center_of_mass[0]), :]
-            central_mask = np.transpose(np.copy(unrolled_mask))[
-                           np.int(center_of_mass[0]):np.int(center_of_mass[0]) + 10, :]
+            central_mask = np.transpose(np.copy(unrolled_mask))[np.int(center_of_mass[0]):np.int(center_of_mass[0]) + 10, :]
             posterior_mask = np.transpose(np.copy(unrolled_mask))[np.int(center_of_mass[0]) + 10:, :]
 
             anterior_mask[np.where(anterior_mask < 3)] = self.ANTERIOR_KEY
