@@ -30,8 +30,8 @@ T2_STAR_KEY = 't2star'
 ACTION_KEY = 'action'
 
 SEGMENTATION_MODEL_KEY = 'model'
-SEGMENTATION_WEIGHTS_DIR_KEY = 'weights-dir'
-SEGMENTATION_BATCH_SIZE_KEY = 'batch-size'
+SEGMENTATION_WEIGHTS_DIR_KEY = 'weights_dir'
+SEGMENTATION_BATCH_SIZE_KEY = 'batch_size'
 
 TARGET_SCAN_KEY = 'ts'
 TARGET_MASK_KEY = 'tm'
@@ -42,7 +42,7 @@ TISSUES_KEY = 'tissues'
 
 def add_segmentation_subparser(parser):
     parser_segment = parser.add_parser('segment')
-    parser_segment.add_argument('--%s' % SEGMENTATION_MODEL_KEY, choices=SUPPORTED_MODELS, nargs=1)
+    parser_segment.add_argument('--%s' % SEGMENTATION_MODEL_KEY, choices=SUPPORTED_MODELS, nargs='?')
     parser_segment.add_argument('--%s' % SEGMENTATION_WEIGHTS_DIR_KEY, type=str, nargs=1,
                                      help='path to directory with weights')
     parser_segment.add_argument('--%s' % SEGMENTATION_BATCH_SIZE_KEY, metavar='B', type=int, default=32, nargs='?',
@@ -66,7 +66,8 @@ def handle_segmentation(vargin, scan):
     tissues = vargin['tissues']
 
     for tissue in tissues:
-        tissue.find_weights(vargin[SEGMENTATION_WEIGHTS_DIR_KEY])
+        segment_weights_path = vargin[SEGMENTATION_WEIGHTS_DIR_KEY]
+        tissue.find_weights(segment_weights_path[0])
         # Load model
         dims = scan.get_dimensions()
         input_shape = (dims[0], dims[1], 1)
@@ -139,7 +140,7 @@ def parse_args():
                                      epilog='NOTE: by default all tissues will be segmented unless specific flags are provided')
 
     # Dicom and results paths
-    parser.add_argument('-d', '--%s' % DICOM_KEY, metavar='D', type=str, nargs=1,
+    parser.add_argument('-d', '--%s' % DICOM_KEY, metavar='D', type=str, nargs='?',
                         help='path to directory storing dicom files')
     parser.add_argument('-m', '--%s' % MASK_KEY, metavar='M', type=str, default='', nargs='?',
                         help='path to directory storing mask')
@@ -160,34 +161,34 @@ def parse_args():
     add_segmentation_subparser(subparsers_dess)
     parser_dess.set_defaults(func=handle_dess)
 
-    # Cubequant parser
-    parser_cubequant = subparsers.add_parser(CUBEQUANT_SCAN_KEYS[0],
-                                             help='analyze cubequant sequence',
-                                             aliases=CUBEQUANT_SCAN_KEYS[1:])
-    parser_cubequant.add_argument('-%s' % T1_RHO_Key,
-                                  action='store_const',
-                                  default=False,
-                                  const=True,
-                                  help='do t1-rho analysis')
-    parser_cubequant.add_argument('-%s' % LOAD_KEY,
-                                  default=None,
-                                  type=str,
-                                  nargs='?',
-                                  help='path where masks are located')
-    parser_cubequant.add_argument('-%s' % INTERREGISTERED_FILES_DIR_KEY,
-                                      type=str,
-                                      nargs='?',
-                                      default=None,
-                                      help='path to interregistered files. If specified, no need to interregister')
-
-    subparsers_cubequant = parser_cubequant.add_subparsers(help='sub-command help', dest=ACTION_KEY)
-    add_interregister_subparser(subparsers_cubequant)
-    parser_cubequant.set_defaults(func=handle_cubequant)
-
-    # Cones parser
-    parser_cubequant = subparsers.add_parser(CONES_KEY, help='analyze cones sequence')
-    parser_cubequant.add_argument('-%s' % T2_STAR_KEY, action='store_const', default=False, const=True,
-                                  help='do t2* analysis')
+    # # Cubequant parser
+    # parser_cubequant = subparsers.add_parser(CUBEQUANT_SCAN_KEYS[0],
+    #                                          help='analyze cubequant sequence',
+    #                                          aliases=CUBEQUANT_SCAN_KEYS[1:])
+    # parser_cubequant.add_argument('-%s' % T1_RHO_Key,
+    #                               action='store_const',
+    #                               default=False,
+    #                               const=True,
+    #                               help='do t1-rho analysis')
+    # parser_cubequant.add_argument('-%s' % LOAD_KEY,
+    #                               default=None,
+    #                               type=str,
+    #                               nargs='?',
+    #                               help='path where masks are located')
+    # parser_cubequant.add_argument('-%s' % INTERREGISTERED_FILES_DIR_KEY,
+    #                                   type=str,
+    #                                   nargs='?',
+    #                                   default=None,
+    #                                   help='path to interregistered files. If specified, no need to interregister')
+    #
+    # subparsers_cubequant = parser_cubequant.add_subparsers(help='sub-command help', dest=ACTION_KEY)
+    # add_interregister_subparser(subparsers_cubequant)
+    # parser_cubequant.set_defaults(func=handle_cubequant)
+    #
+    # # Cones parser
+    # parser_cubequant = subparsers.add_parser(CONES_KEY, help='analyze cones sequence')
+    # parser_cubequant.add_argument('-%s' % T2_STAR_KEY, action='store_const', default=False, const=True,
+    #                               help='do t2* analysis')
 
     start_time = time.time()
     args = parser.parse_args()
