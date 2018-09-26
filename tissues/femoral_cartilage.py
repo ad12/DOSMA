@@ -142,18 +142,50 @@ class FemoralCartilage(Tissue):
                 Deep_layer[i, np.int((angle + 180) / 5 + 1)] = np.mean(binned_deep[:, 2], axis=0)
 
         ## STEP 3: RESIZE DATA TO [512,512] DIMENSION
-        # TODO: is resizing required? can we keep them in the same dimensions as the input
-        Unrolled_Cartilage_res = resize(Unrolled_Cartilage, (512, 512), order=1, preserve_range=True)
-        Sup_layer_res = resize(Sup_layer, (512, 512), order=1, preserve_range=True)
-        Deep_layer_res = resize(Deep_layer, (512, 512), order=1, preserve_range=True)
+        # TODO: is resizing required? can we keep them in the same dimensions as the input: yes we can :)
+        # Unrolled_Cartilage_res = resize(Unrolled_Cartilage, (512, 512), order=1, preserve_range=True)
+        # Sup_layer_res = resize(Sup_layer, (512, 512), order=1, preserve_range=True)
+        # Deep_layer_res = resize(Deep_layer, (512, 512), order=1, preserve_range=True)
 
-        return Unrolled_Cartilage_res, Sup_layer_res, Deep_layer_res
+        total_cartilage_unrolled = np.transpose(Unrolled_Cartilage)
+        sup_layer_unrolled = np.transpose(Sup_layer)
+        deep_layer_unrolled = np.transpose(Deep_layer)
 
-    def split_regions(self, mask):
-        #TODO: implement spliting region
-        # 1. unroll the mask
-        # 2.
-        pass
+        return total_cartilage_unrolled, sup_layer_unrolled, deep_layer_unrolled
+
+        def split_regions(self, unrolled_quantitative_map):
+            # WARNING: this method has to be called after the unroll method.
+
+            # create unrolled mask from unrolled map
+            unrolled_mask_indexes = np.nonzero(unrolled_quantitative_map)
+            unrolled_mask = np.zeros((unrolled_quantitative_map.shape[0], unrolled_quantitative_map.shape[1]))
+            unrolled_mask[unrolled_mask_indexes] = 1
+            unrolled_mask[np.where(unrolled_mask < 1)] = 3
+
+            # find the center of mass of the unrolled mask
+            center_of_mass = ndimage.measurements.center_of_mass(unrolled_mask)
+
+            lateral_mask = np.transpose(np.copy(unrolled_mask))[:, 0:np.int(center_of_mass[1])]
+            medial_mask = np.transpose(np.copy(unrolled_mask))[:, np.int(center_of_mass[1]):]
+
+            lateral_mask[np.where(lateral_mask < 3)] = self.LATERAL_KEY
+            medial_mask[np.where(medial_mask < 3)] = self.MEDIAL_KEY
+
+            ml_mask = np.concatenate((lateral_mask, medial_mask), axis=1)
+
+            # Split map in anterior, central and posterior regions
+            anterior_mask = np.transpose(np.copy(unrolled_mask))[0:np.int(center_of_mass[0]), :]
+            central_mask = np.transpose(np.copy(unrolled_mask))[
+                           np.int(center_of_mass[0]):np.int(center_of_mass[0]) + 10, :]
+            posterior_mask = np.transpose(np.copy(unrolled_mask))[np.int(center_of_mass[0]) + 10:, :]
+
+            anterior_mask[np.where(anterior_mask < 3)] = self.ANTERIOR_KEY
+            posterior_mask[np.where(posterior_mask < 3)] = self.POSTERIOR_KEY
+            central_mask[np.where(central_mask < 3)] = self.CENTRAL_KEY
+
+            acp_mask = np.concatenate((anterior_mask, central_mask, posterior_mask), axis=0)
+
+            self.regions_mask = np.concatenate((ml_mask, acp_mask), axis=2)
 
     def calc_quant_vals(self, quant_map, map_type):
         """
