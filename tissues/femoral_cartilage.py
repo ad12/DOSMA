@@ -153,7 +153,7 @@ class FemoralCartilage(Tissue):
 
         return total_cartilage_unrolled, sup_layer_unrolled, deep_layer_unrolled
 
-        def split_regions(self, unrolled_quantitative_map):
+    def split_regions(self, unrolled_quantitative_map):
             # WARNING: this method has to be called after the unroll method.
 
             # create unrolled mask from unrolled map
