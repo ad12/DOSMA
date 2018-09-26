@@ -25,7 +25,7 @@ class ScanSequence(ABC):
         dicom_path = self.dicom_path
         dicom_ext = self.dicom_ext
 
-        self.volume, self.refs_dicom = dicom_utils.load_dicom(dicom_path, dicom_ext)
+        self.volume, self.refs_dicom, self.pixel_spacing = dicom_utils.load_dicom(dicom_path, dicom_ext)
 
     def get_dimensions(self):
         return self.volume.shape
@@ -47,6 +47,9 @@ class ScanSequence(ABC):
     @abstractmethod
     def load_data(self, load_dirpath):
         pass
+
+    def __save_dir__(self, dirpath):
+        return io_utils.check_dir(os.path.join(dirpath, '%s_data' % self.NAME))
 
 
 class TargetSequence(ScanSequence):
@@ -140,7 +143,7 @@ class NonTargetSequence(ScanSequence):
             spin_lock_times.append(subfile_num)
 
             filepath = os.path.join(interregistered_dirpath, subfile)
-            subvolume_arr = io_utils.load_nifti(filepath)
+            subvolume_arr, self.pixel_spacing = io_utils.load_nifti(filepath)
             subvolumes.append(subvolume_arr)
 
         assert len(spin_lock_times) == len(subvolumes), "Number of subvolumes mismatch"

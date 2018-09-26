@@ -63,12 +63,14 @@ class Dess(TargetSequence):
 
     def segment(self, model, tissue):
         # Use first echo for segmentation
+        print('Segmenting %s...' % tissue.NAME)
         segmentation_volume = self.subvolumes[0]
         volume = dicom_utils.whiten_volume(segmentation_volume)
 
         # Segment tissue and add it to list
         mask = model.generate_mask(volume)
         tissue.mask = mask
+        tissue.pixel_spacing = self.pixel_spacing
         self.__add_tissue__(tissue)
 
         return mask
@@ -145,13 +147,15 @@ class Dess(TargetSequence):
         return t2map
 
     def save_data(self, save_dirpath):
+        save_dirpath = self.__save_dir__(save_dirpath)
         data = {QuantitativeValue.T2.name: self.t2map}
         io_utils.save_h5(os.path.join(save_dirpath, self.__data_filename__()), data)
 
         # write first echo as nii file for registration
         nii_registration_filepath = os.path.join(save_dirpath, '%s-interregister.nii.gz' % self.NAME)
-        io_utils.save_nifti(nii_registration_filepath, self.subvolumes[0])
+        io_utils.save_nifti(nii_registration_filepath, self.subvolumes[0], self.pixel_spacing)
 
     def load_data(self, load_dirpath):
+        load_dirpath = self.__save_dir__(load_dirpath)
         data = io_utils.load_h5(os.path.join(load_dirpath, self.__data_filename__()))
         self.t2map = data[QuantitativeValue.T2.name]

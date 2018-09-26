@@ -12,3 +12,7 @@ ELASTIX_RIGID_PARAMS_FILE = os.path.join(__PATH_TO_ELASTIX_FOLDER__, 'parameters
 
 # Temporary file path
 TEMP_FOLDER_PATH = os.path.join(__DIR__, 'temp')
+
+# TODO: nipype logging
+
+# Pixel Spacing keys

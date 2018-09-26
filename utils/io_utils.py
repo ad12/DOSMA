@@ -5,6 +5,8 @@ import pandas as pd
 import SimpleITK as sitk
 
 import warnings
+import numpy as np
+
 
 DATA_EXT = 'data'
 INFO_EXT = 'info'
@@ -106,14 +108,20 @@ def save_tables(filepath, data_frames, sheet_names=None):
     writer.save()
 
 
-def save_nifti(filepath, img_array):
+def save_nifti(filepath, img_array, spacing):
+
     assert filepath.endswith('.nii.gz')
     if img_array is None or len(img_array.shape) < 2:
         warnings.warn('%s not saved. Input array is None' % img_array)
         return
 
-    check_dir(os.path.dirname(filepath))
+    # invert array for convention of SimpleITK --> (depth, row, column)
+    img_array = np.transpose(img_array, [2, 0, 1])
+
     image = sitk.GetImageFromArray(img_array)
+    image.SetSpacing(spacing)
+
+    check_dir(os.path.dirname(filepath))
 
     sitk.WriteImage(image, filepath)
 
@@ -121,19 +129,13 @@ def save_nifti(filepath, img_array):
 def load_nifti(filepath):
     assert filepath.endswith('.nii.gz')
     image = sitk.ReadImage(filepath)
+    spacing = image.GetSpacing()
 
-    return sitk.GetArrayFromImage(image)
+    img_array = sitk.GetArrayFromImage(image)
 
+    # invert array for convention of SimpleITK - array is now in form (row, column, depth)
+    img_array = np.transpose(img_array, [1, 2, 0])
 
-if __name__ == '__main__':
-    from scan_sequences.cube_quant import CubeQuant
-    cq = CubeQuant('../dicoms/healthy07/008', 'dcm')
-    img_arr = cq.volume
-    save_nifti('test.nii', img_arr)
-    img_loaded = load_nifti('test.nii')
+    return img_array, spacing
 
-    print(img_arr.shape)
-    print(img_loaded.shape)
-
-    assert (img_arr == img_loaded).all()
 

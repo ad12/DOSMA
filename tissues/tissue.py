@@ -17,7 +17,7 @@ class Tissue(ABC):
         self.mask = None
         self.quant_vals = dict()
         self.weights_filepath = None
-
+        self.pixel_spacing = None
         if (weights_dir is not None):
             self.weights_filepath = self.find_weights(weights_dir)
 
@@ -70,9 +70,9 @@ class Tissue(ABC):
     def save_data(self, dirpath):
         io_utils.check_dir(dirpath)
 
-        if self.mask:
+        if self.mask is not None:
             mask_filepath = os.path.join(dirpath, '%s.nii.gz' % self.NAME)
-            io_utils.save_nifti(mask_filepath, self.mask)
+            io_utils.save_nifti(mask_filepath, self.mask, self.pixel_spacing)
 
         q_names = []
         dfs = []
@@ -101,8 +101,8 @@ class Tissue(ABC):
             raise FileNotFoundError('File \'%s\' does not exist' % mask_filepath)
 
         filepath = os.path.join(dirpath, '%s.nii.gz' % self.NAME)
-        self.mask = io_utils.load_nifti(filepath)
+        self.mask, self.pixel_spacing = io_utils.load_nifti(filepath)
 
 
-    def __data_filename__(self):
+    def __data_dir__(self):
         return '%s.%s' % (self.NAME, io_utils.DATA_EXT)

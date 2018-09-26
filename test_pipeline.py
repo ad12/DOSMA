@@ -8,12 +8,15 @@ import pipeline
 from tissues.femoral_cartilage import FemoralCartilage
 from scan_sequences.cube_quant import CubeQuant
 
+from utils import io_utils, dicom_utils
+
 DESS_003_DICOM_PATH = './dicoms/003'
 DESS_003_T2_MAP_PATH = './dicoms/003_t2_map.mat'
 
+SAVE_PATH = './dicoms/healthy07/data'
 DESS_DICOM_PATH = './dicoms/healthy07/007'
 CUBEQUANT_DICOM_PATH = './dicoms/healthy07/008'
-CUBEQUANT_INTERREGISTERED_PATH = './dicoms/healthy07/008/cube_quant/interregistered'
+CUBEQUANT_INTERREGISTERED_PATH = 'dicoms/healthy07/data/cube_quant_data/interregistered'
 
 CUBEQUANT_T1_RHO_MAP_PATH = ''
 
@@ -112,7 +115,7 @@ class CubeQuantTest(unittest.TestCase):
     #     dt = DessTest()
     #     dess_vargin = dt.get_vargin()
     #     dess_vargin[pipeline.DICOM_KEY] = DESS_DICOM_PATH
-    #     dess_vargin[pipeline.SAVE_KEY] = DESS_DICOM_PATH
+    #     dess_vargin[pipeline.SAVE_KEY] = SAVE_PATH
     #
     #     scan = pipeline.handle_dess(dess_vargin)
     #     pipeline.save_info(dess_vargin[pipeline.SAVE_KEY], scan)
@@ -124,7 +127,7 @@ class CubeQuantTest(unittest.TestCase):
         vargin = dict()
         vargin[pipeline.TISSUES_KEY] = [FemoralCartilage()]
         vargin[pipeline.DICOM_KEY] = CUBEQUANT_DICOM_PATH
-        vargin[pipeline.SAVE_KEY] = CUBEQUANT_DICOM_PATH
+        vargin[pipeline.SAVE_KEY] = SAVE_PATH
         vargin[pipeline.EXT_KEY] = 'dcm'
         vargin[pipeline.T1_RHO_Key] = False
         vargin[pipeline.INTERREGISTERED_FILES_DIR_KEY] = None
@@ -142,7 +145,7 @@ class CubeQuantTest(unittest.TestCase):
         # Interregister cubequant files
         vargin = self.get_vargin()
         vargin[pipeline.ACTION_KEY] = 'interregister'
-        vargin[pipeline.TARGET_SCAN_KEY] = os.path.join(DESS_DICOM_PATH, 'dess-interregister.nii.gz')
+        vargin[pipeline.TARGET_SCAN_KEY] = os.path.join(SAVE_PATH, 'dess_data', 'dess-interregister.nii.gz')
         vargin[pipeline.TARGET_MASK_KEY] = mask_path
 
         scan = pipeline.handle_cubequant(vargin)
@@ -174,19 +177,40 @@ class CubeQuantTest(unittest.TestCase):
                                                                               len(load_scan.subvolumes))
         assert len(load_scan.subvolumes) == 4
 
-        for i in range(len(base_scan.subvolumes)):
-            assert np.array_equal(base_scan.subvolumes[i], load_scan.subvolumes[i])
+        for key in base_scan.subvolumes.keys():
+            base_subvolume = base_scan.subvolumes[key]
+            load_subvolume = load_scan.subvolumes[key]
+            assert np.array_equal(base_subvolume, load_subvolume), "Failed key: %s" % str(key)
 
     def test_t1_rho_map(self):
         vargin = self.get_vargin()
         vargin[pipeline.INTERREGISTERED_FILES_DIR_KEY] = CUBEQUANT_INTERREGISTERED_PATH
         vargin[pipeline.T1_RHO_Key] = True
-        vargin[pipeline.LOAD_KEY] = DESS_DICOM_PATH
+        vargin[pipeline.LOAD_KEY] = SAVE_PATH
 
         scan = pipeline.handle_cubequant(vargin)
         pipeline.save_info(vargin[pipeline.SAVE_KEY], scan)
 
         assert scan.t1rho_map is not None
+
+
+class UtilsTest(unittest.TestCase):
+    def setUp(self):
+        print("Testing: ", self._testMethodName)
+
+    def test_simpleitk_io(self):
+        # Read and write dicom volume using simpleitk
+        arr, refs_dicom, spacing = dicom_utils.load_dicom(DESS_DICOM_PATH, 'dcm')
+
+        filepath = './dicoms/ex.nii.gz'
+
+        io_utils.save_nifti(filepath, arr, spacing)
+        arr2, spacing2 = io_utils.load_nifti(filepath)
+
+        print(spacing)
+
+        assert (arr == arr2).all(), "Saved and loaded array must be the same"
+        assert spacing == spacing2, "spacing should agree"
 
 
 if __name__ == '__main__':

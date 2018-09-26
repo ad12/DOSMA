@@ -61,7 +61,7 @@ def load_dicom(dicom_path, dicom_ext=None):
         refs_dicom.append(ds)
         dicom_array[:, :, lstFilesDCM.index(dicom_filename)] = ds.pixel_array
 
-    return dicom_array, refs_dicom
+    return dicom_array, refs_dicom, pixelSpacing
 
 
 def whiten_volume(x):
