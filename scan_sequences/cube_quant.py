@@ -223,6 +223,7 @@ class CubeQuant(NonTargetSequence):
 
         # Save interregistered files
         interregistered_dirpath = os.path.join(save_dirpath, 'interregistered')
+
         for spin_lock_time in self.subvolumes.keys():
             filepath = os.path.join(interregistered_dirpath, '%03d.nii.gz' % spin_lock_time)
             io_utils.save_nifti(filepath, self.subvolumes[spin_lock_time], self.pixel_spacing)
@@ -234,8 +235,3 @@ class CubeQuant(NonTargetSequence):
         interregistered_dirpath = os.path.join(load_dirpath, 'interregistered')
 
         self.subvolumes = self.__load_interregistered_files__(interregistered_dirpath)
-
-
-
-
-
