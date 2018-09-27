@@ -120,6 +120,9 @@ def handle_segmentation(vargin, scan):
 
     print('')
 
+    if len(tissues) == 0:
+        raise ValueError('No tissues specified for segmentation')
+
     for tissue in tissues:
         segment_weights_path = vargin[SEGMENTATION_WEIGHTS_DIR_KEY]
         tissue.find_weights(segment_weights_path[0])
@@ -268,7 +271,6 @@ def parse_args():
         save_path = dicom_path if dicom_path else load_path
         vargin[SAVE_KEY] = save_path
 
-
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
 
@@ -280,7 +282,6 @@ def parse_args():
     save_info(vargin[SAVE_KEY], scan)
 
     print('Time Elapsed: %0.2f seconds' % (time.time() - start_time))
-
 
     #
     # # Cones parser

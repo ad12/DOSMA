@@ -67,16 +67,12 @@ class CubeQuant(NonTargetSequence):
 
         if mask_path is not None:
             #raise ValueError('Moving mask not supported')
-            mask, mask_spacing = io_utils.load_nifti(mask_path)
-            mask_shape = mask.shape
-            mask = sni.zoom(mask, (volume_shape[0] / mask_shape[0],
-                                   volume_shape[1] / mask_shape[1],
-                                   volume_shape[2] / mask_shape[2]))
 
-            assert mask.shape == volume_shape, 'Shape mismatch - mask: %s, volume: %s' % (str(mask.shape), str(volume_shape))
-            moving_mask = np.asarray(sni.gaussian_filter(np.asarray(mask, dtype=np.float32), sigma=3.0) > 0.5, dtype=np.int8)
+            mask, mask_spacing = io_utils.load_nifti(mask_path)
+
+            fixed_mask = np.asarray(sni.gaussian_filter(np.asarray(mask, dtype=np.float32), sigma=3.0) > 0.2, dtype=np.int8)
             fixed_mask_filepath = os.path.join(temp_interregistered_dirpath, 'dilated-mask.nii.gz')
-            io_utils.save_nifti(fixed_mask_filepath, moving_mask, self.pixel_spacing)
+            io_utils.save_nifti(fixed_mask_filepath, fixed_mask, mask_spacing)
             reg.inputs.fixed_mask = fixed_mask_filepath
 
         #reg.terminal_output = 'none'
