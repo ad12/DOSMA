@@ -9,6 +9,18 @@ from scan_sequences.dess import Dess
 from scan_sequences.cube_quant import CubeQuant
 from models.get_model import get_model
 from tissues.femoral_cartilage import FemoralCartilage
+from tissues.patellar_cartilage import PatellarCartilage
+
+from utils.quant_vals import QuantitativeValue as QV, get_qv
+
+from utils import io_utils
+
+from file_constants import DEBUG
+
+import defaults
+
+SUPPORTED_TISSUES = [FemoralCartilage()]
+SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
 
 DICOM_KEY = 'dicom'
@@ -40,13 +52,30 @@ INTERREGISTERED_FILES_DIR_KEY = 'd'
 TISSUES_KEY = 'tissues'
 
 
+def parse_tissues(vargin):
+    tissues = []
+    for tissue in SUPPORTED_TISSUES:
+        if tissue.STR_ID in vargin.keys() and vargin[tissue.STR_ID] and tissue not in tissues:
+            load_path = vargin[LOAD_KEY]
+            if load_path:
+                tissue.load_data(load_path)
+
+            tissues.append(tissue)
+
+    return tissues
+
+
 def add_segmentation_subparser(parser):
     parser_segment = parser.add_parser('segment')
-    parser_segment.add_argument('--%s' % SEGMENTATION_MODEL_KEY, choices=SUPPORTED_MODELS, nargs='?')
+    parser_segment.add_argument('--%s' % SEGMENTATION_MODEL_KEY, choices=SUPPORTED_MODELS, nargs='?', default='unet2d')
     parser_segment.add_argument('--%s' % SEGMENTATION_WEIGHTS_DIR_KEY, type=str, nargs=1,
                                      help='path to directory with weights')
-    parser_segment.add_argument('--%s' % SEGMENTATION_BATCH_SIZE_KEY, metavar='B', type=int, default=32, nargs='?',
+    parser_segment.add_argument('--%s' % SEGMENTATION_BATCH_SIZE_KEY, metavar='B', type=int,
+                                default=defaults.DEFAULT_BATCH_SIZE, nargs='?',
                                 help='batch size for inference. Default: 32')
+    for tissue in SUPPORTED_TISSUES:
+        parser_segment.add_argument('-%s' % tissue.STR_ID, action='store_const', default=False, const=True,
+                                   help='handle %s' % tissue.FULL_NAME)
 
 
 def add_interregister_subparser(parser):
@@ -62,8 +91,34 @@ def add_interregister_subparser(parser):
                                       help='path to target mask')
 
 
+def handle_tissues(vargin):
+    tissues = vargin['tissues']
+
+    load_path = vargin[LOAD_KEY]
+    if not load_path:
+        ValueError('load path must be specified for handling tissues')
+
+    # Get all supported quantitative values
+    qvs = []
+    for qv in SUPPORTED_QUANTITATIVE_VALUES:
+        if vargin[qv.name.lower()]:
+            qvs.append((qv, vargin[qv.name.lower()]))
+
+    for tissue in tissues:
+        tissue.load_data(load_path)
+
+        for qv, filepath in qvs:
+            # load file
+            tmp = io_utils.load_h5(filepath)
+            qv_map = tmp['data']
+
+            tissue.calc_quant_vals(qv_map, qv)
+
+
 def handle_segmentation(vargin, scan):
     tissues = vargin['tissues']
+
+    print('')
 
     for tissue in tissues:
         segment_weights_path = vargin[SEGMENTATION_WEIGHTS_DIR_KEY]
@@ -92,7 +147,7 @@ def handle_t1_rho_analysis(scan, load_dir):
 
 
 def handle_dess(vargin):
-    scan = Dess(dicom_path=vargin[DICOM_KEY], dicom_ext=vargin[EXT_KEY])
+    scan = Dess(dicom_path=vargin[DICOM_KEY], dicom_ext=vargin[EXT_KEY], load_path=vargin[LOAD_KEY])
     if vargin[ACTION_KEY] is not None and vargin[ACTION_KEY] == 'segment':
         handle_segmentation(vargin, scan)
 
@@ -140,15 +195,15 @@ def parse_args():
                                      epilog='NOTE: by default all tissues will be segmented unless specific flags are provided')
 
     # Dicom and results paths
-    parser.add_argument('-d', '--%s' % DICOM_KEY, metavar='D', type=str, nargs='?',
+    parser.add_argument('-d', '--%s' % DICOM_KEY, metavar='D', type=str, default=None, nargs='?',
                         help='path to directory storing dicom files')
-    parser.add_argument('-m', '--%s' % MASK_KEY, metavar='M', type=str, default='', nargs='?',
-                        help='path to directory storing mask')
-    parser.add_argument('-s', '--%s' % SAVE_KEY, metavar='S', type=str, default='', nargs='?',
+    parser.add_argument('-s', '--%s' % SAVE_KEY, metavar='S', type=str, default=None, nargs='?',
                         help='path to directory to save mask. Default: D')
+    parser.add_argument('-l', '--%s' % LOAD_KEY, metavar='L', type=str, default=None, nargs='?',
+                        help='path to data directory')
 
     # If user wants to filter by extension, allow them to specify extension
-    parser.add_argument('-e', '--%s' % EXT_KEY, metavar='E', type=str, default=None, nargs='?',
+    parser.add_argument('-e', '--%s' % EXT_KEY, metavar='E', type=str, default='dcm', nargs='?',
                         help='extension of dicom files')
     parser.add_argument('--%s' % GPU_KEY, metavar='G', type=str, default=None, nargs='?', help='gpu id to use')
 
@@ -156,10 +211,63 @@ def parse_args():
 
     # DESS parser
     parser_dess = subparsers.add_parser(DESS_SCAN_KEY, help='analyze DESS sequence')
-    parser_dess.add_argument('-%s' % T2_KEY, action='store_const', default=False, const=True, help='do t2 analysis')
+    parser_dess.add_argument('-%s' % T2_KEY, action='store_const', default=False, const=True, help='compute T2 map')
     subparsers_dess = parser_dess.add_subparsers(help='sub-command help', dest=ACTION_KEY)
     add_segmentation_subparser(subparsers_dess)
     parser_dess.set_defaults(func=handle_dess)
+
+    # Tissue parser
+    parser_tissue = subparsers.add_parser(TISSUES_KEY, help='analyze tissues')
+    for tissue in SUPPORTED_TISSUES:
+        parser_tissue.add_argument('-%s' % tissue.STR_ID, action='store_const', default=False, const=True,
+                                   help='handle %s' % tissue.FULL_NAME)
+    qvs_dict = dict()
+    for qv in SUPPORTED_QUANTITATIVE_VALUES:
+        qv_name = qv.name.lower()
+        qvs_dict[qv_name] = qv
+        parser_tissue.add_argument('-%s' % qv_name, nargs='?', default=None,
+                                   help='calculate %s' % qv_name)
+
+        parser_tissue.set_defaults(func=handle_tissues)
+
+    start_time = time.time()
+    args = parser.parse_args()
+    vargin = vars(args)
+
+    gpu = vargin[GPU_KEY]
+
+    if DEBUG:
+        print(vargin)
+    # Only supporting femoral cartilage for now
+
+    if gpu is not None:
+        os.environ['CUDA_VISIBLE_DEVICES'] = gpu
+
+    dicom_path = vargin[DICOM_KEY]
+    load_path = vargin[LOAD_KEY]
+
+    if not dicom_path and not load_path:
+        raise ValueError('Must provide path to dicoms or path to load data from')
+
+    save_path = vargin[SAVE_KEY]
+    if not save_path:
+        save_path = dicom_path if dicom_path else load_path
+        vargin[SAVE_KEY] = save_path
+
+
+    if not os.path.isdir(save_path):
+        os.makedirs(save_path)
+
+    tissues = parse_tissues(vargin)
+    vargin['tissues'] = tissues
+
+    # Call func for specific scan (dess, cubequant, cones, etc)
+    scan = args.func(vargin)
+    save_info(vargin[SAVE_KEY], scan)
+
+    print('Time Elapsed: %0.2f seconds' % (time.time() - start_time))
+
+
 
     # # Cubequant parser
     # parser_cubequant = subparsers.add_parser(CUBEQUANT_SCAN_KEYS[0],
@@ -189,54 +297,6 @@ def parse_args():
     # parser_cubequant = subparsers.add_parser(CONES_KEY, help='analyze cones sequence')
     # parser_cubequant.add_argument('-%s' % T2_STAR_KEY, action='store_const', default=False, const=True,
     #                               help='do t2* analysis')
-
-    start_time = time.time()
-    args = parser.parse_args()
-    vargin = vars(args)
-
-    gpu = vargin[GPU_KEY]
-
-    print(vargin)
-    # Only supporting femoral cartilage for now
-
-    if gpu is not None:
-        os.environ['CUDA_VISIBLE_DEVICES'] = gpu
-
-    try:
-        dicom_path = vargin[DICOM_KEY][0]
-    except Exception:
-        raise ValueError("No path to dicom provided")
-
-    save_path = vargin[SAVE_KEY]
-    if save_path == '':
-        save_path = dicom_path
-        vargin[SAVE_KEY] = save_path
-
-    try:
-        if not os.path.isdir(dicom_path):
-            raise ValueError
-    except ValueError:
-        raise NotADirectoryError("Directory \'%s\' does not exist" % dicom_path)
-
-
-    if not os.path.isdir(save_path):
-        os.makedirs(save_path)
-
-    # TODO: Add support for multiple tissues
-    tissues = [FemoralCartilage()]
-    if vargin[MASK_KEY]:
-        for tissue in tissues:
-            tissue.load_data(vargin[MASK_KEY])
-    vargin['tissues'] = tissues
-
-    # Call func for specific scan (dess, cubequant, cones, etc)
-    scan = args.func(vargin)
-    save_info(vargin[SAVE_KEY], scan)
-
-    print('Time Elapsed: %0.2f seconds' % (time.time() - start_time))
-
-
-
 
 
 if __name__ == '__main__':

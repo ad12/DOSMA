@@ -4,7 +4,7 @@ from tissues.tissue import Tissue
 
 class PatellarCartilage(Tissue):
     ID = 3
-    NAME = 'pc'
+    STR_ID = 'pc'
 
     def split_regions(self, mask):
         #TODO: implement spliting regions

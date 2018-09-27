@@ -7,10 +7,11 @@ import numpy as np
 
 WEIGHTS_FILE_EXT = 'h5'
 
-
 class Tissue(ABC):
     ID = -1  # should be unique to all tissues, and should not change
-    NAME = ''
+    STR_ID = ''
+    FULL_NAME = ''
+
 
     def __init__(self, weights_dir = None):
         self.regions = dict()
@@ -55,30 +56,27 @@ class Tissue(ABC):
         weights_file = None
         for f in files:
             file = os.path.join(weights_dir, f)
-            if os.path.isfile(file) and file.endswith(WEIGHTS_FILE_EXT) and self.NAME in file:
+            if os.path.isfile(file) and file.endswith(WEIGHTS_FILE_EXT) and self.STR_ID in file:
                 if weights_file is not None:
                     raise ValueError('There are multiple weights files, please remove duplicates')
                 weights_file = file
 
         if weights_file is None:
-            raise ValueError('No file found that contains \'%s\' and ends in \'%s\'' % (self.NAME, WEIGHTS_FILE_EXT))
+            raise ValueError('No file found that contains \'%s\' and ends in \'%s\'' % (self.STR_ID, WEIGHTS_FILE_EXT))
 
         self.weights_filepath = weights_file
 
         return weights_file
 
     def save_data(self, dirpath):
-        io_utils.check_dir(dirpath)
+        dirpath = self.__save_dirpath__(dirpath)
 
         if self.mask is not None:
-            mask_filepath = os.path.join(dirpath, '%s.nii.gz' % self.NAME)
+            mask_filepath = os.path.join(dirpath, '%s.nii.gz' % self.STR_ID)
             io_utils.save_nifti(mask_filepath, self.mask, self.pixel_spacing)
 
         q_names = []
         dfs = []
-
-        dirpath = os.path.join(dirpath, self.NAME)
-        io_utils.check_dir(dirpath)
 
         for quant_val in QuantitativeValue:
             if quant_val.name not in self.quant_vals:
@@ -96,13 +94,13 @@ class Tissue(ABC):
 
     def load_data(self, dirpath):
         # load mask, if no mask exists stop loading information
-        mask_filepath = os.path.join(dirpath, '%s.nii.gz' % self.NAME)
+        dirpath = self.__save_dirpath__(dirpath)
+        mask_filepath = os.path.join(dirpath, '%s.nii.gz' % self.STR_ID)
         if not os.path.isfile(mask_filepath):
             raise FileNotFoundError('File \'%s\' does not exist' % mask_filepath)
 
-        filepath = os.path.join(dirpath, '%s.nii.gz' % self.NAME)
+        filepath = os.path.join(dirpath, '%s.nii.gz' % self.STR_ID)
         self.mask, self.pixel_spacing = io_utils.load_nifti(filepath)
 
-
-    def __data_dir__(self):
-        return '%s.%s' % (self.NAME, io_utils.DATA_EXT)
+    def __save_dirpath__(self, dirpath):
+        return io_utils.check_dir(os.path.join(dirpath, '%s' % self.STR_ID))

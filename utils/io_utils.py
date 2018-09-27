@@ -40,11 +40,7 @@ def check_dir(dir_path):
     :return: path to directory
     """
     if not os.path.isdir(dir_path):
-        try:
-            original_umask = os.umask(0)
-            os.makedirs(dir_path)
-        finally:
-            os.umask(original_umask)
+        os.makedirs(dir_path)
 
     return dir_path
 
@@ -78,20 +74,20 @@ def save_h5(filepath, data_dict):
     check_dir(os.path.dirname(filepath))
     with h5py.File(filepath, 'w') as f:
         for key in data_dict.keys():
-            if data_dict[key] is None or not data_dict[key]:
-                continue
-
-            f.create_dataset(str(key), data=data_dict[key])
+            f.create_dataset(key, data=data_dict[key])
 
 
 def load_h5(filepath):
-    if (not os.path.isfile(filepath)):
+    if not os.path.isfile(filepath):
         raise FileNotFoundError('%s does not exist' % filepath)
 
     data = dict()
     with h5py.File(filepath, 'r') as f:
         for key in f.keys():
-            data[key] = f.get(key)
+            print(key)
+            data[key] = f.get(key).value
+
+    return data
 
 
 def save_tables(filepath, data_frames, sheet_names=None):
@@ -143,5 +139,7 @@ def load_nifti(filepath):
     img_array = np.transpose(img_array, [1, 2, 0])
 
     return img_array, spacing
+
+
 
 

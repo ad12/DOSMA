@@ -12,11 +12,19 @@ import re
 class ScanSequence(ABC):
     NAME = ''
 
-    def __init__(self, dicom_path=None, dicom_ext=None):
-        self.temp_path = os.path.join(fc.TEMP_FOLDER_PATH, '%s', '%s') % (self.NAME, strftime("%Y-%m-%d-%H-%M-%S", gmtime()))
+    def __init__(self, dicom_path=None, dicom_ext=None, load_path=None):
+        self.temp_path = os.path.join(fc.TEMP_FOLDER_PATH, '%s', '%s') % (self.NAME,
+                                                                          strftime("%Y-%m-%d-%H-%M-%S", gmtime()))
         self.tissues = []
         self.dicom_path = dicom_path
         self.dicom_ext = dicom_ext
+
+        self.volume = None
+        self.pixel_spacing = None
+        self.ref_dicom = None
+
+        if load_path:
+            self.load_data(load_path)
 
         if dicom_path is not None:
             self.__load_dicom__()
@@ -26,6 +34,8 @@ class ScanSequence(ABC):
         dicom_ext = self.dicom_ext
 
         self.volume, self.refs_dicom, self.pixel_spacing = dicom_utils.load_dicom(dicom_path, dicom_ext)
+
+        self.ref_dicom = self.refs_dicom[0]
 
     def get_dimensions(self):
         return self.volume.shape
@@ -40,22 +50,43 @@ class ScanSequence(ABC):
     def __data_filename__(self):
         return '%s.%s' % (self.NAME, io_utils.DATA_EXT)
 
-    @abstractmethod
     def save_data(self, save_dirpath):
-        pass
+        # write other data as ref
+        save_dirpath = self.__save_dir__(save_dirpath)
+        filepath = os.path.join(save_dirpath, '%s.data' % self.NAME)
+        data = {'ref_dicom': self.ref_dicom, 'volume': self.volume, 'pixel_spacing': self.pixel_spacing}
 
-    @abstractmethod
+        io_utils.save_pik(filepath, data)
+
     def load_data(self, load_dirpath):
-        pass
+        load_dirpath = self.__save_dir__(load_dirpath, create_dir=False)
 
-    def __save_dir__(self, dirpath):
-        return io_utils.check_dir(os.path.join(dirpath, '%s_data' % self.NAME))
+        if not os.path.isdir(load_dirpath):
+            raise NotADirectoryError('%s does not exist' % load_dirpath)
+
+        filepath = os.path.join(load_dirpath, '%s.data' % self.NAME)
+        data = io_utils.load_pik(filepath)
+
+        #self.ref_dicom = data['ref_dicom']
+        self.volume = data['volume']
+        self.pixel_spacing = data['pixel_spacing']
+
+    def __save_dir__(self, dirpath, create_dir=True):
+        name_len = len(self.NAME) + 2  # buffer
+        if self.NAME in dirpath[-name_len:]:
+            scan_dirpath = os.path.join(dirpath, '%s_data' % self.NAME)
+        else:
+            scan_dirpath = dirpath
+
+        scan_dirpath = os.path.join(scan_dirpath, '%s_data' % self.NAME)
+
+        if create_dir:
+            scan_dirpath = io_utils.check_dir(scan_dirpath)
+
+        return scan_dirpath
 
 
 class TargetSequence(ScanSequence):
-
-    def __init__(self, dicom_path, dicom_ext):
-        super().__init__(dicom_path, dicom_ext)
 
     def preprocess_volume(self, volume):
         """

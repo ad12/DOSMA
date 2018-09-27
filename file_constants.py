@@ -1,5 +1,7 @@
 import os
 
+DEBUG = 1
+
 # Elastix files
 
 __DIR__ = os.path.dirname(__file__)
@@ -14,5 +16,3 @@ ELASTIX_RIGID_PARAMS_FILE = os.path.join(__PATH_TO_ELASTIX_FOLDER__, 'parameters
 TEMP_FOLDER_PATH = os.path.join(__DIR__, 'temp')
 
 # TODO: nipype logging
-
-# Pixel Spacing keys

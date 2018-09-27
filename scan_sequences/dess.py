@@ -25,11 +25,13 @@ class Dess(TargetSequence):
     __T2_UPPER_BOUND__ = 100
     __T2_DECIMAL_PRECISION__ = 1 # 0.1 ms
 
-    def __init__(self, dicom_path, dicom_ext=None):
-        super().__init__(dicom_path, dicom_ext)
-        self.ref_dicom = self.refs_dicom[0]
-        self.subvolumes = self.split_volume()
-        self.t2map = None
+    def __init__(self, dicom_path, dicom_ext=None, load_path=None):
+        super().__init__(dicom_path, dicom_ext, load_path)
+
+        if not load_path:
+            self.subvolumes = self.split_volume()
+            self.t2map = None
+
         if not self.validate_dess():
             raise ValueError('dicoms in \'%s\' are not acquired from DESS sequence' % self.dicom_path)
 
@@ -63,7 +65,7 @@ class Dess(TargetSequence):
 
     def segment(self, model, tissue):
         # Use first echo for segmentation
-        print('Segmenting %s...' % tissue.NAME)
+        print('Segmenting %s...' % tissue.FULL_NAME)
         segmentation_volume = self.subvolumes[0]
         volume = dicom_utils.whiten_volume(segmentation_volume)
 
@@ -93,6 +95,9 @@ class Dess(TargetSequence):
 
         dicom_array = self.volume
         ref_dicom = self.ref_dicom
+
+        if self.volume is None or self.ref_dicom is None:
+            raise ValueError('volume and ref_dicom fields must be initialized')
 
         if len(dicom_array.shape) != 3:
             raise ValueError("dicom_array must be 3D volume")
@@ -146,15 +151,23 @@ class Dess(TargetSequence):
         return t2map
 
     def save_data(self, save_dirpath):
-        save_dirpath = self.__save_dir__(save_dirpath)
-        data = {QuantitativeValue.T2.name: self.t2map}
-        io_utils.save_h5(os.path.join(save_dirpath, self.__data_filename__()), data)
+        super().save_data(save_dirpath)
 
-        # write first echo as nii file for registration
-        nii_registration_filepath = os.path.join(save_dirpath, '%s-interregister.nii.gz' % self.NAME)
-        io_utils.save_nifti(nii_registration_filepath, self.subvolumes[0], self.pixel_spacing)
+        save_dirpath = self.__save_dir__(save_dirpath)
+        data = {'data': self.t2map}
+        io_utils.save_h5(os.path.join(save_dirpath, '%s.h5' % QuantitativeValue.T2.name.lower()), data)
+
+        # write echos
+        for i in range(len(self.subvolumes)):
+            nii_registration_filepath = os.path.join(save_dirpath, 'echo%d.nii.gz' % (i+1))
+            io_utils.save_nifti(nii_registration_filepath, self.subvolumes[i], self.pixel_spacing)
 
     def load_data(self, load_dirpath):
-        load_dirpath = self.__save_dir__(load_dirpath)
-        data = io_utils.load_h5(os.path.join(load_dirpath, self.__data_filename__()))
-        self.t2map = data[QuantitativeValue.T2.name]
+        super().load_data(load_dirpath)
+
+        self.subvolumes = []
+        # Load subvolumes from nifti file
+        for i in range(self.__NUM_ECHOS__):
+            nii_registration_filepath = os.path.join(load_dirpath, 'echo%d.nii.gz' % (i+1))
+            subvolume, _ = io_utils.load_nifti(nii_registration_filepath)
+            self.subvolumes.append(subvolume)

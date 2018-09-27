@@ -3,7 +3,7 @@ from tissues.tissue import Tissue
 
 class Meniscus(Tissue):
     ID = 4
-    NAME = 'men'
+    STR_ID = 'men'
 
     # Region keys
     DEEP_MEDIAL_REGION_KEY = 'deep_medial'

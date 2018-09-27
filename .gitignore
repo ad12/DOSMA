@@ -20,3 +20,6 @@
 # ignore local files
 libANNlib.dylib
 debug_runs.py
+
+# ignore defaults file
+defaults.py

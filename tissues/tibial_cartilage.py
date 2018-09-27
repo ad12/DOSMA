@@ -4,7 +4,7 @@ from tissues.tissue import Tissue
 
 class TibialCartilage(Tissue):
     ID = 2
-    NAME = 'tc'
+    STR_ID = 'tc'
 
     # TODO: implement region keys
 

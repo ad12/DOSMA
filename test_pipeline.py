@@ -226,6 +226,20 @@ class UtilsTest(unittest.TestCase):
         assert (arr == arr2).all(), "Saved and loaded array must be the same"
         assert spacing == spacing2, "spacing should agree"
 
+    def test_h5(self):
+        filepath = './dicoms/sample_h5_data'
+        datas = [{'type': np.zeros([4,4,4]), 'type2': np.zeros([4,4,4])}]
+
+        for data in datas:
+            io_utils.save_h5(filepath, data)
+            data2 = io_utils.load_h5(filepath)
+
+            assert len(list(data.keys())) == len(list(data2.keys()))
+
+            for key in data.keys():
+                assert (data[key] == data2[key]).all()
+
+
 class ExportTest(unittest.TestCase):
     def setUp(self):
         print("Testing: ", self._testMethodName)
@@ -236,6 +250,15 @@ class ExportTest(unittest.TestCase):
 
         print(arr2.shape)
         print(spacing2)
+
+class TissuesTest(unittest.TestCase):
+    def test_femoral_cartilage(self):
+        vargin = {'dicom': None, 'save': None, 'load': 'dicoms/healthy07/data', 'ext': 'dcm', 'gpu': None,
+                  'scan': 'tissues', 'fc': True, 't2': 'dicoms/healthy07/data/dess_data/t2.h5', 't1_rho': None,
+                  't2_star': None, 'tissues':[FemoralCartilage()]}
+
+        pipeline.handle_tissues(vargin)
+
 
 
 

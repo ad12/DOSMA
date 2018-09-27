@@ -1,12 +1,21 @@
 from enum import Enum
 import scipy.optimize as sop
 import numpy as np
+import glob
 
 __EPSILON__ = 1e-8
+
+
 class QuantitativeValue(Enum):
     T1_RHO = 1
     T2 = 2
     T2_STAR = 3
+
+
+def get_qv(id):
+    for qv in QuantitativeValue:
+        if qv.name.lower() == id or qv.value == id:
+            return qv
 
 
 def fit_mono_exp(x, y, p0=None):
@@ -27,8 +36,7 @@ def fit_mono_exp(x, y, p0=None):
 
     return popt, r_squared
 
+
 if __name__ == '__main__':
     print(type(QuantitativeValue.T1_RHO.name))
-
-    for i in QuantitativeValue:
-        print(i)
+    print(QuantitativeValue.T1_RHO.value== 1)
