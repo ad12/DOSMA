@@ -40,7 +40,12 @@ def check_dir(dir_path):
     :return: path to directory
     """
     if not os.path.isdir(dir_path):
-        os.makedirs(dir_path)
+        try:
+            original_umask = os.umask(0)
+            os.makedirs(dir_path)
+        finally:
+            os.umask(original_umask)
+
     return dir_path
 
 
