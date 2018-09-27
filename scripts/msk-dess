@@ -21,6 +21,6 @@ cd ..
 
 for i in $FILES; do
     DIRNAME=$(dirname $i)
-    echo $DIRNAME
+    DIRNAME="$DIRNAME/data"
     python -m pipeline -d $i -s $DIRNAME dess -t2 segment --weights_dir $WEIGHTS_DIRECTORY -fc
 done
