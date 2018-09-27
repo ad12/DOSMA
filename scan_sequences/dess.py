@@ -141,8 +141,9 @@ class Dess(TargetSequence):
 
         # Filter calculated T2 values that are below 0ms and over 100ms
         t2map[t2map <= self.__T2_LOWER_BOUND__] = np.nan
+        t2map = np.nan_to_num(t2map)
         t2map[t2map > self.__T2_UPPER_BOUND__] = np.nan
-        t2map[np.isinf(t2map)] = np.nan
+        t2map = np.nan_to_num(t2map)
 
         t2map = np.around(t2map, self.__T2_DECIMAL_PRECISION__)
 

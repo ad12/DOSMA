@@ -32,6 +32,7 @@ class DessTest(unittest.TestCase):
         vargin[pipeline.TISSUES_KEY] = [FemoralCartilage()]
         vargin[pipeline.DICOM_KEY] = DESS_003_DICOM_PATH
         vargin[pipeline.SAVE_KEY] = DESS_003_DICOM_PATH
+        vargin[pipeline.LOAD_KEY] = None
         vargin[pipeline.EXT_KEY] = 'dcm'
         vargin[pipeline.SEGMENTATION_MODEL_KEY] = 'unet2d'
         vargin[pipeline.SEGMENTATION_WEIGHTS_DIR_KEY] = './weights'
@@ -66,6 +67,7 @@ class DessTest(unittest.TestCase):
         # Load ground truth t2 map
         vargin = self.get_vargin()
         vargin[pipeline.T2_KEY] = True
+        vargin[pipeline.ACTION_KEY] = ''
 
         scan = pipeline.handle_dess(vargin)
 
