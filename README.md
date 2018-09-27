@@ -1,16 +1,17 @@
 # MRI Knee Tissue Segmentation
 
-This pipeline allows for the segmentation of femoral, tibial, and patellar cartilage and the meniscus using pretrained Unet 2D model.
-
-Details for the pretrained Unet 2D model can be found [here ADD SOURCE](google.com).
+This pipeline is an open-source pipeline for MRI image segmentation, registration, and quantitative analysis.
 
 ## Installation
-Download this repo to a location on your disk. Create a folder named _weights_ in this repo. Download the pretrained weights from this [Google Drive](https://drive.google.com/drive/u/0/folders/1VtVzOAS6VbFzpEi9Fivy6BgcMubfFlL-) into the _weights_ folder. **Do not rename these files**.
+Download this repo to a location on your disk. 
+Request for pretrained weights from this [Google Drive](https://drive.google.com/drive/u/0/folders/1VtVzOAS6VbFzpEi9Fivy6BgcMubfFlL-). 
+Save these weights in an accessible location. **Do not rename these files**.
 
-### Shell interface
-To run the program from a shell, run `python -m opt/path/generate_mask.py` with the flags detailed below. `opt/path` is the path to the file `generate_mask.py`
+## Shell interface
+To run the program from a shell, run `python -m opt/path/pipeline` with the flags detailed below. `opt/path` is the path to the file `python`
 
 Note this program is meant to be run from the command line. As a results, all import statements are local imports.
+
 
 #### Flags
 Required:

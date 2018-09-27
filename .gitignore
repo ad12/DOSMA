@@ -23,3 +23,6 @@ debug_runs.py
 
 # ignore defaults file
 defaults.py
+
+# ignore scripts
+**/scripts

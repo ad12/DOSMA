@@ -134,6 +134,7 @@ class FemoralCartilage(Tissue):
                 splice_super = np.where(binned_result[:, 1] >= rad_division)
                 binned_super = binned_result[splice_super]
 
+                # TODO: not sure if you should do +1, python is 0 indexed
                 Unrolled_Cartilage[i, np.int((angle + 180) / 5 + 1)] = np.mean(binned_result[:, 2], axis=0)
                 Sup_layer[i, np.int((angle + 180) / 5 + 1)] = np.mean(binned_super[:, 2], axis=0)
                 Deep_layer[i, np.int((angle + 180) / 5 + 1)] = np.mean(binned_deep[:, 2], axis=0)
@@ -142,6 +143,10 @@ class FemoralCartilage(Tissue):
         # Unrolled_Cartilage_res = resize(Unrolled_Cartilage, (512, 512), order=1, preserve_range=True)
         # Sup_layer_res = resize(Sup_layer, (512, 512), order=1, preserve_range=True)
         # Deep_layer_res = resize(Deep_layer, (512, 512), order=1, preserve_range=True)
+
+        Unrolled_Cartilage[Unrolled_Cartilage == 0] = np.nan
+        Sup_layer[Sup_layer == 0] = np.nan
+        Deep_layer[Deep_layer == 0] = np.nan
 
         total_cartilage_unrolled = np.transpose(Unrolled_Cartilage)
         sup_layer_unrolled = np.transpose(Sup_layer)

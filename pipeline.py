@@ -191,8 +191,7 @@ def parse_args():
     :raises NotADirectoryError if dicom path does not exist or is not a directory
     """
     parser = argparse.ArgumentParser(prog='PROG',
-                                     description='Pipeline for segmenting MRI knee volumes',
-                                     epilog='NOTE: by default all tissues will be segmented unless specific flags are provided')
+                                     description='Pipeline for segmenting MRI knee volumes')
 
     # Dicom and results paths
     parser.add_argument('-d', '--%s' % DICOM_KEY, metavar='D', type=str, default=None, nargs='?',

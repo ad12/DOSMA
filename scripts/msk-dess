@@ -1,0 +1,26 @@
+#!/bin/bash
+WEIGHTS_DIRECTORY=""
+
+if [ -z "$WEIGHTS_DIRECTORY" ]; then
+    echo "Please define WEIGHTS_DIRECTORY in script. Use the absolute path"
+    exit 125
+fi
+
+if [ $# -eq 1 ]
+then
+SERIES="dess"
+else
+SERIES=$2
+fi
+
+# find relevant dicom files
+
+FILES=$(find $1 -type d -name $SERIES)
+
+cd ..
+
+for i in $FILES; do
+    DIRNAME=$(dirname $i)
+    echo $DIRNAME
+    python -m pipeline -d $i -s $DIRNAME dess -t2 segment --weights_dir $WEIGHTS_DIRECTORY -fc
+done
