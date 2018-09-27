@@ -8,7 +8,6 @@ import scipy.ndimage as sni
 import numpy as np
 import file_constants as fc
 from utils import quant_vals as qv
-import shutil
 import warnings
 
 
@@ -24,21 +23,18 @@ __T1_RHO_DECIMAL_PRECISION__ = 1
 class CubeQuant(NonTargetSequence):
     NAME = 'cube_quant'
 
-    def __init__(self, dicom_path=None, dicom_ext=None, save_dir=None, interregistered_volumes_path=''):
+    def __init__(self, dicom_path=None, dicom_ext=None, load_path=None):
         super().__init__(dicom_path, dicom_ext)
-        self.subvolumes = None
+
         self.t1rho_map = None
+        self.subvolumes = None
 
-        if dicom_path is not None and not interregistered_volumes_path:
-            self.save_dir = save_dir
+        if load_path:
+            self.load_data(load_path)
 
+        if dicom_path is not None:
             self.subvolumes = self.__split_volumes__(__EXPECTED_NUM_SPIN_LOCK_TIMES__)
-            self.intermediate_save_dir = self.__save_dir__(save_dir)
             self.intraregistered_data = self.__intraregister__(self.subvolumes)
-        elif interregistered_volumes_path:
-            print('')
-            print('Path: %s' % interregistered_volumes_path)
-            self.subvolumes = self.__load_interregistered_files__(interregistered_volumes_path)
 
         if self.subvolumes is None:
             raise ValueError('Either dicom_path or interregistered_volumes_path must be specified')
@@ -47,7 +43,6 @@ class CubeQuant(NonTargetSequence):
         base_spin_lock_time, base_image = self.intraregistered_data['BASE']
         files = self.intraregistered_data['FILES']
 
-        interregistered_dirpath = io_utils.check_dir(os.path.join(self.intermediate_save_dir, 'interregistered'))
         temp_interregistered_dirpath = io_utils.check_dir(os.path.join(self.temp_path, 'interregistered'))
 
         print('')
@@ -111,11 +106,13 @@ class CubeQuant(NonTargetSequence):
             warped_files.append((spin_lock_time, warped_file))
 
         # copy each of the interregistered warped files to their own output
-
+        subvolumes = dict()
         for spin_lock_time, warped_file in warped_files:
-            shutil.copyfile(warped_file, os.path.join(interregistered_dirpath, '%s.nii.gz' % str(spin_lock_time)))
+            subvolumes[spin_lock_time], _ = io_utils.load_nifti(warped_file)
 
-        self.subvolumes = self.__load_interregistered_files__(interregistered_dirpath)
+        #self.subvolumes = self.__load_interregistered_files__(interregistered_dirpath)
+        self.subvolumes = subvolumes
+
 
     def generate_t1_rho_map(self):
         svs = []
@@ -219,13 +216,25 @@ class CubeQuant(NonTargetSequence):
 
     def save_data(self, save_dirpath):
         save_dirpath = self.__save_dir__(save_dirpath)
-        data = {qv.QuantitativeValue.T1_RHO.name: self.t1rho_map}
-        io_utils.save_h5(os.path.join(save_dirpath, self.__data_filename__()), data)
+
+        if self.t1rho_map:
+            data = {'data': self.t1rho_map}
+            io_utils.save_h5(os.path.join(save_dirpath, '%s.h5' % qv.QuantitativeValue.T1_RHO.name.lower()), data)
+
+        # Save interregistered files
+        interregistered_dirpath = os.path.join(save_dirpath, 'interregistered')
+        for spin_lock_time in self.subvolumes.keys():
+            filepath = os.path.join(interregistered_dirpath, '%03d.nii.gz' % spin_lock_time)
+            io_utils.save_nifti(filepath, self.subvolumes[spin_lock_time], self.pixel_spacing)
 
     def load_data(self, load_dirpath):
-        load_dirpath = self.__save_dir__(load_dirpath)
-        data = io_utils.load_h5(os.path.join(load_dirpath, self.__data_filename__()))
-        self.t1rho_map = data[qv.QuantitativeValue.T1_RHO.name]
+        super().load_data(load_dirpath)
+        load_dirpath = self.__save_dir__(load_dirpath, create_dir=False)
+
+        interregistered_dirpath = os.path.join(load_dirpath, 'interregistered')
+
+        self.subvolumes = self.__load_interregistered_files__(interregistered_dirpath)
+
 
 
 

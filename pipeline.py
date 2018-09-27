@@ -82,13 +82,13 @@ def add_interregister_subparser(parser):
     parser_interregister = parser.add_parser('interregister')
     parser_interregister.add_argument('-%s' % TARGET_SCAN_KEY,
                                       type=str,
-                                      default=None,
-                                      nargs='1')
+                                      nargs=1,
+                                      help='path to target image (nifti)')
     parser_interregister.add_argument('-%s' % TARGET_MASK_KEY,
                                       type=str,
                                       nargs='?',
                                       default=None,
-                                      help='path to target mask')
+                                      help='path to target mask (nifti)')
 
 
 def handle_tissues(vargin):
@@ -160,13 +160,13 @@ def handle_dess(vargin):
 def handle_cubequant(vargin):
     scan = CubeQuant(dicom_path=vargin[DICOM_KEY],
                      dicom_ext=vargin[EXT_KEY],
-                     save_dir=vargin[SAVE_KEY],
-                     interregistered_volumes_path=vargin[INTERREGISTERED_FILES_DIR_KEY])
+                     load_path=vargin[LOAD_KEY])
 
     scan.tissues = vargin['tissues']
 
     if vargin[ACTION_KEY] is not None and vargin[ACTION_KEY] == 'interregister':
-        scan.interregister(vargin[TARGET_SCAN_KEY], vargin[TARGET_MASK_KEY])
+        target_scan = vargin[TARGET_SCAN_KEY]
+        scan.interregister(target_scan[0], vargin[TARGET_MASK_KEY])
 
     if vargin[T1_RHO_Key]:
         handle_t1_rho_analysis(scan, vargin[LOAD_KEY])
@@ -215,6 +215,20 @@ def parse_args():
     add_segmentation_subparser(subparsers_dess)
     parser_dess.set_defaults(func=handle_dess)
 
+    # Cubequant parser
+    parser_cubequant = subparsers.add_parser(CUBEQUANT_SCAN_KEYS[0],
+                                             help='analyze cubequant sequence',
+                                             aliases=CUBEQUANT_SCAN_KEYS[1:])
+    parser_cubequant.add_argument('-%s' % T1_RHO_Key,
+                                  action='store_const',
+                                  default=False,
+                                  const=True,
+                                  help='do t1-rho analysis')
+
+    subparsers_cubequant = parser_cubequant.add_subparsers(help='sub-command help', dest=ACTION_KEY)
+    add_interregister_subparser(subparsers_cubequant)
+    parser_cubequant.set_defaults(func=handle_cubequant)
+
     # Tissue parser
     parser_tissue = subparsers.add_parser(TISSUES_KEY, help='analyze tissues')
     for tissue in SUPPORTED_TISSUES:
@@ -228,6 +242,7 @@ def parse_args():
                                    help='calculate %s' % qv_name)
 
         parser_tissue.set_defaults(func=handle_tissues)
+
 
     start_time = time.time()
     args = parser.parse_args()
@@ -267,30 +282,6 @@ def parse_args():
     print('Time Elapsed: %0.2f seconds' % (time.time() - start_time))
 
 
-
-    # # Cubequant parser
-    # parser_cubequant = subparsers.add_parser(CUBEQUANT_SCAN_KEYS[0],
-    #                                          help='analyze cubequant sequence',
-    #                                          aliases=CUBEQUANT_SCAN_KEYS[1:])
-    # parser_cubequant.add_argument('-%s' % T1_RHO_Key,
-    #                               action='store_const',
-    #                               default=False,
-    #                               const=True,
-    #                               help='do t1-rho analysis')
-    # parser_cubequant.add_argument('-%s' % LOAD_KEY,
-    #                               default=None,
-    #                               type=str,
-    #                               nargs='?',
-    #                               help='path where masks are located')
-    # parser_cubequant.add_argument('-%s' % INTERREGISTERED_FILES_DIR_KEY,
-    #                                   type=str,
-    #                                   nargs='?',
-    #                                   default=None,
-    #                                   help='path to interregistered files. If specified, no need to interregister')
-    #
-    # subparsers_cubequant = parser_cubequant.add_subparsers(help='sub-command help', dest=ACTION_KEY)
-    # add_interregister_subparser(subparsers_cubequant)
-    # parser_cubequant.set_defaults(func=handle_cubequant)
     #
     # # Cones parser
     # parser_cubequant = subparsers.add_parser(CONES_KEY, help='analyze cones sequence')
