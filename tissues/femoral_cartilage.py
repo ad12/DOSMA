@@ -8,6 +8,8 @@ import scipy.io as sio
 import scipy.ndimage as sni
 import pandas as pd
 
+import nipy.labs.mask as nlm
+
 
 class FemoralCartilage(Tissue):
     ID = 1
@@ -135,9 +137,9 @@ class FemoralCartilage(Tissue):
                 binned_super = binned_result[splice_super]
 
                 # TODO: not sure if you should do +1, python is 0 indexed
-                Unrolled_Cartilage[i, np.int((angle + 180) / 5 + 1)] = np.mean(binned_result[:, 2], axis=0)
-                Sup_layer[i, np.int((angle + 180) / 5 + 1)] = np.mean(binned_super[:, 2], axis=0)
-                Deep_layer[i, np.int((angle + 180) / 5 + 1)] = np.mean(binned_deep[:, 2], axis=0)
+                Unrolled_Cartilage[i, np.int((angle + 180) / 5)] = np.mean(binned_result[:, 2], axis=0)
+                Sup_layer[i, np.int((angle + 180) / 5)] = np.mean(binned_super[:, 2], axis=0)
+                Deep_layer[i, np.int((angle + 180) / 5)] = np.mean(binned_deep[:, 2], axis=0)
 
         ## STEP 3: RESIZE DATA TO [512,512] DIMENSION
         # Unrolled_Cartilage_res = resize(Unrolled_Cartilage, (512, 512), order=1, preserve_range=True)
@@ -230,6 +232,10 @@ class FemoralCartilage(Tissue):
         df = pd.DataFrame(data=np.transpose(tissue_values), index=sagital_keys, columns=pd.MultiIndex.from_tuples(zip(depth_keys, coronal_keys)))
 
         self.__store_quant_vals__(quant_map, df, map_type)
+
+    def set_mask(self, mask, pixel_spacing):
+        super().set_mask(nlm.largest_cc(mask))
+
 
 
 

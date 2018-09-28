@@ -6,7 +6,6 @@ from scan_sequences.scans import TargetSequence
 from utils import dicom_utils, im_utils, io_utils
 from utils.quant_vals import QuantitativeValue
 
-
 class Dess(TargetSequence):
     NAME = 'dess'
 
@@ -71,7 +70,8 @@ class Dess(TargetSequence):
 
         # Segment tissue and add it to list
         mask = model.generate_mask(volume)
-        tissue.mask = mask
+
+        tissue.set_mask(mask, pixel_spacing)
         tissue.pixel_spacing = self.pixel_spacing
         self.__add_tissue__(tissue)
 

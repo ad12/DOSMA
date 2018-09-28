@@ -9,6 +9,7 @@ from tissues.femoral_cartilage import FemoralCartilage
 from scan_sequences.cube_quant import CubeQuant
 
 from utils import io_utils, dicom_utils
+from utils.quant_vals import QuantitativeValue
 
 DESS_003_DICOM_PATH = './dicoms/003'
 DESS_003_T2_MAP_PATH = './dicoms/003_t2_map.mat'
@@ -105,6 +106,18 @@ class DessTest(unittest.TestCase):
         mask2 = fc.mask
 
         assert((mask == mask2).all())
+
+    def test_t2_map_load(self):
+        vargin = self.get_vargin()
+        vargin[pipeline.DICOM_KEY] = DESS_DICOM_PATH
+        vargin[pipeline.SAVE_KEY] = SAVE_PATH
+        vargin[pipeline.T2_KEY] = True
+
+        scan = pipeline.handle_dess(vargin)
+
+        scan.tissues[0].calc_quant_vals(scan.t2map, QuantitativeValue.T2)
+
+        print(scan.t2map.shape)
 
 
 class CubeQuantTest(unittest.TestCase):

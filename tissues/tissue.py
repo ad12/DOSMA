@@ -104,3 +104,7 @@ class Tissue(ABC):
 
     def __save_dirpath__(self, dirpath):
         return io_utils.check_dir(os.path.join(dirpath, '%s' % self.STR_ID))
+
+    def set_mask(self, mask, pixel_spacing):
+        self.mask = mask
+        self.pixel_spacing = pixel_spacing

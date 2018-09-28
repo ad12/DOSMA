@@ -125,7 +125,7 @@ def handle_segmentation(vargin, scan):
 
     for tissue in tissues:
         segment_weights_path = vargin[SEGMENTATION_WEIGHTS_DIR_KEY]
-        tissue.find_weights(segment_weights_path[0])
+        tissue.find_weights(segment_weights_path)
         # Load model
         dims = scan.get_dimensions()
         input_shape = (dims[0], dims[1], 1)
