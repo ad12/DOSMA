@@ -135,9 +135,9 @@ class FemoralCartilage(Tissue):
                 binned_super = binned_result[splice_super]
 
                 # TODO: not sure if you should do +1, python is 0 indexed
-                Unrolled_Cartilage[i, np.int((angle + 180) / 5 + 1)] = np.mean(binned_result[:, 2], axis=0)
-                Sup_layer[i, np.int((angle + 180) / 5 + 1)] = np.mean(binned_super[:, 2], axis=0)
-                Deep_layer[i, np.int((angle + 180) / 5 + 1)] = np.mean(binned_deep[:, 2], axis=0)
+                Unrolled_Cartilage[i, np.int((angle + 180) / 5)] = np.mean(binned_result[:, 2], axis=0)
+                Sup_layer[i, np.int((angle + 180) / 5)] = np.mean(binned_super[:, 2], axis=0)
+                Deep_layer[i, np.int((angle + 180) / 5)] = np.mean(binned_deep[:, 2], axis=0)
 
         ## STEP 3: RESIZE DATA TO [512,512] DIMENSION
         # Unrolled_Cartilage_res = resize(Unrolled_Cartilage, (512, 512), order=1, preserve_range=True)
