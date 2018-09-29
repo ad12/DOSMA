@@ -171,22 +171,22 @@ def parse_args():
     :raises ValueError if dicom path is not provided
     :raises NotADirectoryError if dicom path does not exist or is not a directory
     """
-    parser = argparse.ArgumentParser(prog='PROG',
+    parser = argparse.ArgumentParser(prog='pipeline',
                                      description='Pipeline for segmenting MRI knee volumes')
 
     # Dicom and results paths
     parser.add_argument('-d', '--%s' % DICOM_KEY, metavar='D', type=str, default=None, nargs='?',
                         help='path to directory storing dicom files')
-    parser.add_argument('-s', '--%s' % SAVE_KEY, metavar='S', type=str, default=None, nargs='?',
-                        help='path to directory to save mask. Default: D')
     parser.add_argument('-l', '--%s' % LOAD_KEY, metavar='L', type=str, default=None, nargs='?',
-                        help='path to data directory')
+                        help='path to data directory to load from')
+    parser.add_argument('-s', '--%s' % SAVE_KEY, metavar='S', type=str, default=None, nargs='?',
+                        help='path to directory to save mask. Default: D/L')
 
     # If user wants to filter by extension, allow them to specify extension
     parser.add_argument('-e', '--%s' % EXT_KEY, metavar='E', type=str, default='dcm', nargs='?',
-                        help='extension of dicom files')
+                        help='extension of dicom files. Default \'dcm\'')
 
-    parser.add_argument('--%s' % GPU_KEY, metavar='G', type=str, default=None, nargs='?', help='gpu id to use')
+    parser.add_argument('--%s' % GPU_KEY, metavar='G', type=str, default=None, nargs='?', help='gpu id')
 
     subparsers = parser.add_subparsers(help='sub-command help', dest=SCAN_KEY)
 
