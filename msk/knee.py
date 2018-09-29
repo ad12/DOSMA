@@ -51,7 +51,7 @@ def handle_knee(vargin):
             filepath = find_filepath_with_qv(load_path, qv)
             tmp = io_utils.load_h5(filepath)
             qv_map = tmp['data']
-
+            print(qv.name)
             tissue.calc_quant_vals(qv_map, qv)
 
     for tissue in tissues:

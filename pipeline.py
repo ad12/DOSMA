@@ -52,6 +52,7 @@ ORIENTATION_KEY='orientation'
 TISSUES_KEY = 'tissues'
 
 USE_RMS_KEY = 'rms'
+FOCUSED_MASK_KEY = 'fm'
 
 
 def parse_tissues(vargin):
@@ -149,6 +150,9 @@ def handle_cubequant(vargin):
                      dicom_ext=vargin[EXT_KEY],
                      load_path=vargin[LOAD_KEY])
 
+    if (vargin[FOCUSED_MASK_KEY]):
+        scan.focused_mask_filepath = vargin[FOCUSED_MASK_KEY]
+
     scan.tissues = vargin['tissues']
 
     if vargin[ACTION_KEY] is not None and vargin[ACTION_KEY] == 'interregister':
@@ -213,6 +217,10 @@ def parse_args():
                                   default=False,
                                   const=True,
                                   help='do t1-rho analysis')
+    parser_cubequant.add_argument('-%s' % FOCUSED_MASK_KEY,
+                                  nargs='?',
+                                  default=None,
+                                  help='focused mask to speed up t1rho calculation')
 
     subparsers_cubequant = parser_cubequant.add_subparsers(help='sub-command help', dest=ACTION_KEY)
     add_interregister_subparser(subparsers_cubequant)

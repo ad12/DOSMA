@@ -17,7 +17,7 @@ __INITIAL_P0_VALS__ = (1.0, 1/30.0)
 
 __T1_RHO_LOWER_BOUND__ = 0
 __T1_RHO_UPPER_BOUND__ = np.inf
-__T1_RHO_DECIMAL_PRECISION__ = 1
+__T1_RHO_DECIMAL_PRECISION__ = 3
 
 
 class CubeQuant(NonTargetSequence):
@@ -28,6 +28,7 @@ class CubeQuant(NonTargetSequence):
 
         self.t1rho_map = None
         self.subvolumes = None
+        self.focused_mask_filepath = None
 
         if load_path:
             self.load_data(load_path)
@@ -113,6 +114,12 @@ class CubeQuant(NonTargetSequence):
         svs = []
         spin_lock_times = []
         original_shape = None
+
+        if self.focused_mask_filepath:
+            print('Using focused mask: %s' % self.focused_mask_filepath)
+            msk, _ = io_utils.load_nifti(self.focused_mask_filepath)
+            msk = msk.reshape(1, -1)
+
         for spin_lock_time in self.subvolumes.keys():
             spin_lock_times.append(spin_lock_time)
             sv = self.subvolumes[spin_lock_time]
@@ -122,13 +129,18 @@ class CubeQuant(NonTargetSequence):
             else:
                 assert(sv.shape == original_shape)
 
-            svs.append(sv.reshape((1, -1)))
+            svr = sv.reshape((1, -1))
+            if self.focused_mask_filepath:
+                svr = svr * msk
+
+            svs.append(svr)
 
         vals = np.zeros(svs[0].shape)
         r_squared = np.zeros(svs[0].shape)
         svs = np.concatenate(svs)
-        print(svs.shape)
 
+        print(svs.shape)
+        count = 0
         warned_negative = False
         for i in range(vals.shape[1]):
             if (svs[..., i] < 0).any() and not warned_negative:
@@ -141,13 +153,17 @@ class CubeQuant(NonTargetSequence):
 
             try:
                 params, r2 = qv.fit_mono_exp(spin_lock_times, svs[..., i], p0=__INITIAL_P0_VALS__)
-                t1_rho = params[-1]
+                t1_rho = abs(params[-1])
+                if t1_rho>0 and r2 > __R_SQUARED_THRESHOLD__:
+                    count += 1
+                # print('%s | %s | %s' % (str(params), str(t1_rho), str(r2)))
             except RuntimeError:
                 t1_rho, r2 = (np.nan, 0.0)
 
             vals[..., i] = t1_rho
             r_squared[..., i] = r2
 
+        print(count)
         map_unfiltered = vals.reshape(original_shape)
         r_squared = r_squared.reshape(original_shape)
 
@@ -160,6 +176,8 @@ class CubeQuant(NonTargetSequence):
         t1rho_map = np.nan_to_num(t1rho_map)
 
         t1rho_map = np.around(t1rho_map, __T1_RHO_DECIMAL_PRECISION__)
+
+        print(np.sum(t1rho_map > 0))
 
         self.t1rho_map = t1rho_map
 
@@ -219,9 +237,11 @@ class CubeQuant(NonTargetSequence):
         super().save_data(save_dirpath)
         save_dirpath = self.__save_dir__(save_dirpath)
 
-        if self.t1rho_map:
+        if self.t1rho_map is not None:
             data = {'data': self.t1rho_map}
             io_utils.save_h5(os.path.join(save_dirpath, '%s.h5' % qv.QuantitativeValue.T1_RHO.name.lower()), data)
+            io_utils.save_nifti(os.path.join(save_dirpath, '%s.nii.gz' % qv.QuantitativeValue.T1_RHO.name.lower()), self.t1rho_map,
+                                self.pixel_spacing)
 
         # Save interregistered files
         interregistered_dirpath = os.path.join(save_dirpath, 'interregistered')

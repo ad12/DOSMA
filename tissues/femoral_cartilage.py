@@ -82,6 +82,8 @@ class FemoralCartilage(Tissue):
         segmented_T2maps_projected = np.max(segmented_T2maps, 2)  # Project segmented T2maps on sagittal axis
 
         non_zero_element = np.nonzero(segmented_T2maps_projected)
+        print(non_zero_element[0].shape)
+        print(non_zero_element[1].shape)
 
         xc_fit, yc_fit, R_fit = circle_fit(non_zero_element[0],
                                            non_zero_element[1])  # fit a circle to projected cartilage tissue
@@ -208,6 +210,7 @@ class FemoralCartilage(Tissue):
         :param map_type: A QuantitativeValue instance
         :return:
         """
+        print(quant_map.shape)
         if self.mask is None:
             raise ValueError('Please initialize mask')
 
@@ -216,7 +219,7 @@ class FemoralCartilage(Tissue):
         assert total.shape == deep.shape
         assert deep.shape == superficial.shape
 
-        if not self.regions_mask:
+        if self.regions_mask is None:
             self.split_regions(total)
 
         coronal_region_mask = self.regions_mask[..., 0]
