@@ -155,8 +155,13 @@ def handle_cubequant(vargin):
         target_scan = vargin[TARGET_SCAN_KEY]
         scan.interregister(target_scan[0], vargin[TARGET_MASK_KEY])
 
+    scan.save_data(vargin[SAVE_KEY])
+
+    load_filepath = vargin[LOAD_KEY] if vargin[LOAD_KEY] else vargin[SAVE_KEY]
     if vargin[T1_RHO_Key]:
-        handle_t1_rho_analysis(scan, vargin[LOAD_KEY])
+        handle_t1_rho_analysis(scan, load_filepath)
+
+    scan.save_data(vargin[SAVE_KEY])
 
     return scan
 

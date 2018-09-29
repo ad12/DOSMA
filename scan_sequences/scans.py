@@ -54,7 +54,7 @@ class ScanSequence(ABC):
         # write other data as ref
         save_dirpath = self.__save_dir__(save_dirpath)
         filepath = os.path.join(save_dirpath, '%s.data' % self.NAME)
-        data = {'ref_dicom': self.ref_dicom, 'volume': self.volume, 'pixel_spacing': self.pixel_spacing}
+        data = {'volume': self.volume, 'pixel_spacing': self.pixel_spacing}
 
         io_utils.save_pik(filepath, data)
 

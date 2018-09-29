@@ -109,7 +109,6 @@ class CubeQuant(NonTargetSequence):
         #self.subvolumes = self.__load_interregistered_files__(interregistered_dirpath)
         self.subvolumes = subvolumes
 
-
     def generate_t1_rho_map(self):
         svs = []
         spin_lock_times = []
@@ -131,9 +130,14 @@ class CubeQuant(NonTargetSequence):
 
         warned_negative = False
         for i in range(vals.shape[1]):
+            print(i)
             if (svs[..., i] < 0).any() and not warned_negative:
                 warned_negative = True
                 warnings.warn("Negative values found. Failure in monoexponential fit will result in t1_rho=np.nan")
+
+            # Skip any negative values or all values that are 0s
+            if (svs[..., i] < 0).any() or (svs[..., i] == 0).all():
+                continue
 
             try:
                 params, r2 = qv.fit_mono_exp(spin_lock_times, svs[..., i], p0=__INITIAL_P0_VALS__)
@@ -151,8 +155,9 @@ class CubeQuant(NonTargetSequence):
 
         # Filter calculated T1-rho values that are below 0ms and over 100ms
         t1rho_map[t1rho_map <= __T1_RHO_LOWER_BOUND__] = np.nan
+        t1rho_map = np.nan_to_num(t1rho_map)
         t1rho_map[t1rho_map > __T1_RHO_UPPER_BOUND__] = np.nan
-        t1rho_map[np.isinf(t1rho_map)] = np.nan
+        t1rho_map = np.nan_to_num(t1rho_map)
 
         t1rho_map = np.around(t1rho_map, __T1_RHO_DECIMAL_PRECISION__)
 
@@ -211,6 +216,7 @@ class CubeQuant(NonTargetSequence):
                 'FILES': intraregistered_files}
 
     def save_data(self, save_dirpath):
+        super().save_data(save_dirpath)
         save_dirpath = self.__save_dir__(save_dirpath)
 
         if self.t1rho_map:
