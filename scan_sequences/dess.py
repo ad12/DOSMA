@@ -71,8 +71,7 @@ class Dess(TargetSequence):
         # Segment tissue and add it to list
         mask = model.generate_mask(volume)
 
-        tissue.set_mask(mask, pixel_spacing)
-        tissue.pixel_spacing = self.pixel_spacing
+        tissue.set_mask(mask, self.pixel_spacing)
         self.__add_tissue__(tissue)
 
         return mask

@@ -157,37 +157,46 @@ class FemoralCartilage(Tissue):
         return total_cartilage_unrolled, sup_layer_unrolled, deep_layer_unrolled
 
     def split_regions(self, unrolled_quantitative_map):
-            # WARNING: this method has to be called after the unroll method.
+        # WARNING: this method has to be called after the unroll method.
+        import matplotlib.pyplot as plt
 
-            # create unrolled mask from unrolled map
-            unrolled_mask_indexes = np.nonzero(unrolled_quantitative_map)
-            unrolled_mask = np.zeros((unrolled_quantitative_map.shape[0], unrolled_quantitative_map.shape[1]))
-            unrolled_mask[unrolled_mask_indexes] = 1
-            unrolled_mask[np.where(unrolled_mask < 1)] = 3
+        # create unrolled mask from unrolled map
+        unrolled_mask_indexes = np.nonzero(unrolled_quantitative_map)
+        unrolled_mask = np.zeros((unrolled_quantitative_map.shape[0], unrolled_quantitative_map.shape[1]))
+        unrolled_mask[unrolled_mask_indexes] = 1
+        unrolled_mask[np.where(unrolled_mask < 1)] = 3
 
-            # find the center of mass of the unrolled mask
-            center_of_mass = sni.measurements.center_of_mass(unrolled_mask)
+        # find the center of mass of the unrolled mask
+        center_of_mass = sni.measurements.center_of_mass(unrolled_mask)
 
-            lateral_mask = np.transpose(np.copy(unrolled_mask))[:, 0:np.int(center_of_mass[1])]
-            medial_mask = np.transpose(np.copy(unrolled_mask))[:, np.int(center_of_mass[1]):]
+        lateral_mask = np.copy(unrolled_mask)[:, 0:np.int(np.around(center_of_mass[1]))]
+        medial_mask = np.copy(unrolled_mask)[:, np.int(np.around(center_of_mass[1])):]
 
-            lateral_mask[np.where(lateral_mask < 3)] = self.LATERAL_KEY
-            medial_mask[np.where(medial_mask < 3)] = self.MEDIAL_KEY
+        lateral_mask[np.where(lateral_mask < 3)] = self.LATERAL_KEY
+        medial_mask[np.where(medial_mask < 3)] = self.MEDIAL_KEY
 
-            ml_mask = np.concatenate((lateral_mask, medial_mask), axis=1)
+        ml_mask = np.concatenate((lateral_mask, medial_mask), axis=1)
 
-            # Split map in anterior, central and posterior regions
-            anterior_mask = np.transpose(np.copy(unrolled_mask))[0:np.int(center_of_mass[0]), :]
-            central_mask = np.transpose(np.copy(unrolled_mask))[np.int(center_of_mass[0]):np.int(center_of_mass[0]) + 10, :]
-            posterior_mask = np.transpose(np.copy(unrolled_mask))[np.int(center_of_mass[0]) + 10:, :]
+        # Split map in anterior, central and posterior regions
+        anterior_mask = np.copy(unrolled_mask)[0:np.int(center_of_mass[0]), :]
+        central_mask = np.copy(unrolled_mask)[np.int(center_of_mass[0]):np.int(center_of_mass[0]) + 10, :]
+        posterior_mask = np.copy(unrolled_mask)[np.int(center_of_mass[0]) + 10:, :]
 
-            anterior_mask[np.where(anterior_mask < 3)] = self.ANTERIOR_KEY
-            posterior_mask[np.where(posterior_mask < 3)] = self.POSTERIOR_KEY
-            central_mask[np.where(central_mask < 3)] = self.CENTRAL_KEY
+        anterior_mask[np.where(anterior_mask < 3)] = self.ANTERIOR_KEY
+        posterior_mask[np.where(posterior_mask < 3)] = self.POSTERIOR_KEY
+        central_mask[np.where(central_mask < 3)] = self.CENTRAL_KEY
 
-            acp_mask = np.concatenate((anterior_mask, central_mask, posterior_mask), axis=0)
+        acp_mask = np.concatenate((anterior_mask, central_mask, posterior_mask), axis=0)
 
-            self.regions_mask = np.concatenate((ml_mask, acp_mask), axis=2)
+        assert ml_mask.shape == acp_mask.shape
+
+        ml_mask = ml_mask[..., np.newaxis]
+        acp_mask = acp_mask[..., np.newaxis]
+
+        self.regions_mask = np.concatenate((ml_mask, acp_mask), axis=2)
+
+        assert (self.regions_mask[..., 0] == ml_mask[..., 0]).all()
+        assert (self.regions_mask[..., 1] == acp_mask[..., 0]).all()
 
     def calc_quant_vals(self, quant_map, map_type):
         """
@@ -201,11 +210,14 @@ class FemoralCartilage(Tissue):
 
         total, deep, superficial = self.unroll(quant_map)
 
-        print(total.shape)
-        print(deep.shape)
-        print(superficial.shape)
-        coronal_region_mask = self.regions_mask(..., 0)
-        sagital_region_mask = self.regions_mask(..., 1)
+        assert total.shape == deep.shape
+        assert deep.shape == superficial.shape
+
+        if not self.regions_mask:
+            self.split_regions(total)
+
+        coronal_region_mask = self.regions_mask[..., 0]
+        sagital_region_mask = self.regions_mask[..., 1]
 
         # TODO: identify pixels in deep and superficial that are anterior/central/posterior and medial/lateral
         # Replace strings with values - eg. DMA = 'deep, medial, anterior'
@@ -213,12 +225,13 @@ class FemoralCartilage(Tissue):
                          ['SMA', 'SMC', 'SMP'], ['SLA', 'SLC', 'SLP'],
                          ['TMA', 'TMC', 'TMP'], ['TLA', 'TLC', 'TLP']]
         tissue_values = []
-        for axial_map in [total, deep, superficial]:
+        for axial_map in [deep, superficial, total]:
             for coronal in [self.MEDIAL_KEY, self.LATERAL_KEY]:
                 coronal_list = []
                 for sagital in [self.ANTERIOR_KEY, self.CENTRAL_KEY, self.POSTERIOR_KEY]:
                     curr_region_mask = (coronal_region_mask == coronal) * (sagital_region_mask == sagital) * axial_map
 
+                    curr_region_mask[curr_region_mask==0] = np.nan
                     # discard all values that are 0
                     c_mean = np.nanmean(curr_region_mask)
                     c_std = np.nanstd(curr_region_mask)
@@ -226,7 +239,7 @@ class FemoralCartilage(Tissue):
 
                 tissue_values.append(coronal_list)
 
-        depth_keys = np.array(['total', 'total', 'deep', 'deep', 'superficial', 'superficial'])
+        depth_keys = np.array(['deep', 'deep', 'superficial', 'superficial', 'total', 'total'])
         coronal_keys = np.array(['medial', 'lateral'] * 3)
         sagital_keys = ['anterior', 'central', 'posterior']
         df = pd.DataFrame(data=np.transpose(tissue_values), index=sagital_keys, columns=pd.MultiIndex.from_tuples(zip(depth_keys, coronal_keys)))
@@ -234,7 +247,9 @@ class FemoralCartilage(Tissue):
         self.__store_quant_vals__(quant_map, df, map_type)
 
     def set_mask(self, mask, pixel_spacing):
-        super().set_mask(nlm.largest_cc(mask))
+        mask = np.asarray(nlm.largest_cc(mask), dtype=np.uint8)
+        self.regions_mask = None
+        super().set_mask(mask, pixel_spacing)
 
 
 

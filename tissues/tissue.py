@@ -83,11 +83,12 @@ class Tissue(ABC):
                 continue
 
             q_names.append(quant_val.name)
-            dfs.append(self.quant_vals[1])
-
-            map_filepath = os.path.join(dirpath, quant_val.name + '.tiff')
-            q_map = self.quant_vals[0]
-            cv2.imwrite(map_filepath, q_map)
+            q_val = self.quant_vals[quant_val.name]
+            dfs.append(q_val[1])
+            #
+            # map_filepath = os.path.join(dirpath, quant_val.name + '.tiff')
+            # q_map = q_val[0][0]
+            # cv2.imwrite(map_filepath, q_map)
 
         if len(dfs) > 0:
             io_utils.save_tables(os.path.join(dirpath, 'data.xlsx'), dfs, q_names)

@@ -114,6 +114,8 @@ def handle_tissues(vargin):
 
             tissue.calc_quant_vals(qv_map, qv)
 
+    return tissues
+
 
 def handle_segmentation(vargin, scan):
     tissues = vargin['tissues']
