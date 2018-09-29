@@ -127,10 +127,10 @@ class CubeQuant(NonTargetSequence):
         vals = np.zeros(svs[0].shape)
         r_squared = np.zeros(svs[0].shape)
         svs = np.concatenate(svs)
+        print(svs.shape)
 
         warned_negative = False
         for i in range(vals.shape[1]):
-            print(i)
             if (svs[..., i] < 0).any() and not warned_negative:
                 warned_negative = True
                 warnings.warn("Negative values found. Failure in monoexponential fit will result in t1_rho=np.nan")

@@ -65,6 +65,8 @@ class ScanSequence(ABC):
             raise NotADirectoryError('%s does not exist' % load_dirpath)
 
         filepath = os.path.join(load_dirpath, '%s.data' % self.NAME)
+        print(filepath)
+
         data = io_utils.load_pik(filepath)
 
         #self.ref_dicom = data['ref_dicom']
