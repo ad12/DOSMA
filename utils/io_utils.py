@@ -84,7 +84,6 @@ def load_h5(filepath):
     data = dict()
     with h5py.File(filepath, 'r') as f:
         for key in f.keys():
-            print(key)
             data[key] = f.get(key).value
 
     return data
