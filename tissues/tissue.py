@@ -75,23 +75,10 @@ class Tissue(ABC):
             mask_filepath = os.path.join(dirpath, '%s.nii.gz' % self.STR_ID)
             io_utils.save_nifti(mask_filepath, self.mask, self.pixel_spacing)
 
-        q_names = []
-        dfs = []
+        self.__save_quant_data__(dirpath)
 
-        for quant_val in QuantitativeValue:
-            if quant_val.name not in self.quant_vals:
-                continue
-
-            q_names.append(quant_val.name)
-            q_val = self.quant_vals[quant_val.name]
-            dfs.append(q_val[1])
-            #
-            # map_filepath = os.path.join(dirpath, quant_val.name + '.tiff')
-            # q_map = q_val[0][0]
-            # cv2.imwrite(map_filepath, q_map)
-
-        if len(dfs) > 0:
-            io_utils.save_tables(os.path.join(dirpath, 'data.xlsx'), dfs, q_names)
+    def __save_quant_data__(self, dirpath):
+        pass
 
     def load_data(self, dirpath):
         # load mask, if no mask exists stop loading information

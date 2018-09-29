@@ -1,4 +1,5 @@
 import numpy as np
+import os
 from tissues.tissue import Tissue
 
 from utils import io_utils
@@ -10,6 +11,8 @@ import pandas as pd
 
 import nipy.labs.mask as nlm
 
+from utils.quant_vals import QuantitativeValue
+import matplotlib.pyplot as plt
 
 class FemoralCartilage(Tissue):
     ID = 1
@@ -244,12 +247,46 @@ class FemoralCartilage(Tissue):
         sagital_keys = ['anterior', 'central', 'posterior']
         df = pd.DataFrame(data=np.transpose(tissue_values), index=sagital_keys, columns=pd.MultiIndex.from_tuples(zip(depth_keys, coronal_keys)))
 
-        self.__store_quant_vals__(quant_map, df, map_type)
+        maps = [{'title': 'T2 deep', 'data': deep, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'filename': 't2deep.png'},
+                {'title': 'T2 superficial', 'data': superficial, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'filename': 't2superficial.png'},
+                {'title': 'T2 total', 'data': total, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'filename': 't2total.png'}]
+
+        self.__store_quant_vals__(maps, df, map_type)
 
     def set_mask(self, mask, pixel_spacing):
         mask = np.asarray(nlm.largest_cc(mask), dtype=np.uint8)
         self.regions_mask = None
         super().set_mask(mask, pixel_spacing)
+
+    def __save_quant_data__(self, dirpath):
+        q_names = []
+        dfs = []
+
+        for quant_val in QuantitativeValue:
+            if quant_val.name not in self.quant_vals.keys():
+                continue
+
+            q_names.append(quant_val.name)
+            q_val = self.quant_vals[quant_val.name]
+            dfs.append(q_val[1])
+
+            q_name_dirpath = io_utils.check_dir(os.path.join(dirpath, quant_val.name.lower()))
+            for q_map_data in q_val[0]:
+                filepath = os.path.join(q_name_dirpath, q_map_data['filename'])
+                xlabel = 'Slice'
+                ylabel = 'Angle (binned)'
+                title = q_map_data['title']
+                data_map = q_map_data['data']
+                plt.clf()
+                plt.imshow(data_map, cmap='jet')
+                plt.xlabel(xlabel)
+                plt.ylabel(ylabel)
+                plt.title(title)
+                plt.colorbar()
+                plt.savefig(filepath)
+
+        if len(dfs) > 0:
+            io_utils.save_tables(os.path.join(dirpath, 'data.xlsx'), dfs, q_names)
 
 
 
