@@ -26,9 +26,7 @@ Dicom files should be named in the format *001.dcm: echo1*, *002.dcm: echo2*, *0
 Analysis for the following anatomical regions are supported
 
 #### MSK - knee
-
-**Tissues**:
-- Femoral Cartilage
+*Tissues*: Femoral Cartilage
 
 ## Installation
 Download this repo to your disk.
@@ -93,17 +91,17 @@ optional arguments:
 
 ### MSK Knee
 ```
-usage: pipeline knee [-h] [--orientation [{RIGHT,LEFT}]] [-fc] [-t2 T2]
-                     [-t1_rho T1_RHO] [-t2_star T2_STAR]
+usage: pipeline knee [-h] [--orientation [{RIGHT,LEFT}]] [-fc] [-t2] [-t1_rho]
+                     [-t2_star]
 
 optional arguments:
   -h, --help            show this help message and exit
   --orientation [{RIGHT,LEFT}]
                         knee orientation (left or right)
   -fc                   analyze femoral cartilage
-  -t2 T2                quantify t2
-  -t1_rho T1_RHO        quantify t1_rho
-  -t2_star T2_STAR      quantify t2_star
+  -t2                   quantify t2
+  -t1_rho               quantify t1_rho
+  -t2_star              quantify t2_star
 ```
 
 ## Use cases
@@ -131,12 +129,13 @@ All use cases assume that the [current working directory](https://www.computerho
 
 ### DESS
 #### Case 1
-*Analyze patient01 T<sub>2</sub> using DESS data*
+*Analyze patient01 knee T<sub>2</sub> properties using DESS sequence*
 
 1. Calculate 3D t2 map
 ```
 python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess -t2
 ```
+
 2. Segment femoral cartilage using RMS of two echo dess echos
 ```
 python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess -rms segment --weights_dir unet_weights
@@ -145,4 +144,9 @@ python -m pipeline -d research_data/patient01/dess -s research_data/patient01/da
 3. Calculate T_<sub>2</sub> time for femoral cartilage
 ```
 python -m pipeline -l research_data/patient01/data -s research_data/patient01/data knee -fc -t2
+```
+
+Note steps 1 and 2 can be combined as the following:
+```
+python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess -rms -t2 segment --weights_dir unet_weights
 ```

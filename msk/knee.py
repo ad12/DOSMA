@@ -64,14 +64,12 @@ def find_filepath_with_qv(load_path, qv):
     import glob, os
     dirlist = glob.glob(os.path.join(load_path, '*', '%s.h5' % qv.name.lower()))
 
-    relevant_dirlist = []
-
     name = qv.name.lower()
 
-    if len(relevant_dirlist) == 0:
+    if len(dirlist) == 0:
         raise ValueError('No map for %s found. Must have name %s.h5' % (name, name))
 
-    if (len(relevant_dirlist) > 1):
+    if (len(dirlist) > 1):
         raise ValueError('Multiple %s maps found. Delete extra %s maps' % (name, name))
 
-    return relevant_dirlist[0]
+    return dirlist[0]
