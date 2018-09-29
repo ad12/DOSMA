@@ -11,7 +11,7 @@ class Tissue(ABC):
     ID = -1  # should be unique to all tissues, and should not change
     STR_ID = ''
     FULL_NAME = ''
-
+    ORIENTATION = ''
 
     def __init__(self, weights_dir = None):
         self.regions = dict()

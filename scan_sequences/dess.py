@@ -24,6 +24,8 @@ class Dess(TargetSequence):
     __T2_UPPER_BOUND__ = 100
     __T2_DECIMAL_PRECISION__ = 1 # 0.1 ms
 
+    use_rms = False
+
     def __init__(self, dicom_path, dicom_ext=None, load_path=None):
         super().__init__(dicom_path, dicom_ext, load_path)
 
@@ -65,7 +67,12 @@ class Dess(TargetSequence):
     def segment(self, model, tissue):
         # Use first echo for segmentation
         print('Segmenting %s...' % tissue.FULL_NAME)
-        segmentation_volume = self.subvolumes[0]
+
+        if self.use_rms:
+            segmentation_volume = self.calc_rms()
+        else:
+            segmentation_volume = self.subvolumes[0]
+
         volume = dicom_utils.whiten_volume(segmentation_volume)
 
         # Segment tissue and add it to list
@@ -171,3 +178,25 @@ class Dess(TargetSequence):
             nii_registration_filepath = os.path.join(load_dirpath, 'echo%d.nii.gz' % (i+1))
             subvolume, _ = io_utils.load_nifti(nii_registration_filepath)
             self.subvolumes.append(subvolume)
+
+    def calc_rms(self):
+        if self.subvolumes is None:
+            raise ValueError('Subvolumes must be initialized')
+
+        assert len(self.subvolumes) == 2, "2 Echos expected"
+
+        echo1 = np.asarray(self.subvolumes[0], dtype=np.float64)
+        echo2 = np.asarray(self.subvolumes[1], dtype=np.float64)
+
+        assert (echo1 >= 0).all()
+        assert (echo2 >= 0).all()
+
+        assert (~np.iscomplex(echo1)).all() and (~np.iscomplex(echo2)).all()
+
+        sq_sum = echo1 ** 2 + echo2 ** 2
+
+        assert (sq_sum >= 0).all()
+
+        rms = np.sqrt(echo1 ** 2 + echo2 ** 2)
+
+        return rms

@@ -9,13 +9,11 @@ from scan_sequences.dess import Dess
 from scan_sequences.cube_quant import CubeQuant
 from models.get_model import get_model
 from tissues.femoral_cartilage import FemoralCartilage
-from tissues.patellar_cartilage import PatellarCartilage
 
 from utils.quant_vals import QuantitativeValue as QV, get_qv
-
-from utils import io_utils
-
 from file_constants import DEBUG
+
+from msk import knee
 
 import defaults
 
@@ -49,7 +47,11 @@ TARGET_SCAN_KEY = 'ts'
 TARGET_MASK_KEY = 'tm'
 INTERREGISTERED_FILES_DIR_KEY = 'd'
 
+ORIENTATION_KEY='orientation'
+
 TISSUES_KEY = 'tissues'
+
+USE_RMS_KEY = 'rms'
 
 
 def parse_tissues(vargin):
@@ -91,32 +93,6 @@ def add_interregister_subparser(parser):
                                       help='path to target mask (nifti)')
 
 
-def handle_tissues(vargin):
-    tissues = vargin['tissues']
-
-    load_path = vargin[LOAD_KEY]
-    if not load_path:
-        ValueError('load path must be specified for handling tissues')
-
-    # Get all supported quantitative values
-    qvs = []
-    for qv in SUPPORTED_QUANTITATIVE_VALUES:
-        if vargin[qv.name.lower()]:
-            qvs.append((qv, vargin[qv.name.lower()]))
-
-    for tissue in tissues:
-        tissue.load_data(load_path)
-
-        for qv, filepath in qvs:
-            # load file
-            tmp = io_utils.load_h5(filepath)
-            qv_map = tmp['data']
-
-            tissue.calc_quant_vals(qv_map, qv)
-
-    return tissues
-
-
 def handle_segmentation(vargin, scan):
     tissues = vargin['tissues']
 
@@ -126,7 +102,7 @@ def handle_segmentation(vargin, scan):
         raise ValueError('No tissues specified for segmentation')
 
     for tissue in tissues:
-        segment_weights_path = vargin[SEGMENTATION_WEIGHTS_DIR_KEY]
+        segment_weights_path = vargin[SEGMENTATION_WEIGHTS_DIR_KEY][0]
         tissue.find_weights(segment_weights_path)
         # Load model
         dims = scan.get_dimensions()
@@ -153,11 +129,17 @@ def handle_t1_rho_analysis(scan, load_dir):
 
 def handle_dess(vargin):
     scan = Dess(dicom_path=vargin[DICOM_KEY], dicom_ext=vargin[EXT_KEY], load_path=vargin[LOAD_KEY])
+    scan.use_rms = vargin[USE_RMS_KEY]
     if vargin[ACTION_KEY] is not None and vargin[ACTION_KEY] == 'segment':
         handle_segmentation(vargin, scan)
 
     if vargin[T2_KEY]:
         handle_t2_analysis(scan)
+
+    scan.save_data(vargin[SAVE_KEY])
+
+    for tissue in scan.tissues:
+        tissue.save_data(vargin[SAVE_KEY])
 
     return scan
 
@@ -183,12 +165,6 @@ def handle_cones(vargin):
     pass
 
 
-def save_info(dirpath, scan):
-    scan.save_data(dirpath)
-    for tissue in scan.tissues:
-        tissue.save_data(dirpath)
-
-
 def parse_args():
     """Parse arguments given through command line (argv)
 
@@ -209,12 +185,15 @@ def parse_args():
     # If user wants to filter by extension, allow them to specify extension
     parser.add_argument('-e', '--%s' % EXT_KEY, metavar='E', type=str, default='dcm', nargs='?',
                         help='extension of dicom files')
+
     parser.add_argument('--%s' % GPU_KEY, metavar='G', type=str, default=None, nargs='?', help='gpu id to use')
 
     subparsers = parser.add_subparsers(help='sub-command help', dest=SCAN_KEY)
 
     # DESS parser
     parser_dess = subparsers.add_parser(DESS_SCAN_KEY, help='analyze DESS sequence')
+    parser_dess.add_argument('-%s' % USE_RMS_KEY, action='store_const', default=False, const=True,
+                             help='use rms for segmentation')
     parser_dess.add_argument('-%s' % T2_KEY, action='store_const', default=False, const=True, help='compute T2 map')
     subparsers_dess = parser_dess.add_subparsers(help='sub-command help', dest=ACTION_KEY)
     add_segmentation_subparser(subparsers_dess)
@@ -234,20 +213,8 @@ def parse_args():
     add_interregister_subparser(subparsers_cubequant)
     parser_cubequant.set_defaults(func=handle_cubequant)
 
-    # Tissue parser
-    parser_tissue = subparsers.add_parser(TISSUES_KEY, help='analyze tissues')
-    for tissue in SUPPORTED_TISSUES:
-        parser_tissue.add_argument('-%s' % tissue.STR_ID, action='store_const', default=False, const=True,
-                                   help='handle %s' % tissue.FULL_NAME)
-    qvs_dict = dict()
-    for qv in SUPPORTED_QUANTITATIVE_VALUES:
-        qv_name = qv.name.lower()
-        qvs_dict[qv_name] = qv
-        parser_tissue.add_argument('-%s' % qv_name, nargs='?', default=None,
-                                   help='calculate %s' % qv_name)
-
-        parser_tissue.set_defaults(func=handle_tissues)
-
+    # MSK knee parser
+    knee.knee_parser(subparsers)
 
     start_time = time.time()
     args = parser.parse_args()
@@ -280,8 +247,7 @@ def parse_args():
     vargin['tissues'] = tissues
 
     # Call func for specific scan (dess, cubequant, cones, etc)
-    scan = args.func(vargin)
-    save_info(vargin[SAVE_KEY], scan)
+    scan_or_tissues = args.func(vargin)
 
     print('Time Elapsed: %0.2f seconds' % (time.time() - start_time))
 

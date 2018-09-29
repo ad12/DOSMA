@@ -6,25 +6,40 @@ dependencies:
   - boost=1.68.0=py36h3e44d54_0
   - boost-cpp=1.68.0=h3a22d5f_0
   - bzip2=1.0.6=1
-  - ca-certificates=2018.8.24=ha4d7672_0
-  - certifi=2018.8.24=py36_1
   - icu=58.2=hfc679d8_0
-  - openssl=1.0.2p=h470a237_0
+  - blas=1.0=mkl
+  - ca-certificates=2018.03.07=0
+  - certifi=2018.8.24=py36_1
+  - cycler=0.10.0=py36hfc81398_0
+  - freetype=2.9.1=hb4e5f40_0
+  - intel-openmp=2019.0=118
+  - kiwisolver=1.0.1=py36h0a44026_0
   - libcxx=4.0.1=h579ed51_0
   - libcxxabi=4.0.1=hebd6815_0
   - libedit=3.1.20170329=hb402a30_2
   - libffi=3.2.1=h475c297_4
   - libgfortran=3.0.1=h93005f0_2
   - libopenblas=0.2.20=hdc02c5d_7
+  - libpng=1.6.34=he12f830_0
+  - matplotlib=3.0.0=py36h54f8f79_0
+  - mkl=2019.0=118
+  - mkl_fft=1.0.6=py36hb8a8100_0
+  - mkl_random=1.0.1=py36h5d10147_1
   - ncurses=6.1=h0a44026_0
-  - numpy=1.14.3=py36he6379a5_1
-  - numpy-base=1.14.3=py36h7ef55bc_1
+  - numpy=1.15.2=py36h6a91979_0
+  - numpy-base=1.15.2=py36h8a80b8c_0
+  - openssl=1.0.2p=h1de35cc_0
   - pip=10.0.1=py36_0
+  - pyparsing=2.2.0=py36_1
   - python=3.6.6=hc167b69_0
+  - python-dateutil=2.7.3=py36_0
+  - pytz=2018.5=py36_0
   - readline=7.0=hc1231fa_4
   - setuptools=40.0.0=py36_0
+  - six=1.11.0=py36_1
   - sqlite=3.24.0=ha441bb4_0
   - tk=8.6.7=h35a86e2_3
+  - tornado=5.1=py36h1de35cc_0
   - wheel=0.31.1=py36_0
   - xz=5.2.4=h1de35cc_4
   - zlib=1.2.11=hf3cbc9b_2
@@ -37,10 +52,10 @@ dependencies:
     - bleach==1.5.0
     - click==6.7
     - configparser==3.5.0
-    - cycler==0.10.0
     - decorator==4.3.0
     - deprecated==1.2.1
     - dicom2nifti==2.0.3
+    - et-xmlfile==1.0.1
     - execnet==1.5.0
     - funcsigs==1.0.2
     - future==0.16.0
@@ -50,18 +65,20 @@ dependencies:
     - h5py==2.8.0
     - html5lib==0.9999999
     - isodate==0.6.0
+    - jdcal==1.4
     - keras==2.1.6
-    - kiwisolver==1.0.1
     - lxml==4.2.5
     - markdown==2.6.11
-    - matplotlib==2.2.3
     - mock==2.0.0
     - more-itertools==4.3.0
+    - mpmath==1.0.0
     - natsort==5.3.3
     - networkx==2.1
     - nibabel==2.3.0
+    - nipy==0.4.2
     - nipype==1.1.2
     - opencv-python==3.4.2.17
+    - openpyxl==2.5.8
     - packaging==17.1
     - pandas==0.23.4
     - pbr==4.2.0
@@ -74,12 +91,9 @@ dependencies:
     - pydicom==1.1.0
     - pydot==1.2.4
     - pydotplus==2.0.2
-    - pyparsing==2.2.0
     - pytest==3.8.0
     - pytest-forked==0.2
     - pytest-xdist==1.23.0
-    - python-dateutil==2.7.3
-    - pytz==2018.5
     - pywavelets==0.5.2
     - pyyaml==3.13
     - rdflib==4.2.2
@@ -87,7 +101,7 @@ dependencies:
     - scipy==1.1.0
     - simpleitk==1.1.0
     - simplejson==3.16.0
-    - six==1.11.0
+    - sympy==1.3
     - tensorboard==1.8.0
     - tensorflow==1.8.0
     - termcolor==1.1.0

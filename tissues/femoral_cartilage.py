@@ -14,10 +14,13 @@ import nipy.labs.mask as nlm
 from utils.quant_vals import QuantitativeValue
 import matplotlib.pyplot as plt
 
+
 class FemoralCartilage(Tissue):
     ID = 1
     STR_ID = 'fc'
     FULL_NAME = 'femoral cartilage'
+
+    ORIENTATION = 'RIGHT'
 
     # Coronal Keys
     ANTERIOR_KEY = 0
@@ -139,15 +142,9 @@ class FemoralCartilage(Tissue):
                 splice_super = np.where(binned_result[:, 1] >= rad_division)
                 binned_super = binned_result[splice_super]
 
-                # TODO: not sure if you should do +1, python is 0 indexed
                 Unrolled_Cartilage[i, np.int((angle + 180) / 5)] = np.mean(binned_result[:, 2], axis=0)
                 Sup_layer[i, np.int((angle + 180) / 5)] = np.mean(binned_super[:, 2], axis=0)
                 Deep_layer[i, np.int((angle + 180) / 5)] = np.mean(binned_deep[:, 2], axis=0)
-
-        ## STEP 3: RESIZE DATA TO [512,512] DIMENSION
-        # Unrolled_Cartilage_res = resize(Unrolled_Cartilage, (512, 512), order=1, preserve_range=True)
-        # Sup_layer_res = resize(Sup_layer, (512, 512), order=1, preserve_range=True)
-        # Deep_layer_res = resize(Deep_layer, (512, 512), order=1, preserve_range=True)
 
         Unrolled_Cartilage[Unrolled_Cartilage == 0] = np.nan
         Sup_layer[Sup_layer == 0] = np.nan
@@ -178,7 +175,10 @@ class FemoralCartilage(Tissue):
         lateral_mask[np.where(lateral_mask < 3)] = self.LATERAL_KEY
         medial_mask[np.where(medial_mask < 3)] = self.MEDIAL_KEY
 
-        ml_mask = np.concatenate((lateral_mask, medial_mask), axis=1)
+        if self.ORIENTATION == 'RIGHT':
+            ml_mask = np.concatenate((lateral_mask, medial_mask), axis=1)
+        else:
+            ml_mask = np.concatenate((medial_mask, lateral_mask), axis=1)
 
         # Split map in anterior, central and posterior regions
         anterior_mask = np.copy(unrolled_mask)[0:np.int(center_of_mass[0]), :]
@@ -211,7 +211,7 @@ class FemoralCartilage(Tissue):
         if self.mask is None:
             raise ValueError('Please initialize mask')
 
-        total, deep, superficial = self.unroll(quant_map)
+        total, superficial, deep = self.unroll(quant_map)
 
         assert total.shape == deep.shape
         assert deep.shape == superficial.shape
@@ -238,7 +238,8 @@ class FemoralCartilage(Tissue):
                     # discard all values that are 0
                     c_mean = np.nanmean(curr_region_mask)
                     c_std = np.nanstd(curr_region_mask)
-                    coronal_list.append('%0.2f +/- %0.2f' % (c_mean, c_std))
+                    c_median = np.nanmedian(curr_region_mask)
+                    coronal_list.append('%0.2f +/- %0.2f, %0.2f' % (c_mean, c_std, c_median))
 
                 tissue_values.append(coronal_list)
 

@@ -1,64 +1,49 @@
-# MRI Knee Tissue Segmentation
+# Open-Source MRI Pipeline
 
 This pipeline is an open-source pipeline for MRI image segmentation, registration, and quantitative analysis.
 
+The current code uses the [command line interface](https://www.computerhope.com/jargon/c/commandi.htm) for use. Pull requests for a GUI to command-line translation are welcome.
+
+## Supported Features
+
+### Scans
+The following scan sequences are supported. All sequences with multiple echos, spin_lock_times, etc. should have metadata in the dicom header specifying this information.
+
+#### Double echo DESS
+
+##### Data format
+All data should be provided in the dicom format. Currently only sagittal orientation dicoms are supported.
+
+Dicom files should be named in the format *001.dcm: echo1*, *002.dcm: echo2*, *003.dcm: echo1*, etc.
+
+##### Quantitative Values
+*T<sub>2</sub>*: Calculate T<sub>2</sub> map using dual echos
+
+##### Actions
+*Segmentation*
+
+##### Command-line help
+
+### Anatomy
+Analysis for the following anatomical regions are supported
+
+#### MSK - knee
+
+**Tissues**:
+- Femoral Cartilage
+
 ## Installation
-Download this repo to a location on your disk. 
-Request for pretrained weights from this [Google Drive](https://drive.google.com/drive/u/0/folders/1VtVzOAS6VbFzpEi9Fivy6BgcMubfFlL-). 
+Download this repo to your disk.
+
+For pretrained weights for MSK - knee segmentation, request access to this [Google Drive](https://drive.google.com/drive/u/0/folders/1VtVzOAS6VbFzpEi9Fivy6BgcMubfFlL-).
 Save these weights in an accessible location. **Do not rename these files**.
 
 ## Shell interface
 To run the program from a shell, run `python -m opt/path/pipeline` with the flags detailed below. `opt/path` is the path to the file `python`
 
-Note this program is meant to be run from the command line. As a results, all import statements are local imports.
-
-
-#### Flags
-Required:
-- ```-d D, --dicom D```: directory storing dicom files (referred to as '_dicom directory_')
-
-Optional:
-- ``-s [S], --save [S]``: directory to save mask. Default is dicom directory
-- `-e [E], --ext [E]`: dicom file extension. Default is no extension. This means that if this flag is not specified, all files in the dicom directory will be read as dicom files. In this case, please remove any non dicom files from that directory to avoid errors
-- `-f`: segment femoral cartilage
-- `-t`: segment tibial cartilage
-- `-m`: segment meniscus
-- `-p`: segment patellar cartilage
-
-If none of the segmentation flags (`-f`, `-t`, `-m`. or `-p`) are specified, all tissue will be segmented.
-
-#### Help
-```
-usage: generate_mask.py [-h] [-d D] [-s [S]] [-e [E]] [-f] [-t] [-m] [-p]
-
-Segment MRI knee volumes using ARCHITECTURE (ADD SOURCE)
-
-optional arguments:
-  -h, --help          show this help message and exit
-  -d D, --dicom D     path to directory storing dicom files
-  -s [S], --save [S]  path to directory to save mask. Default: D
-  -e [E], --ext [E]   extension of dicom files
-  -f                  segment femoral cartilage
-  -t                  segment tibial cartilage
-  -m                  segment meniscus
-  -p                  segment patellar cartilage
-
-NOTE: by default all tissues will be segmented unless specific flags are
-provided
-```
-
-### Output
-The outputs are binarized (0/1) uint8 3D tiff images. The names of the files will correspond to the tissue as follows:
-
-- Femoral cartilage: `fc.tiff`
-- Tibial cartilage: `tc.tiff`
-- Meniscus: `men.tiff`
-- Patellar cartilage: `pc.tiff`
-
-
 ### Usage
 
-All use cases assume that the [current working directory](https://www.computerhope.com/jargon/c/currentd.htm) is this repo. If the working directory is different, make sure to specify the path to ```generate_mask.py``` when running the script. For example, ```python -m ~/MyRepo/generate_mask.py``` if the repo is located in the user directory.
+All use cases assume that the [current working directory](https://www.computerhope.com/jargon/c/currentd.htm) is this repo. If the working directory is different, make sure to specify the path to ```pipeline.py``` when running the script. For example, ```python -m ~/MyRepo/pipeline.py``` if the repo is located in the user directory.
 
 #### Case 1
 ###### Read dicoms from ```~/path_to_dicom_directory``` and store masks in same directory:
