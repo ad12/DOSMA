@@ -7,11 +7,12 @@ import os, time
 from models.get_model import SUPPORTED_MODELS
 from scan_sequences.dess import Dess
 from scan_sequences.cube_quant import CubeQuant
+from scan_sequences.cones import Cones
 from models.get_model import get_model
 from tissues.femoral_cartilage import FemoralCartilage
 
 from utils.quant_vals import QuantitativeValue as QV, get_qv
-from file_constants import DEBUG
+import file_constants as fc
 
 from msk import knee
 
@@ -20,6 +21,7 @@ import defaults
 SUPPORTED_TISSUES = [FemoralCartilage()]
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
+DEBUG_KEY = 'debug'
 
 DICOM_KEY = 'dicom'
 MASK_KEY = 'mask'
@@ -115,27 +117,16 @@ def handle_segmentation(vargin, scan):
         scan.segment(model, tissue)
 
 
-def handle_t2_analysis(scan):
-    scan.generate_t2_map()
-
-
-def handle_t1_rho_analysis(scan, load_dir):
-    if not load_dir:
-        raise ValueError('Must provide %s for directory to masks' % LOAD_KEY)
-
-    print('\nCalculating T1_rho')
-
-    scan.generate_t1_rho_map()
-
-
 def handle_dess(vargin):
+    print('\nAnalyze DESS')
     scan = Dess(dicom_path=vargin[DICOM_KEY], dicom_ext=vargin[EXT_KEY], load_path=vargin[LOAD_KEY])
     scan.use_rms = vargin[USE_RMS_KEY]
     if vargin[ACTION_KEY] is not None and vargin[ACTION_KEY] == 'segment':
         handle_segmentation(vargin, scan)
 
     if vargin[T2_KEY]:
-        handle_t2_analysis(scan)
+        print('\nCalculating T2')
+        scan.generate_t2_map()
 
     scan.save_data(vargin[SAVE_KEY])
 
@@ -146,11 +137,42 @@ def handle_dess(vargin):
 
 
 def handle_cubequant(vargin):
+    print('\nAnalyze cubequant')
     scan = CubeQuant(dicom_path=vargin[DICOM_KEY],
                      dicom_ext=vargin[EXT_KEY],
                      load_path=vargin[LOAD_KEY])
 
     if (vargin[FOCUSED_MASK_KEY]):
+        scan.focused_mask_filepath = vargin[FOCUSED_MASK_KEY]
+
+    scan.tissues = vargin['tissues']
+
+    if vargin[ACTION_KEY] is not None and vargin[ACTION_KEY] == 'interregister':
+        target_scan = vargin[TARGET_SCAN_KEY][0]
+        if not os.path.isfile(target_scan):
+            raise FileNotFoundError('%s is not a file' % target_scan)
+
+        scan.interregister(target_scan, vargin[TARGET_MASK_KEY])
+
+    scan.save_data(vargin[SAVE_KEY])
+
+    load_filepath = vargin[LOAD_KEY] if vargin[LOAD_KEY] else vargin[SAVE_KEY]
+    if vargin[T1_RHO_Key]:
+        print('\nCalculating T1_rho')
+        scan.generate_t1_rho_map()
+
+    scan.save_data(vargin[SAVE_KEY])
+
+    return scan
+
+
+def handle_cones(vargin):
+    print('\nAnalyze cones')
+    scan = Cones(dicom_path=vargin[DICOM_KEY],
+                     dicom_ext=vargin[EXT_KEY],
+                     load_path=vargin[LOAD_KEY])
+
+    if vargin[FOCUSED_MASK_KEY]:
         scan.focused_mask_filepath = vargin[FOCUSED_MASK_KEY]
 
     scan.tissues = vargin['tissues']
@@ -162,16 +184,13 @@ def handle_cubequant(vargin):
     scan.save_data(vargin[SAVE_KEY])
 
     load_filepath = vargin[LOAD_KEY] if vargin[LOAD_KEY] else vargin[SAVE_KEY]
-    if vargin[T1_RHO_Key]:
-        handle_t1_rho_analysis(scan, load_filepath)
+    if vargin[T2_STAR_KEY]:
+        print('Calculating T2_star')
+        scan.generate_t2_star_map()
 
     scan.save_data(vargin[SAVE_KEY])
 
     return scan
-
-
-def handle_cones(vargin):
-    pass
 
 
 def parse_args():
@@ -182,6 +201,7 @@ def parse_args():
     """
     parser = argparse.ArgumentParser(prog='pipeline',
                                      description='Pipeline for segmenting MRI knee volumes')
+    parser.add_argument('--%s' % DEBUG_KEY, action='store_const', const=True, default=False, help='debug')
 
     # Dicom and results paths
     parser.add_argument('-d', '--%s' % DICOM_KEY, metavar='D', type=str, default=None, nargs='?',
@@ -226,6 +246,19 @@ def parse_args():
     add_interregister_subparser(subparsers_cubequant)
     parser_cubequant.set_defaults(func=handle_cubequant)
 
+    # Cones parser
+    parser_cones = subparsers.add_parser(CONES_KEY, help='analyze cones sequence')
+    parser_cones.add_argument('-%s' % T2_STAR_KEY, action='store_const', default=False, const=True,
+                                  help='do t2* analysis')
+    parser_cones.add_argument('-%s' % FOCUSED_MASK_KEY,
+                                  nargs='?',
+                                  default=None,
+                                  help='focused mask to speed up t1rho calculation')
+
+    subparsers_cones = parser_cones.add_subparsers(help='sub-command help', dest=ACTION_KEY)
+    add_interregister_subparser(subparsers_cones)
+    parser_cones.set_defaults(func=handle_cones)
+
     # MSK knee parser
     knee.knee_parser(subparsers)
 
@@ -233,9 +266,12 @@ def parse_args():
     args = parser.parse_args()
     vargin = vars(args)
 
+    if vargin[DEBUG_KEY]:
+        fc.set_debug()
+
     gpu = vargin[GPU_KEY]
 
-    if DEBUG:
+    if fc.DEBUG:
         print(vargin)
     # Only supporting femoral cartilage for now
 
@@ -263,12 +299,6 @@ def parse_args():
     scan_or_tissues = args.func(vargin)
 
     print('Time Elapsed: %0.2f seconds' % (time.time() - start_time))
-
-    #
-    # # Cones parser
-    # parser_cubequant = subparsers.add_parser(CONES_KEY, help='analyze cones sequence')
-    # parser_cubequant.add_argument('-%s' % T2_STAR_KEY, action='store_const', default=False, const=True,
-    #                               help='do t2* analysis')
 
 
 if __name__ == '__main__':

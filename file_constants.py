@@ -1,6 +1,6 @@
 import os
 
-DEBUG = 1
+DEBUG = 0
 
 # Elastix files
 
@@ -16,3 +16,9 @@ ELASTIX_RIGID_PARAMS_FILE = os.path.join(__PATH_TO_ELASTIX_FOLDER__, 'parameters
 TEMP_FOLDER_PATH = os.path.join(__DIR__, 'temp')
 
 # TODO: nipype logging
+NIPYPE_LOGGING = 'none'
+
+def set_debug():
+    global DEBUG, NIPYPE_LOGGING
+    DEBUG=1
+    NIPYPE_LOGGING = 'stream'

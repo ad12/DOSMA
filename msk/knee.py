@@ -46,12 +46,17 @@ def handle_knee(vargin):
         tissue.ORIENTATION = orientation
         tissue.load_data(load_path)
 
+        print('')
+        print('=='*40)
+        print(tissue.FULL_NAME)
+        print('==' * 40)
+
         for qv in qvs:
             # load file
+            print('Analyzing %s' % qv.name.lower())
             filepath = find_filepath_with_qv(load_path, qv)
             tmp = io_utils.load_h5(filepath)
             qv_map = tmp['data']
-            print(qv.name)
             tissue.calc_quant_vals(qv_map, qv)
 
     for tissue in tissues:
@@ -69,7 +74,7 @@ def find_filepath_with_qv(load_path, qv):
     if len(dirlist) == 0:
         raise ValueError('No map for %s found. Must have name %s.h5' % (name, name))
 
-    if (len(dirlist) > 1):
+    if len(dirlist) > 1:
         raise ValueError('Multiple %s maps found. Delete extra %s maps' % (name, name))
 
     return dirlist[0]

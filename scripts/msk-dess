@@ -1,5 +1,5 @@
 #!/bin/bash
-WEIGHTS_DIRECTORY="/Users/arjundesai/Documents/stanford/research/msk_pipeline_raw/weights"
+WEIGHTS_DIRECTORY=""
 if [ -z "$WEIGHTS_DIRECTORY" ]; then
     echo "Please define WEIGHTS_DIRECTORY in script. Use the absolute path"
     exit 125

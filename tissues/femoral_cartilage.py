@@ -4,8 +4,6 @@ from tissues.tissue import Tissue
 
 from utils import io_utils
 from utils.geometry_utils import circle_fit, cart2pol
-from skimage.transform import resize
-import scipy.io as sio
 import scipy.ndimage as sni
 import pandas as pd
 
@@ -82,8 +80,6 @@ class FemoralCartilage(Tissue):
         segmented_T2maps_projected = np.max(segmented_T2maps, 2)  # Project segmented T2maps on sagittal axis
 
         non_zero_element = np.nonzero(segmented_T2maps_projected)
-        print(non_zero_element[0].shape)
-        print(non_zero_element[1].shape)
 
         xc_fit, yc_fit, R_fit = circle_fit(non_zero_element[0],
                                            non_zero_element[1])  # fit a circle to projected cartilage tissue
@@ -210,7 +206,6 @@ class FemoralCartilage(Tissue):
         :param map_type: A QuantitativeValue instance
         :return:
         """
-        print(quant_map.shape)
         if self.mask is None:
             raise ValueError('Please initialize mask')
 
@@ -242,7 +237,7 @@ class FemoralCartilage(Tissue):
                     c_mean = np.nanmean(curr_region_mask)
                     c_std = np.nanstd(curr_region_mask)
                     c_median = np.nanmedian(curr_region_mask)
-                    coronal_list.append('%0.2f +/- %0.2f, %0.2f' % (c_mean, c_std, c_median))
+                    coronal_list.append('%0.5f +/- %0.5f, %0.5f' % (c_mean, c_std, c_median))
 
                 tissue_values.append(coronal_list)
 
@@ -291,7 +286,3 @@ class FemoralCartilage(Tissue):
 
         if len(dfs) > 0:
             io_utils.save_tables(os.path.join(dirpath, 'data.xlsx'), dfs, q_names)
-
-
-
-

@@ -1,0 +1,67 @@
+#!/bin/bash
+WEIGHTS_DIRECTORY="/Users/arjundesai/Documents/stanford/research/msk_pipeline_raw/weights"
+if [ -z "$WEIGHTS_DIRECTORY" ]; then
+    echo "Please define WEIGHTS_DIRECTORY in script. Use the absolute path"
+    exit 125
+fi
+
+if [ $# -eq 1 ]
+then
+SERIES="dess"
+else
+SERIES=$2
+fi
+
+# find relevant dicom files
+
+FILES=$(find $1 -type d -name $SERIES)
+
+cd ..
+
+for i in $FILES; do
+    DIRNAME=$(dirname $i)
+    SAVE_DIRNAME="$DIRNAME/data"
+    CUBEQUANT_DIRNAME="$DIRNAME/cubequant"
+    CONES_DIRNAME="$DIRNAME/cones"
+    TARGET_SCAN="$SAVE_DIRNAME/dess_data/echo1.nii.gz"
+    MASK="$SAVE_DIRNAME/fc/fc.nii.gz"
+
+    CUBEQUANT_INTERREGISTERED_DATA="$SAVE_DIRNAME/cubequant_data/interregistered"
+    CUEQUANT_T1RHO="$SAVE_DIRNAME/cubequant_data/t1_rho.nii.gz"
+
+
+    CONES_INTERREGISTERED_DATA="$SAVE_DIRNAME/cones_data/interregistered"
+    CONES_T2STAR="$SAVE_DIRNAME/cones_data/t2_star.nii.gz"
+
+    echo ""
+    echo "----------Analyzing $DIRNAME---------"
+
+    # use DESS to get femoral cartilage segmentation + 3D t2 maps
+    if [ ! -e $TARGET_SCAN ]; then
+    	python -m pipeline -d $i -s $SAVE_DIRNAME dess -t2 -rms segment -fc --weights_dir $WEIGHTS_DIRECTORY
+	fi
+
+	# interregister cubequant with dess
+	if [ ! -e $CUBEQUANT_INTERREGISTERED_DATA ]; then
+		echo $CUBEQUANT_INTERREGISTERED_DATA
+    	python -m pipeline -d $CUBEQUANT_DIRNAME -s $SAVE_DIRNAME cq interregister -ts $TARGET_SCAN
+    fi
+
+    # cubequant 3D t1rho map
+    if [ ! -e $CUEQUANT_T1RHO ]; then
+    	python -m pipeline -l $SAVE_DIRNAME cq -t1rho -fm $MASK
+    fi
+
+    # interregister cones with dess
+    if [ ! -e $CONES_INTERREGISTERED_DATA ]; then
+    	python -m pipeline -d $CONES_DIRNAME -s $SAVE_DIRNAME cones interregister -ts $TARGET_SCAN
+    fi
+
+    # cones 3D t2_star map
+    if [ ! -e $CONES_T2STAR ]; then
+    	python -m pipeline -l $SAVE_DIRNAME cones -t2star -fm $MASK
+    fi
+
+    # analyze femoral cartilage
+    python -m pipeline -l $SAVE_DIRNAME knee -fc -t2 -t1_rho
+done

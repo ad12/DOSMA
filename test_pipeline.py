@@ -11,6 +11,8 @@ from scan_sequences.cube_quant import CubeQuant
 from utils import io_utils, dicom_utils
 from utils.quant_vals import QuantitativeValue
 
+import file_constants as fc
+
 DESS_003_DICOM_PATH = './dicoms/003'
 DESS_003_T2_MAP_PATH = './dicoms/003_t2_map.mat'
 
@@ -266,6 +268,7 @@ class ExportTest(unittest.TestCase):
         print(arr2.shape)
         print(spacing2)
 
+
 class TissuesTest(unittest.TestCase):
     def segment_dess(self):
         dt = DessTest()
@@ -290,6 +293,24 @@ class TissuesTest(unittest.TestCase):
 
         for tissue in tissues:
             tissue.save_data(vargin[pipeline.SAVE_KEY])
+
+
+class FileConstantsTest(unittest.TestCase):
+    def setUp(self):
+        print("Testing: ", self._testMethodName)
+
+    def test_reinit_variables(self):
+        do, oo = fc.DEBUG, fc.NIPYPE_LOGGING
+
+        fc.set_debug()
+
+        dn, on = fc.DEBUG, fc.NIPYPE_LOGGING
+
+        assert do == 0
+        assert dn == 1
+
+        assert oo == 'none'
+        assert on == 'stream'
 
 
 

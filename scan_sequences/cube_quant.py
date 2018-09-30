@@ -8,7 +8,6 @@ import scipy.ndimage as sni
 import numpy as np
 import file_constants as fc
 from utils import quant_vals as qv
-import warnings
 
 
 __EXPECTED_NUM_SPIN_LOCK_TIMES__ = 4
@@ -21,10 +20,10 @@ __T1_RHO_DECIMAL_PRECISION__ = 3
 
 
 class CubeQuant(NonTargetSequence):
-    NAME = 'cube_quant'
+    NAME = 'cubequant'
 
     def __init__(self, dicom_path=None, dicom_ext=None, load_path=None):
-        super().__init__(dicom_path, dicom_ext)
+        super().__init__(dicom_path, dicom_ext, load_path=load_path)
 
         self.t1rho_map = None
         self.subvolumes = None
@@ -34,11 +33,11 @@ class CubeQuant(NonTargetSequence):
             self.load_data(load_path)
 
         if dicom_path is not None:
-            self.subvolumes = self.__split_volumes__(__EXPECTED_NUM_SPIN_LOCK_TIMES__)
+            self.subvolumes, self.spin_lock_times = self.__split_volumes__(__EXPECTED_NUM_SPIN_LOCK_TIMES__)
             self.intraregistered_data = self.__intraregister__(self.subvolumes)
 
         if self.subvolumes is None:
-            raise ValueError('Either dicom_path or interregistered_volumes_path must be specified')
+            raise ValueError('Either dicom_path or load_path must be specified')
 
     def interregister(self, target_path, mask_path=None):
         base_spin_lock_time, base_image = self.intraregistered_data['BASE']
@@ -76,7 +75,7 @@ class CubeQuant(NonTargetSequence):
             io_utils.save_nifti(fixed_mask_filepath, fixed_mask, mask_spacing)
             reg.inputs.fixed_mask = fixed_mask_filepath
 
-        #reg.terminal_output = 'none'
+        reg.terminal_output = fc.NIPYPE_LOGGING
         reg_output = reg.run()
         reg_output = reg_output.outputs
         transformation_files = reg_output.transform
@@ -93,7 +92,7 @@ class CubeQuant(NonTargetSequence):
                 reg.inputs.transform_file = f
                 reg.inputs.output_path = io_utils.check_dir(os.path.join(temp_interregistered_dirpath,
                                                                   '%03d' % spin_lock_time))
-                #reg.terminal_output = 'none'
+                reg.terminal_output = fc.NIPYPE_LOGGING
                 reg_output = reg.run()
                 warped_file = reg_output.outputs.warped_file
 
@@ -120,9 +119,10 @@ class CubeQuant(NonTargetSequence):
             msk, _ = io_utils.load_nifti(self.focused_mask_filepath)
             msk = msk.reshape(1, -1)
 
-        for spin_lock_time in self.subvolumes.keys():
-            spin_lock_times.append(spin_lock_time)
-            sv = self.subvolumes[spin_lock_time]
+        sorted_keys = natsorted(list(self.subvolumes.keys()))
+        for spin_lock_time_index in sorted_keys:
+            spin_lock_times.append(self.spin_lock_times[spin_lock_time_index])
+            sv = self.subvolumes[spin_lock_time_index]
 
             if original_shape is None:
                 original_shape = sv.shape
@@ -135,35 +135,11 @@ class CubeQuant(NonTargetSequence):
 
             svs.append(svr)
 
-        vals = np.zeros(svs[0].shape)
-        r_squared = np.zeros(svs[0].shape)
         svs = np.concatenate(svs)
-
         print(svs.shape)
-        count = 0
-        warned_negative = False
-        for i in range(vals.shape[1]):
-            if (svs[..., i] < 0).any() and not warned_negative:
-                warned_negative = True
-                warnings.warn("Negative values found. Failure in monoexponential fit will result in t1_rho=np.nan")
 
-            # Skip any negative values or all values that are 0s
-            if (svs[..., i] < 0).any() or (svs[..., i] == 0).all():
-                continue
+        vals, r_squared = qv.fit_monoexp_tc(spin_lock_times, svs, __INITIAL_P0_VALS__)
 
-            try:
-                params, r2 = qv.fit_mono_exp(spin_lock_times, svs[..., i], p0=__INITIAL_P0_VALS__)
-                t1_rho = abs(params[-1])
-                if t1_rho>0 and r2 > __R_SQUARED_THRESHOLD__:
-                    count += 1
-                # print('%s | %s | %s' % (str(params), str(t1_rho), str(r2)))
-            except RuntimeError:
-                t1_rho, r2 = (np.nan, 0.0)
-
-            vals[..., i] = t1_rho
-            r_squared[..., i] = r2
-
-        print(count)
         map_unfiltered = vals.reshape(original_shape)
         r_squared = r_squared.reshape(original_shape)
 
@@ -176,8 +152,6 @@ class CubeQuant(NonTargetSequence):
         t1rho_map = np.nan_to_num(t1rho_map)
 
         t1rho_map = np.around(t1rho_map, __T1_RHO_DECIMAL_PRECISION__)
-
-        print(np.sum(t1rho_map > 0))
 
         self.t1rho_map = t1rho_map
 
@@ -198,39 +172,39 @@ class CubeQuant(NonTargetSequence):
         print('==' * 40)
 
         # temporarily save subvolumes as nifti file
-        ordered_spin_lock_times = natsorted(list(subvolumes.keys()))
+        ordered_spin_lock_time_indices = natsorted(list(subvolumes.keys()))
         raw_volumes_base_path = io_utils.check_dir(os.path.join(self.temp_path, 'raw'))
 
         # Use first spin lock time as a basis for registration
         spin_lock_nii_files = []
-        for spin_lock_time in ordered_spin_lock_times:
-            filepath = os.path.join(raw_volumes_base_path, '%03d' % spin_lock_time + '.nii.gz')
+        for spin_lock_time_index in ordered_spin_lock_time_indices:
+            filepath = os.path.join(raw_volumes_base_path, '%03d' % spin_lock_time_index + '.nii.gz')
             spin_lock_nii_files.append(filepath)
 
-            io_utils.save_nifti(filepath, subvolumes[spin_lock_time], self.pixel_spacing)
+            io_utils.save_nifti(filepath, subvolumes[spin_lock_time_index], self.pixel_spacing)
 
         target_filepath = spin_lock_nii_files[0]
 
         intraregistered_files = []
         for i in range(1,len(spin_lock_nii_files)):
             spin_file = spin_lock_nii_files[i]
-            spin_lock_time = ordered_spin_lock_times[i]
+            spin_lock_time_index = ordered_spin_lock_time_indices[i]
 
             reg = Registration()
             reg.inputs.fixed_image = target_filepath
             reg.inputs.moving_image = spin_file
             reg.inputs.output_path = io_utils.check_dir(os.path.join(self.temp_path,
                                                                      'intraregistered',
-                                                                     '%03d' % spin_lock_time))
+                                                                     '%03d' % spin_lock_time_index))
             reg.inputs.parameters = [fc.ELASTIX_AFFINE_PARAMS_FILE]
-            #reg.terminal_output = 'none'
-            print('Registering %s --> %s' % (str(spin_lock_time), str(ordered_spin_lock_times[0])))
+            reg.terminal_output = fc.NIPYPE_LOGGING
+            print('Registering %s --> %s' % (str(spin_lock_time_index), str(ordered_spin_lock_time_indices[0])))
             tmp = reg.run()
 
             warped_file = tmp.outputs.warped_file
-            intraregistered_files.append((spin_lock_time, warped_file))
+            intraregistered_files.append((spin_lock_time_index, warped_file))
 
-        return {'BASE': (ordered_spin_lock_times[0], spin_lock_nii_files[0]),
+        return {'BASE': (ordered_spin_lock_time_indices[0], spin_lock_nii_files[0]),
                 'FILES': intraregistered_files}
 
     def save_data(self, save_dirpath):
@@ -246,9 +220,9 @@ class CubeQuant(NonTargetSequence):
         # Save interregistered files
         interregistered_dirpath = os.path.join(save_dirpath, 'interregistered')
 
-        for spin_lock_time in self.subvolumes.keys():
-            filepath = os.path.join(interregistered_dirpath, '%03d.nii.gz' % spin_lock_time)
-            io_utils.save_nifti(filepath, self.subvolumes[spin_lock_time], self.pixel_spacing)
+        for spin_lock_time_index in self.subvolumes.keys():
+            filepath = os.path.join(interregistered_dirpath, '%03d.nii.gz' % spin_lock_time_index)
+            io_utils.save_nifti(filepath, self.subvolumes[spin_lock_time_index], self.pixel_spacing)
 
     def load_data(self, load_dirpath):
         super().load_data(load_dirpath)
@@ -257,3 +231,8 @@ class CubeQuant(NonTargetSequence):
         interregistered_dirpath = os.path.join(load_dirpath, 'interregistered')
 
         self.subvolumes = self.__load_interregistered_files__(interregistered_dirpath)
+
+    def __serializable_variables__(self):
+        var_names = super().__serializable_variables__()
+        var_names.extend(['spin_lock_times'])
+        return var_names
