@@ -1,5 +1,5 @@
 #!/bin/bash
-WEIGHTS_DIRECTORY="/Users/arjundesai/Documents/stanford/research/msk_pipeline_raw/weights"
+WEIGHTS_DIRECTORY=""
 if [ -z "$WEIGHTS_DIRECTORY" ]; then
     echo "Please define WEIGHTS_DIRECTORY in script. Use the absolute path"
     exit 125
@@ -63,5 +63,5 @@ for i in $FILES; do
     fi
 
     # analyze femoral cartilage
-    python -m pipeline -l $SAVE_DIRNAME knee -fc -t2 -t1_rho
+    python -m pipeline -l $SAVE_DIRNAME knee -fc -t2 -t1_rho -t2_star
 done
