@@ -11,7 +11,7 @@ from scan_sequences.cones import Cones
 from models.get_model import get_model
 from tissues.femoral_cartilage import FemoralCartilage
 
-from utils.quant_vals import QuantitativeValue as QV, get_qv
+from utils.quant_vals import QuantitativeValues as QV, get_qv
 import file_constants as fc
 
 from msk import knee

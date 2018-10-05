@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import os
 from utils import io_utils
-from utils.quant_vals import QuantitativeValue
+from utils.quant_vals import QuantitativeValues
 import cv2
 import numpy as np
 

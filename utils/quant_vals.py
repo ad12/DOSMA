@@ -9,19 +9,19 @@ __EPSILON__ = 1e-8
 __R_SQUARED_THRESHOLD__ = 0.9
 
 
-class QuantitativeValue(Enum):
+class QuantitativeValues(Enum):
     T1_RHO = 1
     T2 = 2
     T2_STAR = 3
 
 
 def get_qv(id):
-    for qv in QuantitativeValue:
+    for qv in QuantitativeValues:
         if qv.name.lower() == id or qv.value == id:
             return qv
 
 
-def fit_mono_exp(x, y, p0=None):
+def __fit_mono_exp__(x, y, p0=None):
     def func(t, a, b):
         exp = np.exp(b * t)
         return a * exp
@@ -40,8 +40,9 @@ def fit_mono_exp(x, y, p0=None):
     return popt, r_squared
 
 
-def fit_monoexp_tc(x, ys, p0):
-    vals = np.zeros([1, ys.shape[-1]])
+def fit_monoexp_tc(x, ys, tc0):
+    p0 = (1.0, -1/tc0)
+    time_constants = np.zeros([1, ys.shape[-1]])
     r_squared = np.zeros([1, ys.shape[-1]])
 
     warned_negative = False
@@ -56,17 +57,17 @@ def fit_monoexp_tc(x, ys, p0):
             continue
 
         try:
-            params, r2 = fit_mono_exp(x, y, p0=p0)
-            t1_rho = abs(params[-1])
+            params, r2 = __fit_mono_exp__(x, y, p0=p0)
+            tc = 1 / abs(params[-1])
         except RuntimeError:
-            t1_rho, r2 = (np.nan, 0.0)
+            tc, r2 = (np.nan, 0.0)
 
-        vals[..., i] = t1_rho
+        time_constants[..., i] = tc
         r_squared[..., i] = r2
 
-    return vals, r_squared
+    return time_constants, r_squared
 
 
 if __name__ == '__main__':
-    print(type(QuantitativeValue.T1_RHO.name))
-    print(QuantitativeValue.T1_RHO.value== 1)
+    print(type(QuantitativeValues.T1_RHO.name))
+    print(QuantitativeValues.T1_RHO.value == 1)

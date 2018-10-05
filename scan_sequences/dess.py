@@ -4,7 +4,7 @@ from pydicom.tag import Tag
 
 from scan_sequences.scans import TargetSequence
 from utils import dicom_utils, im_utils, io_utils
-from utils.quant_vals import QuantitativeValue
+from utils.quant_vals import QuantitativeValues
 
 class Dess(TargetSequence):
     NAME = 'dess'
@@ -162,8 +162,8 @@ class Dess(TargetSequence):
 
         save_dirpath = self.__save_dir__(save_dirpath)
         data = {'data': self.t2map}
-        io_utils.save_h5(os.path.join(save_dirpath, '%s.h5' % QuantitativeValue.T2.name.lower()), data)
-        io_utils.save_nifti(os.path.join(save_dirpath, '%s.nii.gz' % QuantitativeValue.T2.name.lower()), self.t2map, self.pixel_spacing)
+        io_utils.save_h5(os.path.join(save_dirpath, '%s.h5' % QuantitativeValues.T2.name.lower()), data)
+        io_utils.save_nifti(os.path.join(save_dirpath, '%s.nii.gz' % QuantitativeValues.T2.name.lower()), self.t2map, self.pixel_spacing)
 
         # write echos
         for i in range(len(self.subvolumes)):

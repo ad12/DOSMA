@@ -12,7 +12,7 @@ from utils import quant_vals as qv
 
 __EXPECTED_NUM_SPIN_LOCK_TIMES__ = 4
 __R_SQUARED_THRESHOLD__ = 0.9
-__INITIAL_P0_VALS__ = (1.0, 1/30.0)
+__INITIAL_T1_RHO_VAL__ = 70.0
 
 __T1_RHO_LOWER_BOUND__ = 0
 __T1_RHO_UPPER_BOUND__ = np.inf
@@ -136,9 +136,8 @@ class CubeQuant(NonTargetSequence):
             svs.append(svr)
 
         svs = np.concatenate(svs)
-        print(svs.shape)
 
-        vals, r_squared = qv.fit_monoexp_tc(spin_lock_times, svs, __INITIAL_P0_VALS__)
+        vals, r_squared = qv.fit_monoexp_tc(spin_lock_times, svs, __INITIAL_T1_RHO_VAL__)
 
         map_unfiltered = vals.reshape(original_shape)
         r_squared = r_squared.reshape(original_shape)
@@ -213,8 +212,8 @@ class CubeQuant(NonTargetSequence):
 
         if self.t1rho_map is not None:
             data = {'data': self.t1rho_map}
-            io_utils.save_h5(os.path.join(save_dirpath, '%s.h5' % qv.QuantitativeValue.T1_RHO.name.lower()), data)
-            io_utils.save_nifti(os.path.join(save_dirpath, '%s.nii.gz' % qv.QuantitativeValue.T1_RHO.name.lower()), self.t1rho_map,
+            io_utils.save_h5(os.path.join(save_dirpath, '%s.h5' % qv.QuantitativeValues.T1_RHO.name.lower()), data)
+            io_utils.save_nifti(os.path.join(save_dirpath, '%s.nii.gz' % qv.QuantitativeValues.T1_RHO.name.lower()), self.t1rho_map,
                                 self.pixel_spacing)
 
         # Save interregistered files

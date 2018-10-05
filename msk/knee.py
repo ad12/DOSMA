@@ -1,5 +1,5 @@
 from tissues.femoral_cartilage import FemoralCartilage
-from utils.quant_vals import QuantitativeValue as QV
+from utils.quant_vals import QuantitativeValues as QV
 from utils import io_utils
 
 KNEE_KEY = 'knee'

@@ -13,7 +13,7 @@ import re
 __EXPECTED_NUM_ECHO_TIMES__ = 4
 
 __R_SQUARED_THRESHOLD__ = 0.9
-__INITIAL_P0_VALS__ = (1.0, 1/30.0)
+__INITIAL_T2_STAR_VAL__ = 30.0 # ms
 
 __T2_STAR_LOWER_BOUND__ = 0
 __T2_STAR_UPPER_BOUND__ = np.inf
@@ -56,7 +56,6 @@ class Cones(NonTargetSequence):
         raw_filepaths = dict()
 
         echo_time_inds = natsorted(list(subvolumes.keys()))
-        print(echo_time_inds)
 
         for i in range(len(echo_time_inds)):
             raw_filepath = os.path.join(temp_raw_dirpath, '%03d.nii.gz' % i)
@@ -107,7 +106,6 @@ class Cones(NonTargetSequence):
         transformation_files = reg_output.transform
         warped_files = [(base_echo_time, reg_output.warped_file)]
 
-        print(raw_filepaths)
         files = []
         for echo_time_ind in raw_filepaths.keys():
             filepath = raw_filepaths[echo_time_ind]
@@ -146,8 +144,8 @@ class Cones(NonTargetSequence):
 
         if self.t2star_map is not None:
             data = {'data': self.t2star_map}
-            io_utils.save_h5(os.path.join(save_dirpath, '%s.h5' % qv.QuantitativeValue.T2_STAR.name.lower()), data)
-            io_utils.save_nifti(os.path.join(save_dirpath, '%s.nii.gz' % qv.QuantitativeValue.T2_STAR.name.lower()),
+            io_utils.save_h5(os.path.join(save_dirpath, '%s.h5' % qv.QuantitativeValues.T2_STAR.name.lower()), data)
+            io_utils.save_nifti(os.path.join(save_dirpath, '%s.nii.gz' % qv.QuantitativeValues.T2_STAR.name.lower()),
                                 self.t2star_map, self.pixel_spacing)
 
         # Save interregistered files
@@ -183,7 +181,7 @@ class Cones(NonTargetSequence):
             svs.append(svr)
 
         svs = np.concatenate(svs)
-        vals, r_squared = qv.fit_monoexp_tc(spin_lock_times, svs, __INITIAL_P0_VALS__)
+        vals, r_squared = qv.fit_monoexp_tc(spin_lock_times, svs, __INITIAL_T2_STAR_VAL__)
 
         map_unfiltered = vals.reshape(original_shape)
         r_squared = r_squared.reshape(original_shape)

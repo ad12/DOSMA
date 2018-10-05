@@ -9,7 +9,7 @@ from tissues.femoral_cartilage import FemoralCartilage
 from scan_sequences.cube_quant import CubeQuant
 
 from utils import io_utils, dicom_utils
-from utils.quant_vals import QuantitativeValue
+from utils.quant_vals import QuantitativeValues
 
 import file_constants as fc
 
@@ -117,7 +117,7 @@ class DessTest(unittest.TestCase):
 
         scan = pipeline.handle_dess(vargin)
 
-        scan.tissues[0].calc_quant_vals(scan.t2map, QuantitativeValue.T2)
+        scan.tissues[0].calc_quant_vals(scan.t2map, QuantitativeValues.T2)
 
         print(scan.t2map.shape)
 

@@ -9,9 +9,15 @@ import pandas as pd
 
 import nipy.labs.mask as nlm
 
-from utils.quant_vals import QuantitativeValue
+from utils.quant_vals import QuantitativeValues
 import matplotlib.pyplot as plt
 
+import defaults
+import warnings
+
+BOUNDS = {QuantitativeValues.T2: 100.0,
+          QuantitativeValues.T1_RHO: 150.0,
+          QuantitativeValues.T2_STAR: 100.0}
 
 class FemoralCartilage(Tissue):
     ID = 1
@@ -246,9 +252,10 @@ class FemoralCartilage(Tissue):
         sagital_keys = ['anterior', 'central', 'posterior']
         df = pd.DataFrame(data=np.transpose(tissue_values), index=sagital_keys, columns=pd.MultiIndex.from_tuples(zip(depth_keys, coronal_keys)))
 
-        maps = [{'title': 'T2 deep', 'data': deep, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'filename': 't2deep.png'},
-                {'title': 'T2 superficial', 'data': superficial, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'filename': 't2superficial.png'},
-                {'title': 'T2 total', 'data': total, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'filename': 't2total.png'}]
+        qv_name = map_type.name
+        maps = [{'title': '%s deep' % qv_name, 'data': deep, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'filename': '%s_deep.png' % qv_name},
+                {'title': '%s superficial' % qv_name, 'data': superficial, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'filename': '%s_superficial.png' % qv_name},
+                {'title': '%s total' % qv_name, 'data': total, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'filename': '%s_total.png' % qv_name}]
 
         self.__store_quant_vals__(maps, df, map_type)
 
@@ -261,7 +268,7 @@ class FemoralCartilage(Tissue):
         q_names = []
         dfs = []
 
-        for quant_val in QuantitativeValue:
+        for quant_val in QuantitativeValues:
             if quant_val.name not in self.quant_vals.keys():
                 continue
 
@@ -276,12 +283,27 @@ class FemoralCartilage(Tissue):
                 ylabel = 'Angle (binned)'
                 title = q_map_data['title']
                 data_map = q_map_data['data']
+
                 plt.clf()
-                plt.imshow(data_map, cmap='jet')
+
+                upper_bound = BOUNDS[quant_val]
+                is_picture_written = False
+                if defaults.FIX_VISUALIZATION_BOUNDS:
+                    if np.sum(data_map <= upper_bound) == 0:
+                        plt.imshow(data_map, cmap='jet', vmin=0.0, vmax=BOUNDS[quant_val])
+                        is_picture_written = True
+                    else:
+                        warnings.warn('%s: Pixel value exceeded upper bound (%0.1f). Using normalized scale.'
+                                      % (quant_val.name, upper_bound))
+
+                if not is_picture_written:
+                    plt.imshow(data_map, cmap='jet')
+
                 plt.xlabel(xlabel)
                 plt.ylabel(ylabel)
                 plt.title(title)
                 plt.colorbar()
+
                 plt.savefig(filepath)
 
         if len(dfs) > 0:
