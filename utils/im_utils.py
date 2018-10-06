@@ -1,7 +1,9 @@
-import cv2
 import os
-import numpy as np
+
 import SimpleITK as sitk
+import cv2
+import numpy as np
+
 from utils import io_utils
 
 TIFF_EXTENSION = '.tiff'

@@ -1,10 +1,10 @@
 import os
-import numpy as np
-from natsort import natsorted
-import pydicom
-import math
-from pydicom.tag import Tag
 
+import numpy as np
+import pydicom
+from natsort import natsorted
+
+from med_objects.med_volume import MedicalVolume
 
 __VOLUME_DIMENSIONS__ = 3
 __EPSILON__ = 1e-8
@@ -59,7 +59,9 @@ def load_dicom(dicom_path, dicom_ext=None):
         refs_dicom.append(ds)
         dicom_array[:, :, lstFilesDCM.index(dicom_filename)] = ds.pixel_array
 
-    return dicom_array, refs_dicom, pixelSpacing
+    volume = MedicalVolume(dicom_array, pixelSpacing)
+
+    return volume, refs_dicom
 
 
 def whiten_volume(x):

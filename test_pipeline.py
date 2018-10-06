@@ -1,17 +1,16 @@
+import os
 import unittest
+
 import keras.backend as K
 import numpy as np
 import scipy.io as sio
-import os
-
-import pipeline
-from tissues.femoral_cartilage import FemoralCartilage
-from scan_sequences.cube_quant import CubeQuant
-
-from utils import io_utils, dicom_utils
-from utils.quant_vals import QuantitativeValues
 
 import file_constants as fc
+import pipeline
+from scan_sequences.cube_quant import CubeQuant
+from tissues.femoral_cartilage import FemoralCartilage
+from utils import io_utils, dicom_utils
+from utils.quant_vals import QuantitativeValues
 
 DESS_003_DICOM_PATH = './dicoms/003'
 DESS_003_T2_MAP_PATH = './dicoms/003_t2_map.mat'
@@ -83,13 +82,13 @@ class DessTest(unittest.TestCase):
         # need to convert all np.nan values to 0 before comparing
         # np.nan does not equal np.nan, so we need the same values to compare
         mat_t2_map = np.nan_to_num(mat_t2_map)
-        #py_t2_map = np.nan_to_num(py_t2_map)
+        # py_t2_map = np.nan_to_num(py_t2_map)
 
         # Round to the nearest 1000th (0.001)
         mat_t2_map = np.round(mat_t2_map, decimals=DECIMAL_PRECISION)
         py_t2_map = np.round(py_t2_map, decimals=DECIMAL_PRECISION)
 
-        assert((mat_t2_map == py_t2_map).all())
+        assert ((mat_t2_map == py_t2_map).all())
 
     def test_loading_data(self):
         vargin = self.get_vargin()
@@ -101,13 +100,12 @@ class DessTest(unittest.TestCase):
 
         pipeline.save_info(vargin[pipeline.SAVE_KEY], scan)
 
-
         fc = FemoralCartilage()
         fc.load_data(vargin[pipeline.SAVE_KEY])
 
         mask2 = fc.mask
 
-        assert((mask == mask2).all())
+        assert ((mask == mask2).all())
 
     def test_t2_map_load(self):
         vargin = self.get_vargin()
@@ -245,7 +243,7 @@ class UtilsTest(unittest.TestCase):
 
     def test_h5(self):
         filepath = './dicoms/sample_h5_data'
-        datas = [{'type': np.zeros([4,4,4]), 'type2': np.zeros([4,4,4])}]
+        datas = [{'type': np.zeros([4, 4, 4]), 'type2': np.zeros([4, 4, 4])}]
 
         for data in datas:
             io_utils.save_h5(filepath, data)
@@ -285,9 +283,10 @@ class TissuesTest(unittest.TestCase):
         if not os.path.isdir(SAVE_PATH):
             self.segment_dess()
 
-        vargin = {'dicom': None, 'save': 'dicoms/healthy07/data', 'load': 'dicoms/healthy07/data', 'ext': 'dcm', 'gpu': None,
+        vargin = {'dicom': None, 'save': 'dicoms/healthy07/data', 'load': 'dicoms/healthy07/data', 'ext': 'dcm',
+                  'gpu': None,
                   'scan': 'tissues', 'fc': True, 't2': 'dicoms/healthy07/data/dess_data/t2.h5', 't1_rho': None,
-                  't2_star': None, 'tissues':[FemoralCartilage()]}
+                  't2_star': None, 'tissues': [FemoralCartilage()]}
 
         tissues = pipeline.handle_tissues(vargin)
 
@@ -313,8 +312,5 @@ class FileConstantsTest(unittest.TestCase):
         assert on == 'stream'
 
 
-
-
 if __name__ == '__main__':
     unittest.main()
-

@@ -1,6 +1,6 @@
 from tissues.femoral_cartilage import FemoralCartilage
-from utils.quant_vals import QuantitativeValues as QV
 from utils import io_utils
+from utils.quant_vals import QuantitativeValues as QV
 
 KNEE_KEY = 'knee'
 ORIENTATION_KEY = 'orientation'
@@ -47,7 +47,7 @@ def handle_knee(vargin):
         tissue.load_data(load_path)
 
         print('')
-        print('=='*40)
+        print('==' * 40)
         print(tissue.FULL_NAME)
         print('==' * 40)
 
@@ -55,9 +55,8 @@ def handle_knee(vargin):
             # load file
             print('Analyzing %s' % qv.name.lower())
             filepath = find_filepath_with_qv(load_path, qv)
-            tmp = io_utils.load_h5(filepath)
-            qv_map = tmp['data']
-            tissue.calc_quant_vals(qv_map, qv)
+            tmp = io_utils.load_nifti(filepath)
+            tissue.calc_quant_vals(tmp, qv)
 
     for tissue in tissues:
         tissue.save_data(vargin[SAVE_KEY])
@@ -67,12 +66,12 @@ def handle_knee(vargin):
 
 def find_filepath_with_qv(load_path, qv):
     import glob, os
-    dirlist = glob.glob(os.path.join(load_path, '*', '%s.h5' % qv.name.lower()))
+    dirlist = glob.glob(os.path.join(load_path, '*', '%s.nii.gz' % qv.name.lower()))
 
     name = qv.name.lower()
 
     if len(dirlist) == 0:
-        raise ValueError('No map for %s found. Must have name %s.h5' % (name, name))
+        raise ValueError('No map for %s found. Must have name %s.nii.gz' % (name, name))
 
     if len(dirlist) > 1:
         raise ValueError('Multiple %s maps found. Delete extra %s maps' % (name, name))

@@ -2,21 +2,19 @@
 Main file for scan pipeline - handle argparse
 """
 import argparse
-import os, time
-
-from models.get_model import SUPPORTED_MODELS
-from scan_sequences.dess import Dess
-from scan_sequences.cube_quant import CubeQuant
-from scan_sequences.cones import Cones
-from models.get_model import get_model
-from tissues.femoral_cartilage import FemoralCartilage
-
-from utils.quant_vals import QuantitativeValues as QV, get_qv
-import file_constants as fc
-
-from msk import knee
+import os
+import time
 
 import defaults
+import file_constants as fc
+from models.get_model import SUPPORTED_MODELS
+from models.get_model import get_model
+from msk import knee
+from scan_sequences.cones import Cones
+from scan_sequences.cube_quant import CubeQuant
+from scan_sequences.dess import Dess
+from tissues.femoral_cartilage import FemoralCartilage
+from utils.quant_vals import QuantitativeValues as QV
 
 SUPPORTED_TISSUES = [FemoralCartilage()]
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
@@ -49,7 +47,7 @@ TARGET_SCAN_KEY = 'ts'
 TARGET_MASK_KEY = 'tm'
 INTERREGISTERED_FILES_DIR_KEY = 'd'
 
-ORIENTATION_KEY='orientation'
+ORIENTATION_KEY = 'orientation'
 
 TISSUES_KEY = 'tissues'
 
@@ -74,13 +72,13 @@ def add_segmentation_subparser(parser):
     parser_segment = parser.add_parser('segment')
     parser_segment.add_argument('--%s' % SEGMENTATION_MODEL_KEY, choices=SUPPORTED_MODELS, nargs='?', default='unet2d')
     parser_segment.add_argument('--%s' % SEGMENTATION_WEIGHTS_DIR_KEY, type=str, nargs=1,
-                                     help='path to directory with weights')
+                                help='path to directory with weights')
     parser_segment.add_argument('--%s' % SEGMENTATION_BATCH_SIZE_KEY, metavar='B', type=int,
                                 default=defaults.DEFAULT_BATCH_SIZE, nargs='?',
                                 help='batch size for inference. Default: 32')
     for tissue in SUPPORTED_TISSUES:
         parser_segment.add_argument('-%s' % tissue.STR_ID, action='store_const', default=False, const=True,
-                                   help='handle %s' % tissue.FULL_NAME)
+                                    help='handle %s' % tissue.FULL_NAME)
 
 
 def add_interregister_subparser(parser):
@@ -169,8 +167,8 @@ def handle_cubequant(vargin):
 def handle_cones(vargin):
     print('\nAnalyze cones')
     scan = Cones(dicom_path=vargin[DICOM_KEY],
-                     dicom_ext=vargin[EXT_KEY],
-                     load_path=vargin[LOAD_KEY])
+                 dicom_ext=vargin[EXT_KEY],
+                 load_path=vargin[LOAD_KEY])
 
     if vargin[FOCUSED_MASK_KEY]:
         scan.focused_mask_filepath = vargin[FOCUSED_MASK_KEY]
@@ -249,11 +247,11 @@ def parse_args():
     # Cones parser
     parser_cones = subparsers.add_parser(CONES_KEY, help='analyze cones sequence')
     parser_cones.add_argument('-%s' % T2_STAR_KEY, action='store_const', default=False, const=True,
-                                  help='do t2* analysis')
+                              help='do t2* analysis')
     parser_cones.add_argument('-%s' % FOCUSED_MASK_KEY,
-                                  nargs='?',
-                                  default=None,
-                                  help='focused mask to speed up t1rho calculation')
+                              nargs='?',
+                              default=None,
+                              help='focused mask to speed up t1rho calculation')
 
     subparsers_cones = parser_cones.add_subparsers(help='sub-command help', dest=ACTION_KEY)
     add_interregister_subparser(subparsers_cones)

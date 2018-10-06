@@ -1,12 +1,18 @@
-from abc import ABC, abstractmethod
-from utils import dicom_utils
-import numpy as np
-from utils import io_utils
 import os
-import file_constants as fc
-from time import gmtime, strftime
-from natsort import natsorted
 import re
+from abc import ABC, abstractmethod
+from time import gmtime, strftime
+
+import numpy as np
+import scipy.ndimage as sni
+from natsort import natsorted
+from nipype.interfaces.elastix import Registration, ApplyWarp
+
+import defaults
+import file_constants as fc
+from med_objects.med_volume import MedicalVolume
+from utils import dicom_utils
+from utils import io_utils
 
 
 class ScanSequence(ABC):
@@ -20,7 +26,6 @@ class ScanSequence(ABC):
         self.dicom_ext = dicom_ext
 
         self.volume = None
-        self.pixel_spacing = None
         self.ref_dicom = None
 
         if load_path:
@@ -33,12 +38,12 @@ class ScanSequence(ABC):
         dicom_path = self.dicom_path
         dicom_ext = self.dicom_ext
 
-        self.volume, self.refs_dicom, self.pixel_spacing = dicom_utils.load_dicom(dicom_path, dicom_ext)
+        self.volume, self.refs_dicom = dicom_utils.load_dicom(dicom_path, dicom_ext)
 
         self.ref_dicom = self.refs_dicom[0]
 
     def get_dimensions(self):
-        return self.volume.shape
+        return self.volume.volume.shape
 
     def __add_tissue__(self, new_tissue):
         contains_tissue = any([tissue.ID == new_tissue.ID for tissue in self.tissues])
@@ -90,8 +95,7 @@ class ScanSequence(ABC):
         return scan_dirpath
 
     def __serializable_variables__(self):
-        return ['volume', 'dicom_path', 'dicom_ext', 'pixel_spacing']
-
+        return ['volume', 'dicom_path', 'dicom_ext']
 
 
 class TargetSequence(ScanSequence):
@@ -129,10 +133,8 @@ class NonTargetSequence(ScanSequence):
     def __split_volumes__(self, expected_num_echos):
         refs_dicom = self.refs_dicom
         volume = self.volume
-        subvolumes_dict = dict()
 
         echo_times = []
-        subvolumes = []
         # get echo_time time for each refs_dicom
         for i in range(len(refs_dicom)):
             echo_time = float(refs_dicom[i].EchoTime)
@@ -156,17 +158,20 @@ class NonTargetSequence(ScanSequence):
 
         # number of spin lock times should go evenly into subvolume
         if (len(refs_dicom) % num_echo_times) != 0:
-            raise ValueError('Uneven number of dicom files - %d dicoms, %d spin lock times/echos' % (len(refs_dicom),                                                                              num_echo_times))
+            raise ValueError('Uneven number of dicom files - %d dicoms, %d spin lock times/echos' % (
+                len(refs_dicom), num_echo_times))
 
         num_slices_per_subvolume = len(refs_dicom) / num_echo_times
 
         for key in subvolumes_dict.keys():
             if (len(subvolumes_dict[key]) != num_slices_per_subvolume):
-                raise ValueError('subvolume \'%s\' (echo_time %s) has %d slices. Expected %d slices' % (key, echo_times[key-1], len(subvolumes_dict[key]), num_slices_per_subvolume))
+                raise ValueError('subvolume \'%s\' (echo_time %s) has %d slices. Expected %d slices' % (
+                    key, echo_times[key - 1], len(subvolumes_dict[key]), num_slices_per_subvolume))
 
         for key in subvolumes_dict.keys():
             sv = subvolumes_dict[key]
-            sv = volume[..., sv]
+            sv = MedicalVolume(volume.volume[..., sv], volume.pixel_spacing)
+
             subvolumes_dict[key] = sv
 
         return subvolumes_dict, echo_times
@@ -193,8 +198,9 @@ class NonTargetSequence(ScanSequence):
             indices.append(subfile_num)
 
             filepath = os.path.join(interregistered_dirpath, subfile)
-            subvolume_arr, self.pixel_spacing = io_utils.load_nifti(filepath)
-            subvolumes.append(subvolume_arr)
+            subvolume = io_utils.load_nifti(filepath)
+
+            subvolumes.append(subvolume)
 
         assert len(indices) == len(subvolumes), "Number of subvolumes mismatch"
 
@@ -206,3 +212,67 @@ class NonTargetSequence(ScanSequence):
             subvolumes_dict[indices[i]] = subvolumes[i]
 
         return subvolumes_dict
+
+    def __dilate_mask__(self, mask_path, temp_path, dil_rate=defaults.DEFAULT_MASK_DIL_RATE,
+                        dil_threshold=defaults.DEFAULT_MASK_DIL_THRESHOLD):
+        mask = io_utils.load_nifti(mask_path)
+        mask = mask.volume
+        dilated_mask = sni.gaussian_filter(np.asarray(mask.volume, dtype=np.float32),
+                                           sigma=dil_rate) > dil_threshold
+        fixed_mask = np.asarray(dilated_mask,
+                                dtype=np.int8)
+        fixed_mask_filepath = os.path.join(temp_path, 'dilated-mask.nii.gz')
+
+        dilated_mask_volume = MedicalVolume(fixed_mask, mask.pixel_spacing)
+        dilated_mask_volume.save_volume(fixed_mask_filepath)
+
+        return fixed_mask_filepath
+
+    def __interregister_base_file__(self, base_image_info, target_path, temp_path, mask_path=None,
+                                    parameter_files=[fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE]):
+        base_image_path, base_time_id = base_image_info
+        # Register base image to the target image
+        print('Registering %s (base image)' % base_image_path)
+        transformation_files = []
+
+        use_mask_arr = [False, True]
+
+        for i in range(len(parameter_files)):
+            use_mask = use_mask_arr[i]
+            pfile = parameter_files[i]
+            reg = Registration()
+            reg.inputs.fixed_image = target_path
+            reg.inputs.moving_image = base_image_path
+            reg.inputs.output_path = io_utils.check_dir(os.path.join(temp_path,
+                                                                     '%03d_param%i' % (base_time_id, i)))
+            reg.inputs.parameters = pfile
+
+            if use_mask and mask_path is not None:
+                fixed_mask_filepath = self.__dilate_mask__(mask_path, temp_path)
+                reg.inputs.fixed_mask = fixed_mask_filepath
+
+            reg.terminal_output = fc.NIPYPE_LOGGING
+            reg_output = reg.run()
+            reg_output = reg_output.outputs
+            transformation_files.append(reg_output.transform[0])
+
+        return reg_output.warped_file, transformation_files
+
+    def __apply_transform__(self, image_info, transformation_files, temp_path):
+        filename, image_id = image_info
+        print('Applying transform %s' % filename)
+        warped_file = ''
+        for f in transformation_files:
+            reg = ApplyWarp()
+            reg.inputs.moving_image = filename
+
+            reg.inputs.transform_file = f
+            reg.inputs.output_path = io_utils.check_dir(os.path.join(temp_path,
+                                                                     '%03d' % image_id))
+            reg.terminal_output = fc.NIPYPE_LOGGING
+            reg_output = reg.run()
+            warped_file = reg_output.outputs.warped_file
+
+        assert warped_file != ''
+
+        return warped_file

@@ -1,23 +1,22 @@
-import numpy as np
 import os
-from tissues.tissue import Tissue
+import warnings
 
-from utils import io_utils
-from utils.geometry_utils import circle_fit, cart2pol
-import scipy.ndimage as sni
-import pandas as pd
-
-import nipy.labs.mask as nlm
-
-from utils.quant_vals import QuantitativeValues
 import matplotlib.pyplot as plt
+import nipy.labs.mask as nlm
+import numpy as np
+import pandas as pd
+import scipy.ndimage as sni
 
 import defaults
-import warnings
+from tissues.tissue import Tissue
+from utils import io_utils
+from utils.geometry_utils import circle_fit, cart2pol
+from utils.quant_vals import QuantitativeValues
 
 BOUNDS = {QuantitativeValues.T2: 100.0,
           QuantitativeValues.T1_RHO: 150.0,
           QuantitativeValues.T2_STAR: 100.0}
+
 
 class FemoralCartilage(Tissue):
     ID = 1
@@ -37,7 +36,7 @@ class FemoralCartilage(Tissue):
     LATERAL_KEY = 1
     SAGGITAL_KEYS = [MEDIAL_KEY, LATERAL_KEY]
 
-    def __init__(self, weights_dir = None):
+    def __init__(self, weights_dir=None):
         super().__init__(weights_dir=weights_dir)
         self.regions_mask = None
 
@@ -65,12 +64,12 @@ class FemoralCartilage(Tissue):
         #                                   ...considering the DEEP layers
         ###
 
-        mask = self.mask
+        mask = self.mask.volume
 
-        if (qv_map.shape != mask.shape):
+        if qv_map.shape != mask.shape:
             raise ValueError('t2_map and mask must have same shape')
 
-        if (len(qv_map.shape) != 3):
+        if len(qv_map.shape) != 3:
             raise ValueError('t2_map and mask must be 3D')
 
         num_slices = qv_map.shape[-1]
@@ -162,7 +161,6 @@ class FemoralCartilage(Tissue):
 
     def split_regions(self, unrolled_quantitative_map):
         # WARNING: this method has to be called after the unroll method.
-        import matplotlib.pyplot as plt
 
         # create unrolled mask from unrolled map
         unrolled_mask_indexes = np.nonzero(unrolled_quantitative_map)
@@ -212,10 +210,13 @@ class FemoralCartilage(Tissue):
         :param map_type: A QuantitativeValue instance
         :return:
         """
+
+        super().calc_quant_vals(quant_map, map_type)
+
         if self.mask is None:
             raise ValueError('Please initialize mask')
 
-        total, superficial, deep = self.unroll(quant_map)
+        total, superficial, deep = self.unroll(quant_map.volume)
 
         assert total.shape == deep.shape
         assert deep.shape == superficial.shape
@@ -238,7 +239,7 @@ class FemoralCartilage(Tissue):
                 for sagital in [self.ANTERIOR_KEY, self.CENTRAL_KEY, self.POSTERIOR_KEY]:
                     curr_region_mask = (coronal_region_mask == coronal) * (sagital_region_mask == sagital) * axial_map
 
-                    curr_region_mask[curr_region_mask==0] = np.nan
+                    curr_region_mask[curr_region_mask == 0] = np.nan
                     # discard all values that are 0
                     c_mean = np.nanmean(curr_region_mask)
                     c_std = np.nanstd(curr_region_mask)
@@ -250,19 +251,24 @@ class FemoralCartilage(Tissue):
         depth_keys = np.array(['deep', 'deep', 'superficial', 'superficial', 'total', 'total'])
         coronal_keys = np.array(['medial', 'lateral'] * 3)
         sagital_keys = ['anterior', 'central', 'posterior']
-        df = pd.DataFrame(data=np.transpose(tissue_values), index=sagital_keys, columns=pd.MultiIndex.from_tuples(zip(depth_keys, coronal_keys)))
+        df = pd.DataFrame(data=np.transpose(tissue_values), index=sagital_keys,
+                          columns=pd.MultiIndex.from_tuples(zip(depth_keys, coronal_keys)))
 
         qv_name = map_type.name
-        maps = [{'title': '%s deep' % qv_name, 'data': deep, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'filename': '%s_deep.png' % qv_name},
-                {'title': '%s superficial' % qv_name, 'data': superficial, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'filename': '%s_superficial.png' % qv_name},
-                {'title': '%s total' % qv_name, 'data': total, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'filename': '%s_total.png' % qv_name}]
+        maps = [{'title': '%s deep' % qv_name, 'data': deep, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)',
+                 'filename': '%s_deep.png' % qv_name},
+                {'title': '%s superficial' % qv_name, 'data': superficial, 'xlabel': 'Slice',
+                 'ylabel': 'Angle (binned)', 'filename': '%s_superficial.png' % qv_name},
+                {'title': '%s total' % qv_name, 'data': total, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)',
+                 'filename': '%s_total.png' % qv_name}]
 
         self.__store_quant_vals__(maps, df, map_type)
 
-    def set_mask(self, mask, pixel_spacing):
-        mask = np.asarray(nlm.largest_cc(mask), dtype=np.uint8)
+    def set_mask(self, mask):
+        msk = np.asarray(nlm.largest_cc(mask.volume), dtype=np.uint8)
+        mask.volume = msk
         self.regions_mask = None
-        super().set_mask(mask, pixel_spacing)
+        super().set_mask(mask)
 
     def __save_quant_data__(self, dirpath):
         q_names = []

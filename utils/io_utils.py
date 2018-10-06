@@ -1,12 +1,11 @@
-import h5py
-import pickle
 import os
-import pandas as pd
-import SimpleITK as sitk
-
+import pickle
 import warnings
-import numpy as np
 
+import SimpleITK as sitk
+import h5py
+import numpy as np
+import pandas as pd
 
 DATA_EXT = 'data'
 INFO_EXT = 'info'
@@ -24,7 +23,7 @@ def get_subdirs(dirpath):
     if not os.path.isdir(dirpath):
         raise NotADirectoryError('%s not a directory' % dirpath)
 
-    subdirs =[]
+    subdirs = []
     for file in os.listdir(dirpath):
         possible_dir = os.path.join(dirpath, file)
         if os.path.isdir(possible_dir):
@@ -96,7 +95,7 @@ def save_tables(filepath, data_frames, sheet_names=None):
     if sheet_names is None:
         sheet_names = []
         for i in range(len(data_frames)):
-            sheet_names.append('Sheet%d' % (i+1))
+            sheet_names.append('Sheet%d' % (i + 1))
 
     if len(data_frames) != len(sheet_names):
         raise ValueError('Number of data_frames and sheet_frames should be the same')
@@ -109,7 +108,6 @@ def save_tables(filepath, data_frames, sheet_names=None):
 
 
 def save_nifti(filepath, img_array, spacing):
-
     assert filepath.endswith('.nii.gz')
     if img_array is None or len(img_array.shape) < 2:
         warnings.warn('%s not saved. Input array is None' % img_array)
@@ -128,6 +126,8 @@ def save_nifti(filepath, img_array, spacing):
 
 
 def load_nifti(filepath):
+    from med_objects.med_volume import MedicalVolume
+
     assert filepath.endswith('.nii.gz')
     image = sitk.ReadImage(filepath)
     spacing = image.GetSpacing()
@@ -137,8 +137,4 @@ def load_nifti(filepath):
     # invert array for convention of SimpleITK - array is now in form (row, column, depth)
     img_array = np.transpose(img_array, [1, 2, 0])
 
-    return img_array, spacing
-
-
-
-
+    return MedicalVolume(img_array, spacing)

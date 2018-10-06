@@ -1,8 +1,8 @@
-import numpy as np
-from keras.models import Model
-from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, concatenate, Dropout, Concatenate
-from keras.layers import BatchNormalization as BN
 import keras.backend as K
+import numpy as np
+from keras.layers import BatchNormalization as BN
+from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, Concatenate
+from keras.models import Model
 
 from models.model import SegModel
 
@@ -76,7 +76,7 @@ class Unet2D(SegModel):
             up = Concatenate(axis=3)([Conv2DTranspose(nfeatures[depth_cnt], (3, 3),
                                                       padding='same',
                                                       strides=unpooling_size)(conv),
-                                     conv_ptr[depth_cnt]])
+                                      conv_ptr[depth_cnt]])
 
             conv = Conv2D(nfeatures[depth_cnt], (3, 3),
                           padding='same',
@@ -125,4 +125,3 @@ class Unet2D(SegModel):
 
         K.clear_session()
         return mask
-

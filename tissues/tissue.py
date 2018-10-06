@@ -1,11 +1,12 @@
-from abc import ABC, abstractmethod
 import os
+from abc import ABC, abstractmethod
+
+from med_objects.med_volume import MedicalVolume
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues
-import cv2
-import numpy as np
 
 WEIGHTS_FILE_EXT = 'h5'
+
 
 class Tissue(ABC):
     ID = -1  # should be unique to all tissues, and should not change
@@ -13,13 +14,13 @@ class Tissue(ABC):
     FULL_NAME = ''
     ORIENTATION = ''
 
-    def __init__(self, weights_dir = None):
+    def __init__(self, weights_dir=None):
         self.regions = dict()
         self.mask = None
         self.quant_vals = dict()
         self.weights_filepath = None
-        self.pixel_spacing = None
-        if (weights_dir is not None):
+
+        if weights_dir is not None:
             self.weights_filepath = self.find_weights(weights_dir)
 
     @abstractmethod
@@ -39,6 +40,10 @@ class Tissue(ABC):
         :param map_type: an enum instance of QuantitativeValue
         :return: a dictionary of quantitative values, save in quant_vals
         """
+
+        assert type(quant_map) is MedicalVolume
+        assert type(map_type) is QuantitativeValues
+
         pass
 
     def __store_quant_vals__(self, quant_map, quant_df, map_type):
@@ -73,7 +78,7 @@ class Tissue(ABC):
 
         if self.mask is not None:
             mask_filepath = os.path.join(dirpath, '%s.nii.gz' % self.STR_ID)
-            io_utils.save_nifti(mask_filepath, self.mask, self.pixel_spacing)
+            self.mask.save_volume(mask_filepath)
 
         self.__save_quant_data__(dirpath)
 
@@ -88,11 +93,11 @@ class Tissue(ABC):
             raise FileNotFoundError('File \'%s\' does not exist' % mask_filepath)
 
         filepath = os.path.join(dirpath, '%s.nii.gz' % self.STR_ID)
-        self.mask, self.pixel_spacing = io_utils.load_nifti(filepath)
+        self.mask = io_utils.load_nifti(filepath)
 
     def __save_dirpath__(self, dirpath):
         return io_utils.check_dir(os.path.join(dirpath, '%s' % self.STR_ID))
 
-    def set_mask(self, mask, pixel_spacing):
+    def set_mask(self, mask):
+        assert (type(mask) is MedicalVolume)
         self.mask = mask
-        self.pixel_spacing = pixel_spacing
