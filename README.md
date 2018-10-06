@@ -4,7 +4,16 @@ This pipeline is an open-source pipeline for MRI image segmentation, registratio
 
 The current code uses the [command line interface](https://www.computerhope.com/jargon/c/commandi.htm) for use. Pull requests for a GUI to command-line translation are welcome.
 
+## Overview
+This repo is to serve as an open-source location for developers to add MRI processing techniques. This includes, but is not limited to:
+- image processing tasks (denoising, super-resolution, segmentation, etc)
+- relaxation parameter analysis (T1, T1-rho, T2, T2*, etc)
+- anatomical features (patellar tilt, femoral cartilage thickness, etc)
+
+We hope that this open-source pipeline will be useful for quick anatomy/pathology analysis from MRI and will serve as a hub for adding support for analyzing different anatomies and scan sequences.
+
 ## Supported Features
+Currently, this pipeline supports analysis of the femoral cartilage in the knee using cubequant, cones, and [DESS](https://onlinelibrary.wiley.com/doi/pdf/10.1002/mrm.26577) scanning protocols. Details are provided below.
 
 ### Scans
 The following scan sequences are supported. All sequences with multiple echos, spin_lock_times, etc. should have metadata in the dicom header specifying this information.
@@ -104,6 +113,11 @@ optional arguments:
   -t2_star              quantify t2_star
 ```
 
+## Machine Learning Disclaimer
+All weights/parameters trained for any task are likely to be most closely correlated to data used for training. If scans from a particular sequence were used for training, the performance of those weights are likely optimized for that specific scan type. As a result, they may not perform as well on segmenting images acquired using different scan types.
+
+If you do train weights for any deep learning task that you would want to include as part of this repo, please provide a link to those weights and detail the scanning parameters/sequence used to acquire those images. All data contributed to this pipeline should be made freely available to all users.
+
 ## Use cases
 
 We detail use cases that could be useful for analyzing data. We assume that all scans are stored per patient, meaning that the folder structure looks like below:
@@ -131,7 +145,7 @@ All use cases assume that the [current working directory](https://www.computerho
 #### Case 1
 *Analyze patient01 knee T<sub>2</sub> properties using DESS sequence*
 
-1. Calculate 3D t2 map
+1. Calculate 3D T<sub>2</sub> map
 ```
 python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess -t2
 ```
@@ -141,7 +155,7 @@ python -m pipeline -d research_data/patient01/dess -s research_data/patient01/da
 python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess -rms segment --weights_dir unet_weights
 ```
 
-3. Calculate T_<sub>2</sub> time for femoral cartilage
+3. Calculate T<sub>2</sub> time for femoral cartilage
 ```
 python -m pipeline -l research_data/patient01/data -s research_data/patient01/data knee -fc -t2
 ```
