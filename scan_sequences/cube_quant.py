@@ -173,7 +173,8 @@ class CubeQuant(NonTargetSequence):
         if self.t1rho_map is not None:
             assert (self.r2 is not None)
 
-            t1rho_map_filepath = os.path.join(base_save_dirpath, '%s.nii.gz' % qv.QuantitativeValues.T1_RHO.name.lower())
+            t1rho_map_filepath = os.path.join(base_save_dirpath,
+                                              '%s.nii.gz' % qv.QuantitativeValues.T1_RHO.name.lower())
             self.t1rho_map.save_volume(t1rho_map_filepath)
 
             t1rho_r2_map_filepath = os.path.join(base_save_dirpath,

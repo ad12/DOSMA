@@ -13,8 +13,8 @@ class Tissue(ABC):
     Technically this includes non-tissue anatomy, like bone
     """
     ID = -1  # should be unique to all tissues, and should not change - replace with a unique identifier
-    STR_ID = '' # short hand string id such as 'fc' for femoral cartilage
-    FULL_NAME = '' # full name of tissue 'femoral cartilage' for femoral cartilage
+    STR_ID = ''  # short hand string id such as 'fc' for femoral cartilage
+    FULL_NAME = ''  # full name of tissue 'femoral cartilage' for femoral cartilage
 
     def __init__(self, weights_dir=None):
         """

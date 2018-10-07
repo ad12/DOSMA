@@ -10,6 +10,7 @@ from med_objects.med_volume import MedicalVolume
 
 class Fit(ABC):
     """Abstract class for fitting functionality"""
+
     @abstractmethod
     def fit(self):
         pass
@@ -17,6 +18,7 @@ class Fit(ABC):
 
 class MonoExponentialFit(Fit):
     """Fit data using monoexponential fit of model A*exp(b*t)"""
+
     def __init__(self, ts, subvolumes, mask=None, bounds=(0, 100.0), tc0=30.0, decimal_precision=1):
         """
         :param ts: 1D list or numpy array of times corresponding to different subvolumes
