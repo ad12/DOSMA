@@ -11,30 +11,8 @@ DATA_EXT = 'data'
 INFO_EXT = 'info'
 
 
-def get_metadata_dirpath(dirpath):
-    return check_dir(os.path.join(dirpath, 'metadata'))
-
-
-def get_visualization_dirpath(dirpath):
-    return check_dir(os.path.join(dirpath, 'visualization'))
-
-
-def get_subdirs(dirpath):
-    if not os.path.isdir(dirpath):
-        raise NotADirectoryError('%s not a directory' % dirpath)
-
-    subdirs = []
-    for file in os.listdir(dirpath):
-        possible_dir = os.path.join(dirpath, file)
-        if os.path.isdir(possible_dir):
-            subdirs.append(file)
-
-    return subdirs
-
-
 def check_dir(dir_path):
-    """
-    If directory does not exist, make directory
+    """Make directory is directory does not exist
     :param dir_path: path to directory
     :return: path to directory
     """
@@ -45,11 +23,9 @@ def check_dir(dir_path):
 
 
 def save_pik(filepath, data):
-    """
-    Save data using pickle
+    """Save data using pickle
     :param data: data to save
     :param filepath: a string
-    :return:
     """
     check_dir(os.path.dirname(filepath))
     with open(filepath, "wb") as f:
@@ -57,8 +33,7 @@ def save_pik(filepath, data):
 
 
 def load_pik(filepath):
-    """
-    Load data using pickle
+    """Load data using pickle
     :param filepath: filepath to load from
     :return: data saved using save_pik
     """
@@ -70,6 +45,11 @@ def load_pik(filepath):
 
 
 def save_h5(filepath, data_dict):
+    """Save data in H5DF format
+    :param filepath: path to h5 file to create
+    :param data_dict: dictionary of data to store
+    :return:
+    """
     check_dir(os.path.dirname(filepath))
     with h5py.File(filepath, 'w') as f:
         for key in data_dict.keys():
@@ -77,6 +57,10 @@ def save_h5(filepath, data_dict):
 
 
 def load_h5(filepath):
+    """Load data in H5DF format
+    :param filepath: path to h5 file
+    :return: dictionary of data values stored using save_h5
+    """
     if not os.path.isfile(filepath):
         raise FileNotFoundError('%s does not exist' % filepath)
 
@@ -89,6 +73,12 @@ def load_h5(filepath):
 
 
 def save_tables(filepath, data_frames, sheet_names=None):
+    """Save data in excel tables
+    :param filepath: filepath to excel file
+    :param data_frames: panda dataframes to use
+    :param sheet_names: names of different sheets if storing multi-sheet data
+    :return:
+    """
     check_dir(os.path.dirname(filepath))
     writer = pd.ExcelWriter(filepath)
 
@@ -108,6 +98,11 @@ def save_tables(filepath, data_frames, sheet_names=None):
 
 
 def save_nifti(filepath, img_array, spacing):
+    """Save data in nifti format using ITK with extension '.nii.gz'
+    :param filepath: filepath with '.nii.gz' extension
+    :param img_array: 3D numpy array
+    :param spacing: pixel spacing
+    """
     assert filepath.endswith('.nii.gz')
     if img_array is None or len(img_array.shape) < 2:
         warnings.warn('%s not saved. Input array is None' % img_array)
@@ -126,6 +121,10 @@ def save_nifti(filepath, img_array, spacing):
 
 
 def load_nifti(filepath):
+    """Load nifti file to a MedicalVolume
+    :param filepath: filepath to nifti file - must have extension '.nii.gz'
+    :return: a MedicalVolume
+    """
     from med_objects.med_volume import MedicalVolume
 
     assert filepath.endswith('.nii.gz')

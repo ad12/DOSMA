@@ -59,7 +59,7 @@ for i in $FILES; do
 
     # cones 3D t2_star map
     if [ ! -e $CONES_T2STAR ]; then
-    	python -m pipeline --debug -l $SAVE_DIRNAME cones -t2star -fm $MASK
+    	python -m pipeline -l $SAVE_DIRNAME cones -t2star -fm $MASK
     fi
 
     # analyze femoral cartilage

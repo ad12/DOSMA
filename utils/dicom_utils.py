@@ -19,7 +19,7 @@ def load_dicom(dicom_path, dicom_ext=None):
     Optional:
     :param dicom_ext: string extension for dicom files. Default is None, meaning the extension will not be checked
 
-    :rtype: 3D numpy array
+    :return tuple of MedicalVolume, list of dicom headers
 
     :raises NotADirectoryError if dicom pat does not exist or is not a directory
 

@@ -1,3 +1,5 @@
+"""Basic file constants to be shared with program"""
+
 import os
 
 DEBUG = 0

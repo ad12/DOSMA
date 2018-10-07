@@ -9,14 +9,18 @@ WEIGHTS_FILE_EXT = 'h5'
 
 
 class Tissue(ABC):
-    ID = -1  # should be unique to all tissues, and should not change
-    STR_ID = ''
-    FULL_NAME = ''
-    ORIENTATION = ''
+    """Handles analysis for all tissues
+    Technically this includes non-tissue anatomy, like bone
+    """
+    ID = -1  # should be unique to all tissues, and should not change - replace with a unique identifier
+    STR_ID = '' # short hand string id such as 'fc' for femoral cartilage
+    FULL_NAME = '' # full name of tissue 'femoral cartilage' for femoral cartilage
 
     def __init__(self, weights_dir=None):
-        self.regions = dict()
-        self.mask = None
+        """
+        :param weights_dir: Directory with segmentation weights
+        """
+        self.__mask__ = None
         self.quant_vals = dict()
         self.weights_filepath = None
 
@@ -24,10 +28,10 @@ class Tissue(ABC):
             self.weights_filepath = self.find_weights(weights_dir)
 
     @abstractmethod
-    def split_regions(self, mask):
+    def split_regions(self, base_map):
         """
-        Split mask into regions
-        :param mask:
+        Split mask into anatomical regions
+        :param base_map: a 3D numpy array
         :return: a 4D numpy array (region, height, width, depth) - save in variable self.regions
         """
         pass
@@ -53,7 +57,7 @@ class Tissue(ABC):
         """
         Search for weights file in weights directory
         :param weights_dir: directory where weights are stored
-        :return:
+        :return: filepath to weights corresponding to tissue
         """
 
         # Find weights file with NAME in the filename, like 'fc_weights.h5'
@@ -73,31 +77,54 @@ class Tissue(ABC):
 
         return weights_file
 
-    def save_data(self, dirpath):
-        dirpath = self.__save_dirpath__(dirpath)
+    def save_data(self, save_dirpath):
+        """Save data for tissue
 
-        if self.mask is not None:
-            mask_filepath = os.path.join(dirpath, '%s.nii.gz' % self.STR_ID)
-            self.mask.save_volume(mask_filepath)
+        Saves mask and quantitative values associated with this tissue
 
-        self.__save_quant_data__(dirpath)
+        :param save_dirpath: base path to save data
+        """
+        save_dirpath = self.__save_dirpath__(save_dirpath)
 
+        if self.__mask__ is not None:
+            mask_filepath = os.path.join(save_dirpath, '%s.nii.gz' % self.STR_ID)
+            self.__mask__.save_volume(mask_filepath)
+
+        self.__save_quant_data__(save_dirpath)
+
+    @abstractmethod
     def __save_quant_data__(self, dirpath):
         pass
 
-    def load_data(self, dirpath):
-        # load mask, if no mask exists stop loading information
-        dirpath = self.__save_dirpath__(dirpath)
-        mask_filepath = os.path.join(dirpath, '%s.nii.gz' % self.STR_ID)
+    def load_data(self, load_dirpath):
+        """Load information for tissue
+
+        All tissue information is based on the mask.
+        If mask for tissue doesn't exist, there is no information to load.
+
+        :param load_dirpath: base path to load data (same as 'save_dirpath' arg input to self.save_data(save_dirpath))
+
+        :raise FileNotFoundError:
+                    1. if mask file (.nii.gz nifti format) cannot be found in load_dirpath
+        """
+        load_dirpath = self.__save_dirpath__(load_dirpath)
+        mask_filepath = os.path.join(load_dirpath, '%s.nii.gz' % self.STR_ID)
         if not os.path.isfile(mask_filepath):
             raise FileNotFoundError('File \'%s\' does not exist' % mask_filepath)
 
-        filepath = os.path.join(dirpath, '%s.nii.gz' % self.STR_ID)
-        self.mask = io_utils.load_nifti(filepath)
+        filepath = os.path.join(load_dirpath, '%s.nii.gz' % self.STR_ID)
+        self.__mask__ = io_utils.load_nifti(filepath)
 
     def __save_dirpath__(self, dirpath):
+        """Subdirectory to store data - save_dirpath/self.STR_ID/
+        :param dirpath: base dirpath
+        :return:
+        """
         return io_utils.check_dir(os.path.join(dirpath, '%s' % self.STR_ID))
 
     def set_mask(self, mask):
-        assert (type(mask) is MedicalVolume)
-        self.mask = mask
+        """Set mask for tissue
+        :param mask: a MedicalVolume
+        """
+        assert type(mask) is MedicalVolume, "mask for tissue must be of type MedicalVolume"
+        self.__mask__ = mask

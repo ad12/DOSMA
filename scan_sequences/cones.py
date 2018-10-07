@@ -11,7 +11,7 @@ from utils.fits import MonoExponentialFit
 
 __EXPECTED_NUM_ECHO_TIMES__ = 4
 
-__INITIAL_T2_STAR_VAL__ = 30.0  # ms
+__INITIAL_T2_STAR_VAL__ = 30.0
 
 __T2_STAR_LOWER_BOUND__ = 0
 __T2_STAR_UPPER_BOUND__ = np.inf
@@ -19,6 +19,7 @@ __T2_STAR_DECIMAL_PRECISION__ = 3
 
 
 class Cones(NonTargetSequence):
+    """Handles analysis for Cones scan sequence """
     NAME = 'cones'
 
     def __init__(self, dicom_path=None, dicom_ext=None, load_path=None):
@@ -109,6 +110,10 @@ class Cones(NonTargetSequence):
         self.subvolumes = subvolumes
 
     def generate_t2_star_map(self):
+        """Generate 3D T2* map and r2 fit map using monoexponential fit across subvolumes acquired at different
+                echo times
+        :return: a MedicalVolume
+        """
         msk = None
         spin_lock_times = []
         subvolumes_list = []
@@ -132,31 +137,31 @@ class Cones(NonTargetSequence):
 
         return self.t2star_map
 
-    def save_data(self, save_dirpath):
-        super().save_data(save_dirpath)
-        save_dirpath = self.__save_dir__(save_dirpath)
+    def save_data(self, base_save_dirpath):
+        super().save_data(base_save_dirpath)
+        base_save_dirpath = self.__save_dir__(base_save_dirpath)
 
         if self.t2star_map is not None:
             assert self.r2 is not None
-            self.t2star_map.save_volume(os.path.join(save_dirpath,
+            self.t2star_map.save_volume(os.path.join(base_save_dirpath,
                                                      '%s.nii.gz' % qv.QuantitativeValues.T2_STAR.name.lower()))
 
-            t1rho_r2_map_filepath = os.path.join(save_dirpath,
+            t1rho_r2_map_filepath = os.path.join(base_save_dirpath,
                                                  '%s_r2.nii.gz' % qv.QuantitativeValues.T2_STAR.name.lower())
             self.r2.save_volume(t1rho_r2_map_filepath)
 
         # Save interregistered files
-        interregistered_dirpath = os.path.join(save_dirpath, 'interregistered')
+        interregistered_dirpath = os.path.join(base_save_dirpath, 'interregistered')
 
         for spin_lock_time in self.subvolumes.keys():
             filepath = os.path.join(interregistered_dirpath, '%03d.nii.gz' % spin_lock_time)
             self.subvolumes[spin_lock_time].save_volume(filepath)
 
-    def load_data(self, load_dirpath):
-        super().load_data(load_dirpath)
-        load_dirpath = self.__save_dir__(load_dirpath, create_dir=False)
+    def load_data(self, base_load_dirpath):
+        super().load_data(base_load_dirpath)
+        base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
 
-        interregistered_dirpath = os.path.join(load_dirpath, 'interregistered')
+        interregistered_dirpath = os.path.join(base_load_dirpath, 'interregistered')
 
         self.subvolumes = self.__load_interregistered_files__(interregistered_dirpath)
 

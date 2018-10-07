@@ -81,6 +81,10 @@ class CubeQuant(NonTargetSequence):
         self.subvolumes = subvolumes
 
     def generate_t1_rho_map(self):
+        """Generate 3D T1-rho map and r2 fit map using monoexponential fit across subvolumes acquired at different
+                echo times
+        :return: a MedicalVolume
+        """
         spin_lock_times = []
         subvolumes_list = []
         msk = None
@@ -104,11 +108,20 @@ class CubeQuant(NonTargetSequence):
         return self.t1rho_map
 
     def __intraregister__(self, subvolumes):
+        """Intraregister cubequant subvolumes to each other
+        Patient could have moved between acquisition of different subvolumes, so different subvolumes of cubequant scan
+            have to be registered with each other
+
+        The first spin lock time has the highest SNR, so it is used as the target
+        Subvolumes corresponding to the other spin lock times are registered to the target
+
+        Affine registration is done using elastix
+
+        :param subvolumes: dictionary of subvolumes mapping spin lock time index --> MedicalVolume
+                                (e.g. {0 --> MedicalVolume A, 1 --> MedicalVolume B}
+        :return: a dictionary of base, other files spin-lock index --> nifti filepath
         """
-        Register subvolumes to each other using affine registration with elastix
-        :param subvolumes:
-        :return:
-        """
+
         if subvolumes is None:
             raise ValueError('subvolumes must be dict()')
 
@@ -153,32 +166,32 @@ class CubeQuant(NonTargetSequence):
         return {'BASE': (ordered_spin_lock_time_indices[0], spin_lock_nii_files[0]),
                 'FILES': intraregistered_files}
 
-    def save_data(self, save_dirpath):
-        super().save_data(save_dirpath)
-        save_dirpath = self.__save_dir__(save_dirpath)
+    def save_data(self, base_save_dirpath):
+        super().save_data(base_save_dirpath)
+        base_save_dirpath = self.__save_dir__(base_save_dirpath)
 
         if self.t1rho_map is not None:
             assert (self.r2 is not None)
 
-            t1rho_map_filepath = os.path.join(save_dirpath, '%s.nii.gz' % qv.QuantitativeValues.T1_RHO.name.lower())
+            t1rho_map_filepath = os.path.join(base_save_dirpath, '%s.nii.gz' % qv.QuantitativeValues.T1_RHO.name.lower())
             self.t1rho_map.save_volume(t1rho_map_filepath)
 
-            t1rho_r2_map_filepath = os.path.join(save_dirpath,
+            t1rho_r2_map_filepath = os.path.join(base_save_dirpath,
                                                  '%s_r2.nii.gz' % qv.QuantitativeValues.T1_RHO.name.lower())
             self.r2.save_volume(t1rho_r2_map_filepath)
 
         # Save interregistered files
-        interregistered_dirpath = os.path.join(save_dirpath, 'interregistered')
+        interregistered_dirpath = os.path.join(base_save_dirpath, 'interregistered')
 
         for spin_lock_time_index in self.subvolumes.keys():
             filepath = os.path.join(interregistered_dirpath, '%03d.nii.gz' % spin_lock_time_index)
             self.subvolumes[spin_lock_time_index].save_volume(filepath)
 
-    def load_data(self, load_dirpath):
-        super().load_data(load_dirpath)
-        load_dirpath = self.__save_dir__(load_dirpath, create_dir=False)
+    def load_data(self, base_load_dirpath):
+        super().load_data(base_load_dirpath)
+        base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
 
-        interregistered_dirpath = os.path.join(load_dirpath, 'interregistered')
+        interregistered_dirpath = os.path.join(base_load_dirpath, 'interregistered')
 
         self.subvolumes = self.__load_interregistered_files__(interregistered_dirpath)
 

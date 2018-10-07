@@ -1,3 +1,7 @@
+"""Default parameters
+Please change depending on your preferences
+"""
+
 # Default inference batch size - based on RAM of computer
 # for 16 GB RAM , recommend 16
 DEFAULT_BATCH_SIZE = 16

@@ -98,17 +98,6 @@ class Unet2D(SegModel):
         return model
 
     def generate_mask(self, volume):
-        """Segment the given tissue in the MRI volume
-
-        :param volume: 3D numpy array of shape (height, width, slices)
-
-        :rtype: binarized (0,1) uint8 3D numpy array of shape volume.shape
-
-        :raise ValueError if volume is not 3D numpy array
-        :raise ValueError if tissue is not a string or not in list permitted tissues
-
-        """
-
         if type(volume) is not np.ndarray or len(volume.shape) != 3:
             raise ValueError("Volume must be a 3D numpy array")
 

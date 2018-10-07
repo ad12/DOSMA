@@ -13,17 +13,18 @@ from utils import io_utils
 from utils.geometry_utils import circle_fit, cart2pol
 from utils.quant_vals import QuantitativeValues
 
+from med_objects.med_volume import MedicalVolume
+
 BOUNDS = {QuantitativeValues.T2: 100.0,
           QuantitativeValues.T1_RHO: 150.0,
           QuantitativeValues.T2_STAR: 100.0}
 
 
 class FemoralCartilage(Tissue):
+    """Handles analysis for femoral cartilage"""
     ID = 1
     STR_ID = 'fc'
     FULL_NAME = 'femoral cartilage'
-
-    ORIENTATION = 'RIGHT'
 
     # Coronal Keys
     ANTERIOR_KEY = 0
@@ -36,9 +37,10 @@ class FemoralCartilage(Tissue):
     LATERAL_KEY = 1
     SAGGITAL_KEYS = [MEDIAL_KEY, LATERAL_KEY]
 
-    def __init__(self, weights_dir=None):
+    def __init__(self, weights_dir=None, knee_direction='RIGHT'):
         super().__init__(weights_dir=weights_dir)
         self.regions_mask = None
+        self.knee_direction = knee_direction
 
     def unroll(self, qv_map):
 
@@ -64,7 +66,7 @@ class FemoralCartilage(Tissue):
         #                                   ...considering the DEEP layers
         ###
 
-        mask = self.mask.volume
+        mask = self.__mask__.volume
 
         if qv_map.shape != mask.shape:
             raise ValueError('t2_map and mask must have same shape')
@@ -177,7 +179,7 @@ class FemoralCartilage(Tissue):
         lateral_mask[np.where(lateral_mask < 3)] = self.LATERAL_KEY
         medial_mask[np.where(medial_mask < 3)] = self.MEDIAL_KEY
 
-        if self.ORIENTATION == 'RIGHT':
+        if self.knee_direction == 'RIGHT':
             ml_mask = np.concatenate((lateral_mask, medial_mask), axis=1)
         else:
             ml_mask = np.concatenate((medial_mask, lateral_mask), axis=1)
@@ -213,7 +215,7 @@ class FemoralCartilage(Tissue):
 
         super().calc_quant_vals(quant_map, map_type)
 
-        if self.mask is None:
+        if self.__mask__ is None:
             raise ValueError('Please initialize mask')
 
         total, superficial, deep = self.unroll(quant_map.volume)
@@ -265,12 +267,18 @@ class FemoralCartilage(Tissue):
         self.__store_quant_vals__(maps, df, map_type)
 
     def set_mask(self, mask):
+        assert type(mask) is MedicalVolume, "mask for femoral cartilage must be of type MedicalVolume"
         msk = np.asarray(nlm.largest_cc(mask.volume), dtype=np.uint8)
-        mask.volume = msk
+        mask_copy = MedicalVolume(msk, mask.pixel_spacing)
+
         self.regions_mask = None
-        super().set_mask(mask)
+
+        super().set_mask(mask_copy)
 
     def __save_quant_data__(self, dirpath):
+        """Save quantitative data and 2D visualizations of femoral cartilage
+        :param dirpath: base filepath to save data
+        """
         q_names = []
         dfs = []
 

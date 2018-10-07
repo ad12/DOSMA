@@ -12,8 +12,12 @@ SUPPORTED_TISSUES = [FemoralCartilage()]
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
 
-def knee_parser(subparsers):
-    parser_tissue = subparsers.add_parser(KNEE_KEY, help='calculate/analyze quantitative data for MSK knee')
+def knee_parser(base_parser):
+    """Parse command line input related to knee
+
+    :param base_parser: the base parser to add knee subcommand to
+    """
+    parser_tissue = base_parser.add_parser(KNEE_KEY, help='calculate/analyze quantitative data for MSK knee')
     parser_tissue.add_argument('--%s' % ORIENTATION_KEY, choices={'LEFT', 'RIGHT'}, nargs='?', default='RIGHT',
                                help='knee orientation (left or right)')
 
@@ -32,6 +36,10 @@ def knee_parser(subparsers):
 
 
 def handle_knee(vargin):
+    """Handle parsing command-line input for knee subcommand
+    :param vargin:
+    :return:
+    """
     tissues = vargin[TISSUES_KEY]
     load_path = vargin[LOAD_KEY]
     orientation = vargin[ORIENTATION_KEY]
@@ -65,6 +73,18 @@ def handle_knee(vargin):
 
 
 def find_filepath_with_qv(load_path, qv):
+    """Find filepath to the quantitative value map.
+
+    All maps must be stored in the nifti format
+
+    :param load_path: base path for searching
+    :param qv: a QuantiativeValue
+    :return: a path to the quantitative value map
+
+    :raise ValueError:
+                1. No files (recursively searched) in load_path directory
+                2. Multiple files found for the same quantitative value
+    """
     import glob, os
     dirlist = glob.glob(os.path.join(load_path, '*', '%s.nii.gz' % qv.name.lower()))
 

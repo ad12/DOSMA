@@ -9,13 +9,24 @@ from med_objects.med_volume import MedicalVolume
 
 
 class Fit(ABC):
+    """Abstract class for fitting functionality"""
     @abstractmethod
     def fit(self):
         pass
 
 
 class MonoExponentialFit(Fit):
+    """Fit data using monoexponential fit of model A*exp(b*t)"""
     def __init__(self, ts, subvolumes, mask=None, bounds=(0, 100.0), tc0=30.0, decimal_precision=1):
+        """
+        :param ts: 1D list or numpy array of times corresponding to different subvolumes
+        :param subvolumes: list of MedicalVolumes
+        :param mask: a MedicalVolume mask of pixels to fit - speeds up fitting time
+                        all pixels outside of mask are ignored
+        :param bounds: tuple of [lower, upper) bound
+        :param tc0: initial time constant guess (in milliseconds)
+        :param decimal_precision: precision of rounding
+        """
         assert (len(ts) == len(subvolumes))
         self.ts = ts
 
@@ -36,6 +47,9 @@ class MonoExponentialFit(Fit):
         self.decimal_precision = decimal_precision
 
     def fit(self):
+        """Fit data used to initialize object
+        :return: tuple of MedicalVolumes of time-constant estimate, r2 vals
+        """
         original_shape = None
         svs = []
         msk = None

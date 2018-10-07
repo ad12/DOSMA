@@ -103,7 +103,7 @@ class DessTest(unittest.TestCase):
         fc = FemoralCartilage()
         fc.load_data(vargin[pipeline.SAVE_KEY])
 
-        mask2 = fc.mask
+        mask2 = fc.__mask__
 
         assert ((mask == mask2).all())
 
