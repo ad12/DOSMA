@@ -37,34 +37,31 @@ class FemoralCartilage(Tissue):
     LATERAL_KEY = 1
     SAGGITAL_KEYS = [MEDIAL_KEY, LATERAL_KEY]
 
-    def __init__(self, weights_dir=None, knee_direction='RIGHT'):
+    def __init__(self, weights_dir=None, knee_direction=None):
+        """
+        :param weights_dir: Directory to weights files
+        :param knee_direction: LEFT or RIGHT, default is None specified
+        """
         super().__init__(weights_dir=weights_dir)
+
         self.regions_mask = None
         self.knee_direction = knee_direction
 
     def unroll(self, qv_map):
+        """Unroll femoral cartilage 3D quantitative value (qv) maps to 2D for visualiation
 
-        ## UNROLLING CARTILAGE T2 MAPS
-        #
-        # the function applies a segmentation mask to the T2 maps. It then fits a circle to the sagittal projection of the
-        # 3D segmentation mask.
-        # Slice per slice the fitted circle is used to put T2 values of each slice into degree bins. In this way the tissue
-        # is unrolled. The cartilage is then divided into deep and superficial cartilage.
-        # As final step, the arrays are resized to fit [512,512] resolution.
-        #
-        # INPUT:
-        #   TODO: by default t2 maps have nan values - we should handle these by clipping possibly?
-        #   t2_map..........................numpy array (n,n,nb_slices) which contains the T2 map
-        #
-        # OUTPUT:
-        #
-        #   Unrolled_Cartilage_res..........numpy array (n,nb_bins) which contains the unrolled cartilage T2 maps...
-        #                                   ...considering ALL the layers
-        #   Sup_layer_res...................numpy array (n,nb_bins) which contains the unrolled cartilage T2 maps...
-        #                                   ...considering the SUPERFICIAL layers
-        #   Deep_layer_res..................numpy array (n,nb_bins) which contains the unrolled cartilage T2 maps...
-        #                                   ...considering the DEEP layers
-        ###
+        The function multiplies a 3D segmentation mask to a 3D qv map --> 3D femoral cartilage qv (fc_qv) map
+        It then fits a circle to the collapsed sagittal projection of the fc_qv map
+        Each slice is binned into bins of 5 degree sizes
+
+        The unrolled map is then divided into deep and superficial cartilage
+
+        :param qv_map: 3D numpy array (slices last) of sagittal knee describing quantitative parameter values
+        :return: tuple in (row, column) format:
+                    1. 2D Total unrolled cartilage (slices, degrees) - average of superficial and deep layers
+                    2. Superficial unrolled cartilage (slices, degrees) - superficial layer
+                    3. Deep unrolled cartilage (slices, degrees) - deep layer
+        """
 
         mask = self.__mask__.volume
 
@@ -162,7 +159,14 @@ class FemoralCartilage(Tissue):
         return total_cartilage_unrolled, sup_layer_unrolled, deep_layer_unrolled
 
     def split_regions(self, unrolled_quantitative_map):
-        # WARNING: this method has to be called after the unroll method.
+        """Split 2D MxN unrolled quantitative map into regions
+
+        Generates a MxNx2 mask of medial/lateral pixels and anterior/central/posterior pixels
+        This method must be called after the unrolled method
+
+        :param unrolled_quantitative_map:
+        :return: a MxNx2 numpy array with values corresponding to regions
+        """
 
         # create unrolled mask from unrolled map
         unrolled_mask_indexes = np.nonzero(unrolled_quantitative_map)
@@ -178,6 +182,9 @@ class FemoralCartilage(Tissue):
 
         lateral_mask[np.where(lateral_mask < 3)] = self.LATERAL_KEY
         medial_mask[np.where(medial_mask < 3)] = self.MEDIAL_KEY
+
+        if self.knee_direction is None:
+            raise ValueError('The knee direction must be initialized to determine medial/lateral sides of knee')
 
         if self.knee_direction == 'RIGHT':
             ml_mask = np.concatenate((lateral_mask, medial_mask), axis=1)
@@ -207,10 +214,22 @@ class FemoralCartilage(Tissue):
 
     def calc_quant_vals(self, quant_map, map_type):
         """
-        Calculate quantitative values and store in excel file
+        Calculate quantitative values per region and 2D visualizations
+
+        1. Save 2D figure (deep, superficial, total) information to use with matplotlib
+                (title, data, xlabel, ylabel, filename)
+        2. Save 2D dataframes in format:
+                [['DMA', 'DMC', 'DMP'], ['DLA', 'DLC', 'DLP'],
+                 ['SMA', 'SMC', 'SMP'], ['SLA', 'SLC', 'SLP'],
+                 ['TMA', 'TMC', 'TMP'], ['TLA', 'TLC', 'TLP']]
+
+                 D=deep, S=superficial, T=total,
+                 M=medial, L=lateral,
+                 A=anterior, C=central, P=posterior
+
+
         :param quant_map: The 3D volume of quantitative values (np.nan for all pixels that are not accurate)
         :param map_type: A QuantitativeValue instance
-        :return:
         """
 
         super().calc_quant_vals(quant_map, map_type)
@@ -277,6 +296,12 @@ class FemoralCartilage(Tissue):
 
     def __save_quant_data__(self, dirpath):
         """Save quantitative data and 2D visualizations of femoral cartilage
+
+        Check which quantitative values (T2, T1rho, etc) are defined for femoral cartilage and analyze these
+        1. Save 2D total, superficial, and deep visualization maps
+        2. Save {'medial', 'lateral'}, {'anterior', 'central', 'posterior'}, {'deep', 'superficial'} data to excel
+                file
+
         :param dirpath: base filepath to save data
         """
         q_names = []

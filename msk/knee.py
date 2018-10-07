@@ -3,7 +3,7 @@ from utils import io_utils
 from utils.quant_vals import QuantitativeValues as QV
 
 KNEE_KEY = 'knee'
-ORIENTATION_KEY = 'orientation'
+DIRECTION_KEY = 'direction'
 TISSUES_KEY = 'tissues'
 LOAD_KEY = 'load'
 SAVE_KEY = 'save'
@@ -18,7 +18,7 @@ def knee_parser(base_parser):
     :param base_parser: the base parser to add knee subcommand to
     """
     parser_tissue = base_parser.add_parser(KNEE_KEY, help='calculate/analyze quantitative data for MSK knee')
-    parser_tissue.add_argument('--%s' % ORIENTATION_KEY, choices={'LEFT', 'RIGHT'}, nargs='?', default='RIGHT',
+    parser_tissue.add_argument('--%s' % DIRECTION_KEY, choices={'LEFT', 'RIGHT'}, nargs='?', default='RIGHT',
                                help='knee orientation (left or right)')
 
     for tissue in SUPPORTED_TISSUES:
@@ -42,7 +42,7 @@ def handle_knee(vargin):
     """
     tissues = vargin[TISSUES_KEY]
     load_path = vargin[LOAD_KEY]
-    orientation = vargin[ORIENTATION_KEY]
+    direction = vargin[DIRECTION_KEY]
 
     # Get all supported quantitative values
     qvs = []
@@ -51,7 +51,7 @@ def handle_knee(vargin):
             qvs.append(qv)
 
     for tissue in tissues:
-        tissue.ORIENTATION = orientation
+        tissue.knee_direction = direction
         tissue.load_data(load_path)
 
         print('')
