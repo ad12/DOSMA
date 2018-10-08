@@ -38,6 +38,8 @@ Analysis for the following anatomical regions are supported
 *Tissues*: Femoral Cartilage
 
 ## Installation
+### Using virtual environments
+We recommend using the (Anaconda)[https://www.anaconda.com/download] virtual environment
 Download this repo to your disk.
 
 For pretrained weights for MSK knee segmentation, request access to this [Google Drive](https://drive.google.com/drive/u/0/folders/1VtVzOAS6VbFzpEi9Fivy6BgcMubfFlL-). Note that these weights are optimized to run on single-echo RMS DESS sequence as used in the [OA initiative](https://oai.epi-ucsf.org/datarelease/).
@@ -155,12 +157,13 @@ python -m pipeline -d research_data/patient01/dess -s research_data/patient01/da
 python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess -rms segment --weights_dir unet_weights
 ```
 
-3. Calculate T<sub>2</sub> time for femoral cartilage
-```
-python -m pipeline -l research_data/patient01/data -s research_data/patient01/data knee -fc -t2
-```
 
 Note steps 1 and 2 can be combined as the following:
 ```
 python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess -rms -t2 segment --weights_dir unet_weights
+```
+
+3. Calculate T<sub>2</sub> time for femoral cartilage
+```
+python -m pipeline -l research_data/patient01/data -s research_data/patient01/data knee -fc -t2
 ```
