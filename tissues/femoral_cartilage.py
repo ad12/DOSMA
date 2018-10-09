@@ -250,33 +250,52 @@ class FemoralCartilage(Tissue):
         coronal_region_mask = self.regions_mask[..., 0]
         sagital_region_mask = self.regions_mask[..., 1]
 
+        subject_pid = self.pid
+        pd_header = ['Subject', 'Location', 'Side', 'Region', 'Mean', 'Std', 'Median']
+        pd_list = []
+
         # TODO: identify pixels in deep and superficial that are anterior/central/posterior and medial/lateral
         # Replace strings with values - eg. DMA = 'deep, medial, anterior'
-        tissue_values = [['DMA', 'DMC', 'DMP'], ['DLA', 'DLC', 'DLP'],
-                         ['SMA', 'SMC', 'SMP'], ['SLA', 'SLC', 'SLP'],
-                         ['TMA', 'TMC', 'TMP'], ['TLA', 'TLC', 'TLP']]
-        tissue_values = []
-        for axial_map in [deep, superficial, total]:
+        # tissue_values = [['DMA', 'DMC', 'DMP'], ['DLA', 'DLC', 'DLP'],
+        #                  ['SMA', 'SMC', 'SMP'], ['SLA', 'SLC', 'SLP'],
+        #                  ['TMA', 'TMC', 'TMP'], ['TLA', 'TLC', 'TLP']]
+        # tissue_values = []
+        axial_data = [deep, superficial, total]
+
+        axial_names = ['deep', 'superficial', 'total']
+        coronal_names = ['medial', 'lateral']
+        sagittal_names = ['anterior', 'central', 'posterior']
+
+        for axial in range(3):
+            axial_map = axial_data[axial]
             for coronal in [self.MEDIAL_KEY, self.LATERAL_KEY]:
-                coronal_list = []
-                for sagital in [self.ANTERIOR_KEY, self.CENTRAL_KEY, self.POSTERIOR_KEY]:
-                    curr_region_mask = (coronal_region_mask == coronal) * (sagital_region_mask == sagital) * axial_map
+                # coronal_list = []
+                for sagittal in [self.ANTERIOR_KEY, self.CENTRAL_KEY, self.POSTERIOR_KEY]:
+                    curr_region_mask = (coronal_region_mask == coronal) * (sagital_region_mask == sagittal) * axial_map
 
                     curr_region_mask[curr_region_mask == 0] = np.nan
                     # discard all values that are 0
                     c_mean = np.nanmean(curr_region_mask)
                     c_std = np.nanstd(curr_region_mask)
                     c_median = np.nanmedian(curr_region_mask)
-                    coronal_list.append('%0.5f +/- %0.5f, %0.5f' % (c_mean, c_std, c_median))
 
-                tissue_values.append(coronal_list)
+                    row_info = [subject_pid, axial_names[axial], coronal_names[coronal], sagittal_names[sagittal],
+                                c_mean, c_std, c_median]
 
-        depth_keys = np.array(['deep', 'deep', 'superficial', 'superficial', 'total', 'total'])
-        coronal_keys = np.array(['medial', 'lateral'] * 3)
-        sagital_keys = ['anterior', 'central', 'posterior']
-        df = pd.DataFrame(data=np.transpose(tissue_values), index=sagital_keys,
-                          columns=pd.MultiIndex.from_tuples(zip(depth_keys, coronal_keys)))
+                    pd_list.append(row_info)
 
+                    #value_str = '%0.5f +/- %0.5f, %0.5f' % (c_mean, c_std, c_median)
+                    # coronal_list.append('%0.5f +/- %0.5f, %0.5f' % (c_mean, c_std, c_median))
+
+                #tissue_values.append(coronal_list)
+
+        # depth_keys = np.array(['deep', 'deep', 'superficial', 'superficial', 'total', 'total'])
+        # coronal_keys = np.array(['medial', 'lateral'] * 3)
+        # sagital_keys = ['anterior', 'central', 'posterior']
+        # df = pd.DataFrame(data=np.transpose(tissue_values), index=sagital_keys,
+        #                   columns=pd.MultiIndex.from_tuples(zip(depth_keys, coronal_keys)))
+
+        df = pd.DataFrame(pd_list, columns=pd_header)
         qv_name = map_type.name
         maps = [{'title': '%s deep' % qv_name, 'data': deep, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)',
                  'filename': '%s_deep.png' % qv_name},

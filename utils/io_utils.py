@@ -92,7 +92,7 @@ def save_tables(filepath, data_frames, sheet_names=None):
 
     for i in range(len(data_frames)):
         df = data_frames[i]
-        df.to_excel(writer, sheet_names[i])
+        df.to_excel(writer, sheet_names[i], index=False)
 
     writer.save()
 

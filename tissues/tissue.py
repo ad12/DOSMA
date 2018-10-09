@@ -20,6 +20,7 @@ class Tissue(ABC):
         """
         :param weights_dir: Directory with segmentation weights
         """
+        self.pid = None
         self.__mask__ = None
         self.quant_vals = dict()
         self.weights_filepath = None

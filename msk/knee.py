@@ -1,12 +1,15 @@
 from tissues.femoral_cartilage import FemoralCartilage
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues as QV
+import uuid
+
 
 KNEE_KEY = 'knee'
 DIRECTION_KEY = 'direction'
 TISSUES_KEY = 'tissues'
 LOAD_KEY = 'load'
 SAVE_KEY = 'save'
+PID_KEY = 'pid'
 
 SUPPORTED_TISSUES = [FemoralCartilage()]
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
@@ -18,8 +21,10 @@ def knee_parser(base_parser):
     :param base_parser: the base parser to add knee subcommand to
     """
     parser_tissue = base_parser.add_parser(KNEE_KEY, help='calculate/analyze quantitative data for MSK knee')
-    parser_tissue.add_argument('--%s' % DIRECTION_KEY, choices={'LEFT', 'RIGHT'}, nargs='?', default='RIGHT',
+    parser_tissue.add_argument('-%s' % DIRECTION_KEY, choices={'LEFT', 'RIGHT'}, nargs='?', default='RIGHT',
                                help='knee orientation (left or right)')
+
+    parser_tissue.add_argument('-%s' % PID_KEY, nargs='?', default=str(uuid.uuid4()), help='specify pid')
 
     for tissue in SUPPORTED_TISSUES:
         parser_tissue.add_argument('-%s' % tissue.STR_ID, action='store_const', default=False, const=True,
@@ -43,7 +48,7 @@ def handle_knee(vargin):
     tissues = vargin[TISSUES_KEY]
     load_path = vargin[LOAD_KEY]
     direction = vargin[DIRECTION_KEY]
-
+    pid = vargin[PID_KEY]
     # Get all supported quantitative values
     qvs = []
     for qv in SUPPORTED_QUANTITATIVE_VALUES:
@@ -51,6 +56,7 @@ def handle_knee(vargin):
             qvs.append(qv)
 
     for tissue in tissues:
+        tissue.pid = pid
         tissue.knee_direction = direction
         tissue.load_data(load_path)
 
