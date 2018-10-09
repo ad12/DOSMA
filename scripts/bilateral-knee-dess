@@ -3,7 +3,7 @@
 # 1. Separate dicom files from bilateral dess knee scan into left dicoms and right dicoms
 # 2. Run dess analysis
 
-WEIGHTS_DIRECTORY="A"
+WEIGHTS_DIRECTORY="/home/marco.b215/msk_pipeline_data/weights"
 if [ -z "$WEIGHTS_DIRECTORY" ]; then
     echo "Please define WEIGHTS_DIRECTORY in script. Use the absolute path"
     exit 125
@@ -61,8 +61,9 @@ cd ..
 
 base_dicom_path=$(dirname $DICOM_PATH)
 base_filename=$(basename $DICOM_PATH)
-DATA_DIR="$base_filename/data/$base_filename"
+DATA_DIR="$base_dicom_path/data/$base_filename"
 
+echo $DATA_DIR
 # 2. run analysis on the dess files
 #    if data directory already exist, skip analysis
 
