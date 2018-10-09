@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# 1. Separate dicom files from bilateral dess knee scan into left dicoms and right dicoms
+# 2. Run dess analysis
+
+
+if [ -z "$WEIGHTS_DIRECTORY" ]; then
+    echo "Please define WEIGHTS_DIRECTORY in script. Use the absolute path"
+    exit 125
+fi
+
+if [ $# -eq 0 ]; then
+	echo "Please provide path to dicom folder"
+	exit 125
+fi
+
+DICOM_PATH=$1
+echo $DICOM_PATH
+
+# get list of dicoms in this folder
+dicom_list_str=$(find $DICOM_PATH -type f -name "*.dcm" | sort)
+dicom_array=()
+for filepath in $dicom_list_str
+do
+    dicom_array+=($filepath)
+done
+
+echo "Number of dicoms: ${#dicom_array[@]}"
+
+# halfpoint in dicom list to split 
+half_point=$((${#dicom_array[@]} / 2))
+echo $half_point
+
+LEFT_DIR="$DICOM_PATH/LEFT/"
+if [ ! -d "$LEFT_DIR" ]; then
+	mkdir $LEFT_DIR
+fi
+
+RIGHT_DIR="$DICOM_PATH/RIGHT/"
+if [ ! -d "$RIGHT_DIR" ]; then
+	mkdir $RIGHT_DIR
+fi
+
+counter=1
+for filepath in ${dicom_array[@]}
+do
+	counter=$(expr $counter + 1)
+
+	filename=$(basename $filepath)
+
+	if [ $counter -gt $half_point ]; then
+		# store in left directory
+		cp $filepath $RIGHT_DIR
+	else
+		cp $filepath $LEFT_DIR
+	fi
+done
+
+cd ..
+
+base_dicom_path=$(dirname $DICOM_PATH)
+base_filename=$(basename $DICOM_PATH)
+DATA_DIR="$base_filename/data/$base_filename"
+
+# 2. run analysis on the dess files
+#    if data directory already exist, skip analysis
+
+DATA_DIR_LEFT="$DATA_DIR/LEFT"
+if [ ! -d "$DATA_DIR_LEFT" ]; then
+	python -m pipeline -d $LEFT_DIR -s $DATA_DIR_LEFT dess -t2 -rms segment -fc --weights_dir $WEIGHTS_DIRECTORY
+	python -m pipeline -l $DATA_DIR_LEFT knee -fc -t2
+fi
+
+
+DATA_DIR_RIGHT="$DATA_DIR/RIGHT"
+if [ ! -d "$DATA_DIR_RIGHT" ]; then
+	python -m pipeline -d $RIGHT_DIR -s $DATA_DIR_RIGHT dess -t2 -rms segment -fc --weights_dir $WEIGHTS_DIRECTORY
+	python -m pipeline -l $DATA_DIR_RIGHT knee -fc -t2
+fi
+
+
+
+
+
+
+
+
+
