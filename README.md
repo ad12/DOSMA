@@ -135,6 +135,7 @@ optional arguments:
 
 ### Cones
 The cones protocol used here is detailed below:
+
 ```
 usage: pipeline cones [-h] [-t2star] [-fm [FM]] {interregister} ...
 
