@@ -10,6 +10,21 @@ __VOLUME_DIMENSIONS__ = 3
 __EPSILON__ = 1e-8
 
 
+def get_pixel_spacing(dicom_filepath):
+    """
+    Get pixel spacing from dicom header
+    :param dicom_filepath: Filepath to single dicom
+    :return: tuple of pixel spacing (r, c, d)
+    """
+    ref_dicom = pydicom.read_file(dicom_filepath)
+
+    # Load spacing values (in mm)
+    pixelSpacing = (float(ref_dicom.PixelSpacing[0]),
+                    float(ref_dicom.PixelSpacing[1]),
+                    float(ref_dicom.SpacingBetweenSlices))
+
+    return pixelSpacing
+
 def load_dicom(dicom_path, dicom_ext=None):
     """Load dicoms into numpy array
 

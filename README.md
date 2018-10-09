@@ -38,10 +38,14 @@ Analysis for the following anatomical regions are supported
 *Tissues*: Femoral Cartilage
 
 ## Installation
-### Using virtual environments
-We recommend using the (Anaconda)[https://www.anaconda.com/download] virtual environment
-Download this repo to your disk.
+Download this repo to your disk. Note that the path to this repo should not have any spaces. In general, this pipeline does not handle folder paths that have spaces in between folder names.
 
+### Virtual Environment
+We recommend using the (Anaconda)[https://www.anaconda.com/download] virtual environment to run python.
+
+An `environment.yml` file is provided in this repo containing all libraries used.
+
+### Weights
 For pretrained weights for MSK knee segmentation, request access to this [Google Drive](https://drive.google.com/drive/u/0/folders/1VtVzOAS6VbFzpEi9Fivy6BgcMubfFlL-). Note that these weights are optimized to run on single-echo RMS DESS sequence as used in the [OA initiative](https://oai.epi-ucsf.org/datarelease/).
 
 Save these weights in an accessible location. **Do not rename these files**.
@@ -74,6 +78,8 @@ optional arguments:
 ```
 
 ### DESS
+The DESS protocol used here is detailed below:
+
 ```
 usage: pipeline dess [-h] [-rms] [-t2] {segment} ...
 
@@ -98,6 +104,57 @@ optional arguments:
                         path to directory with weights
   --batch_size [B]      batch size for inference. Default: 32
   -fc                   handle femoral cartilage
+```
+
+### Cubequant
+The cubequant protocol used here is detailed below:
+
+```
+usage: pipeline cubequant [-h] [-t1rho] [-fm [FM]] {interregister} ...
+
+positional arguments:
+  {interregister}  sub-command help
+
+optional arguments:
+  -h, --help       show this help message and exit
+  -t1rho           do t1-rho analysis
+  -fm [FM]         focused mask to speed up t1rho calculation
+```
+
+#### Interregister
+Register cubequant scan to a target scan
+
+```
+usage: pipeline cubequant interregister [-h] [-ts TS] [-tm [TM]]
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -ts TS      path to target image (nifti)
+  -tm [TM]    path to target mask (nifti)
+```
+
+### Cones
+The cones protocol used here is detailed below:
+```
+usage: pipeline cones [-h] [-t2star] [-fm [FM]] {interregister} ...
+
+positional arguments:
+  {interregister}  sub-command help
+
+optional arguments:
+  -h, --help       show this help message and exit
+  -t2star          do t2* analysis
+  -fm [FM]         focused mask to speed up t1rho calculation
+```
+
+#### Interregister
+```
+usage: pipeline cones interregister [-h] [-ts TS] [-tm [TM]]
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -ts TS      path to target image (nifti)
+  -tm [TM]    path to target mask (nifti)
 ```
 
 ### MSK Knee
