@@ -7,8 +7,10 @@ Please change depending on your preferences
 DEFAULT_BATCH_SIZE = 16
 
 # Fix the bounds for the visualization colorbar based on the quantitative measure (T2, T1rho, etc)
-# if any value exceeds these bounds, automatically set this parameter to False
-FIX_VISUALIZATION_BOUNDS = True
+# soft bound: if any value exceeds these bounds, automatically set this parameter to False
+# hard bound: clip all values out of bounds, so that the color bar is fixed (good for comparing images)
+VISUALIZATION_SOFT_BOUNDS = False
+VISUALIZATION_HARD_BOUNDS = True
 
 # The dilation rate we use for dilating any mask before registration
 DEFAULT_MASK_DIL_RATE = 8.0

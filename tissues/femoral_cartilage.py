@@ -348,7 +348,12 @@ class FemoralCartilage(Tissue):
 
                 upper_bound = BOUNDS[quant_val]
                 is_picture_written = False
-                if defaults.FIX_VISUALIZATION_BOUNDS:
+
+                if defaults.VISUALIZATION_HARD_BOUNDS:
+                    plt.imshow(data_map, cmap='jet', vmin=0.0, vmax=BOUNDS[quant_val])
+                    is_picture_written = True
+
+                if defaults.VISUALIZATION_SOFT_BOUNDS and not is_picture_written:
                     if np.sum(data_map <= upper_bound) == 0:
                         plt.imshow(data_map, cmap='jet', vmin=0.0, vmax=BOUNDS[quant_val])
                         is_picture_written = True
