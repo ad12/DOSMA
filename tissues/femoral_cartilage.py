@@ -1,7 +1,10 @@
 import os
 import warnings
 
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
 import nipy.labs.mask as nlm
 import numpy as np
 import pandas as pd
