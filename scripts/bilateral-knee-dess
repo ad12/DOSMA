@@ -3,7 +3,7 @@
 # 1. Separate dicom files from bilateral dess knee scan into left dicoms and right dicoms
 # 2. Run dess analysis
 
-
+WEIGHTS_DIRECTORY="A"
 if [ -z "$WEIGHTS_DIRECTORY" ]; then
     echo "Please define WEIGHTS_DIRECTORY in script. Use the absolute path"
     exit 125
@@ -44,7 +44,6 @@ fi
 counter=1
 for filepath in ${dicom_array[@]}
 do
-	counter=$(expr $counter + 1)
 
 	filename=$(basename $filepath)
 
@@ -54,6 +53,8 @@ do
 	else
 		cp $filepath $LEFT_DIR
 	fi
+
+	counter=$(expr $counter + 1)
 done
 
 cd ..
