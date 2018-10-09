@@ -78,7 +78,15 @@ optional arguments:
 ```
 
 ### DESS
-The DESS protocol used here is detailed below:
+The DESS protocol used here is detailed in [this](https://onlinelibrary.wiley.com/doi/pdf/10.1002/jmri.25883) paper referenced below:
+
+*Chaudhari, Akshay S., et al. "Five‐minute knee MRI for simultaneous morphometry and T2 relaxometry of cartilage and meniscus and for semiquantitative radiological assessment using double‐echo in steady‐state at 3T." JMRI 47.5 (2018): 1328-1341.*
+
+The figure below details the DESS protocol used in this paper:
+
+![alt text](readme_ims/dess_protocol.png)
+Figure 1: Supported DESS protocol as referenced [here]((https://onlinelibrary.wiley.com/doi/pdf/10.1002/jmri.25883))
+
 
 ```
 usage: pipeline dess [-h] [-rms] [-t2] {segment} ...
