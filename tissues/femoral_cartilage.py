@@ -17,9 +17,9 @@ from utils import io_utils
 from utils.geometry_utils import circle_fit, cart2pol
 from utils.quant_vals import QuantitativeValues
 
-BOUNDS = {QuantitativeValues.T2: 100.0,
-          QuantitativeValues.T1_RHO: 150.0,
-          QuantitativeValues.T2_STAR: 100.0}
+BOUNDS = {QuantitativeValues.T2: 60.0,
+          QuantitativeValues.T1_RHO: 100.0,
+          QuantitativeValues.T2_STAR: 50.0}
 
 
 class FemoralCartilage(Tissue):
