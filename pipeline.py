@@ -221,7 +221,7 @@ def parse_args():
     # DESS parser
     parser_dess = subparsers.add_parser(DESS_SCAN_KEY, help='analyze DESS sequence')
     parser_dess.add_argument('-%s' % USE_RMS_KEY, action='store_const', default=False, const=True,
-                             help='use rms for segmentation')
+                             help='use root mean square (rms) of two echos for segmentation')
     parser_dess.add_argument('-%s' % T2_KEY, action='store_const', default=False, const=True, help='compute T2 map')
     subparsers_dess = parser_dess.add_subparsers(help='sub-command help', dest=ACTION_KEY)
     add_segmentation_subparser(subparsers_dess)

@@ -96,7 +96,7 @@ positional arguments:
 
 optional arguments:
   -h, --help  show this help message and exit
-  -rms        use rms for segmentation
+  -rms        use root mean square (rms) of two echos for segmentation
   -t2         compute T2 map
 ```
 
