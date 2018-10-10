@@ -2,6 +2,15 @@
 
 # 1. Separate dicom files from bilateral dess knee scan into left dicoms and right dicoms
 # 2. Run dess analysis
+#
+# Usage (from terminal/command line):
+# ./bilateral-knee-dess PATH_TO_DICOM_FOLDER PATIENT_ID
+# eg: "./bilateral-knee-dess /Users/data/P07/005 07"
+#
+#
+# To initialize this script, run the one-time command below :
+# chmod +x bilateral-knee-dess
+
 
 WEIGHTS_DIRECTORY="/home/marco.b215/msk_pipeline_data/weights"
 if [ -z "$WEIGHTS_DIRECTORY" ]; then
@@ -29,33 +38,40 @@ echo "Number of dicoms: ${#dicom_array[@]}"
 
 # halfpoint in dicom list to split 
 half_point=$((${#dicom_array[@]} / 2))
-echo $half_point
+
+# Assume directories exist, if they don't set this to false
+DIRS_EXIST=1
 
 LEFT_DIR="$DICOM_PATH/LEFT/"
 if [ ! -d "$LEFT_DIR" ]; then
 	mkdir $LEFT_DIR
+	DIRS_EXIST=0
 fi
 
 RIGHT_DIR="$DICOM_PATH/RIGHT/"
 if [ ! -d "$RIGHT_DIR" ]; then
 	mkdir $RIGHT_DIR
+    DIRS_EXIST=0
 fi
 
-counter=1
-for filepath in ${dicom_array[@]}
-do
+# if the directories already exist, assume the data has already been separated into different folders
+if [ DIRS_EXIST -eq 0]; then
+    counter=1
+    for filepath in ${dicom_array[@]}
+    do
 
-	filename=$(basename $filepath)
+        filename=$(basename $filepath)
 
-	if [ $counter -gt $half_point ]; then
-		# store in left directory
-		cp $filepath $RIGHT_DIR
-	else
-		cp $filepath $LEFT_DIR
-	fi
+        if [ $counter -gt $half_point ]; then
+            # store in left directory
+            cp $filepath $RIGHT_DIR
+        else
+            cp $filepath $LEFT_DIR
+        fi
 
-	counter=$(expr $counter + 1)
-done
+        counter=$(expr $counter + 1)
+    done
+fi
 
 cd ..
 
@@ -63,7 +79,8 @@ base_dicom_path=$(dirname $DICOM_PATH)
 base_filename=$(basename $DICOM_PATH)
 DATA_DIR="$base_dicom_path/data/$base_filename"
 
-echo $DATA_DIR
+echo "Save path: $DATA_DIR"
+
 # 2. run analysis on the dess files
 #    if data directory already exist, skip analysis
 
@@ -72,7 +89,6 @@ if [ ! -d "$DATA_DIR_LEFT" ]; then
 	python -m pipeline -d $LEFT_DIR -s $DATA_DIR_LEFT dess -t2 -rms segment -fc --weights_dir $WEIGHTS_DIRECTORY
 	python -m pipeline -l $DATA_DIR_LEFT knee -fc -t2
 fi
-
 
 DATA_DIR_RIGHT="$DATA_DIR/RIGHT"
 if [ ! -d "$DATA_DIR_RIGHT" ]; then
