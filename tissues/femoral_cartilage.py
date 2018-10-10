@@ -39,15 +39,15 @@ class FemoralCartilage(Tissue):
     LATERAL_KEY = 1
     SAGGITAL_KEYS = [MEDIAL_KEY, LATERAL_KEY]
 
-    def __init__(self, weights_dir=None, knee_direction=None):
+    def __init__(self, weights_dir=None, medial_to_lateral=None):
         """
         :param weights_dir: Directory to weights files
-        :param knee_direction: LEFT or RIGHT, default is None specified
+        :param medial_to_lateral: True or False, if false, then lateral to medial
         """
         super().__init__(weights_dir=weights_dir)
 
         self.regions_mask = None
-        self.knee_direction = knee_direction
+        self.medial_to_lateral = medial_to_lateral
 
     def unroll(self, qv_map):
         """Unroll femoral cartilage 3D quantitative value (qv) maps to 2D for visualiation
@@ -185,13 +185,10 @@ class FemoralCartilage(Tissue):
         lateral_mask[np.where(lateral_mask < 3)] = self.LATERAL_KEY
         medial_mask[np.where(medial_mask < 3)] = self.MEDIAL_KEY
 
-        if self.knee_direction is None:
-            raise ValueError('The knee direction must be initialized to determine medial/lateral sides of knee')
-
-        if self.knee_direction == 'RIGHT':
-            ml_mask = np.concatenate((lateral_mask, medial_mask), axis=1)
-        else:
+        if self.medial_to_lateral:
             ml_mask = np.concatenate((medial_mask, lateral_mask), axis=1)
+        else:
+            ml_mask = np.concatenate((lateral_mask, medial_mask), axis=1)
 
         # Split map in anterior, central and posterior regions
         anterior_mask = np.copy(unrolled_mask)[0:np.int(center_of_mass[0]), :]
@@ -266,10 +263,14 @@ class FemoralCartilage(Tissue):
         coronal_names = ['medial', 'lateral']
         sagittal_names = ['anterior', 'central', 'posterior']
 
+        if self.medial_to_lateral:
+            coronal_direction = [self.MEDIAL_KEY, self.LATERAL_KEY]
+        else:
+            coronal_direction = [self.MEDIAL_KEY, self.LATERAL_KEY]
+
         for axial in range(3):
             axial_map = axial_data[axial]
-            for coronal in [self.MEDIAL_KEY, self.LATERAL_KEY]:
-                # coronal_list = []
+            for coronal in coronal_direction:
                 for sagittal in [self.ANTERIOR_KEY, self.CENTRAL_KEY, self.POSTERIOR_KEY]:
                     curr_region_mask = (coronal_region_mask == coronal) * (sagital_region_mask == sagittal) * axial_map
 
@@ -283,17 +284,6 @@ class FemoralCartilage(Tissue):
                                 c_mean, c_std, c_median]
 
                     pd_list.append(row_info)
-
-                    #value_str = '%0.5f +/- %0.5f, %0.5f' % (c_mean, c_std, c_median)
-                    # coronal_list.append('%0.5f +/- %0.5f, %0.5f' % (c_mean, c_std, c_median))
-
-                #tissue_values.append(coronal_list)
-
-        # depth_keys = np.array(['deep', 'deep', 'superficial', 'superficial', 'total', 'total'])
-        # coronal_keys = np.array(['medial', 'lateral'] * 3)
-        # sagital_keys = ['anterior', 'central', 'posterior']
-        # df = pd.DataFrame(data=np.transpose(tissue_values), index=sagital_keys,
-        #                   columns=pd.MultiIndex.from_tuples(zip(depth_keys, coronal_keys)))
 
         df = pd.DataFrame(pd_list, columns=pd_header)
         qv_name = map_type.name

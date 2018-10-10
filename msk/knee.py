@@ -5,7 +5,7 @@ import uuid
 
 
 KNEE_KEY = 'knee'
-DIRECTION_KEY = 'direction'
+MEDIAL_TO_LATERAL_KEY = 'ml'
 TISSUES_KEY = 'tissues'
 LOAD_KEY = 'load'
 SAVE_KEY = 'save'
@@ -21,8 +21,9 @@ def knee_parser(base_parser):
     :param base_parser: the base parser to add knee subcommand to
     """
     parser_tissue = base_parser.add_parser(KNEE_KEY, help='calculate/analyze quantitative data for MSK knee')
-    parser_tissue.add_argument('-%s' % DIRECTION_KEY, choices={'LEFT', 'RIGHT'}, nargs='?', default='RIGHT',
-                               help='knee orientation (left or right)')
+
+    parser_tissue.add_argument('-%s' % MEDIAL_TO_LATERAL_KEY, action='store_const', const=True, default=False,
+                               help="defines slices in sagittal direction going from medial -> lateral")
 
     parser_tissue.add_argument('-%s' % PID_KEY, nargs='?', default=str(uuid.uuid4()), help='specify pid')
 
@@ -47,8 +48,9 @@ def handle_knee(vargin):
     """
     tissues = vargin[TISSUES_KEY]
     load_path = vargin[LOAD_KEY]
-    direction = vargin[DIRECTION_KEY]
+    medial_to_lateral = vargin[MEDIAL_TO_LATERAL_KEY]
     pid = vargin[PID_KEY]
+
     # Get all supported quantitative values
     qvs = []
     for qv in SUPPORTED_QUANTITATIVE_VALUES:
@@ -57,7 +59,7 @@ def handle_knee(vargin):
 
     for tissue in tissues:
         tissue.pid = pid
-        tissue.knee_direction = direction
+        tissue.medial_to_lateral = medial_to_lateral
         tissue.load_data(load_path)
 
         print('')
