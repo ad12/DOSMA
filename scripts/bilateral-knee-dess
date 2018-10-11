@@ -10,6 +10,8 @@
 #
 # To initialize this script, run the one-time command below :
 # chmod +x bilateral-knee-dess
+#
+# this pipeline is meant to skip 
 
 
 WEIGHTS_DIRECTORY="/home/marco.b215/msk_pipeline_data/weights"
@@ -18,13 +20,20 @@ if [ -z "$WEIGHTS_DIRECTORY" ]; then
     exit 125
 fi
 
-if [ $# -eq 0 ]; then
-	echo "Please provide path to dicom folder"
+if [ $# -lt 1 ]; then
+	echo "Please provide path to dicom folder and patient id"
+	exit 125
+fi
+
+if [ $# -lt 2 ]; then
+	echo "Please provide patient id"
 	exit 125
 fi
 
 DICOM_PATH=$1
-echo $DICOM_PATH
+PID=$2
+echo "dicom path: $DICOM_PATH"
+echo "patient id: $PID"
 
 # get list of dicoms in this folder
 dicom_list_str=$(find $DICOM_PATH -type f -name "*.dcm" | sort)
@@ -55,7 +64,7 @@ if [ ! -d "$RIGHT_DIR" ]; then
 fi
 
 # if the directories already exist, assume the data has already been separated into different folders
-if [ DIRS_EXIST -eq 0]; then
+if [ $DIRS_EXIST -eq 0 ]; then
     counter=1
     for filepath in ${dicom_array[@]}
     do
@@ -85,22 +94,13 @@ echo "Save path: $DATA_DIR"
 #    if data directory already exist, skip analysis
 
 DATA_DIR_LEFT="$DATA_DIR/LEFT"
-if [ ! -d "$DATA_DIR_LEFT" ]; then
-	python -m pipeline -d $LEFT_DIR -s $DATA_DIR_LEFT dess -t2 -rms segment -fc --weights_dir $WEIGHTS_DIRECTORY
-	python -m pipeline -l $DATA_DIR_LEFT knee -fc -t2
-fi
+
+python -m pipeline -d $LEFT_DIR -s $DATA_DIR_LEFT dess -t2 -rms segment -fc --weights_dir $WEIGHTS_DIRECTORY
+python -m pipeline -l $DATA_DIR_LEFT knee -fc -t2 -pid $PID
+
 
 DATA_DIR_RIGHT="$DATA_DIR/RIGHT"
-if [ ! -d "$DATA_DIR_RIGHT" ]; then
-	python -m pipeline -d $RIGHT_DIR -s $DATA_DIR_RIGHT dess -t2 -rms segment -fc --weights_dir $WEIGHTS_DIRECTORY
-	python -m pipeline -l $DATA_DIR_RIGHT knee -fc -t2
-fi
 
-
-
-
-
-
-
-
+python -m pipeline -d $RIGHT_DIR -s $DATA_DIR_RIGHT dess -t2 -rms segment -fc --weights_dir $WEIGHTS_DIRECTORY
+python -m pipeline -l $DATA_DIR_RIGHT knee -fc -t2 -ml -pid $PID
 
