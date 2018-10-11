@@ -1,7 +1,7 @@
 import argparse
 import os
 import scipy.io as sio
-from utils import dicom_utils
+from utils import dicom_utils, io_utils
 from med_objects.med_volume import MedicalVolume
 
 
@@ -35,6 +35,8 @@ def handle_mat(vargin):
 
     if save_path is None:
         save_path = os.path.dirname(mat_filepath)
+
+    save_path = io_utils.check_dir(save_path)
 
     save_filepath = os.path.join(save_path, '%s.nii.gz' % filename)
 
