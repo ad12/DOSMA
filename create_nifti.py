@@ -12,11 +12,14 @@ FILE_KEY = 'file'
 MAT_FILE = 'mat'
 SAMPLE_DICOM_KEY = 'sample_dicom'
 
+SAVE_KEY='save'
+
 
 def handle_mat(vargin):
     mat_filepath = vargin[FILE_KEY][0]
     var_name = vargin[VARIABLE_KEY][0]
     sample_dicom_path = vargin[SAMPLE_DICOM_KEY][0]
+    save_path = vargin[SAVE_KEY]
 
     # extract array from mat file
     mat_contents = sio.loadmat(mat_filepath)
@@ -27,8 +30,14 @@ def handle_mat(vargin):
 
     v = MedicalVolume(arr, pixel_spacing)
 
-    fs = os.path.splitext(mat_filepath)
-    save_filepath = '%s.nii.gz' % fs[0]
+    fs = os.path.splitext(os.path.basename(mat_filepath))
+    filename = fs[0]
+
+    if save_path is None:
+        save_path = os.path.dirname(mat_filepath)
+
+    save_filepath = os.path.join(save_path, '%s.nii.gz' % filename)
+
     v.save_volume(save_filepath)
 
 
@@ -42,11 +51,13 @@ def parse_args():
                                      description='Pipeline for segmenting MRI knee volumes')
 
     subparsers = parser.add_subparsers(help='sub-command help', dest=FILETYPE_KEY)
-    parser_mat = subparsers.add_parser(MAT_FILE, help='convert .mat to .nii.gz format')
+    parser_mat = subparsers.add_parser(MAT_FILE, help='convert .mat->.nii.gz. File name is the same')
 
     # Dicom and results paths
     parser_mat.add_argument('-f', '--%s' % FILE_KEY, metavar='F', type=str, default=None, nargs=1,
                         help='path to .mat file')
+    parser_mat.add_argument('-s', '--%s' % SAVE_KEY, metavar='S', type=str, default=None, nargs='?',
+                        help='directory to save .nii.gz file')
     parser_mat.add_argument('-v', '--%s' % VARIABLE_KEY, metavar='V', type=str, default=None, nargs=1,
                             help='if using .mat format, what variable name to analyze')
     parser_mat.add_argument('-sd', '--%s' % SAMPLE_DICOM_KEY, metavar='SD', type=str, default=None, nargs=1,
