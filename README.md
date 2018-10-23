@@ -1,4 +1,4 @@
-# Open-Source MRI Pipeline
+# DOSMA: Deep Open-Source MRI Analysis
 
 This pipeline is an open-source pipeline for MRI image segmentation, registration, and quantitative analysis.
 
