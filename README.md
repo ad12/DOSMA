@@ -18,7 +18,7 @@ Currently, this pipeline supports analysis of the femoral cartilage in the knee 
 ### Scans
 The following scan sequences are supported. All sequences with multiple echos, spin_lock_times, etc. should have metadata in the dicom header specifying this information.
 
-#### Double echo DESS
+#### Double echo steady state (DESS)
 
 ##### Data format
 All data should be provided in the dicom format. Currently only sagittal orientation dicoms are supported.
@@ -54,22 +54,23 @@ Save these weights in an accessible location. **Do not rename these files**.
 To run the program from a shell, run `python -m opt/path/pipeline` with the flags detailed below. `opt/path` is the path to the file `python`
 
 ### Base information
-
 ```
-usage: pipeline [-h] [-d [D]] [-l [L]] [-s [S]] [-e [E]] [--gpu [G]]
-            {dess,cubequant,cq,knee} ...
+usage: pipeline [-h] [--debug] [-d [D]] [-l [L]] [-s [S]] [-e [E]] [--gpu [G]]
+                {dess,cubequant,cq,cones,knee} ...
 
 Pipeline for segmenting MRI knee volumes
 
 positional arguments:
-  {dess,cubequant,cq,knee}
+  {dess,cubequant,cq,cones,knee}
                         sub-command help
     dess                analyze DESS sequence
     cubequant (cq)      analyze cubequant sequence
-    knee                analyze tissues
+    cones               analyze cones sequence
+    knee                calculate/analyze quantitative data for MSK knee
 
 optional arguments:
   -h, --help            show this help message and exit
+  --debug               debug
   -d [D], --dicom [D]   path to directory storing dicom files
   -l [L], --load [L]    path to data directory to load from
   -s [S], --save [S]    path to directory to save mask. Default: D/L
@@ -102,8 +103,9 @@ optional arguments:
 
 #### Segmentation
 ```
-usage: pipeline dess segment [-h] [--model [{unet2d}]] [--weights_dir WEIGHTS_DIR]
-                         [--batch_size [B]] [-fc]
+usage: pipeline dess segment [-h] [--model [{unet2d}]]
+                             [--weights_dir WEIGHTS_DIR] [--batch_size [B]]
+                             [-fc]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -168,17 +170,17 @@ optional arguments:
 
 ### MSK Knee
 ```
-usage: pipeline knee [-h] [--orientation [{RIGHT,LEFT}]] [-fc] [-t2] [-t1_rho]
-                     [-t2_star]
+usage: pipeline knee [-h] [-ml] [-pid [PID]] [-fc] [-t2] [-t1_rho] [-t2_star]
 
 optional arguments:
-  -h, --help            show this help message and exit
-  --orientation [{RIGHT,LEFT}]
-                        knee orientation (left or right)
-  -fc                   analyze femoral cartilage
-  -t2                   quantify t2
-  -t1_rho               quantify t1_rho
-  -t2_star              quantify t2_star
+  -h, --help  show this help message and exit
+  -ml         defines slices in sagittal direction going from medial ->
+              lateral (default lateral->medial)
+  -pid [PID]  specify pid
+  -fc         analyze femoral cartilage
+  -t2         quantify t2
+  -t1_rho     quantify t1_rho
+  -t2_star    quantify t2_star
 ```
 
 ## Machine Learning Disclaimer
@@ -218,7 +220,7 @@ All use cases assume that the [current working directory](https://www.computerho
 python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess -t2
 ```
 
-2. Segment femoral cartilage using RMS of two echo dess echos
+2. Segment femoral cartilage using root mean square (RMS) of two echo dess echos
 ```
 python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess -rms segment --weights_dir unet_weights
 ```
