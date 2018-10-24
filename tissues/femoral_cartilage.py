@@ -174,10 +174,11 @@ class FemoralCartilage(Tissue):
         unrolled_mask_indexes = np.nonzero(unrolled_quantitative_map)
         unrolled_mask = np.zeros((unrolled_quantitative_map.shape[0], unrolled_quantitative_map.shape[1]))
         unrolled_mask[unrolled_mask_indexes] = 1
-        unrolled_mask[np.where(unrolled_mask < 1)] = 3
 
         # find the center of mass of the unrolled mask
         center_of_mass = sni.measurements.center_of_mass(unrolled_mask)
+
+        unrolled_mask[np.where(unrolled_mask < 1)] = 3
 
         lateral_mask = np.copy(unrolled_mask)[:, 0:np.int(np.around(center_of_mass[1]))]
         medial_mask = np.copy(unrolled_mask)[:, np.int(np.around(center_of_mass[1])):]
