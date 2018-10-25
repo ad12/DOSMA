@@ -46,7 +46,7 @@ We recommend using the (Anaconda)[https://www.anaconda.com/download] virtual env
 An `environment.yml` file is provided in this repo containing all libraries used.
 
 ### Weights
-For pretrained weights for MSK knee segmentation, request access to this [Google Drive](https://drive.google.com/drive/u/0/folders/1VtVzOAS6VbFzpEi9Fivy6BgcMubfFlL-). Note that these weights are optimized to run on single-echo RMS DESS sequence as used in the [OA initiative](https://oai.epi-ucsf.org/datarelease/).
+For pretrained weights for MSK knee segmentation, request access using this [Google form](https://goo.gl/forms/JlxgS3aoUeeUUlVh2). Note that these weights are optimized to run on single-echo RMS DESS sequence as used in the [OA initiative](https://oai.epi-ucsf.org/datarelease/).
 
 Save these weights in an accessible location. **Do not rename these files**.
 
