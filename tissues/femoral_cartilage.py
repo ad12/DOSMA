@@ -184,16 +184,18 @@ class FemoralCartilage(Tissue):
 
         unrolled_mask[np.where(unrolled_mask < 1)] = self.BACKGROUND_KEY
 
-        lateral_mask = np.copy(unrolled_mask)[:, 0:np.int(np.around(center_of_mass[1]))]
-        medial_mask = np.copy(unrolled_mask)[:, np.int(np.around(center_of_mass[1])):]
+        left_side_mask = np.copy(unrolled_mask)[:, 0:np.int(np.around(center_of_mass[1]))]
+        right_side_mask = np.copy(unrolled_mask)[:, np.int(np.around(center_of_mass[1])):]
 
-        lateral_mask[np.where(lateral_mask < self.BACKGROUND_KEY)] = self.LATERAL_KEY
-        medial_mask[np.where(medial_mask < self.BACKGROUND_KEY)] = self.MEDIAL_KEY
-
+        # take into account scanning direction
         if self.medial_to_lateral:
-            ml_mask = np.concatenate((medial_mask, lateral_mask), axis=1)
+            left_side_mask[np.where(left_side_mask < self.BACKGROUND_KEY)] = self.MEDIAL_KEY
+            right_side_mask[np.where(right_side_mask < self.BACKGROUND_KEY)] = self.LATERAL_KEY
         else:
-            ml_mask = np.concatenate((lateral_mask, medial_mask), axis=1)
+            left_side_mask[np.where(left_side_mask < self.BACKGROUND_KEY)] = self.LATERAL_KEY
+            right_side_mask[np.where(right_side_mask < self.BACKGROUND_KEY)] = self.MEDIAL_KEY
+
+        ml_mask = np.concatenate((left_side_mask, right_side_mask), axis=1)
 
         # Split map in anterior, central and posterior regions
         anterior_mask = np.copy(unrolled_mask)[0:np.int(center_of_mass[0]), :]
