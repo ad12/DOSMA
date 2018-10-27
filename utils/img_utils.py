@@ -1,6 +1,13 @@
 import random
 import numpy as np
 import itertools
+import seaborn as sns
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+
 
 def downsample_slice(img_array, ds_factor, is_mask = False):
     
@@ -51,5 +58,54 @@ def downsample_slice(img_array, ds_factor, is_mask = False):
     if is_mask is True:
         final = (final >= 1)*1
 
-    return final 
+    return final
 
+
+def write_regions(filepath, arr, labels=None):
+    """
+    Write 2D array to region image where colors correspond to the region
+
+    All finite values should be >= 1
+    nan/inf value are ignored - written as white
+
+    :param filepath: Filepath to save image
+    :param arr: The 2D numpy array to convert to region image
+    :param labels: labels for unique values, default = None
+    """
+
+    if len(arr.shape) != 2:
+        raise ValueError('\'arr\' must be a 2D numpy array')
+
+    unique_vals = np.unique(arr.flatten())
+    if 0 in unique_vals:
+        raise ValueError('All finite values in \'arr\' must be >=1')
+
+    unique_vals = unique_vals[np.isfinite(unique_vals)]
+    num_unique_vals = len(unique_vals)
+
+    if labels is None:
+        labels = list(unique_vals)
+
+    if len(labels) != num_unique_vals:
+        raise ValueError('len(labels) != num_unique_vals - %d != %d' % (len(labels), num_unique_vals))
+
+    cpal = sns.color_palette("pastel", num_unique_vals)
+
+    arr_c = np.array(arr)
+    arr_c = np.nan_to_num(arr_c)
+    arr_c[arr_c > np.max(unique_vals)] = 0
+    arr_rgb = np.ones([arr_c.shape[0], arr_c.shape[1], 3])
+
+    custom_lines = []
+    for i in range(num_unique_vals):
+        unique_val = unique_vals[i]
+        i0, i1 = np.where(arr_c == unique_val)
+        arr_rgb[i0, i1, ...] = np.asarray(cpal[i])
+
+        custom_lines.append(Line2D([], [], color=cpal[i], marker='o', linestyle='None',
+                          markersize=5))
+
+    plt.legend(custom_lines, labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
+          fancybox=True, shadow=True, ncol=3)
+    plt.imshow(arr_rgb)
+    plt.savefig(filepath)

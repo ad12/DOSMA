@@ -13,7 +13,7 @@ import scipy.ndimage as sni
 import defaults
 from med_objects.med_volume import MedicalVolume
 from tissues.tissue import Tissue
-from utils import io_utils
+from utils import io_utils, img_utils
 from utils.geometry_utils import circle_fit, cart2pol
 from utils.quant_vals import QuantitativeValues
 
@@ -274,14 +274,9 @@ class FemoralCartilage(Tissue):
         coronal_names = ['medial', 'lateral']
         sagittal_names = ['anterior', 'central', 'posterior']
 
-        if self.medial_to_lateral:
-            coronal_direction = [self.MEDIAL_KEY, self.LATERAL_KEY]
-        else:
-            coronal_direction = [self.MEDIAL_KEY, self.LATERAL_KEY]
-
         for axial in range(3):
             axial_map = axial_data[axial]
-            for coronal in coronal_direction:
+            for coronal in [self.MEDIAL_KEY, self.LATERAL_KEY]:
                 for sagittal in [self.ANTERIOR_KEY, self.CENTRAL_KEY, self.POSTERIOR_KEY]:
                     curr_region_mask = (coronal_region_mask == coronal) * (sagital_region_mask == sagittal) * axial_map
 
@@ -376,7 +371,7 @@ class FemoralCartilage(Tissue):
 
                 # Save data
                 raw_data_filepath = os.path.join(q_name_dirpath, q_map_data['raw_data_filename'])
-                io_utils.save_pik(raw_data_filepath, {'data': data_map})
+                io_utils.save_pik(raw_data_filepath, data_map)
 
         if len(dfs) > 0:
             io_utils.save_tables(os.path.join(dirpath, 'data.xlsx'), dfs, q_names)
@@ -384,6 +379,15 @@ class FemoralCartilage(Tissue):
     def save_data(self, save_dirpath):
         super().save_data(save_dirpath)
 
-        # Save region map
+        save_dirpath = self.__save_dirpath__(save_dirpath)
+
+        # Save region map - add by 1 because no key can be 0
+        coronal_region_mask = (self.regions_mask[..., 0] + 1) * 10
+        sagital_region_mask = (self.regions_mask[..., 1] + 1)
+        joined_mask = coronal_region_mask + sagital_region_mask
+        labels = ['medial anterior', 'medial central', 'medial posterior',
+                  'lateral anterior', 'lateral central', 'lateral posterior']
+
+        img_utils.write_regions(os.path.join(save_dirpath, 'regions'), joined_mask, labels)
 
 
