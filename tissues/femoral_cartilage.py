@@ -299,11 +299,13 @@ class FemoralCartilage(Tissue):
         df = pd.DataFrame(pd_list, columns=pd_header)
         qv_name = map_type.name
         maps = [{'title': '%s deep' % qv_name, 'data': deep, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)',
-                 'filename': '%s_deep.png' % qv_name},
+                 'filename': '%s_deep.png' % qv_name, 'raw_data_filename': '%s_deep.data' % qv_name},
                 {'title': '%s superficial' % qv_name, 'data': superficial, 'xlabel': 'Slice',
-                 'ylabel': 'Angle (binned)', 'filename': '%s_superficial.png' % qv_name},
+                 'ylabel': 'Angle (binned)', 'filename': '%s_superficial.png' % qv_name,
+                 'raw_data_filename': '%s_superficial.data' % qv_name},
                 {'title': '%s total' % qv_name, 'data': total, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)',
-                 'filename': '%s_total.png' % qv_name}]
+                 'filename': '%s_total.png' % qv_name,
+                 'raw_data_filename': '%s_total.data' % qv_name}]
 
         self.__store_quant_vals__(maps, df, map_type)
 
@@ -372,5 +374,16 @@ class FemoralCartilage(Tissue):
 
                 plt.savefig(filepath)
 
+                # Save data
+                raw_data_filepath = os.path.join(q_name_dirpath, q_map_data['raw_data_filename'])
+                io_utils.save_pik(raw_data_filepath, {'data': data_map})
+
         if len(dfs) > 0:
             io_utils.save_tables(os.path.join(dirpath, 'data.xlsx'), dfs, q_names)
+
+    def save_data(self, save_dirpath):
+        super().save_data(save_dirpath)
+
+        # Save region map
+
+

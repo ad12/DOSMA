@@ -83,6 +83,9 @@ class Tissue(ABC):
 
         Saves mask and quantitative values associated with this tissue
 
+        Extension (Overriding) protocol: When overriding in subclasses, call super().save_data(save_dirpath) first
+                                            e.g. femoral_cartilage.py
+
         :param save_dirpath: base path to save data
         """
         save_dirpath = self.__save_dirpath__(save_dirpath)
