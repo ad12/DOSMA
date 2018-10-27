@@ -95,7 +95,9 @@ def write_regions(filepath, arr, labels=None):
     arr_c = np.nan_to_num(arr_c)
     arr_c[arr_c > np.max(unique_vals)] = 0
     arr_rgb = np.ones([arr_c.shape[0], arr_c.shape[1], 3])
-
+    
+    plt.figure()
+    plt.clf()
     custom_lines = []
     for i in range(num_unique_vals):
         unique_val = unique_vals[i]
@@ -105,7 +107,7 @@ def write_regions(filepath, arr, labels=None):
         custom_lines.append(Line2D([], [], color=cpal[i], marker='o', linestyle='None',
                           markersize=5))
 
-    plt.legend(custom_lines, labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
+    lgd = plt.legend(custom_lines, labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
           fancybox=True, shadow=True, ncol=3)
     plt.imshow(arr_rgb)
-    plt.savefig(filepath)
+    plt.savefig(filepath, bbox_extra_artists=(lgd,), bbox_inches='tight')

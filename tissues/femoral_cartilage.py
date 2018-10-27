@@ -370,7 +370,7 @@ class FemoralCartilage(Tissue):
                 plt.savefig(filepath)
 
                 # Save data
-                raw_data_filepath = os.path.join(q_name_dirpath, q_map_data['raw_data_filename'])
+                raw_data_filepath = os.path.join(q_name_dirpath, 'raw_data', q_map_data['raw_data_filename'])
                 io_utils.save_pik(raw_data_filepath, data_map)
 
         if len(dfs) > 0:
