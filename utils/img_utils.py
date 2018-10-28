@@ -85,7 +85,9 @@ def write_regions(filepath, arr, plt_dict=None):
     
     if plt_dict is None:
         plt_dict = {'xlabel': '', 'ylabel': '', 'labels': None}
-    if plt_dict['labels'] is None:
+
+    labels = plt_dict['labels']
+    if labels is None:
         labels = list(unique_vals)
 
     if len(labels) != num_unique_vals:
