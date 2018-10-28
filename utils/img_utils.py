@@ -61,7 +61,7 @@ def downsample_slice(img_array, ds_factor, is_mask = False):
     return final
 
 
-def write_regions(filepath, arr, labels=None):
+def write_regions(filepath, arr, plt_dict=None):
     """
     Write 2D array to region image where colors correspond to the region
 
@@ -82,8 +82,10 @@ def write_regions(filepath, arr, labels=None):
 
     unique_vals = unique_vals[np.isfinite(unique_vals)]
     num_unique_vals = len(unique_vals)
-
-    if labels is None:
+    
+    if plt_dict is None:
+        plt_dict = {'xlabel': '', 'ylabel': '', 'labels': None}
+    if plt_dict[labels] is None:
         labels = list(unique_vals)
 
     if len(labels) != num_unique_vals:
@@ -106,6 +108,9 @@ def write_regions(filepath, arr, labels=None):
 
         custom_lines.append(Line2D([], [], color=cpal[i], marker='o', linestyle='None',
                           markersize=5))
+    
+    plt.xlabel(plt_dict['xlabel'])
+    plt.ylabel(plt_dict['ylabel'])
 
     lgd = plt.legend(custom_lines, labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
           fancybox=True, shadow=True, ncol=3)
