@@ -387,7 +387,7 @@ class FemoralCartilage(Tissue):
         joined_mask = coronal_region_mask + sagital_region_mask
         labels = ['medial anterior', 'medial central', 'medial posterior',
                   'lateral anterior', 'lateral central', 'lateral posterior']
-        plt_dict={'labels': labels, 'xlabel': 'Slice', ylabel: 'Angle (binned)'}
+        plt_dict={'labels': labels, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)'}
         img_utils.write_regions(os.path.join(save_dirpath, 'region_map.png'), joined_mask, plt_dict)
 
 
