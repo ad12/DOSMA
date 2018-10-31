@@ -381,13 +381,17 @@ class FemoralCartilage(Tissue):
 
         save_dirpath = self.__save_dirpath__(save_dirpath)
 
+        if self.regions_mask is None:
+            print('femoral cartilage region mask not saved')
+            return
+
         # Save region map - add by 1 because no key can be 0
         coronal_region_mask = (self.regions_mask[..., 0] + 1) * 10
         sagital_region_mask = (self.regions_mask[..., 1] + 1)
         joined_mask = coronal_region_mask + sagital_region_mask
         labels = ['medial anterior', 'medial central', 'medial posterior',
                   'lateral anterior', 'lateral central', 'lateral posterior']
-        plt_dict={'labels': labels, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)'}
-        img_utils.write_regions(os.path.join(save_dirpath, 'region_map.png'), joined_mask, plt_dict)
+        plt_dict={'labels': labels, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'title': 'Unrolled Regions'}
+        img_utils.write_regions(os.path.join(save_dirpath, 'region_map.png'), joined_mask, plt_dict=plt_dict)
 
 
