@@ -8,6 +8,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
+import defaults
+
 
 def downsample_slice(img_array, ds_factor, is_mask = False):
     
@@ -118,4 +120,4 @@ def write_regions(filepath, arr, plt_dict=None):
     lgd = plt.legend(custom_lines, labels, loc='upper center', bbox_to_anchor=(0.5, -0.122),
           fancybox=True, shadow=True, ncol=3)
     plt.imshow(arr_rgb)
-    plt.savefig(filepath, dpi=1000, bbox_extra_artists=(lgd,), bbox_inches='tight')
+    plt.savefig(filepath, dpi=defaults.DEFAULT_DPI, bbox_extra_artists=(lgd,), bbox_inches='tight')

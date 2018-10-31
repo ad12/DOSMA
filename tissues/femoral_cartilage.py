@@ -367,7 +367,7 @@ class FemoralCartilage(Tissue):
                 plt.title(title)
                 plt.colorbar()
 
-                plt.savefig(filepath, dpi=1000)
+                plt.savefig(filepath, dpi=defaults.DEFAULT_DPI)
 
                 # Save data
                 raw_data_filepath = os.path.join(q_name_dirpath, 'raw_data', q_map_data['raw_data_filename'])

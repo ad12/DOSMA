@@ -18,3 +18,6 @@ DEFAULT_MASK_DIL_THRESHOLD = 0.2
 
 # The R^2 fit threshold to include when estimating quantitative values
 DEFAULT_R2_THRESHOLD = 0.9
+
+# DPI to save images
+DEFAULT_DPI = 400
