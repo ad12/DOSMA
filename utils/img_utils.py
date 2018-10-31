@@ -84,7 +84,7 @@ def write_regions(filepath, arr, plt_dict=None):
     num_unique_vals = len(unique_vals)
     
     if plt_dict is None:
-        plt_dict = {'xlabel': '', 'ylabel': '', 'labels': None}
+        plt_dict = {'xlabel': '', 'ylabel': '', 'title': '', 'labels': None}
 
     labels = plt_dict['labels']
     if labels is None:
@@ -113,8 +113,9 @@ def write_regions(filepath, arr, plt_dict=None):
     
     plt.xlabel(plt_dict['xlabel'])
     plt.ylabel(plt_dict['ylabel'])
+    plt.title(plt_dict['title'])
 
-    lgd = plt.legend(custom_lines, labels, loc='upper center', bbox_to_anchor=(0.5, 0.1),
+    lgd = plt.legend(custom_lines, labels, loc='upper center', bbox_to_anchor=(0.5, -0.122),
           fancybox=True, shadow=True, ncol=3)
-    #plt.imshow(arr_rgb)
-    plt.savefig(filepath, bbox_extra_artists=(lgd,), bbox_inches='tight')
+    plt.imshow(arr_rgb)
+    plt.savefig(filepath, dpi=1000, bbox_extra_artists=(lgd,), bbox_inches='tight')

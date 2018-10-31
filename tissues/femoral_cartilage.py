@@ -254,7 +254,7 @@ class FemoralCartilage(Tissue):
 
         if self.regions_mask is None:
             self.split_regions(total)
-
+        
         coronal_region_mask = self.regions_mask[..., 0]
         sagital_region_mask = self.regions_mask[..., 1]
 
@@ -367,7 +367,7 @@ class FemoralCartilage(Tissue):
                 plt.title(title)
                 plt.colorbar()
 
-                plt.savefig(filepath)
+                plt.savefig(filepath, dpi=1000)
 
                 # Save data
                 raw_data_filepath = os.path.join(q_name_dirpath, 'raw_data', q_map_data['raw_data_filename'])
@@ -384,7 +384,7 @@ class FemoralCartilage(Tissue):
         if self.regions_mask is None:
             print('femoral cartilage region mask not saved')
             return
-
+        
         # Save region map - add by 1 because no key can be 0
         coronal_region_mask = (self.regions_mask[..., 0] + 1) * 10
         sagital_region_mask = (self.regions_mask[..., 1] + 1)
