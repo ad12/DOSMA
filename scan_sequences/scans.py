@@ -341,7 +341,7 @@ class NonTargetSequence(ScanSequence):
             raise ValueError('dil_threshold must be in range [0, 1]')
 
         mask = io_utils.load_nifti(mask_path)
-        mask = mask.volume
+
         dilated_mask = sni.gaussian_filter(np.asarray(mask.volume, dtype=np.float32),
                                            sigma=dil_rate) > dil_threshold
         fixed_mask = np.asarray(dilated_mask,

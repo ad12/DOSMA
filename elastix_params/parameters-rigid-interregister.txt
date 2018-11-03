@@ -54,7 +54,8 @@
 // * Sampler parameters
 // *********************
 (NumberOfSpatialSamples 2000)
-(ImageSampler "RandomSparseMask")
+//(ImageSampler "RandomSparseMask")
+(ImageSampler "RandomCoordinate")
 (CheckNumberOfSamples "true")
 (NewSamplesEveryIteration "true")
 (FinalBSplineInterpolationOrder 3)
