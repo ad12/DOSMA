@@ -19,3 +19,5 @@
 libANNlib.dylib
 debug_runs.py
 
+# ignore ismrm
+**/ismrm_2019_scripts
