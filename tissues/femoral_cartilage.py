@@ -365,7 +365,8 @@ class FemoralCartilage(Tissue):
                 plt.xlabel(xlabel)
                 plt.ylabel(ylabel)
                 plt.title(title)
-                plt.colorbar()
+                clb = plt.colorbar()
+                clb.ax.set_title('(ms)')
 
                 plt.savefig(filepath, dpi=defaults.DEFAULT_DPI)
 
