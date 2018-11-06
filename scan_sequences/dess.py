@@ -36,7 +36,8 @@ class Dess(TargetSequence):
 
         if not load_path:
             self.subvolumes = self.__split_volume__(self.__NUM_ECHOS__)
-            self.t2map = None
+
+        self.t2map = None
 
         if not self.validate_dess():
             raise ValueError('dicoms in \'%s\' are not acquired from DESS sequence' % self.dicom_path)
@@ -186,6 +187,7 @@ class Dess(TargetSequence):
     def load_data(self, base_load_dirpath):
         super().load_data(base_load_dirpath)
 
+        base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
         self.subvolumes = []
         # Load subvolumes from nifti file
         for i in range(self.__NUM_ECHOS__):

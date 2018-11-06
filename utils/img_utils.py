@@ -117,7 +117,8 @@ def write_regions(filepath, arr, plt_dict=None):
     plt.ylabel(plt_dict['ylabel'])
     plt.title(plt_dict['title'])
 
-    lgd = plt.legend(custom_lines, labels, loc='upper center', bbox_to_anchor=(0.5, -0.122),
+    lgd = plt.legend(custom_lines, labels, loc='upper center', bbox_to_anchor=(0.5, -defaults.DEFAULT_TEXT_SPACING),
           fancybox=True, shadow=True, ncol=3)
     plt.imshow(arr_rgb)
+
     plt.savefig(filepath, dpi=defaults.DEFAULT_DPI, bbox_extra_artists=(lgd,), bbox_inches='tight')
