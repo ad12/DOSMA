@@ -2,7 +2,6 @@ import os
 import warnings
 
 import matplotlib.pyplot as plt
-
 import nipy.labs.mask as nlm
 import numpy as np
 import pandas as pd
@@ -15,6 +14,7 @@ from utils import io_utils, img_utils
 from utils.geometry_utils import circle_fit, cart2pol
 from utils.quant_vals import QuantitativeValues
 
+# milliseconds
 BOUNDS = {QuantitativeValues.T2: 60.0,
           QuantitativeValues.T1_RHO: 100.0,
           QuantitativeValues.T2_STAR: 50.0}
@@ -25,6 +25,9 @@ class FemoralCartilage(Tissue):
     ID = 1
     STR_ID = 'fc'
     FULL_NAME = 'femoral cartilage'
+
+    # Expected quantitative values
+    T1_EXPECTED = 1200 # milliseconds
 
     # Coronal Keys
     ANTERIOR_KEY = 0
@@ -220,7 +223,7 @@ class FemoralCartilage(Tissue):
         assert np.allclose(self.regions_mask[..., 0], ml_mask[..., 0], equal_nan=True)
         assert np.allclose(self.regions_mask[..., 1], acp_mask[..., 0], equal_nan=True)
 
-    def calc_quant_vals(self, quant_map, map_type):
+    def __calc_quant_vals__(self, quant_map, map_type):
         """
         Calculate quantitative values per region and 2D visualizations
 
@@ -240,7 +243,7 @@ class FemoralCartilage(Tissue):
         :param map_type: A QuantitativeValue instance
         """
 
-        super().calc_quant_vals(quant_map, map_type)
+        super().__calc_quant_vals__(quant_map, map_type)
 
         if self.__mask__ is None:
             raise ValueError('Please initialize mask')

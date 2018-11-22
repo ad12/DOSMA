@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 from med_objects.med_volume import MedicalVolume
 from utils import io_utils
-from utils.quant_vals import QuantitativeValues
+from utils.quant_vals import QuantitativeValues, QuantitativeValue
 
 WEIGHTS_FILE_EXT = 'h5'
 
@@ -15,6 +15,12 @@ class Tissue(ABC):
     ID = -1  # should be unique to all tissues, and should not change - replace with a unique identifier
     STR_ID = ''  # short hand string id such as 'fc' for femoral cartilage
     FULL_NAME = ''  # full name of tissue 'femoral cartilage' for femoral cartilage
+
+    # Expected quantitative param values
+    T1_EXPECTED = None
+
+    # quantitative value list
+    quantitative_values = []
 
     def __init__(self, weights_dir=None):
         """
@@ -37,10 +43,20 @@ class Tissue(ABC):
         """
         pass
 
-    @abstractmethod
-    def calc_quant_vals(self, quant_map, map_type):
+    def calc_quant_vals(self):
         """
-        Get quantitative values for tissue
+        Get all quantitative values for tissue
+        :param quant_map: a 3D numpy array for quantitative measures (t2, t2*, t1-rho, etc)
+        :param map_type: an enum instance of QuantitativeValue
+        :return: a list of dictionaries of quantitative values, save in quant_vals
+        """
+        for qv in self.quantitative_values:
+            self.__calc_quant_vals__(qv.volumetric_map, qv.get_enum())
+
+    @abstractmethod
+    def __calc_quant_vals__(self, quant_map, map_type):
+        """
+        Private method to get quantitative values for tissue - implemented by tissue
         :param quant_map: a 3D numpy array for quantitative measures (t2, t2*, t1-rho, etc)
         :param map_type: an enum instance of QuantitativeValue
         :return: a dictionary of quantitative values, save in quant_vals
@@ -94,6 +110,9 @@ class Tissue(ABC):
             mask_filepath = os.path.join(save_dirpath, '%s.nii.gz' % self.STR_ID)
             self.__mask__.save_volume(mask_filepath)
 
+        for qv in self.quantitative_values:
+            qv.save_data(save_dirpath)
+
         self.__save_quant_data__(save_dirpath)
 
     @abstractmethod
@@ -107,17 +126,15 @@ class Tissue(ABC):
         If mask for tissue doesn't exist, there is no information to load.
 
         :param load_dirpath: base path to load data (same as 'save_dirpath' arg input to self.save_data(save_dirpath))
-
-        :raise FileNotFoundError:
-                    1. if mask file (.nii.gz nifti format) cannot be found in load_dirpath
         """
         load_dirpath = self.__save_dirpath__(load_dirpath)
         mask_filepath = os.path.join(load_dirpath, '%s.nii.gz' % self.STR_ID)
-        if not os.path.isfile(mask_filepath):
-            raise FileNotFoundError('File \'%s\' does not exist' % mask_filepath)
 
-        filepath = os.path.join(load_dirpath, '%s.nii.gz' % self.STR_ID)
-        self.__mask__ = io_utils.load_nifti(filepath)
+        # try to load mask, if file exists
+        if os.path.isfile(mask_filepath):
+            self.__mask__ = io_utils.load_nifti(mask_filepath)
+
+        self.quantitative_values = QuantitativeValue.load_qvs(load_dirpath)
 
     def __save_dirpath__(self, dirpath):
         """Subdirectory to store data - save_dirpath/self.STR_ID/
@@ -132,3 +149,15 @@ class Tissue(ABC):
         """
         assert type(mask) is MedicalVolume, "mask for tissue must be of type MedicalVolume"
         self.__mask__ = mask
+
+    def get_mask(self):
+        # if mask is None, try loading mask
+        return self.__mask__
+
+    def add_quantitative_value(self, qv_new):
+        for qv in self.quantitative_values:
+            if qv_new.NAME == qv.NAME:
+                raise ValueError('This quantitative value already exists. '
+                                 'Only one type of quantitative value can be added per tissue')
+
+        self.quantitative_values.append(qv_new)

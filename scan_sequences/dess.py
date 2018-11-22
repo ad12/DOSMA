@@ -7,7 +7,7 @@ from pydicom.tag import Tag
 from med_objects.med_volume import MedicalVolume
 from scan_sequences.scans import TargetSequence
 from utils import dicom_utils, io_utils
-from utils.quant_vals import QuantitativeValues
+from utils.quant_vals import T2
 
 
 class Dess(TargetSequence):
@@ -21,7 +21,6 @@ class Dess(TargetSequence):
     # DESS constants
     __NUM_ECHOS__ = 2
     __VOLUME_DIMENSIONS__ = 3
-    __T1__ = 1.2
     __D__ = 1.25 * 1e-9
 
     # Clipping bounds for t2
@@ -36,8 +35,6 @@ class Dess(TargetSequence):
 
         if not load_path:
             self.subvolumes = self.__split_volume__(self.__NUM_ECHOS__)
-
-        self.t2map = None
 
         if not self.validate_dess():
             raise ValueError('dicoms in \'%s\' are not acquired from DESS sequence' % self.dicom_path)
@@ -105,7 +102,7 @@ class Dess(TargetSequence):
 
         return mask
 
-    def generate_t2_map(self):
+    def generate_t2_map(self, tissue):
         """ Generate 3D t2 map
 
         :return MedicalVolume with 3D map of t2 values
@@ -132,6 +129,7 @@ class Dess(TargetSequence):
         TR = float(ref_dicom.RepetitionTime) * 1e-3
         TE = float(ref_dicom.EchoTime) * 1e-3
         Tg = float(ref_dicom[self.__TG_TAG__].value) * 1e-6
+        T1 = float(tissue.T1_EXPECTED) * 1e-3
 
         # Flip Angle (degree -> radians)
         alpha = math.radians(float(ref_dicom.FlipAngle))
@@ -144,8 +142,8 @@ class Dess(TargetSequence):
 
         # Simply math
         k = math.pow((math.sin(alpha / 2)), 2) * (
-                1 + math.exp(-TR / self.__T1__ - TR * math.pow(dkL, 2) * self.__D__)) / (
-                    1 - math.cos(alpha) * math.exp(-TR / self.__T1__ - TR * math.pow(dkL, 2) * self.__D__))
+                1 + math.exp(-TR / T1 - TR * math.pow(dkL, 2) * self.__D__)) / (
+                    1 - math.cos(alpha) * math.exp(-TR / T1 - TR * math.pow(dkL, 2) * self.__D__))
 
         c1 = (TR - Tg / 3) * (math.pow(dkL, 2)) * self.__D__
 
@@ -167,17 +165,16 @@ class Dess(TargetSequence):
 
         t2map = np.around(t2map, self.__T2_DECIMAL_PRECISION__)
 
-        self.t2map = MedicalVolume(t2map, subvolumes[0].pixel_spacing)
+        t2_map_wrapped = MedicalVolume(t2map, subvolumes[0].pixel_spacing)
 
-        return self.t2map
+        tissue.add_quantitative_value(T2(t2_map_wrapped))
+
+        return t2map
 
     def save_data(self, base_save_dirpath):
         super().save_data(base_save_dirpath)
 
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
-
-        if self.t2map is not None:
-            self.t2map.save_volume(os.path.join(base_save_dirpath, '%s.nii.gz' % QuantitativeValues.T2.name.lower()))
 
         # write echos
         for i in range(len(self.subvolumes)):

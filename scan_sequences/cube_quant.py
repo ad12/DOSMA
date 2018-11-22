@@ -24,10 +24,7 @@ class CubeQuant(NonTargetSequence):
     def __init__(self, dicom_path=None, dicom_ext=None, load_path=None):
         super().__init__(dicom_path, dicom_ext, load_path=load_path)
 
-        self.t1rho_map = None
-        self.r2 = None
         self.subvolumes = None
-        self.focused_mask_filepath = None
 
         if load_path:
             self.load_data(load_path)
@@ -80,32 +77,46 @@ class CubeQuant(NonTargetSequence):
 
         self.subvolumes = subvolumes
 
-    def generate_t1_rho_map(self):
+    def generate_t1_rho_map(self, tissues=None):
         """Generate 3D T1-rho map and r2 fit map using monoexponential fit across subvolumes acquired at different
                 echo times
-        :return: a MedicalVolume
+        :param tissues: A list of Tissue instances specifying which tissue to examine
+                        if None, use list of tissues class initialized with
+        :return: a list of T1Rho instances
         """
-        spin_lock_times = []
-        subvolumes_list = []
-        msk = None
-        if self.focused_mask_filepath:
-            print('Using focused mask: %s' % self.focused_mask_filepath)
-            msk = io_utils.load_nifti(self.focused_mask_filepath)
 
-        sorted_keys = natsorted(list(self.subvolumes.keys()))
-        for spin_lock_time_index in sorted_keys:
-            subvolumes_list.append(self.subvolumes[spin_lock_time_index])
-            spin_lock_times.append(self.spin_lock_times[spin_lock_time_index])
+        if tissues is None:
+            tissues = self.tissues
 
-        mef = MonoExponentialFit(spin_lock_times, subvolumes_list,
-                                 mask=msk,
-                                 bounds=(__T1_RHO_LOWER_BOUND__, __T1_RHO_UPPER_BOUND__),
-                                 tc0=__INITIAL_T1_RHO_VAL__,
-                                 decimal_precision=__T1_RHO_DECIMAL_PRECISION__)
+        quant_maps = []
+        for tissue in tissues:
+            spin_lock_times = []
+            subvolumes_list = []
 
-        self.t1rho_map, self.r2 = mef.fit()
+            # only calculate for focused region if a mask is available, this speeds up computation
+            mask = tissue.get_mask()
 
-        return self.t1rho_map
+            sorted_keys = natsorted(list(self.subvolumes.keys()))
+            for spin_lock_time_index in sorted_keys:
+                subvolumes_list.append(self.subvolumes[spin_lock_time_index])
+                spin_lock_times.append(self.spin_lock_times[spin_lock_time_index])
+
+            mef = MonoExponentialFit(spin_lock_times, subvolumes_list,
+                                     mask=mask,
+                                     bounds=(__T1_RHO_LOWER_BOUND__, __T1_RHO_UPPER_BOUND__),
+                                     tc0=__INITIAL_T1_RHO_VAL__,
+                                     decimal_precision=__T1_RHO_DECIMAL_PRECISION__)
+
+            t1rho_map, r2 = mef.fit()
+
+            quant_val_map = qv.T1Rho(t1rho_map)
+            quant_val_map.add_additional_volume('r2', r2)
+
+            quant_maps.append(quant_val_map)
+
+            tissue.add_quantitative_value(quant_val_map)
+
+        return quant_maps
 
     def __intraregister__(self, subvolumes):
         """Intraregister cubequant subvolumes to each other
@@ -169,17 +180,6 @@ class CubeQuant(NonTargetSequence):
     def save_data(self, base_save_dirpath):
         super().save_data(base_save_dirpath)
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
-
-        if self.t1rho_map is not None:
-            assert (self.r2 is not None)
-
-            t1rho_map_filepath = os.path.join(base_save_dirpath,
-                                              '%s.nii.gz' % qv.QuantitativeValues.T1_RHO.name.lower())
-            self.t1rho_map.save_volume(t1rho_map_filepath)
-
-            t1rho_r2_map_filepath = os.path.join(base_save_dirpath,
-                                                 '%s_r2.nii.gz' % qv.QuantitativeValues.T1_RHO.name.lower())
-            self.r2.save_volume(t1rho_r2_map_filepath)
 
         # Save interregistered files
         interregistered_dirpath = os.path.join(base_save_dirpath, 'interregistered')

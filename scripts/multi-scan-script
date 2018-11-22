@@ -1,4 +1,39 @@
 #!/bin/bash
+
+# multi-scan-script
+#
+# @brief: Run DESS, Cubequant, and Cones analysis on super folder (absolute path) specified as an argument
+#
+# @folder structure:
+#   |subject_scans
+#       |patient01
+#           |dess
+#           |cubequant
+#           |cones
+#       |patient02
+#           |dess
+#           |cubequant
+#           |cones
+#       |patient03
+#           |dess
+#           |cubequant
+#           |cones
+#       ...
+#
+# @usage (from terminal/command line):
+#   ./multi-scan-script PATH_TO_SUPER_FOLDER
+#   eg: "./multi-scan-script Users/john/Documents/subject_scans/"
+#
+# @initialization protocol:
+#   1. run "chmod +x multi-scan-script" from the command line
+#   2. Update `WEIGHTS_DIRECTORY` field below
+#
+# @notes:
+#   - If data already exists for subject, then script does not recalculate - delete `data` folder and rerun script to redo analysis
+#
+# @author: Arjun Desai, Stanford University
+#          (c) Stanford University, 2018
+
 WEIGHTS_DIRECTORY="/Users/arjundesai/Documents/stanford/research/msk_pipeline_raw/weights"
 if [ -z "$WEIGHTS_DIRECTORY" ]; then
     echo "Please define WEIGHTS_DIRECTORY in script. Use the absolute path"
@@ -38,30 +73,30 @@ for i in $FILES; do
 
     # use DESS to get femoral cartilage segmentation + 3D t2 maps
     if [ ! -e $TARGET_SCAN ]; then
-    	python -m pipeline -d $i -s $SAVE_DIRNAME dess -t2 -rms segment -fc --weights_dir $WEIGHTS_DIRECTORY
+    	python -m pipeline -d $i -s $SAVE_DIRNAME dess -t2 -rms -fc segment --weights_dir $WEIGHTS_DIRECTORY
 	fi
 
 	# interregister cubequant with dess
 	if [ ! -e $CUBEQUANT_INTERREGISTERED_DATA ]; then
 		echo $CUBEQUANT_INTERREGISTERED_DATA
-    	python -m pipeline -d $CUBEQUANT_DIRNAME -s $SAVE_DIRNAME cq interregister -ts $TARGET_SCAN
+    	python -m pipeline -d $CUBEQUANT_DIRNAME -s $SAVE_DIRNAME cq interregister -ts $TARGET_SCAN -tm $MASK
     fi
 
     # cubequant 3D t1rho map
     if [ ! -e $CUEQUANT_T1RHO ]; then
-    	python -m pipeline -l $SAVE_DIRNAME cq -t1rho -fm $MASK
+    	python -m pipeline -l $SAVE_DIRNAME cq -t1_rho
     fi
 
     # interregister cones with dess
     if [ ! -e $CONES_INTERREGISTERED_DATA ]; then
-    	python -m pipeline -d $CONES_DIRNAME -s $SAVE_DIRNAME cones interregister -ts $TARGET_SCAN
+    	python -m pipeline -d $CONES_DIRNAME -s $SAVE_DIRNAME cones interregister -ts $TARGET_SCAN -tm $MASK
     fi
 
     # cones 3D t2_star map
     if [ ! -e $CONES_T2STAR ]; then
-    	python -m pipeline -l $SAVE_DIRNAME cones -t2star -fm $MASK
+    	python -m pipeline -l $SAVE_DIRNAME cones -t2_star
     fi
 
     # analyze femoral cartilage
-    python -m pipeline -l $SAVE_DIRNAME knee -fc -t2 -t1_rho -t2_star
+    python -m pipeline -l $SAVE_DIRNAME knee
 done

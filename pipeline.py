@@ -16,8 +16,8 @@ from scan_sequences.cube_quant import CubeQuant
 from scan_sequences.dess import Dess
 from tissues.femoral_cartilage import FemoralCartilage
 from utils.quant_vals import QuantitativeValues as QV
+from msk import knee
 
-SUPPORTED_TISSUES = [FemoralCartilage()]
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
 DEBUG_KEY = 'debug'
@@ -35,8 +35,8 @@ CUBEQUANT_SCAN_KEYS = ['cubequant', 'cq']
 CONES_KEY = 'cones'
 
 T2_KEY = 't2'
-T1_RHO_Key = 't1rho'
-T2_STAR_KEY = 't2star'
+T1_RHO_Key = 't1_rho'
+T2_STAR_KEY = 't2_star'
 
 ACTION_KEY = 'action'
 
@@ -53,18 +53,35 @@ ORIENTATION_KEY = 'orientation'
 TISSUES_KEY = 'tissues'
 
 USE_RMS_KEY = 'rms'
-FOCUSED_MASK_KEY = 'fm'
 
 
 def parse_tissues(vargin):
     tissues = []
-    for tissue in SUPPORTED_TISSUES:
+    for tissue in knee.SUPPORTED_TISSUES:
         if tissue.STR_ID in vargin.keys() and vargin[tissue.STR_ID] and tissue not in tissues:
             load_path = vargin[LOAD_KEY]
             if load_path:
                 tissue.load_data(load_path)
 
             tissues.append(tissue)
+
+    # if no tissues are specified, do computation for all supported tissues
+    if len(tissues) == 0:
+        print('No tissues specified, computing for all supported tissues...')
+        tissues = []
+        for tissue in knee.SUPPORTED_TISSUES:
+            if tissue not in tissues:
+                load_path = vargin[LOAD_KEY]
+                if load_path:
+                    tissue.load_data(load_path)
+
+                tissues.append(tissue)
+
+    analysis_str = 'Tissue(s): '
+    for tissue in tissues:
+        analysis_str += '%s, ' % tissue.FULL_NAME
+
+    print(analysis_str)
 
     return tissues
 
@@ -77,9 +94,6 @@ def add_segmentation_subparser(parser):
     parser_segment.add_argument('--%s' % SEGMENTATION_BATCH_SIZE_KEY, metavar='B', type=int,
                                 default=defaults.DEFAULT_BATCH_SIZE, nargs='?',
                                 help='batch size for inference. Default: 32')
-    for tissue in SUPPORTED_TISSUES:
-        parser_segment.add_argument('-%s' % tissue.STR_ID, action='store_const', default=False, const=True,
-                                    help='handle %s' % tissue.FULL_NAME)
 
 
 def add_interregister_subparser(parser):
@@ -117,15 +131,18 @@ def handle_segmentation(vargin, scan):
 
 
 def handle_dess(vargin):
-    print('\nAnalyze DESS')
+    print('\nAnalyzing DESS...')
     scan = Dess(dicom_path=vargin[DICOM_KEY], dicom_ext=vargin[EXT_KEY], load_path=vargin[LOAD_KEY])
     scan.use_rms = vargin[USE_RMS_KEY]
     if vargin[ACTION_KEY] is not None and vargin[ACTION_KEY] == 'segment':
         handle_segmentation(vargin, scan)
 
     if vargin[T2_KEY]:
-        print('\nCalculating T2')
-        scan.generate_t2_map()
+        print('')
+        tissues = vargin['tissues']
+        for tissue in tissues:
+            print('Calculating T2 - %s' % tissue.FULL_NAME)
+            scan.generate_t2_map(tissue)
 
     scan.save_data(vargin[SAVE_KEY])
 
@@ -136,13 +153,11 @@ def handle_dess(vargin):
 
 
 def handle_cubequant(vargin):
-    print('\nAnalyze cubequant')
+    print('\nAnalyzing cubequant...')
+
     scan = CubeQuant(dicom_path=vargin[DICOM_KEY],
                      dicom_ext=vargin[EXT_KEY],
                      load_path=vargin[LOAD_KEY])
-
-    if (vargin[FOCUSED_MASK_KEY]):
-        scan.focused_mask_filepath = vargin[FOCUSED_MASK_KEY]
 
     scan.tissues = vargin['tissues']
 
@@ -155,24 +170,23 @@ def handle_cubequant(vargin):
 
     scan.save_data(vargin[SAVE_KEY])
 
-    load_filepath = vargin[LOAD_KEY] if vargin[LOAD_KEY] else vargin[SAVE_KEY]
     if vargin[T1_RHO_Key]:
         print('\nCalculating T1_rho')
         scan.generate_t1_rho_map()
 
     scan.save_data(vargin[SAVE_KEY])
 
+    for tissue in scan.tissues:
+        tissue.save_data(vargin[SAVE_KEY])
+
     return scan
 
 
 def handle_cones(vargin):
-    print('\nAnalyze cones')
+    print('\nAnalyzing cones...')
     scan = Cones(dicom_path=vargin[DICOM_KEY],
                  dicom_ext=vargin[EXT_KEY],
                  load_path=vargin[LOAD_KEY])
-
-    if vargin[FOCUSED_MASK_KEY]:
-        scan.focused_mask_filepath = vargin[FOCUSED_MASK_KEY]
 
     scan.tissues = vargin['tissues']
 
@@ -189,7 +203,16 @@ def handle_cones(vargin):
 
     scan.save_data(vargin[SAVE_KEY])
 
+    for tissue in scan.tissues:
+        tissue.save_data(vargin[SAVE_KEY])
+
     return scan
+
+
+def add_tissues(parser):
+    for tissue in knee.SUPPORTED_TISSUES:
+        parser.add_argument('-%s' % tissue.STR_ID, action='store_const', default=False, const=True,
+                                   help='analyze %s' % tissue.FULL_NAME)
 
 
 def parse_args():
@@ -223,6 +246,7 @@ def parse_args():
     parser_dess.add_argument('-%s' % USE_RMS_KEY, action='store_const', default=False, const=True,
                              help='use root mean square (rms) of two echos for segmentation')
     parser_dess.add_argument('-%s' % T2_KEY, action='store_const', default=False, const=True, help='compute T2 map')
+    add_tissues(parser_dess)
     subparsers_dess = parser_dess.add_subparsers(help='sub-command help', dest=ACTION_KEY)
     add_segmentation_subparser(subparsers_dess)
     parser_dess.set_defaults(func=handle_dess)
@@ -236,10 +260,7 @@ def parse_args():
                                   default=False,
                                   const=True,
                                   help='do t1-rho analysis')
-    parser_cubequant.add_argument('-%s' % FOCUSED_MASK_KEY,
-                                  nargs='?',
-                                  default=None,
-                                  help='focused mask to speed up t1rho calculation')
+    add_tissues(parser_cubequant)
 
     subparsers_cubequant = parser_cubequant.add_subparsers(help='sub-command help', dest=ACTION_KEY)
     add_interregister_subparser(subparsers_cubequant)
@@ -249,10 +270,7 @@ def parse_args():
     parser_cones = subparsers.add_parser(CONES_KEY, help='analyze cones sequence')
     parser_cones.add_argument('-%s' % T2_STAR_KEY, action='store_const', default=False, const=True,
                               help='do t2* analysis')
-    parser_cones.add_argument('-%s' % FOCUSED_MASK_KEY,
-                              nargs='?',
-                              default=None,
-                              help='focused mask to speed up t1rho calculation')
+    add_tissues(parser_cones)
 
     subparsers_cones = parser_cones.add_subparsers(help='sub-command help', dest=ACTION_KEY)
     add_interregister_subparser(subparsers_cones)

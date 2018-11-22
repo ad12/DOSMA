@@ -17,4 +17,6 @@ class MedicalVolume():
         Write volume to nifti format
         :param filepath: filepath to save data
         """
+        assert filepath.endswith('.nii.gz'), "Filepath must end in `.nii.gz` (nifti) format"
+
         io_utils.save_nifti(filepath, self.volume, self.pixel_spacing)

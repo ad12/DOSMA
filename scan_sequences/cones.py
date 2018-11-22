@@ -25,10 +25,7 @@ class Cones(NonTargetSequence):
     def __init__(self, dicom_path=None, dicom_ext=None, load_path=None):
         super().__init__(dicom_path, dicom_ext)
 
-        self.t2star_map = None
-        self.r2 = None
         self.subvolumes = None
-        self.focused_mask_filepath = None
         self.echo_times = []
 
         if load_path:
@@ -109,46 +106,48 @@ class Cones(NonTargetSequence):
 
         self.subvolumes = subvolumes
 
-    def generate_t2_star_map(self):
+    def generate_t2_star_map(self, tissues=None):
         """Generate 3D T2* map and r2 fit map using monoexponential fit across subvolumes acquired at different
                 echo times
-        :return: a MedicalVolume
+        :param tissues: A list of Tissue instances specifying which tissue to examine
+                        if None, use list of tissues class initialized with
+        :return A list of T2Star instances
         """
-        msk = None
-        spin_lock_times = []
-        subvolumes_list = []
+        if tissues is None:
+            tissues = self.tissues
 
-        if self.focused_mask_filepath:
-            print('Using focused mask: %s' % self.focused_mask_filepath)
-            msk = io_utils.load_nifti(self.focused_mask_filepath)
+        quant_maps = []
 
-        for echo_time in self.subvolumes.keys():
-            spin_lock_times.append(echo_time)
-            subvolumes_list.append(self.subvolumes[echo_time])
+        for tissue in tissues:
+            msk = tissue.get_mask()
+            spin_lock_times = []
+            subvolumes_list = []
 
-        mef = MonoExponentialFit(spin_lock_times,
-                                 subvolumes_list,
-                                 mask=msk,
-                                 bounds=(__T2_STAR_LOWER_BOUND__, __T2_STAR_UPPER_BOUND__),
-                                 tc0=__INITIAL_T2_STAR_VAL__,
-                                 decimal_precision=__T2_STAR_DECIMAL_PRECISION__)
+            for echo_time in self.subvolumes.keys():
+                spin_lock_times.append(echo_time)
+                subvolumes_list.append(self.subvolumes[echo_time])
 
-        self.t2star_map, self.r2 = mef.fit()
+            mef = MonoExponentialFit(spin_lock_times,
+                                     subvolumes_list,
+                                     mask=msk,
+                                     bounds=(__T2_STAR_LOWER_BOUND__, __T2_STAR_UPPER_BOUND__),
+                                     tc0=__INITIAL_T2_STAR_VAL__,
+                                     decimal_precision=__T2_STAR_DECIMAL_PRECISION__)
 
-        return self.t2star_map
+            t2star_map, r2 = mef.fit()
+
+            quant_val_map = qv.T2Star(t2star_map)
+            quant_val_map.add_additional_volume('r2', r2)
+
+            quant_maps.append(quant_val_map)
+
+            tissue.add_quantitative_value(quant_val_map)
+
+        return quant_maps
 
     def save_data(self, base_save_dirpath):
         super().save_data(base_save_dirpath)
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
-
-        if self.t2star_map is not None:
-            assert self.r2 is not None
-            self.t2star_map.save_volume(os.path.join(base_save_dirpath,
-                                                     '%s.nii.gz' % qv.QuantitativeValues.T2_STAR.name.lower()))
-
-            t1rho_r2_map_filepath = os.path.join(base_save_dirpath,
-                                                 '%s_r2.nii.gz' % qv.QuantitativeValues.T2_STAR.name.lower())
-            self.r2.save_volume(t1rho_r2_map_filepath)
 
         # Save interregistered files
         interregistered_dirpath = os.path.join(base_save_dirpath, 'interregistered')

@@ -282,7 +282,7 @@ class NonTargetSequence(ScanSequence):
                     1. Files are not of the name <INTEGER>.nii.gz (e.g. 0.nii.gz, 000.nii.gz, etc)
                     2. No interregistered files found in interregistered_dirpath
         """
-        print('loading interregistered files')
+        print('Loading interregistered files')
         if 'interregistered' not in interregistered_dirpath:
             raise ValueError('Invalid path for loading %s interregistered files' % self.NAME)
 

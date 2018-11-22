@@ -1,4 +1,20 @@
 #!/bin/bash
+
+# msk-dess
+#
+# @brief: Run DESS analysis on patient folder specified as an argument
+#
+# @usage (from terminal/command line):
+#   ./msk-dess PATH_TO_PATIENT_FOLDER DESS_DICOM_FOLDER_NAME
+#   eg: "./msk-dess subject_scans/patient01 001"
+#
+# @initialization protocol:
+#   1. run "chmod +x msk-dess" from the command line
+#   2. Update `WEIGHTS_DIRECTORY` field below
+#
+# @author: Arjun Desai, Stanford University
+#          (c) Stanford University, 2018
+
 WEIGHTS_DIRECTORY=""
 if [ -z "$WEIGHTS_DIRECTORY" ]; then
     echo "Please define WEIGHTS_DIRECTORY in script. Use the absolute path"
@@ -21,5 +37,5 @@ cd ..
 for i in $FILES; do
     DIRNAME=$(dirname $i)
     DIRNAME="$DIRNAME/data"
-    python -m pipeline -d $i -s $DIRNAME dess -t2 segment --weights_dir $WEIGHTS_DIRECTORY -fc
+    python -m pipeline -d $i -s $DIRNAME dess -t2 -fc segment --weights_dir $WEIGHTS_DIRECTORY
 done

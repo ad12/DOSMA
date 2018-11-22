@@ -21,8 +21,7 @@ ELASTIX_RIGID_INTERREGISTER_PARAMS_FILE = os.path.join(__PATH_TO_ELASTIX_FOLDER_
 # Temporary file path
 TEMP_FOLDER_PATH = os.path.join(__DIR__, 'temp')
 
-# TODO: nipype logging
-NIPYPE_LOGGING = 'stream'
+NIPYPE_LOGGING = 'none'
 
 
 def set_debug():

@@ -1,9 +1,10 @@
 import argparse
 import os
-import scipy.io as sio
-from utils import dicom_utils, io_utils
-from med_objects.med_volume import MedicalVolume
 
+import scipy.io as sio
+
+from med_objects.med_volume import MedicalVolume
+from utils import dicom_utils, io_utils
 
 INPUT_KEY = 'input'
 VARIABLE_KEY = 'var'

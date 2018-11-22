@@ -115,7 +115,7 @@ class DessTest(unittest.TestCase):
 
         scan = pipeline.handle_dess(vargin)
 
-        scan.tissues[0].calc_quant_vals(scan.t2map, QuantitativeValues.T2)
+        scan.tissues[0].__calc_quant_vals__(scan.t2map, QuantitativeValues.T2)
 
         print(scan.t2map.shape)
 

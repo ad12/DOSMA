@@ -1,8 +1,7 @@
-from tissues.femoral_cartilage import FemoralCartilage
-from utils import io_utils
-from utils.quant_vals import QuantitativeValues as QV
 import uuid
 
+from tissues.femoral_cartilage import FemoralCartilage
+from utils.quant_vals import QuantitativeValues as QV
 
 KNEE_KEY = 'knee'
 MEDIAL_TO_LATERAL_KEY = 'ml'
@@ -38,7 +37,7 @@ def knee_parser(base_parser):
         parser_tissue.add_argument('-%s' % qv_name, action='store_const', const=True, default=False,
                                    help='quantify %s' % qv_name)
 
-        parser_tissue.set_defaults(func=handle_knee)
+    parser_tissue.set_defaults(func=handle_knee)
 
 
 def handle_knee(vargin):
@@ -51,11 +50,19 @@ def handle_knee(vargin):
     medial_to_lateral = vargin[MEDIAL_TO_LATERAL_KEY]
     pid = vargin[PID_KEY]
 
+    if tissues is None or len(tissues) == 0:
+        print('Computing for all supported knee tissues...')
+        tissues = SUPPORTED_TISSUES
+
     # Get all supported quantitative values
     qvs = []
     for qv in SUPPORTED_QUANTITATIVE_VALUES:
         if vargin[qv.name.lower()]:
             qvs.append(qv)
+
+    if len(qvs) == 0:
+        print('Computing for all supported quantitative values...')
+        qvs = SUPPORTED_QUANTITATIVE_VALUES
 
     for tissue in tissues:
         tissue.pid = pid
@@ -70,38 +77,9 @@ def handle_knee(vargin):
         for qv in qvs:
             # load file
             print('Analyzing %s' % qv.name.lower())
-            filepath = find_filepath_with_qv(load_path, qv)
-            tmp = io_utils.load_nifti(filepath)
-            tissue.calc_quant_vals(tmp, qv)
+            tissue.calc_quant_vals()
 
     for tissue in tissues:
         tissue.save_data(vargin[SAVE_KEY])
 
     return tissues
-
-
-def find_filepath_with_qv(load_path, qv):
-    """Find filepath to the quantitative value map.
-
-    All maps must be stored in the nifti format
-
-    :param load_path: base path for searching
-    :param qv: a QuantiativeValue
-    :return: a path to the quantitative value map
-
-    :raise ValueError:
-                1. No files (recursively searched) in load_path directory
-                2. Multiple files found for the same quantitative value
-    """
-    import glob, os
-    dirlist = glob.glob(os.path.join(load_path, '*', '%s.nii.gz' % qv.name.lower()))
-
-    name = qv.name.lower()
-
-    if len(dirlist) == 0:
-        raise ValueError('No map for %s found. Must have name %s.nii.gz' % (name, name))
-
-    if len(dirlist) > 1:
-        raise ValueError('Multiple %s maps found. Delete extra %s maps' % (name, name))
-
-    return dirlist[0]
