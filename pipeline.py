@@ -88,12 +88,13 @@ def parse_tissues(vargin):
 
 def add_segmentation_subparser(parser):
     parser_segment = parser.add_parser('segment')
-    parser_segment.add_argument('--%s' % SEGMENTATION_MODEL_KEY, choices=SUPPORTED_MODELS, nargs='?', default='unet2d')
+    parser_segment.add_argument('--%s' % SEGMENTATION_MODEL_KEY, choices=SUPPORTED_MODELS, nargs='?', default='unet2d',
+                                help='Model to use for segmentation. Choices: {%s}' % 'unet2d')
     parser_segment.add_argument('--%s' % SEGMENTATION_WEIGHTS_DIR_KEY, type=str, nargs=1,
                                 help='path to directory with weights')
     parser_segment.add_argument('--%s' % SEGMENTATION_BATCH_SIZE_KEY, metavar='B', type=int,
                                 default=defaults.DEFAULT_BATCH_SIZE, nargs='?',
-                                help='batch size for inference. Default: 32')
+                                help='batch size for inference. Default: %d' % defaults.DEFAULT_BATCH_SIZE)
 
 
 def add_interregister_subparser(parser):
@@ -222,7 +223,7 @@ def parse_args():
     :raises NotADirectoryError if dicom path does not exist or is not a directory
     """
     parser = argparse.ArgumentParser(prog='pipeline',
-                                     description='Pipeline for segmenting MRI knee volumes')
+                                     description='Tool for segmenting MRI knee volumes')
     parser.add_argument('--%s' % DEBUG_KEY, action='store_const', const=True, default=False, help='debug')
 
     # Dicom and results paths
@@ -231,7 +232,7 @@ def parse_args():
     parser.add_argument('-l', '--%s' % LOAD_KEY, metavar='L', type=str, default=None, nargs='?',
                         help='path to data directory to load from')
     parser.add_argument('-s', '--%s' % SAVE_KEY, metavar='S', type=str, default=None, nargs='?',
-                        help='path to directory to save mask. Default: D/L')
+                        help='path to directory to save mask. Default: L/D')
 
     # If user wants to filter by extension, allow them to specify extension
     parser.add_argument('-e', '--%s' % EXT_KEY, metavar='E', type=str, default='dcm', nargs='?',

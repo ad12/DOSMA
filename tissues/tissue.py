@@ -132,7 +132,7 @@ class Tissue(ABC):
 
         # try to load mask, if file exists
         if os.path.isfile(mask_filepath):
-            self.__mask__ = io_utils.load_nifti(mask_filepath)
+            self.set_mask(io_utils.load_nifti(mask_filepath))
 
         self.quantitative_values = QuantitativeValue.load_qvs(load_dirpath)
 

@@ -253,11 +253,10 @@ class FemoralCartilage(Tissue):
         assert total.shape == deep.shape
         assert deep.shape == superficial.shape
 
-        if self.regions_mask is None:
-            self.split_regions(total)
+        assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
         
         coronal_region_mask = self.regions_mask[..., 0]
-        sagital_region_mask = self.regions_mask[..., 1]
+        sagittal_region_mask = self.regions_mask[..., 1]
 
         subject_pid = self.pid
         pd_header = ['Subject', 'Location', 'Side', 'Region', 'Mean', 'Std', 'Median']
@@ -279,7 +278,7 @@ class FemoralCartilage(Tissue):
             axial_map = axial_data[axial]
             for coronal in [self.MEDIAL_KEY, self.LATERAL_KEY]:
                 for sagittal in [self.ANTERIOR_KEY, self.CENTRAL_KEY, self.POSTERIOR_KEY]:
-                    curr_region_mask = (coronal_region_mask == coronal) * (sagital_region_mask == sagittal) * axial_map
+                    curr_region_mask = (coronal_region_mask == coronal) * (sagittal_region_mask == sagittal) * axial_map
 
                     curr_region_mask[curr_region_mask == 0] = np.nan
                     # discard all values that are 0
@@ -306,13 +305,15 @@ class FemoralCartilage(Tissue):
         self.__store_quant_vals__(maps, df, map_type)
 
     def set_mask(self, mask):
-        assert type(mask) is MedicalVolume, "mask for femoral cartilage must be of type MedicalVolume"
+        # get the largest connected component from the mask - we expect femoral cartilage to be a smooth volume
         msk = np.asarray(nlm.largest_cc(mask.volume), dtype=np.uint8)
         mask_copy = MedicalVolume(msk, mask.pixel_spacing)
 
-        self.regions_mask = None
-
         super().set_mask(mask_copy)
+
+        # set region map
+        total, _, _ = self.unroll(self.__mask__.volume)
+        self.split_regions(total)
 
     def __save_quant_data__(self, dirpath):
         """Save quantitative data and 2D visualizations of femoral cartilage
@@ -384,9 +385,8 @@ class FemoralCartilage(Tissue):
         save_dirpath = self.__save_dirpath__(save_dirpath)
 
         if self.regions_mask is None:
-            print('femoral cartilage region mask not saved')
             return
-        
+
         # Save region map - add by 1 because no key can be 0
         coronal_region_mask = (self.regions_mask[..., 0] + 1) * 10
         sagital_region_mask = (self.regions_mask[..., 1] + 1)
