@@ -58,7 +58,7 @@ To run the program from a shell, run `python -m opt/path/pipeline` with the flag
 usage: pipeline [-h] [--debug] [-d [D]] [-l [L]] [-s [S]] [-e [E]] [--gpu [G]]
                 {dess,cubequant,cq,cones,knee} ...
 
-Pipeline for segmenting MRI knee volumes
+Tool for segmenting MRI knee volumes
 
 positional arguments:
   {dess,cubequant,cq,cones,knee}
@@ -73,7 +73,7 @@ optional arguments:
   --debug               debug
   -d [D], --dicom [D]   path to directory storing dicom files
   -l [L], --load [L]    path to data directory to load from
-  -s [S], --save [S]    path to directory to save mask. Default: D/L
+  -s [S], --save [S]    path to directory to save mask. Default: L/D
   -e [E], --ext [E]     extension of dicom files. Default 'dcm'
   --gpu [G]             gpu id
 ```
@@ -90,45 +90,46 @@ Figure 1: Supported DESS protocol as referenced [here]((https://onlinelibrary.wi
 
 
 ```
-usage: pipeline dess [-h] [-rms] [-t2] {segment} ...
+usage: pipeline dess [-h] [-t2] [-fc] {segment} ...
 
 positional arguments:
   {segment}   sub-command help
 
 optional arguments:
   -h, --help  show this help message and exit
-  -rms        use root mean square (rms) of two echos for segmentation
   -t2         compute T2 map
+  -fc         analyze femoral cartilage
 ```
 
 #### Segmentation
 ```
 usage: pipeline dess segment [-h] [--model [{unet2d}]]
                              [--weights_dir WEIGHTS_DIR] [--batch_size [B]]
-                             [-fc]
+                             [-rms]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --model [{unet2d}]
+  --model [{unet2d}]    Model to use for segmentation. Choices: {unet2d}
   --weights_dir WEIGHTS_DIR
                         path to directory with weights
-  --batch_size [B]      batch size for inference. Default: 32
-  -fc                   handle femoral cartilage
+  --batch_size [B]      batch size for inference. Default: 16
+  -rms                  use root mean square (rms) of two echos for
+                        segmentation
 ```
 
 ### Cubequant
 The cubequant protocol used here is detailed below:
 
 ```
-usage: pipeline cubequant [-h] [-t1rho] [-fm [FM]] {interregister} ...
+usage: pipeline cubequant [-h] [-t1_rho] [-fc] {interregister} ...
 
 positional arguments:
   {interregister}  sub-command help
 
 optional arguments:
   -h, --help       show this help message and exit
-  -t1rho           do t1-rho analysis
-  -fm [FM]         focused mask to speed up t1rho calculation
+  -t1_rho          do t1-rho analysis
+  -fc              analyze femoral cartilage
 ```
 
 #### Interregister
@@ -139,23 +140,23 @@ usage: pipeline cubequant interregister [-h] [-ts TS] [-tm [TM]]
 
 optional arguments:
   -h, --help  show this help message and exit
-  -ts TS      path to target image (nifti)
-  -tm [TM]    path to target mask (nifti)
+  -ts TS      path to target image. Type: nifti (.nii.gz)
+  -tm [TM]    path to target mask. Type: nifti (.nii.gz)
 ```
 
 ### Cones
 The cones protocol used here is detailed below:
 
 ```
-usage: pipeline cones [-h] [-t2star] [-fm [FM]] {interregister} ...
+usage: pipeline cones [-h] [-t2_star] [-fc] {interregister} ...
 
 positional arguments:
   {interregister}  sub-command help
 
 optional arguments:
   -h, --help       show this help message and exit
-  -t2star          do t2* analysis
-  -fm [FM]         focused mask to speed up t1rho calculation
+  -t2_star         do t2* analysis
+  -fc              analyze femoral cartilage
 ```
 
 #### Interregister
@@ -164,8 +165,8 @@ usage: pipeline cones interregister [-h] [-ts TS] [-tm [TM]]
 
 optional arguments:
   -h, --help  show this help message and exit
-  -ts TS      path to target image (nifti)
-  -tm [TM]    path to target mask (nifti)
+  -ts TS      path to target image. Type: nifti (.nii.gz)
+  -tm [TM]    path to target mask. Type: nifti (.nii.gz)
 ```
 
 ### MSK Knee
@@ -175,13 +176,17 @@ usage: pipeline knee [-h] [-ml] [-pid [PID]] [-fc] [-t2] [-t1_rho] [-t2_star]
 optional arguments:
   -h, --help  show this help message and exit
   -ml         defines slices in sagittal direction going from medial ->
-              lateral (default lateral->medial)
+              lateral
   -pid [PID]  specify pid
   -fc         analyze femoral cartilage
   -t2         quantify t2
   -t1_rho     quantify t1_rho
   -t2_star    quantify t2_star
 ```
+
+If no quantitative value flag (`-t2`, `-t1_rho`, `-t2_star`) is specified, all quantitative values will be calculated by default.
+
+If no tissue flag (`-fc`) is specified, all tissues will be calculated by default.
 
 ## Machine Learning Disclaimer
 All weights/parameters trained for any task are likely to be most closely correlated to data used for training. If scans from a particular sequence were used for training, the performance of those weights are likely optimized for that specific scan type. As a result, they may not perform as well on segmenting images acquired using different scan types.
@@ -212,26 +217,55 @@ research_data
 All use cases assume that the [current working directory](https://www.computerhope.com/jargon/c/currentd.htm) is this repo. If the working directory is different, make sure to specify the path to ```pipeline.py``` when running the script. For example, ```python -m ~/MyRepo/pipeline.py``` if the repo is located in the user directory.
 
 ### DESS
-#### Case 1
-*Analyze patient01 knee T<sub>2</sub> properties using DESS sequence*
+*Analyze patient01's knee T<sub>2</sub> properties using DESS sequence*
 
-1. Calculate 3D T<sub>2</sub> map
+#### Step 1
+*Calculate 3D T<sub>2</sub> map*
 ```
 python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess -t2
 ```
 
-2. Segment femoral cartilage using root mean square (RMS) of two echo dess echos
-```
-python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess -rms segment --weights_dir unet_weights
-```
+#### Step 2
+*Segment femoral cartilage using root mean square (RMS) of two echo dess echos*
 
+```
+python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess segment -rms --weights_dir unet_weights
+```
 
 Note steps 1 and 2 can be combined as the following:
 ```
-python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess -rms -t2 segment --weights_dir unet_weights
+python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess -t2 segment -rms --weights_dir unet_weights
 ```
 
-3. Calculate T<sub>2</sub> time for femoral cartilage
+#### Step 3
+*Calculate/visualize T<sub>2</sub> for knee tissues per region*
+
 ```
-python -m pipeline -l research_data/patient01/data -s research_data/patient01/data knee -fc -t2
+python -m pipeline -l research_data/patient01/data -s research_data/patient01/data knee -t2
+```
+
+### Cubequant
+*Analyze patient 01 knee T<sub>1</sub>-rho properties using Cubequant sequence*
+
+#### Step 1
+*Register cubequant volume to first echo of DESS sequence*
+```
+python -m pipeline -d research_data/patient01/cubequant -s research_data/patient01/data cq interregister -ts research_data/patient01/data/dess/echo1.nii.gz -tm research_data/patient01/data/fc/fc.nii.gz
+```
+
+#### Step 2
+*Calculate 3D T<sub>1</sub>-rho map of interregistered sequence*
+```
+python -m pipeline -l research_data/patient01/data cq -t1_rho
+```
+
+Note steps 1 and 2 can be combined as the following:
+```
+python -m pipeline -d research_data/patient01/cubequant -s research_data/patient01/data cq -t1_rho interregister -ts research_data/patient01/data/dess/echo1.nii.gz -tm research_data/patient01/data/fc/fc.nii.gz
+```
+
+#### Step 3
+*Calculate/visualize T<sub>2</sub> for knee tissues per region*
+```
+python -m pipeline -l research_data/patient01/data -s research_data/patient01/data knee -t1_rho
 ```

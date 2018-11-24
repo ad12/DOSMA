@@ -104,12 +104,12 @@ def add_interregister_subparser(parser):
     parser_interregister.add_argument('-%s' % TARGET_SCAN_KEY,
                                       type=str,
                                       nargs=1,
-                                      help='path to target image (nifti)')
+                                      help='path to target image. Type: nifti (.nii.gz)')
     parser_interregister.add_argument('-%s' % TARGET_MASK_KEY,
                                       type=str,
                                       nargs='?',
                                       default=None,
-                                      help='path to target mask (nifti)')
+                                      help='path to target mask. Type: nifti (.nii.gz)')
 
 
 def handle_segmentation(vargin, scan):
@@ -225,7 +225,9 @@ def parse_args():
     :raises NotADirectoryError if dicom path does not exist or is not a directory
     """
     parser = argparse.ArgumentParser(prog='pipeline',
-                                     description='Tool for segmenting MRI knee volumes')
+                                     description='Tool for segmenting MRI knee volumes',
+                                     epilog='Either `-d` or `-l` must be specified. '
+                                            'If both are given, `-d` will be used')
     parser.add_argument('--%s' % DEBUG_KEY, action='store_const', const=True, default=False, help='debug')
 
     # Dicom and results paths
@@ -234,13 +236,13 @@ def parse_args():
     parser.add_argument('-l', '--%s' % LOAD_KEY, metavar='L', type=str, default=None, nargs='?',
                         help='path to data directory to load from')
     parser.add_argument('-s', '--%s' % SAVE_KEY, metavar='S', type=str, default=None, nargs='?',
-                        help='path to directory to save mask. Default: L/D')
+                        help='path to data directory to save to. Default: L/D')
 
     # If user wants to filter by extension, allow them to specify extension
     parser.add_argument('-e', '--%s' % EXT_KEY, metavar='E', type=str, default='dcm', nargs='?',
-                        help='extension of dicom files. Default \'dcm\'')
+                        help='extension of dicom files. Default: \'dcm\'')
 
-    parser.add_argument('--%s' % GPU_KEY, metavar='G', type=str, default=None, nargs='?', help='gpu id')
+    parser.add_argument('--%s' % GPU_KEY, metavar='G', type=str, default=None, nargs='?', help='gpu id. Default: None')
 
     subparsers = parser.add_subparsers(help='sub-command help', dest=SCAN_KEY)
 

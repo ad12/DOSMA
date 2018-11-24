@@ -19,7 +19,8 @@ def knee_parser(base_parser):
 
     :param base_parser: the base parser to add knee subcommand to
     """
-    parser_tissue = base_parser.add_parser(KNEE_KEY, help='calculate/analyze quantitative data for MSK knee')
+    parser_tissue = base_parser.add_parser(KNEE_KEY,
+                                           help='calculate/analyze quantitative data for knee')
 
     parser_tissue.add_argument('-%s' % MEDIAL_TO_LATERAL_KEY, action='store_const', const=True, default=False,
                                help="defines slices in sagittal direction going from medial -> lateral")
