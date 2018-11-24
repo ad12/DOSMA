@@ -96,6 +96,8 @@ def add_segmentation_subparser(parser):
                                 default=defaults.DEFAULT_BATCH_SIZE, nargs='?',
                                 help='batch size for inference. Default: %d' % defaults.DEFAULT_BATCH_SIZE)
 
+    return parser_segment
+
 
 def add_interregister_subparser(parser):
     parser_interregister = parser.add_parser('interregister')
@@ -244,12 +246,17 @@ def parse_args():
 
     # DESS parser
     parser_dess = subparsers.add_parser(DESS_SCAN_KEY, help='analyze DESS sequence')
-    parser_dess.add_argument('-%s' % USE_RMS_KEY, action='store_const', default=False, const=True,
-                             help='use root mean square (rms) of two echos for segmentation')
     parser_dess.add_argument('-%s' % T2_KEY, action='store_const', default=False, const=True, help='compute T2 map')
+
     add_tissues(parser_dess)
+
     subparsers_dess = parser_dess.add_subparsers(help='sub-command help', dest=ACTION_KEY)
-    add_segmentation_subparser(subparsers_dess)
+    segmentation_parser_dess = add_segmentation_subparser(subparsers_dess)
+
+    # add additional fields to base segmentation
+    segmentation_parser_dess.add_argument('-%s' % USE_RMS_KEY, action='store_const', default=False, const=True,
+                                          help='use root mean square (rms) of two echos for segmentation')
+
     parser_dess.set_defaults(func=handle_dess)
 
     # Cubequant parser

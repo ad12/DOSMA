@@ -102,12 +102,12 @@ echo "Save path: $DATA_DIR"
 
 DATA_DIR_LEFT="$DATA_DIR/LEFT"
 
-python -m pipeline -d $LEFT_DIR -s $DATA_DIR_LEFT dess -t2 -fc -rms segment --weights_dir $WEIGHTS_DIRECTORY
+python -m pipeline -d $LEFT_DIR -s $DATA_DIR_LEFT dess -t2 -fc segment -rms --weights_dir $WEIGHTS_DIRECTORY
 python -m pipeline -l $DATA_DIR_LEFT knee -pid $PID
 
 
 DATA_DIR_RIGHT="$DATA_DIR/RIGHT"
 
-python -m pipeline -d $RIGHT_DIR -s $DATA_DIR_RIGHT dess -t2 -rms -fc segment --weights_dir $WEIGHTS_DIRECTORY
+python -m pipeline -d $RIGHT_DIR -s $DATA_DIR_RIGHT dess -t2 -fc segment -rms --weights_dir $WEIGHTS_DIRECTORY
 python -m pipeline -l $DATA_DIR_RIGHT knee -ml -pid $PID
 

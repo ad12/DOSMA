@@ -3,6 +3,8 @@
 # msk-dess
 #
 # @brief: Run DESS analysis on patient folder specified as an argument
+#           1. Calculate t2 map
+#           2.
 #
 # @usage (from terminal/command line):
 #   ./msk-dess PATH_TO_PATIENT_FOLDER DESS_DICOM_FOLDER_NAME
@@ -37,5 +39,6 @@ cd ..
 for i in $FILES; do
     DIRNAME=$(dirname $i)
     DIRNAME="$DIRNAME/data"
-    python -m pipeline -d $i -s $DIRNAME dess -t2 -fc segment --weights_dir $WEIGHTS_DIRECTORY
+    python -m pipeline -d $i -s $DIRNAME dess -t2 -fc segment -rms --weights_dir $WEIGHTS_DIRECTORY
+    python -m pipeline -l $DIRNAME knee
 done

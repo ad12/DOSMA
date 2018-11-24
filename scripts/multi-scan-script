@@ -73,7 +73,7 @@ for i in $FILES; do
 
     # use DESS to get femoral cartilage segmentation + 3D t2 maps
     if [ ! -e $TARGET_SCAN ]; then
-    	python -m pipeline -d $i -s $SAVE_DIRNAME dess -t2 -rms -fc segment --weights_dir $WEIGHTS_DIRECTORY
+    	python -m pipeline -d $i -s $SAVE_DIRNAME dess -t2 -fc segment -rms --weights_dir $WEIGHTS_DIRECTORY
 	fi
 
 	# interregister cubequant with dess
