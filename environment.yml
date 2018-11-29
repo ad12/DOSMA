@@ -108,4 +108,3 @@ dependencies:
   - traits==4.6.0
   - werkzeug==0.14.1
   - wrapt==1.10.11
-prefix: /Users/arjundesai/anaconda3/envs/tf
