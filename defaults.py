@@ -26,9 +26,9 @@ DEFAULT_R2_THRESHOLD = 0.9
 # DPI to save images
 DEFAULT_DPI = 400
 
-
 # Matplotlib initialization
 import matplotlib
+
 matplotlib.use('Agg')
 
 # Default font size
@@ -36,4 +36,5 @@ DEFAULT_FONT_SIZE = 16
 DEFAULT_TEXT_SPACING = DEFAULT_FONT_SIZE * 0.01
 
 import matplotlib.pyplot as plt
+
 plt.rcParams.update({'font.size': DEFAULT_FONT_SIZE})

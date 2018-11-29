@@ -1,8 +1,3 @@
-import numpy as np
-import itertools
-import seaborn as sns
-
-import matplotlib
 import itertools
 
 import matplotlib
@@ -16,8 +11,7 @@ from matplotlib.lines import Line2D
 import defaults
 
 
-def downsample_slice(img_array, ds_factor, is_mask = False):
-    
+def downsample_slice(img_array, ds_factor, is_mask=False):
     '''
     
     Function Info:
@@ -50,20 +44,20 @@ def downsample_slice(img_array, ds_factor, is_mask = False):
     Akshay Chaudhari, akshaysc@stanford.edu, October 16th 2018
 
     '''
-        
-    img_array = np.transpose(img_array,(2,0,1))
+
+    img_array = np.transpose(img_array, (2, 0, 1))
     L = list(img_array)
-    
+
     def grouper(iterable, n):
-         args = [iter(iterable)] * n
-         return itertools.zip_longest(fillvalue=0, *args)
-     
-    final = np.array([sum(x) for x in grouper(L, ds_factor)])    
-    final = np.transpose(final, (1,2,0))
-    
-#     Binarize if it is a mask
+        args = [iter(iterable)] * n
+        return itertools.zip_longest(fillvalue=0, *args)
+
+    final = np.array([sum(x) for x in grouper(L, ds_factor)])
+    final = np.transpose(final, (1, 2, 0))
+
+    #     Binarize if it is a mask
     if is_mask is True:
-        final = (final >= 1)*1
+        final = (final >= 1) * 1
 
     return final
 
@@ -89,7 +83,7 @@ def write_regions(filepath, arr, plt_dict=None):
 
     unique_vals = unique_vals[np.isfinite(unique_vals)]
     num_unique_vals = len(unique_vals)
-    
+
     if plt_dict is None:
         plt_dict = {'xlabel': '', 'ylabel': '', 'title': '', 'labels': None}
 
@@ -106,7 +100,7 @@ def write_regions(filepath, arr, plt_dict=None):
     arr_c = np.nan_to_num(arr_c)
     arr_c[arr_c > np.max(unique_vals)] = 0
     arr_rgb = np.ones([arr_c.shape[0], arr_c.shape[1], 3])
-    
+
     plt.figure()
     plt.clf()
     custom_lines = []
@@ -116,14 +110,14 @@ def write_regions(filepath, arr, plt_dict=None):
         arr_rgb[i0, i1, ...] = np.asarray(cpal[i])
 
         custom_lines.append(Line2D([], [], color=cpal[i], marker='o', linestyle='None',
-                          markersize=5))
-    
+                                   markersize=5))
+
     plt.xlabel(plt_dict['xlabel'])
     plt.ylabel(plt_dict['ylabel'])
     plt.title(plt_dict['title'])
 
     lgd = plt.legend(custom_lines, labels, loc='upper center', bbox_to_anchor=(0.5, -defaults.DEFAULT_TEXT_SPACING),
-          fancybox=True, shadow=True, ncol=3)
+                     fancybox=True, shadow=True, ncol=3)
     plt.imshow(arr_rgb)
 
     plt.savefig(filepath, dpi=defaults.DEFAULT_DPI, bbox_extra_artists=(lgd,), bbox_inches='tight')

@@ -13,7 +13,7 @@ FILE_KEY = 'file'
 MAT_FILE = 'mat'
 SAMPLE_DICOM_KEY = 'sample_dicom'
 
-SAVE_KEY='save'
+SAVE_KEY = 'save'
 
 
 def handle_mat(vargin):
@@ -58,9 +58,9 @@ def parse_args():
 
     # Dicom and results paths
     parser_mat.add_argument('-f', '--%s' % FILE_KEY, metavar='F', type=str, default=None, nargs=1,
-                        help='path to .mat file')
+                            help='path to .mat file')
     parser_mat.add_argument('-s', '--%s' % SAVE_KEY, metavar='S', type=str, default=None, nargs='?',
-                        help='directory to save .nii.gz file')
+                            help='directory to save .nii.gz file')
     parser_mat.add_argument('-v', '--%s' % VARIABLE_KEY, metavar='V', type=str, default=None, nargs=1,
                             help='if using .mat format, what variable name to analyze')
     parser_mat.add_argument('-sd', '--%s' % SAMPLE_DICOM_KEY, metavar='SD', type=str, default=None, nargs=1,

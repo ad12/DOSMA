@@ -14,9 +14,7 @@ from msk import knee
 from scan_sequences.cones import Cones
 from scan_sequences.cube_quant import CubeQuant
 from scan_sequences.dess import Dess
-from tissues.femoral_cartilage import FemoralCartilage
 from utils.quant_vals import QuantitativeValues as QV
-from msk import knee
 
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
@@ -154,6 +152,7 @@ def handle_dess(vargin):
 
     return scan
 
+
 def handle_cubequant(vargin):
     print('\nAnalyzing cubequant...')
 
@@ -214,7 +213,7 @@ def handle_cones(vargin):
 def add_tissues(parser):
     for tissue in knee.SUPPORTED_TISSUES:
         parser.add_argument('-%s' % tissue.STR_ID, action='store_const', default=False, const=True,
-                                   help='analyze %s' % tissue.FULL_NAME)
+                            help='analyze %s' % tissue.FULL_NAME)
 
 
 def parse_args():

@@ -27,7 +27,7 @@ class FemoralCartilage(Tissue):
     FULL_NAME = 'femoral cartilage'
 
     # Expected quantitative values
-    T1_EXPECTED = 1200 # milliseconds
+    T1_EXPECTED = 1200  # milliseconds
 
     # Coronal Keys
     ANTERIOR_KEY = 0
@@ -254,7 +254,7 @@ class FemoralCartilage(Tissue):
         assert deep.shape == superficial.shape
 
         assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
-        
+
         coronal_region_mask = self.regions_mask[..., 0]
         sagittal_region_mask = self.regions_mask[..., 1]
 
@@ -393,7 +393,5 @@ class FemoralCartilage(Tissue):
         joined_mask = coronal_region_mask + sagital_region_mask
         labels = ['medial anterior', 'medial central', 'medial posterior',
                   'lateral anterior', 'lateral central', 'lateral posterior']
-        plt_dict={'labels': labels, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'title': 'Unrolled Regions'}
+        plt_dict = {'labels': labels, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'title': 'Unrolled Regions'}
         img_utils.write_regions(os.path.join(save_dirpath, 'region_map.png'), joined_mask, plt_dict=plt_dict)
-
-

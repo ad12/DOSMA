@@ -25,6 +25,7 @@ def get_pixel_spacing(dicom_filepath):
 
     return pixelSpacing
 
+
 def load_dicom(dicom_path, dicom_ext=None):
     """Load dicoms into numpy array
 

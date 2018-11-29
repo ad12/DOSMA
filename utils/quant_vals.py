@@ -17,7 +17,6 @@ class QuantitativeValue(ABC):
     ID = 0
     NAME = ''
 
-
     @staticmethod
     def get_qv(qv_id):
         """Find QuantitativeValue enum using id
