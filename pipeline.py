@@ -154,7 +154,6 @@ def handle_dess(vargin):
 
     return scan
 
-
 def handle_cubequant(vargin):
     print('\nAnalyzing cubequant...')
 
