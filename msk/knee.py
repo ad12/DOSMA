@@ -1,6 +1,7 @@
 import uuid
 
 from tissues.femoral_cartilage import FemoralCartilage
+from tissues.meniscus import Meniscus
 from utils.quant_vals import QuantitativeValues as QV
 
 KNEE_KEY = 'knee'
@@ -10,7 +11,7 @@ LOAD_KEY = 'load'
 SAVE_KEY = 'save'
 PID_KEY = 'pid'
 
-SUPPORTED_TISSUES = [FemoralCartilage()]
+SUPPORTED_TISSUES = [FemoralCartilage(), Meniscus()]
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
 
