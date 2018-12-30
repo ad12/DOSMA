@@ -4,7 +4,7 @@ from tissues.femoral_cartilage import FemoralCartilage
 from tissues.meniscus import Meniscus
 from tissues.tibial_cartilage import TibialCartilage
 from utils.quant_vals import QuantitativeValues as QV
-
+from tissues.patellar_cartilage import PatellarCartilage
 KNEE_KEY = 'knee'
 MEDIAL_TO_LATERAL_KEY = 'ml'
 TISSUES_KEY = 'tissues'
@@ -12,7 +12,7 @@ LOAD_KEY = 'load'
 SAVE_KEY = 'save'
 PID_KEY = 'pid'
 
-SUPPORTED_TISSUES = [FemoralCartilage(), Meniscus(), TibialCartilage()]
+SUPPORTED_TISSUES = [FemoralCartilage(), Meniscus(), TibialCartilage(), PatellarCartilage()]
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
 

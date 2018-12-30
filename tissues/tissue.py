@@ -22,7 +22,7 @@ class Tissue(ABC):
     # quantitative value list
     quantitative_values = []
 
-    def __init__(self, weights_dir=None):
+    def __init__(self, weights_dir=None, medial_to_lateral=None):
         """
         :param weights_dir: Directory with segmentation weights
         """
@@ -33,6 +33,8 @@ class Tissue(ABC):
 
         if weights_dir is not None:
             self.weights_filepath = self.find_weights(weights_dir)
+
+        self.medial_to_lateral = medial_to_lateral
 
     @abstractmethod
     def split_regions(self, base_map):
