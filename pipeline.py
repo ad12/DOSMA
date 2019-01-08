@@ -134,7 +134,9 @@ def handle_segmentation(vargin, scan):
 def handle_dess(vargin):
     print('\nAnalyzing DESS...')
     scan = Dess(dicom_path=vargin[DICOM_KEY], dicom_ext=vargin[EXT_KEY], load_path=vargin[LOAD_KEY])
-    scan.use_rms = vargin[USE_RMS_KEY]
+
+    scan.use_rms = vargin[USE_RMS_KEY] if USE_RMS_KEY in vargin.keys() else False
+
     if vargin[ACTION_KEY] is not None and vargin[ACTION_KEY] == 'segment':
         handle_segmentation(vargin, scan)
 
