@@ -129,7 +129,7 @@ class FemoralCartilage(Tissue):
 
             for angle in angles:
                 bottom_bin = angle
-                top_bin = angle + 5
+                top_bin = angle + dtheta
 
                 splice_matrix = np.where((polar_coords[:, 0] > bottom_bin) & (polar_coords[:, 0] <= top_bin))
 
