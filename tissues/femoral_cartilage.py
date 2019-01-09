@@ -104,12 +104,12 @@ class FemoralCartilage(Tissue):
         Deep_layer = np.float32(np.zeros((num_slices, nb_bins)))
 
         for i in np.array(range(num_slices)):
-
             segmented_T2maps_slice = segmented_T2maps[:, :, i]
 
             if np.max(segmented_T2maps_slice) == 0:
                 continue
 
+            import pdb; pdb.set_trace()
             non_zero_slice_element = np.nonzero(segmented_T2maps_slice)
             non_zero_T2_slice_values = segmented_T2maps_slice[segmented_T2maps_slice > 0]
             dim = non_zero_T2_slice_values.shape[0]
@@ -131,7 +131,7 @@ class FemoralCartilage(Tissue):
                 bottom_bin = angle
                 top_bin = angle + dtheta
 
-                splice_matrix = np.where((polar_coords[:, 0] > bottom_bin) & (polar_coords[:, 0] <= top_bin))
+                splice_matrix = np.where((polar_coords[:, 0] >= bottom_bin) & (polar_coords[:, 0] < top_bin))
 
                 binned_result = polar_coords[splice_matrix[0], :]
 
@@ -148,7 +148,7 @@ class FemoralCartilage(Tissue):
                 splice_deep = np.where(binned_result[:, 1] <= rad_division)
                 binned_deep = binned_result[splice_deep]
 
-                splice_super = np.where(binned_result[:, 1] >= rad_division)
+                splice_super = np.where(binned_result[:, 1] > rad_division)
                 binned_super = binned_result[splice_super]
 
                 Unrolled_Cartilage[i, np.int((angle + 180) / 5)] = np.mean(binned_result[:, 2], axis=0)
