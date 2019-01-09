@@ -124,7 +124,8 @@ class FemoralCartilage(Tissue):
             polar_coords = np.concatenate(
                 (theta.reshape(dim, 1), rho.reshape(dim, 1), non_zero_T2_slice_values.reshape(dim, 1)), axis=1)
 
-            angles = np.linspace(-180, 175, num=72)
+            dtheta = 360 / nb_bins
+            angles = np.linspace(-180, 180-dtheta, num=nb_bins)
 
             for angle in angles:
                 bottom_bin = angle
