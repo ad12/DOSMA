@@ -79,7 +79,7 @@ class FemoralCartilage(Tissue):
 
         num_slices = qv_map.shape[-1]
 
-        ## STEP 1: PROJECTING AND CYLINDRICAL FIT
+        # STEP 1: PROJECTING AND CYLINDRICAL FIT
 
         thikness_divisor = 0.5
 
@@ -94,7 +94,7 @@ class FemoralCartilage(Tissue):
         xc_fit, yc_fit, R_fit = circle_fit(non_zero_element[0],
                                            non_zero_element[1])  # fit a circle to projected cartilage tissue
 
-        ## STEP 2: SLICE BY SLI2E BINNING
+        # STEP 2: SLICE BY SLICE BINNING
 
         nb_bins = 72
 
@@ -107,7 +107,7 @@ class FemoralCartilage(Tissue):
 
             segmented_T2maps_slice = segmented_T2maps[:, :, i]
 
-            if np.max(np.max(segmented_T2maps_slice)) == 0:
+            if np.max(segmented_T2maps_slice) == 0:
                 continue
 
             non_zero_slice_element = np.nonzero(segmented_T2maps_slice)
@@ -180,13 +180,18 @@ class FemoralCartilage(Tissue):
         unrolled_mask = np.zeros((unrolled_quantitative_map.shape[0], unrolled_quantitative_map.shape[1]))
         unrolled_mask[unrolled_mask_indexes] = 1
 
+        import pdb; pdb.set_trace()
+
         # find the center of mass of the unrolled mask
         center_of_mass = sni.measurements.center_of_mass(unrolled_mask)
 
+        acp_thresholds = [np.int(center_of_mass[0]) - 5, np.int(center_of_mass[0]) + 5]
+        ml_threshold = np.int(np.around(center_of_mass[1]))
+
         unrolled_mask[np.where(unrolled_mask < 1)] = self.BACKGROUND_KEY
 
-        left_side_mask = np.copy(unrolled_mask)[:, 0:np.int(np.around(center_of_mass[1]))]
-        right_side_mask = np.copy(unrolled_mask)[:, np.int(np.around(center_of_mass[1])):]
+        left_side_mask = np.copy(unrolled_mask)[:, 0:ml_threshold]
+        right_side_mask = np.copy(unrolled_mask)[:, ml_threshold:]
 
         # take into account scanning direction
         if self.medial_to_lateral:
@@ -199,9 +204,9 @@ class FemoralCartilage(Tissue):
         ml_mask = np.concatenate((left_side_mask, right_side_mask), axis=1)
 
         # Split map in anterior, central and posterior regions
-        anterior_mask = np.copy(unrolled_mask)[0:np.int(center_of_mass[0]), :]
-        central_mask = np.copy(unrolled_mask)[np.int(center_of_mass[0]):np.int(center_of_mass[0]) + 10, :]
-        posterior_mask = np.copy(unrolled_mask)[np.int(center_of_mass[0]) + 10:, :]
+        anterior_mask = np.copy(unrolled_mask)[0:acp_thresholds[0], :]
+        central_mask = np.copy(unrolled_mask)[acp_thresholds[0]:acp_thresholds[1], :]
+        posterior_mask = np.copy(unrolled_mask)[acp_thresholds[1]:, :]
 
         anterior_mask[np.where(anterior_mask < self.BACKGROUND_KEY)] = self.ANTERIOR_KEY
         posterior_mask[np.where(posterior_mask < self.BACKGROUND_KEY)] = self.POSTERIOR_KEY
