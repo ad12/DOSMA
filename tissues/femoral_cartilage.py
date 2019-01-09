@@ -78,7 +78,8 @@ class FemoralCartilage(Tissue):
         yv, xv = np.meshgrid(range(height), range(width), indexing='ij')
 
         rho, theta = cart2pol(xv - xc_fit, yc_fit - yv)
-        theta_bins = np.floor(-(theta - 180) / DTHETA)
+        theta = (theta >= 90) * (theta-360) + (theta < 90)*theta
+        theta_bins = np.floor((theta - np.min(theta)) / DTHETA)
 
         rho_volume = np.stack([rho] * num_slices, axis=-1)
         mask_nan = np.asarray(np.copy(mask), dtype=np.float64)
@@ -165,15 +166,30 @@ class FemoralCartilage(Tissue):
         Sup_layer = np.zeros([NB_BINS, num_slices])
         Deep_layer = np.zeros([NB_BINS, num_slices])
 
-        for curr_bin in range(NB_BINS):
-            for curr_slice in range(num_slices):
-                qv_slice = qv_map[..., curr_slice]
-                ds_slice = ds_volume[..., curr_slice]
+        for curr_slice in range(num_slices):
+            qv_slice = qv_map[..., curr_slice]
+            ds_slice = ds_volume[..., curr_slice]
+            # if slice is all NaNs, then don't analyze
+            if np.sum(np.isnan(qv_slice)) == qv_slice.shape[0] * qv_slice.shape[1]:
+                continue
 
-                Unrolled_Cartilage[curr_bin, curr_slice] = np.nanmean(qv_slice[theta_bins == curr_bin])
-                #import pdb; pdb.set_trace()
-                Sup_layer[curr_bin, curr_slice] = np.nanmean(qv_slice[np.logical_and(theta_bins == curr_bin, ds_slice == self.SUPERFICIAL_KEY)])
-                Deep_layer[curr_bin, curr_slice] = np.nanmean(qv_slice[np.logical_and(theta_bins == curr_bin, ds_slice == self.DEEP_KEY)])
+            for curr_bin in range(NB_BINS):
+                qv_bin = qv_slice[theta_bins == curr_bin]
+                if np.sum(np.isnan(qv_bin)) == len(qv_bin):
+                    continue
+
+                Unrolled_Cartilage[curr_bin, curr_slice] = np.nanmean(qv_bin)
+
+                # TODO: check if it should be possible to have deep, but not superficial and vice versa
+                qv_superficial = qv_slice[np.logical_and(theta_bins == curr_bin, ds_slice == self.SUPERFICIAL_KEY)]
+                #assert np.sum(np.isnan(qv_superficial)) != len(qv_superficial)
+                Sup_layer[curr_bin, curr_slice] = np.nanmean(qv_superficial)
+
+                qv_deep = qv_slice[np.logical_and(theta_bins == curr_bin, ds_slice == self.DEEP_KEY)]
+                #assert np.sum(np.isnan(qv_deep)) != len(qv_superficial)
+                Deep_layer[curr_bin, curr_slice] = np.nanmean(qv_deep)
+
+                assert np.sum(np.isnan(qv_deep)) != len(qv_superficial) or np.sum(np.isnan(qv_superficial)) != len(qv_superficial)
 
         Unrolled_Cartilage[Unrolled_Cartilage == 0] = np.nan
         Sup_layer[Sup_layer == 0] = np.nan
@@ -349,7 +365,8 @@ class FemoralCartilage(Tissue):
             return
 
         # TODO (arjundd): fix region mask
-        unrolled_mask = self.unroll(self.__mask__.volume)
+        unrolled_total, unrolled_superficial, unrolled_deep = self.unroll(np.asarray(self.__mask__.volume, dtype=np.float64))
+
         # Save region map - add by 1 because no key can be 0
         coronal_region_mask = (self.regions_mask[..., 0] + 1) * 10
         sagital_region_mask = (self.regions_mask[..., 1] + 1)
