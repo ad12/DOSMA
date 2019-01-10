@@ -23,6 +23,10 @@ THICKNESS_DIVISOR = 0.5  # split between superficial/deep cartilage
 NB_BINS = 72  # number of bins
 DTHETA = 360 / NB_BINS  # theta intervals for bins (in degrees)
 
+# Theta range: [-270, 90)
+THETA_MIN = -270
+THETA_MAX = 90
+
 
 class FemoralCartilage(Tissue):
     """Handles analysis for femoral cartilage"""
@@ -48,6 +52,9 @@ class FemoralCartilage(Tissue):
     SUPERFICIAL_KEY = 0
     DEEP_KEY = 1
     TOTAL_AXIAL_KEY = 2
+
+    ML_BOUNDARY = None
+    ACP_BOUNDARY = None
 
     def __init__(self, weights_dir=None, medial_to_lateral=None):
         """
@@ -78,31 +85,36 @@ class FemoralCartilage(Tissue):
         yv, xv = np.meshgrid(range(height), range(width), indexing='ij')
 
         rho, theta = cart2pol(xv - xc_fit, yc_fit - yv)
-        theta = (theta >= 90) * (theta-360) + (theta < 90)*theta
-        theta_bins = np.floor((theta - np.min(theta)) / DTHETA)
+        theta = (theta >= 90) * (theta-360) + (theta < 90)*theta  # range: [-270, 90)
 
-        rho_volume = np.stack([rho] * num_slices, axis=-1)
-        mask_nan = np.asarray(np.copy(mask), dtype=np.float64)
-        mask_nan[mask_nan == 0] = np.nan
-        rho_volume_valid = mask_nan * rho_volume  # invalid values are NaN
+        assert (np.min(theta) >= THETA_MIN) and (np.max(theta) < THETA_MAX), \
+            "Expected Theta range is [%d, %d) degrees. Recieved min: %d max: %d)." % (THETA_MIN, THETA_MAX,
+                                                                                      np.min(theta), np.max(theta))
 
-        rhos_max = np.nanmax(rho_volume_valid, axis=(0, 1))
-        rhos_min = np.nanmin(rho_volume_valid, axis=(0, 1))
+        theta_bins = np.floor((theta - THETA_MIN) / DTHETA)
 
-        rhos_threshold = THICKNESS_DIVISOR * (rhos_max - rhos_min) + rhos_min  # threshold radii for different slices
-        rhos_threshold = np.nan_to_num(rhos_threshold)  # thresholds can only be NaN if no cartilage exists on slice
+        # STEP 3: COMPUTE THRESHOLD RADII
+        rhos_threshold_volume = np.zeros(mask.shape)
+        for curr_slice in range(num_slices):
+            mask_slice = mask[..., curr_slice]
 
-        assert rhos_threshold.shape[0] == num_slices, "Must have threshold radius for each slice"
+            for curr_bin in range(NB_BINS):
+                rhos_valid = rho[np.logical_and(mask_slice > 0, theta_bins == curr_bin)]
+                if len(rhos_valid) == 0:
+                    continue
 
-        rho_threshold_volume = [np.ones([height, width])*thresh for thresh in rhos_threshold]
-        rho_threshold_volume = np.stack(rho_threshold_volume, axis=-1)
+                rho_min = np.min(rhos_valid)
+                rho_max = np.max(rhos_valid)
+
+                rho_threshold = THICKNESS_DIVISOR * (rho_max - rho_min) + rho_min
+                rhos_threshold_volume[theta_bins == curr_bin, curr_slice] = rho_threshold
 
         # anterior/central/posterior division
         # Central region occupies middle 30 degrees, anterior on left, posterior on right
         acp_map = np.zeros(theta.shape)
-        acp_map[np.logical_or((theta >= 90), (theta < -105))] = self.ANTERIOR_KEY
+        acp_map[theta < -105] = self.ANTERIOR_KEY
         acp_map[np.logical_and((theta >= -105), (theta < -75))] = self.CENTRAL_KEY
-        acp_map[np.logical_and((theta > -75), (theta < 90))] = self.POSTERIOR_KEY
+        acp_map[theta >= -75] = self.POSTERIOR_KEY
         acp_volume = np.stack([acp_map]*num_slices, axis=-1)
 
         # medial/lateral division
@@ -119,13 +131,16 @@ class FemoralCartilage(Tissue):
             ml_volume[..., int(np.ceil(com_slicewise)):] = self.MEDIAL_KEY
 
         # deep/superficial division
+        rho_volume = np.stack([rho]*num_slices, axis=-1)
         ds_volume = np.zeros(mask.shape)
-        ds_volume[rho_volume <= rho_threshold_volume] = self.DEEP_KEY
-        ds_volume[rho_volume > rho_threshold_volume] = self.SUPERFICIAL_KEY
+        ds_volume[rho_volume < rhos_threshold_volume] = self.DEEP_KEY
+        ds_volume[rho_volume >= rhos_threshold_volume] = self.SUPERFICIAL_KEY
         ds_volume = ds_volume
 
         self.regions_mask = np.stack([ds_volume, acp_volume, ml_volume], axis=-1)
         self.theta_bins = theta_bins
+        self.ML_BOUNDARY = int(np.ceil(com_slicewise))
+        self.ACP_BOUNDARY = [int(np.floor((-105 - THETA_MIN) / DTHETA)), int(np.floor((-75 - THETA_MIN) / DTHETA))]
 
     def unroll(self, qv_map):
         """Unroll femoral cartilage 3D quantitative value (qv) maps to 2D for visualiation
@@ -364,14 +379,41 @@ class FemoralCartilage(Tissue):
         if self.regions_mask is None:
             return
 
-        # TODO (arjundd): fix region mask
-        unrolled_total, unrolled_superficial, unrolled_deep = self.unroll(np.asarray(self.__mask__.volume, dtype=np.float64))
+        sagital_region_mask, coronal_region_mask = self.__split_mask__()
 
         # Save region map - add by 1 because no key can be 0
-        coronal_region_mask = (self.regions_mask[..., 0] + 1) * 10
-        sagital_region_mask = (self.regions_mask[..., 1] + 1)
+        coronal_region_mask = (coronal_region_mask + 1) * 10
+        sagital_region_mask = (sagital_region_mask + 1)
         joined_mask = coronal_region_mask + sagital_region_mask
         labels = ['medial anterior', 'medial central', 'medial posterior',
                   'lateral anterior', 'lateral central', 'lateral posterior']
         plt_dict = {'labels': labels, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'title': 'Unrolled Regions'}
         img_utils.write_regions(os.path.join(save_dirpath, 'region_map.png'), joined_mask, plt_dict=plt_dict)
+
+    def __split_mask__(self):
+
+        assert self.ML_BOUNDARY is not None and self.ACP_BOUNDARY is not None, "medial/lateral and anterior/central/posterior boundaries should be specified"
+
+        # split into regions
+        unrolled_total, _, _ = self.unroll(np.asarray(self.__mask__.volume, dtype=np.float64))
+
+        acp_division_unrolled = np.zeros(unrolled_total.shape)
+
+        ac_threshold = self.ACP_BOUNDARY[0]
+        cp_threshold = self.ACP_BOUNDARY[1]
+        acp_division_unrolled[:ac_threshold, :] = self.ANTERIOR_KEY
+        acp_division_unrolled[ac_threshold:cp_threshold, :] = self.CENTRAL_KEY
+        acp_division_unrolled[cp_threshold:, :] = self.POSTERIOR_KEY
+
+        ml_division_unrolled = np.zeros(unrolled_total.shape)
+        if self.medial_to_lateral:
+            ml_division_unrolled[..., :self.ML_BOUNDARY] = self.MEDIAL_KEY
+            ml_division_unrolled[..., self.ML_BOUNDARY:] = self.LATERAL_KEY
+        else:
+            ml_division_unrolled[..., :self.ML_BOUNDARY] = self.LATERAL_KEY
+            ml_division_unrolled[..., self.ML_BOUNDARY:] = self.MEDIAL_KEY
+
+        acp_division_unrolled[np.isnan(unrolled_total)] = np.nan
+        ml_division_unrolled[np.isnan(unrolled_total)] = np.nan
+
+        return acp_division_unrolled, ml_division_unrolled
