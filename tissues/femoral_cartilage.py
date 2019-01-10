@@ -6,6 +6,7 @@ import nipy.labs.mask as nlm
 import numpy as np
 import pandas as pd
 import scipy.ndimage as sni
+import time
 
 import defaults
 from med_objects.med_volume import MedicalVolume
@@ -49,8 +50,8 @@ class FemoralCartilage(Tissue):
     SAGGITAL_KEYS = [MEDIAL_KEY, LATERAL_KEY]
 
     # Axial Keys
-    SUPERFICIAL_KEY = 0
-    DEEP_KEY = 1
+    DEEP_KEY = 0
+    SUPERFICIAL_KEY = 1
     TOTAL_AXIAL_KEY = 2
 
     ML_BOUNDARY = None
@@ -157,7 +158,6 @@ class FemoralCartilage(Tissue):
                     2. Superficial unrolled cartilage (slices, degrees) - superficial layer
                     3. Deep unrolled cartilage (slices, degrees) - deep layer
         """
-
         mask = self.__mask__.volume
 
         if qv_map.shape != mask.shape:
@@ -246,6 +246,7 @@ class FemoralCartilage(Tissue):
         axial_region_mask = self.regions_mask[..., 0]
         sagittal_region_mask = self.regions_mask[..., 1]
         coronal_region_mask = self.regions_mask[..., 2]
+        mask = self.__mask__.volume
 
         subject_pid = self.pid
         pd_header = ['Subject', 'Location', 'Side', 'Region', 'Mean', 'Std', 'Median']
@@ -270,15 +271,18 @@ class FemoralCartilage(Tissue):
             else:
                 axial_map = axial_region_mask == axial
 
+            axial_map = axial_map * quant_map.volume
+
             for coronal in [self.MEDIAL_KEY, self.LATERAL_KEY]:
                 for sagittal in [self.ANTERIOR_KEY, self.CENTRAL_KEY, self.POSTERIOR_KEY]:
-                    curr_region_mask = (coronal_region_mask == coronal) * (sagittal_region_mask == sagittal) * axial_map
+                    curr_region_mask = (coronal_region_mask == coronal) * (sagittal_region_mask == sagittal) * axial_map * mask
 
-                    curr_region_mask[curr_region_mask == 0] = np.nan
-                    # discard all values that are 0
-                    c_mean = np.nanmean(curr_region_mask)
-                    c_std = np.nanstd(curr_region_mask)
-                    c_median = np.nanmedian(curr_region_mask)
+                    # discard all values that are <= 0
+                    qv_region_vals = curr_region_mask[curr_region_mask > 0]
+
+                    c_mean = np.nanmean(qv_region_vals)
+                    c_std = np.nanstd(qv_region_vals)
+                    c_median = np.nanmedian(qv_region_vals)
 
                     row_info = [subject_pid, axial_names[axial], coronal_names[coronal], sagittal_names[sagittal],
                                 c_mean, c_std, c_median]
