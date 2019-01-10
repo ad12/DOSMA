@@ -195,13 +195,10 @@ class FemoralCartilage(Tissue):
 
                 Unrolled_Cartilage[curr_bin, curr_slice] = np.nanmean(qv_bin)
 
-                # TODO: check if it should be possible to have deep, but not superficial and vice versa
                 qv_superficial = qv_slice[np.logical_and(theta_bins == curr_bin, ds_slice == self.SUPERFICIAL_KEY)]
-                #assert np.sum(np.isnan(qv_superficial)) != len(qv_superficial)
                 Sup_layer[curr_bin, curr_slice] = np.nanmean(qv_superficial)
 
                 qv_deep = qv_slice[np.logical_and(theta_bins == curr_bin, ds_slice == self.DEEP_KEY)]
-                #assert np.sum(np.isnan(qv_deep)) != len(qv_superficial)
                 Deep_layer[curr_bin, curr_slice] = np.nanmean(qv_deep)
 
                 assert np.sum(np.isnan(qv_deep)) != len(qv_superficial) or np.sum(np.isnan(qv_superficial)) != len(qv_superficial)
@@ -252,7 +249,6 @@ class FemoralCartilage(Tissue):
         pd_header = ['Subject', 'Location', 'Side', 'Region', 'Mean', 'Std', 'Median']
         pd_list = []
 
-        # TODO: identify pixels in deep and superficial that are anterior/central/posterior and medial/lateral
         # Replace strings with values - eg. DMA = 'deep, medial, anterior'
         # tissue_values = [['DMA', 'DMC', 'DMP'], ['DLA', 'DLC', 'DLP'],
         #                  ['SMA', 'SMC', 'SMP'], ['SLA', 'SLC', 'SLP'],
