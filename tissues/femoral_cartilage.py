@@ -196,12 +196,20 @@ class FemoralCartilage(Tissue):
                 Unrolled_Cartilage[curr_bin, curr_slice] = np.nanmean(qv_bin)
 
                 qv_superficial = qv_slice[np.logical_and(theta_bins == curr_bin, ds_slice == self.SUPERFICIAL_KEY)]
-                Sup_layer[curr_bin, curr_slice] = np.nanmean(qv_superficial)
-
                 qv_deep = qv_slice[np.logical_and(theta_bins == curr_bin, ds_slice == self.DEEP_KEY)]
+                # assert len(qv_superficial) > 1, "must have at least 1 superficial pixel"
+                # assert len(qv_deep) >
+
+                if len(qv_superficial) <= 1 and np.sum(np.isnan(qv_superficial)) == len(qv_superficial):
+                    import pdb; pdb.set_trace()
+
+                if len(qv_deep) <= 1 and np.sum(np.isnan(qv_deep)) == len(qv_deep):
+                    import pdb; pdb.set_trace()
+
+                Sup_layer[curr_bin, curr_slice] = np.nanmean(qv_superficial)
                 Deep_layer[curr_bin, curr_slice] = np.nanmean(qv_deep)
 
-                assert np.sum(np.isnan(qv_deep)) != len(qv_superficial) or np.sum(np.isnan(qv_superficial)) != len(qv_superficial)
+                assert np.sum(np.isnan(qv_deep)) != len(qv_deep) or np.sum(np.isnan(qv_superficial)) != len(qv_superficial)
 
         Unrolled_Cartilage[Unrolled_Cartilage == 0] = np.nan
         Sup_layer[Sup_layer == 0] = np.nan
