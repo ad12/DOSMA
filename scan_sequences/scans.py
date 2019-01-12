@@ -406,15 +406,15 @@ class NonTargetSequence(ScanSequence):
         warped_file = ''
         for f in transformation_files:
             reg = ApplyWarp()
-            reg.inputs.moving_image = filename
+            reg.inputs.moving_image = filename if len(warped_file) == 0 else warped_file
 
             reg.inputs.transform_file = f
             reg.inputs.output_path = io_utils.check_dir(os.path.join(temp_path,
                                                                      '%03d' % image_id))
             reg.terminal_output = fc.NIPYPE_LOGGING
             reg_output = reg.run()
-            warped_file = reg_output.outputs.warped_file
 
-        assert warped_file != ''
+            warped_file = reg_output.outputs.warped_file
+            assert warped_file != ''
 
         return warped_file
