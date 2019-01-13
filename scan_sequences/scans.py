@@ -372,13 +372,16 @@ class NonTargetSequence(ScanSequence):
         transformation_files = []
 
         use_mask_arr = [False, True]
+        reg_output = None
+        moving_image = base_image_path
 
         for i in range(len(parameter_files)):
             use_mask = use_mask_arr[i]
             pfile = parameter_files[i]
+
             reg = Registration()
             reg.inputs.fixed_image = target_path
-            reg.inputs.moving_image = base_image_path
+            reg.inputs.moving_image = moving_image
             reg.inputs.output_path = io_utils.check_dir(os.path.join(temp_path,
                                                                      '%03d_param%i' % (base_time_id, i)))
             reg.inputs.parameters = pfile
@@ -388,8 +391,14 @@ class NonTargetSequence(ScanSequence):
                 reg.inputs.fixed_mask = fixed_mask_filepath
 
             reg.terminal_output = fc.NIPYPE_LOGGING
+
             reg_output = reg.run()
             reg_output = reg_output.outputs
+            assert reg_output is not None
+
+            # update moving image to output
+            moving_image = reg_output.warped_file
+
             transformation_files.append(reg_output.transform[0])
 
         return reg_output.warped_file, transformation_files
