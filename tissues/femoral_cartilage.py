@@ -38,21 +38,29 @@ class FemoralCartilage(Tissue):
     # Expected quantitative values
     T1_EXPECTED = 1200  # milliseconds
 
+    # Keys correspond to integer representing bit location for each region
+    # bit string: 'T D S M L A C P' (stored as integer)
     # Coronal Keys
-    ANTERIOR_KEY = 0
-    CENTRAL_KEY = 1
-    POSTERIOR_KEY = 2
+    POSTERIOR_KEY = 2 ** 0
+    CENTRAL_KEY = 2 ** 1
+    ANTERIOR_KEY = 2 ** 2
     CORONAL_KEYS = [ANTERIOR_KEY, CENTRAL_KEY, POSTERIOR_KEY]
 
     # Saggital Keys
-    MEDIAL_KEY = 0
-    LATERAL_KEY = 1
+    MEDIAL_KEY = 2 ** 3
+    LATERAL_KEY = 2 ** 4
     SAGGITAL_KEYS = [MEDIAL_KEY, LATERAL_KEY]
 
     # Axial Keys
-    DEEP_KEY = 0
-    SUPERFICIAL_KEY = 1
-    TOTAL_AXIAL_KEY = 2
+    DEEP_KEY = 2 ** 5
+    SUPERFICIAL_KEY = 2 ** 6
+    TOTAL_AXIAL_KEY = 2 ** 7
+    AXIAL_KEYS = [DEEP_KEY, SUPERFICIAL_KEY, TOTAL_AXIAL_KEY]
+
+    # Do not change order of below. Order reflects order of CORONAL_KEYS, SAGGITAL_KEYS, AXIAL_KEYS
+    AXIAL_NAMES = ['deep', 'superficial', 'total']
+    SAGITTAL_NAMES = ['medial', 'lateral']
+    CORONAL_NAMES = ['anterior', 'central', 'posterior']
 
     ML_BOUNDARY = None
     ACP_BOUNDARY = None
@@ -110,19 +118,22 @@ class FemoralCartilage(Tissue):
                 rho_threshold = THICKNESS_DIVISOR * (rho_max - rho_min) + rho_min
                 rhos_threshold_volume[theta_bins == curr_bin, curr_slice] = rho_threshold
 
+        regions_volume = np.asarray(np.zeros(mask.shape), dtype=np.uint16)
+
         # anterior/central/posterior division
         # Central region occupies middle 30 degrees, anterior on left, posterior on right
-        acp_map = np.zeros(theta.shape)
-        acp_map[theta < -105] = self.ANTERIOR_KEY
-        acp_map[np.logical_and((theta >= -105), (theta < -75))] = self.CENTRAL_KEY
-        acp_map[theta >= -75] = self.POSTERIOR_KEY
-        acp_volume = np.stack([acp_map]*num_slices, axis=-1)
+        anterior_region = self.ANTERIOR_KEY * (theta < -105)
+        central_region = self.CENTRAL_KEY * np.logical_and((theta >= -105), (theta < -75))
+        posterior_region = self.POSTERIOR_KEY * (theta >= -75)
+        acp_map = anterior_region + central_region + posterior_region
+        acp_volume = np.asarray(np.stack([acp_map]*num_slices, axis=-1), dtype=np.uint16)
+        regions_volume += acp_volume
 
         # medial/lateral division
         # take into account scanning direction
         center_of_mass = sni.measurements.center_of_mass(mask)
         com_slicewise = center_of_mass[-1]
-        ml_volume = np.zeros(mask.shape)
+        ml_volume = np.asarray(np.zeros(mask.shape), dtype=np.uint16)
 
         if self.medial_to_lateral:
             ml_volume[..., :int(np.ceil(com_slicewise))] = self.MEDIAL_KEY
@@ -130,15 +141,17 @@ class FemoralCartilage(Tissue):
         else:
             ml_volume[..., :int(np.ceil(com_slicewise))] = self.LATERAL_KEY
             ml_volume[..., int(np.ceil(com_slicewise)):] = self.MEDIAL_KEY
+        regions_volume += ml_volume
 
         # deep/superficial division
         rho_volume = np.stack([rho]*num_slices, axis=-1)
-        ds_volume = np.zeros(mask.shape)
-        ds_volume[rho_volume < rhos_threshold_volume] = self.DEEP_KEY
-        ds_volume[rho_volume >= rhos_threshold_volume] = self.SUPERFICIAL_KEY
-        ds_volume = ds_volume
+        deep_volume = (rho_volume <= rhos_threshold_volume) * self.DEEP_KEY
+        superficial_volume = (rho_volume >= rhos_threshold_volume) * self.SUPERFICIAL_KEY
+        ds_volume = np.asarray(deep_volume + superficial_volume + self.TOTAL_AXIAL_KEY, dtype=np.uint16)
 
-        self.regions_mask = np.stack([ds_volume, acp_volume, ml_volume], axis=-1)
+        regions_volume += ds_volume
+
+        self.regions_mask = regions_volume
         self.theta_bins = theta_bins
         self.ML_BOUNDARY = int(np.ceil(com_slicewise))
         self.ACP_BOUNDARY = [int(np.floor((-105 - THETA_MIN) / DTHETA)), int(np.floor((-75 - THETA_MIN) / DTHETA))]
@@ -172,18 +185,20 @@ class FemoralCartilage(Tissue):
 
         qv_map = np.nan_to_num(qv_map)
         qv_map = np.multiply(mask, qv_map)  # apply binary mask
-        qv_map[qv_map == 0] = np.nan  # wherever qv_map is 0, either no cartilage or qv=0 ms, which is impractical
+        qv_map[qv_map <= 0] = np.nan  # wherever qv_map is 0, either no cartilage or qv=0 ms, which is impractical
 
         theta_bins = self.theta_bins  # binning with theta
-        ds_volume = self.regions_mask[..., 0]  # deep/superficial split
+
+        regions_mask = self.regions_mask
 
         Unrolled_Cartilage = np.zeros([NB_BINS, num_slices])
         Sup_layer = np.zeros([NB_BINS, num_slices])
         Deep_layer = np.zeros([NB_BINS, num_slices])
 
-        for curr_slice in range(num_slices):
-            qv_slice = qv_map[..., curr_slice]
-            ds_slice = ds_volume[..., curr_slice]
+        for slice_ind in range(num_slices):
+            qv_slice = qv_map[..., slice_ind]
+            curr_slice = regions_mask[..., slice_ind]
+
             # if slice is all NaNs, then don't analyze
             if np.sum(np.isnan(qv_slice)) == qv_slice.shape[0] * qv_slice.shape[1]:
                 continue
@@ -193,23 +208,24 @@ class FemoralCartilage(Tissue):
                 if np.sum(np.isnan(qv_bin)) == len(qv_bin):
                     continue
 
-                Unrolled_Cartilage[curr_bin, curr_slice] = np.nanmean(qv_bin)
+                Unrolled_Cartilage[curr_bin, slice_ind] = np.nanmean(qv_bin)
 
-                qv_superficial = qv_slice[np.logical_and(theta_bins == curr_bin, ds_slice == self.SUPERFICIAL_KEY)]
-                qv_deep = qv_slice[np.logical_and(theta_bins == curr_bin, ds_slice == self.DEEP_KEY)]
-                # assert len(qv_superficial) > 1, "must have at least 1 superficial pixel"
-                # assert len(qv_deep) >
+                qv_superficial = qv_slice[np.logical_and(theta_bins == curr_bin, np.bitwise_and(curr_slice, self.SUPERFICIAL_KEY))]
+                qv_deep = qv_slice[np.logical_and(theta_bins == curr_bin, np.bitwise_and(curr_slice, self.DEEP_KEY))]
 
-                if len(qv_superficial) <= 1 and np.sum(np.isnan(qv_superficial)) == len(qv_superficial):
+                qv_superficial = np.nan_to_num(qv_superficial)
+                qv_deep = np.nan_to_num(qv_deep)
+
+                qv_sup_mean = np.mean(qv_superficial[qv_superficial > 0])
+                qv_deep_mean = np.mean(qv_deep[qv_deep > 0])
+                Sup_layer[curr_bin, slice_ind] = qv_sup_mean
+                Deep_layer[curr_bin, slice_ind] = qv_deep_mean
+
+                if qv_sup_mean == 0:
                     import pdb; pdb.set_trace()
 
-                if len(qv_deep) <= 1 and np.sum(np.isnan(qv_deep)) == len(qv_deep):
+                if qv_deep_mean == 0:
                     import pdb; pdb.set_trace()
-
-                Sup_layer[curr_bin, curr_slice] = np.nanmean(qv_superficial)
-                Deep_layer[curr_bin, curr_slice] = np.nanmean(qv_deep)
-
-                assert np.sum(np.isnan(qv_deep)) != len(qv_deep) or np.sum(np.isnan(qv_superficial)) != len(qv_superficial)
 
         Unrolled_Cartilage[Unrolled_Cartilage == 0] = np.nan
         Sup_layer[Sup_layer == 0] = np.nan
@@ -248,9 +264,7 @@ class FemoralCartilage(Tissue):
         assert total.shape == deep.shape
         assert deep.shape == superficial.shape
 
-        axial_region_mask = self.regions_mask[..., 0]
-        sagittal_region_mask = self.regions_mask[..., 1]
-        coronal_region_mask = self.regions_mask[..., 2]
+        regions_mask = self.regions_mask
         mask = self.__mask__.volume
 
         subject_pid = self.pid
@@ -262,25 +276,15 @@ class FemoralCartilage(Tissue):
         #                  ['SMA', 'SMC', 'SMP'], ['SLA', 'SLC', 'SLP'],
         #                  ['TMA', 'TMC', 'TMP'], ['TLA', 'TLC', 'TLP']]
         # tissue_values = []
-        axial_data = [deep, superficial, total]
 
-        axial_names = ['deep', 'superficial', 'total']
-        coronal_names = ['medial', 'lateral']
-        sagittal_names = ['anterior', 'central', 'posterior']
+        for axial_ind in range(len(self.AXIAL_KEYS)):
+            axial = self.AXIAL_KEYS[axial_ind]
+            for sagittal_ind in range(len(self.SAGGITAL_KEYS)):
+                sagittal = self.SAGGITAL_KEYS[sagittal_ind]
+                for coronal_ind in range(len(self.CORONAL_KEYS)):
+                    coronal = self.CORONAL_KEYS[coronal_ind]
 
-        for axial in [self.DEEP_KEY, self.SUPERFICIAL_KEY, self.TOTAL_AXIAL_KEY]:
-            if axial == self.TOTAL_AXIAL_KEY:
-                axial_map = np.logical_or(np.asarray(axial_region_mask == self.DEEP_KEY, dtype=np.float32),
-                                          np.asarray(axial_region_mask == self.SUPERFICIAL_KEY, dtype=np.float32))
-            else:
-                axial_map = axial_region_mask == axial
-
-            axial_map = axial_map * quant_map.volume
-
-            for coronal in [self.MEDIAL_KEY, self.LATERAL_KEY]:
-                for sagittal in [self.ANTERIOR_KEY, self.CENTRAL_KEY, self.POSTERIOR_KEY]:
-                    curr_region_mask = (coronal_region_mask == coronal) * (sagittal_region_mask == sagittal) * axial_map * mask
-
+                    curr_region_mask = np.asarray(np.bitwise_and(regions_mask, (axial | coronal | sagittal)), dtype=np.bool) * mask * quant_map.volume
                     # discard all values that are <= 0
                     qv_region_vals = curr_region_mask[curr_region_mask > 0]
 
@@ -288,7 +292,8 @@ class FemoralCartilage(Tissue):
                     c_std = np.nanstd(qv_region_vals)
                     c_median = np.nanmedian(qv_region_vals)
 
-                    row_info = [subject_pid, axial_names[axial], coronal_names[coronal], sagittal_names[sagittal],
+                    row_info = [subject_pid,
+                                self.AXIAL_NAMES[axial_ind], self.SAGITTAL_NAMES[sagittal_ind], self.CORONAL_NAMES[coronal_ind],
                                 c_mean, c_std, c_median]
 
                     pd_list.append(row_info)
