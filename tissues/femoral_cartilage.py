@@ -77,15 +77,18 @@ class FemoralCartilage(Tissue):
 
         self.medial_to_lateral = medial_to_lateral
 
-    def split_regions(self, base_map):
+    def split_regions(self, base_map=None):
         mask = self.__mask__.volume
+
+        if base_map is not None:
+            mask = mask * np.nan_to_num(base_map)
 
         height, width, num_slices = mask.shape
 
+        import pdb; pdb.set_trace()
         # STEP 1: PROJECTING AND CYLINDRICAL FIT
-        segmented_T2maps_projected = np.max(mask, 2)  # Project segmented T2maps on sagittal axis
-
-        non_zero_element = np.nonzero(segmented_T2maps_projected)
+        segmented_t2maps_projected = np.max(mask, 2)  # Project segmented T2maps on sagittal axis
+        non_zero_element = np.nonzero(segmented_t2maps_projected)
 
         xc_fit, yc_fit, R_fit = circle_fit(non_zero_element[1],
                                            non_zero_element[0])  # fit a circle to projected cartilage tissue
@@ -264,6 +267,10 @@ class FemoralCartilage(Tissue):
         assert total.shape == deep.shape
         assert deep.shape == superficial.shape
 
+        # We have to call this every time we load a new quantitative map
+        # mask = segmentation_mask * clipped_quant_map
+        self.split_regions(quant_map.volume)
+
         regions_mask = self.regions_mask
         mask = self.__mask__.volume
 
@@ -285,6 +292,7 @@ class FemoralCartilage(Tissue):
                     coronal = self.CORONAL_KEYS[coronal_ind]
 
                     curr_region_mask = np.asarray(np.bitwise_and(regions_mask, (axial | coronal | sagittal)), dtype=np.bool) * mask * quant_map.volume
+                    import pdb; pdb.set_trace()
                     # discard all values that are <= 0
                     qv_region_vals = curr_region_mask[curr_region_mask > 0]
 
@@ -318,7 +326,7 @@ class FemoralCartilage(Tissue):
 
         super().set_mask(mask_copy)
 
-        self.split_regions(self.__mask__.volume)
+        #self.split_regions(self.__mask__.volume)
 
     def __save_quant_data__(self, dirpath):
         """Save quantitative data and 2D visualizations of femoral cartilage
