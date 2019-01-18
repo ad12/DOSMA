@@ -77,15 +77,13 @@ class FemoralCartilage(Tissue):
 
         self.medial_to_lateral = medial_to_lateral
 
-    def split_regions(self, base_map=None):
+    def split_regions(self, base_map):
         mask = self.__mask__.volume
 
-        if base_map is not None:
-            mask = mask * np.nan_to_num(base_map)
+        mask = mask * np.nan_to_num(base_map)
 
         height, width, num_slices = mask.shape
 
-        import pdb; pdb.set_trace()
         # STEP 1: PROJECTING AND CYLINDRICAL FIT
         segmented_t2maps_projected = np.max(mask, 2)  # Project segmented T2maps on sagittal axis
         non_zero_element = np.nonzero(segmented_t2maps_projected)
@@ -153,13 +151,12 @@ class FemoralCartilage(Tissue):
         ds_volume = np.asarray(deep_volume + superficial_volume + self.TOTAL_AXIAL_KEY, dtype=np.uint16)
 
         regions_volume += ds_volume
+        ml_boundary = int(np.ceil(com_slicewise))
+        acp_boundary = [int(np.floor((-105 - THETA_MIN) / DTHETA)), int(np.floor((-75 - THETA_MIN) / DTHETA))]
 
-        self.regions_mask = regions_volume
-        self.theta_bins = theta_bins
-        self.ML_BOUNDARY = int(np.ceil(com_slicewise))
-        self.ACP_BOUNDARY = [int(np.floor((-105 - THETA_MIN) / DTHETA)), int(np.floor((-75 - THETA_MIN) / DTHETA))]
+        return regions_volume, theta_bins, ml_boundary, acp_boundary
 
-    def unroll(self, qv_map):
+    def unroll(self, qv_map, regions_mask, theta_bins):
         """Unroll femoral cartilage 3D quantitative value (qv) maps to 2D for visualiation
 
         The function multiplies a 3D segmentation mask to a 3D qv map --> 3D femoral cartilage qv (fc_qv) map
@@ -182,7 +179,7 @@ class FemoralCartilage(Tissue):
         if len(qv_map.shape) != 3:
             raise ValueError('t2_map and mask must be 3D')
 
-        assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
+        #assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
 
         num_slices = qv_map.shape[-1]
 
@@ -190,9 +187,9 @@ class FemoralCartilage(Tissue):
         qv_map = np.multiply(mask, qv_map)  # apply binary mask
         qv_map[qv_map <= 0] = np.nan  # wherever qv_map is 0, either no cartilage or qv=0 ms, which is impractical
 
-        theta_bins = self.theta_bins  # binning with theta
+        #theta_bins = self.theta_bins  # binning with theta
 
-        regions_mask = self.regions_mask
+        #regions_mask = self.regions_mask
 
         Unrolled_Cartilage = np.zeros([NB_BINS, num_slices])
         Sup_layer = np.zeros([NB_BINS, num_slices])
@@ -260,18 +257,18 @@ class FemoralCartilage(Tissue):
         if self.__mask__ is None:
             raise ValueError('Please initialize mask')
 
-        assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
+        #assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
 
-        total, superficial, deep = self.unroll(quant_map.volume)
+        # We have to call this every time we load a new quantitative map
+        # mask = segmentation_mask * clipped_quant_map
+        regions_mask, theta_bins, _, _ = self.split_regions(quant_map.volume)
+
+        total, superficial, deep = self.unroll(quant_map.volume, regions_mask, theta_bins)
 
         assert total.shape == deep.shape
         assert deep.shape == superficial.shape
 
-        # We have to call this every time we load a new quantitative map
-        # mask = segmentation_mask * clipped_quant_map
-        self.split_regions(quant_map.volume)
-
-        regions_mask = self.regions_mask
+        #regions_mask = self.regions_mask
         mask = self.__mask__.volume
 
         subject_pid = self.pid
@@ -292,7 +289,6 @@ class FemoralCartilage(Tissue):
                     coronal = self.CORONAL_KEYS[coronal_ind]
 
                     curr_region_mask = np.asarray(np.bitwise_and(regions_mask, (axial | coronal | sagittal)), dtype=np.bool) * mask * quant_map.volume
-                    import pdb; pdb.set_trace()
                     # discard all values that are <= 0
                     qv_region_vals = curr_region_mask[curr_region_mask > 0]
 
@@ -326,7 +322,7 @@ class FemoralCartilage(Tissue):
 
         super().set_mask(mask_copy)
 
-        #self.split_regions(self.__mask__.volume)
+        self.regions_mask, self.theta_bins, self.ML_BOUNDARY, self.ACP_BOUNDARY = self.split_regions(self.__mask__.volume)
 
     def __save_quant_data__(self, dirpath):
         """Save quantitative data and 2D visualizations of femoral cartilage
@@ -416,7 +412,7 @@ class FemoralCartilage(Tissue):
         assert self.ML_BOUNDARY is not None and self.ACP_BOUNDARY is not None, "medial/lateral and anterior/central/posterior boundaries should be specified"
 
         # split into regions
-        unrolled_total, _, _ = self.unroll(np.asarray(self.__mask__.volume, dtype=np.float64))
+        unrolled_total, _, _ = self.unroll(np.asarray(self.__mask__.volume, dtype=np.float32), self.regions_mask, self.theta_bins)
 
         acp_division_unrolled = np.zeros(unrolled_total.shape)
 
