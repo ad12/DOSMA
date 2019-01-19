@@ -4,7 +4,6 @@ import matplotlib
 import numpy as np
 import seaborn as sns
 
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 

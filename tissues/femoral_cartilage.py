@@ -6,6 +6,7 @@ import nipy.labs.mask as nlm
 import numpy as np
 import pandas as pd
 import scipy.ndimage as sni
+import time
 
 import defaults
 from med_objects.med_volume import MedicalVolume
@@ -19,6 +20,14 @@ BOUNDS = {QuantitativeValues.T2: 60.0,
           QuantitativeValues.T1_RHO: 100.0,
           QuantitativeValues.T2_STAR: 50.0}
 
+THICKNESS_DIVISOR = 0.5  # split between superficial/deep cartilage
+NB_BINS = 72  # number of bins
+DTHETA = 360 / NB_BINS  # theta intervals for bins (in degrees)
+
+# Theta range: [-270, 90)
+THETA_MIN = -270
+THETA_MAX = 90
+
 
 class FemoralCartilage(Tissue):
     """Handles analysis for femoral cartilage"""
@@ -29,19 +38,32 @@ class FemoralCartilage(Tissue):
     # Expected quantitative values
     T1_EXPECTED = 1200  # milliseconds
 
+    # Keys correspond to integer representing bit location for each region
+    # bit string: 'T D S M L A C P' (stored as integer)
     # Coronal Keys
-    ANTERIOR_KEY = 0
-    CENTRAL_KEY = 1
-    POSTERIOR_KEY = 2
-    CORONAL_KEYS = [ANTERIOR_KEY, CENTRAL_KEY, POSTERIOR_KEY]
+    POSTERIOR_KEY = 2 ** 0
+    CENTRAL_KEY = 2 ** 1
+    ANTERIOR_KEY = 2 ** 2
+    CORONAL_KEYS = [POSTERIOR_KEY, CENTRAL_KEY, ANTERIOR_KEY]
 
     # Saggital Keys
-    MEDIAL_KEY = 0
-    LATERAL_KEY = 1
+    MEDIAL_KEY = 2 ** 3
+    LATERAL_KEY = 2 ** 4
     SAGGITAL_KEYS = [MEDIAL_KEY, LATERAL_KEY]
 
-    # Background Key
-    BACKGROUND_KEY = 3
+    # Axial Keys
+    DEEP_KEY = 2 ** 5
+    SUPERFICIAL_KEY = 2 ** 6
+    TOTAL_AXIAL_KEY = 2 ** 7
+    AXIAL_KEYS = [DEEP_KEY, SUPERFICIAL_KEY, TOTAL_AXIAL_KEY]
+
+    # Do not change order of below. Order reflects order of CORONAL_KEYS, SAGGITAL_KEYS, AXIAL_KEYS
+    AXIAL_NAMES = ['deep', 'superficial', 'total']
+    SAGITTAL_NAMES = ['medial', 'lateral']
+    CORONAL_NAMES = ['anterior', 'central', 'posterior']
+
+    ML_BOUNDARY = None
+    ACP_BOUNDARY = None
 
     def __init__(self, weights_dir=None, medial_to_lateral=None):
         """
@@ -51,9 +73,90 @@ class FemoralCartilage(Tissue):
         super().__init__(weights_dir=weights_dir)
 
         self.regions_mask = None
+        self.theta_bins = None
+
         self.medial_to_lateral = medial_to_lateral
 
-    def unroll(self, qv_map):
+    def split_regions(self, base_map):
+        mask = self.__mask__.volume
+
+        mask = mask * np.nan_to_num(base_map)
+
+        height, width, num_slices = mask.shape
+
+        # STEP 1: PROJECTING AND CYLINDRICAL FIT
+        segmented_t2maps_projected = np.max(mask, 2)  # Project segmented T2maps on sagittal axis
+        non_zero_element = np.nonzero(segmented_t2maps_projected)
+
+        xc_fit, yc_fit, R_fit = circle_fit(non_zero_element[1],
+                                           non_zero_element[0])  # fit a circle to projected cartilage tissue
+
+        # STEP 2: SLICE BY SLICE BINNING
+        yv, xv = np.meshgrid(range(height), range(width), indexing='ij')
+
+        rho, theta = cart2pol(xv - xc_fit, yc_fit - yv)
+        theta = (theta >= 90) * (theta-360) + (theta < 90)*theta  # range: [-270, 90)
+
+        assert (np.min(theta) >= THETA_MIN) and (np.max(theta) < THETA_MAX), \
+            "Expected Theta range is [%d, %d) degrees. Recieved min: %d max: %d)." % (THETA_MIN, THETA_MAX,
+                                                                                      np.min(theta), np.max(theta))
+
+        theta_bins = np.floor((theta - THETA_MIN) / DTHETA)
+
+        # STEP 3: COMPUTE THRESHOLD RADII
+        rhos_threshold_volume = np.zeros(mask.shape)
+        for curr_slice in range(num_slices):
+            mask_slice = mask[..., curr_slice]
+
+            for curr_bin in range(NB_BINS):
+                rhos_valid = rho[np.logical_and(mask_slice > 0, theta_bins == curr_bin)]
+                if len(rhos_valid) == 0:
+                    continue
+
+                rho_min = np.min(rhos_valid)
+                rho_max = np.max(rhos_valid)
+
+                rho_threshold = THICKNESS_DIVISOR * (rho_max - rho_min) + rho_min
+                rhos_threshold_volume[theta_bins == curr_bin, curr_slice] = rho_threshold
+
+        regions_volume = np.asarray(np.zeros(mask.shape), dtype=np.uint16)
+
+        # anterior/central/posterior division
+        # Central region occupies middle 30 degrees, anterior on left, posterior on right
+        anterior_region = self.ANTERIOR_KEY * (theta < -105)
+        central_region = self.CENTRAL_KEY * np.logical_and((theta >= -105), (theta < -75))
+        posterior_region = self.POSTERIOR_KEY * (theta >= -75)
+        acp_map = anterior_region + central_region + posterior_region
+        acp_volume = np.asarray(np.stack([acp_map]*num_slices, axis=-1), dtype=np.uint16)
+        regions_volume += acp_volume
+
+        # medial/lateral division
+        # take into account scanning direction
+        center_of_mass = sni.measurements.center_of_mass(mask)
+        com_slicewise = center_of_mass[-1]
+        ml_volume = np.asarray(np.zeros(mask.shape), dtype=np.uint16)
+
+        if self.medial_to_lateral:
+            ml_volume[..., :int(np.ceil(com_slicewise))] = self.MEDIAL_KEY
+            ml_volume[..., int(np.ceil(com_slicewise)):] = self.LATERAL_KEY
+        else:
+            ml_volume[..., :int(np.ceil(com_slicewise))] = self.LATERAL_KEY
+            ml_volume[..., int(np.ceil(com_slicewise)):] = self.MEDIAL_KEY
+        regions_volume += ml_volume
+
+        # deep/superficial division
+        rho_volume = np.stack([rho]*num_slices, axis=-1)
+        deep_volume = (rho_volume <= rhos_threshold_volume) * self.DEEP_KEY
+        superficial_volume = (rho_volume >= rhos_threshold_volume) * self.SUPERFICIAL_KEY
+        ds_volume = np.asarray(deep_volume + superficial_volume + self.TOTAL_AXIAL_KEY, dtype=np.uint16)
+
+        regions_volume += ds_volume
+        ml_boundary = int(np.ceil(com_slicewise))
+        acp_boundary = [int(np.floor((-105 - THETA_MIN) / DTHETA)), int(np.floor((-75 - THETA_MIN) / DTHETA))]
+
+        return regions_volume, theta_bins, ml_boundary, acp_boundary
+
+    def unroll(self, qv_map, regions_mask, theta_bins):
         """Unroll femoral cartilage 3D quantitative value (qv) maps to 2D for visualiation
 
         The function multiplies a 3D segmentation mask to a 3D qv map --> 3D femoral cartilage qv (fc_qv) map
@@ -68,7 +171,6 @@ class FemoralCartilage(Tissue):
                     2. Superficial unrolled cartilage (slices, degrees) - superficial layer
                     3. Deep unrolled cartilage (slices, degrees) - deep layer
         """
-
         mask = self.__mask__.volume
 
         if qv_map.shape != mask.shape:
@@ -77,151 +179,59 @@ class FemoralCartilage(Tissue):
         if len(qv_map.shape) != 3:
             raise ValueError('t2_map and mask must be 3D')
 
+        #assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
+
         num_slices = qv_map.shape[-1]
 
-        ## STEP 1: PROJECTING AND CYLINDRICAL FIT
-
-        thikness_divisor = 0.5
-
         qv_map = np.nan_to_num(qv_map)
+        qv_map = np.multiply(mask, qv_map)  # apply binary mask
+        qv_map[qv_map <= 0] = np.nan  # wherever qv_map is 0, either no cartilage or qv=0 ms, which is impractical
 
-        segmented_T2maps = np.multiply(mask, qv_map)  # apply binary mask
+        #theta_bins = self.theta_bins  # binning with theta
 
-        segmented_T2maps_projected = np.max(segmented_T2maps, 2)  # Project segmented T2maps on sagittal axis
+        #regions_mask = self.regions_mask
 
-        non_zero_element = np.nonzero(segmented_T2maps_projected)
+        Unrolled_Cartilage = np.zeros([NB_BINS, num_slices])
+        Sup_layer = np.zeros([NB_BINS, num_slices])
+        Deep_layer = np.zeros([NB_BINS, num_slices])
 
-        xc_fit, yc_fit, R_fit = circle_fit(non_zero_element[0],
-                                           non_zero_element[1])  # fit a circle to projected cartilage tissue
+        for slice_ind in range(num_slices):
+            qv_slice = qv_map[..., slice_ind]
+            curr_slice = regions_mask[..., slice_ind]
 
-        ## STEP 2: SLICE BY SLI2E BINNING
-
-        nb_bins = 72
-
-        Unrolled_Cartilage = np.float32(np.zeros((num_slices, nb_bins)))
-
-        Sup_layer = np.float32(np.zeros((num_slices, nb_bins)))
-        Deep_layer = np.float32(np.zeros((num_slices, nb_bins)))
-
-        for i in np.array(range(num_slices)):
-
-            segmented_T2maps_slice = segmented_T2maps[:, :, i]
-
-            if np.max(np.max(segmented_T2maps_slice)) == 0:
+            # if slice is all NaNs, then don't analyze
+            if np.sum(np.isnan(qv_slice)) == qv_slice.shape[0] * qv_slice.shape[1]:
                 continue
 
-            non_zero_slice_element = np.nonzero(segmented_T2maps_slice)
-            non_zero_T2_slice_values = segmented_T2maps_slice[segmented_T2maps_slice > 0]
-            dim = non_zero_T2_slice_values.shape[0]
-
-            x_index_c = non_zero_slice_element[0] - xc_fit
-            y_index_c = non_zero_slice_element[1] - yc_fit
-
-            rho, theta_rad = cart2pol(x_index_c, y_index_c)
-
-            theta = theta_rad * (180 / np.pi)
-
-            polar_coords = np.concatenate(
-                (theta.reshape(dim, 1), rho.reshape(dim, 1), non_zero_T2_slice_values.reshape(dim, 1)), axis=1)
-
-            angles = np.linspace(-180, 175, num=72)
-
-            for angle in angles:
-                bottom_bin = angle
-                top_bin = angle + 5
-
-                splice_matrix = np.where((polar_coords[:, 0] > bottom_bin) & (polar_coords[:, 0] <= top_bin))
-
-                binned_result = polar_coords[splice_matrix[0], :]
-
-                if binned_result.size == 0:
+            for curr_bin in range(NB_BINS):
+                qv_bin = qv_slice[theta_bins == curr_bin]
+                if np.sum(np.isnan(qv_bin)) == len(qv_bin):
                     continue
 
-                max_radius = np.max(binned_result[:, 1])
-                min_radius = np.min(binned_result[:, 1])
+                Unrolled_Cartilage[curr_bin, slice_ind] = np.nanmean(qv_bin)
 
-                cart_thickness = max_radius - min_radius
+                qv_superficial = qv_slice[np.logical_and(theta_bins == curr_bin, np.bitwise_and(curr_slice, self.SUPERFICIAL_KEY))]
+                qv_deep = qv_slice[np.logical_and(theta_bins == curr_bin, np.bitwise_and(curr_slice, self.DEEP_KEY))]
 
-                rad_division = min_radius + cart_thickness * thikness_divisor
+                qv_superficial = np.nan_to_num(qv_superficial)
+                qv_deep = np.nan_to_num(qv_deep)
 
-                splice_deep = np.where(binned_result[:, 1] <= rad_division)
-                binned_deep = binned_result[splice_deep]
+                qv_sup_mean = np.mean(qv_superficial[qv_superficial > 0])
+                qv_deep_mean = np.mean(qv_deep[qv_deep > 0])
+                Sup_layer[curr_bin, slice_ind] = qv_sup_mean
+                Deep_layer[curr_bin, slice_ind] = qv_deep_mean
 
-                splice_super = np.where(binned_result[:, 1] >= rad_division)
-                binned_super = binned_result[splice_super]
+                if qv_sup_mean == 0:
+                    import pdb; pdb.set_trace()
 
-                Unrolled_Cartilage[i, np.int((angle + 180) / 5)] = np.mean(binned_result[:, 2], axis=0)
-                Sup_layer[i, np.int((angle + 180) / 5)] = np.mean(binned_super[:, 2], axis=0)
-                Deep_layer[i, np.int((angle + 180) / 5)] = np.mean(binned_deep[:, 2], axis=0)
+                if qv_deep_mean == 0:
+                    import pdb; pdb.set_trace()
 
         Unrolled_Cartilage[Unrolled_Cartilage == 0] = np.nan
         Sup_layer[Sup_layer == 0] = np.nan
         Deep_layer[Deep_layer == 0] = np.nan
 
-        total_cartilage_unrolled = np.transpose(Unrolled_Cartilage)
-        sup_layer_unrolled = np.transpose(Sup_layer)
-        deep_layer_unrolled = np.transpose(Deep_layer)
-
-        return total_cartilage_unrolled, sup_layer_unrolled, deep_layer_unrolled
-
-    def split_regions(self, unrolled_quantitative_map):
-        """Split 2D MxN unrolled quantitative map into regions
-
-        Generates a MxNx2 mask of medial/lateral pixels and anterior/central/posterior pixels
-        This method must be called after the unrolled method
-
-        :param unrolled_quantitative_map:
-        :return: a MxNx2 numpy array with values corresponding to regions
-        """
-
-        # create unrolled mask from unrolled map
-        unrolled_quantitative_map = np.nan_to_num(unrolled_quantitative_map)
-        unrolled_mask_indexes = np.nonzero(unrolled_quantitative_map)
-        unrolled_mask = np.zeros((unrolled_quantitative_map.shape[0], unrolled_quantitative_map.shape[1]))
-        unrolled_mask[unrolled_mask_indexes] = 1
-
-        # find the center of mass of the unrolled mask
-        center_of_mass = sni.measurements.center_of_mass(unrolled_mask)
-
-        unrolled_mask[np.where(unrolled_mask < 1)] = self.BACKGROUND_KEY
-
-        left_side_mask = np.copy(unrolled_mask)[:, 0:np.int(np.around(center_of_mass[1]))]
-        right_side_mask = np.copy(unrolled_mask)[:, np.int(np.around(center_of_mass[1])):]
-
-        # take into account scanning direction
-        if self.medial_to_lateral:
-            left_side_mask[np.where(left_side_mask < self.BACKGROUND_KEY)] = self.MEDIAL_KEY
-            right_side_mask[np.where(right_side_mask < self.BACKGROUND_KEY)] = self.LATERAL_KEY
-        else:
-            left_side_mask[np.where(left_side_mask < self.BACKGROUND_KEY)] = self.LATERAL_KEY
-            right_side_mask[np.where(right_side_mask < self.BACKGROUND_KEY)] = self.MEDIAL_KEY
-
-        ml_mask = np.concatenate((left_side_mask, right_side_mask), axis=1)
-
-        # Split map in anterior, central and posterior regions
-        anterior_mask = np.copy(unrolled_mask)[0:np.int(center_of_mass[0]), :]
-        central_mask = np.copy(unrolled_mask)[np.int(center_of_mass[0]):np.int(center_of_mass[0]) + 10, :]
-        posterior_mask = np.copy(unrolled_mask)[np.int(center_of_mass[0]) + 10:, :]
-
-        anterior_mask[np.where(anterior_mask < self.BACKGROUND_KEY)] = self.ANTERIOR_KEY
-        posterior_mask[np.where(posterior_mask < self.BACKGROUND_KEY)] = self.POSTERIOR_KEY
-        central_mask[np.where(central_mask < self.BACKGROUND_KEY)] = self.CENTRAL_KEY
-
-        acp_mask = np.concatenate((anterior_mask, central_mask, posterior_mask), axis=0)
-
-        assert ml_mask.shape == acp_mask.shape
-
-        # convert backgorund label to NaN
-        ml_mask[ml_mask == self.BACKGROUND_KEY] = np.nan
-        acp_mask[acp_mask == self.BACKGROUND_KEY] = np.nan
-
-        ml_mask = ml_mask[..., np.newaxis]
-        acp_mask = acp_mask[..., np.newaxis]
-
-        self.regions_mask = np.concatenate((ml_mask, acp_mask), axis=2)
-
-        assert np.allclose(self.regions_mask[..., 0], ml_mask[..., 0], equal_nan=True)
-        assert np.allclose(self.regions_mask[..., 1], acp_mask[..., 0], equal_nan=True)
+        return Unrolled_Cartilage, Sup_layer, Deep_layer
 
     def __calc_quant_vals__(self, quant_map, map_type):
         """
@@ -238,7 +248,6 @@ class FemoralCartilage(Tissue):
                  M=medial, L=lateral,
                  A=anterior, C=central, P=posterior
 
-
         :param quant_map: The 3D volume of quantitative values (np.nan for all pixels that are not accurate)
         :param map_type: A QuantitativeValue instance
         """
@@ -248,45 +257,47 @@ class FemoralCartilage(Tissue):
         if self.__mask__ is None:
             raise ValueError('Please initialize mask')
 
-        total, superficial, deep = self.unroll(quant_map.volume)
+        #assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
+
+        # We have to call this every time we load a new quantitative map
+        # mask = segmentation_mask * clipped_quant_map
+        regions_mask, theta_bins, _, _ = self.split_regions(quant_map.volume)
+
+        total, superficial, deep = self.unroll(quant_map.volume, regions_mask, theta_bins)
 
         assert total.shape == deep.shape
         assert deep.shape == superficial.shape
 
-        assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
-
-        coronal_region_mask = self.regions_mask[..., 0]
-        sagittal_region_mask = self.regions_mask[..., 1]
+        #regions_mask = self.regions_mask
+        mask = self.__mask__.volume
 
         subject_pid = self.pid
         pd_header = ['Subject', 'Location', 'Side', 'Region', 'Mean', 'Std', 'Median']
         pd_list = []
 
-        # TODO: identify pixels in deep and superficial that are anterior/central/posterior and medial/lateral
         # Replace strings with values - eg. DMA = 'deep, medial, anterior'
         # tissue_values = [['DMA', 'DMC', 'DMP'], ['DLA', 'DLC', 'DLP'],
         #                  ['SMA', 'SMC', 'SMP'], ['SLA', 'SLC', 'SLP'],
         #                  ['TMA', 'TMC', 'TMP'], ['TLA', 'TLC', 'TLP']]
         # tissue_values = []
-        axial_data = [deep, superficial, total]
 
-        axial_names = ['deep', 'superficial', 'total']
-        coronal_names = ['medial', 'lateral']
-        sagittal_names = ['anterior', 'central', 'posterior']
+        for axial_ind in range(len(self.AXIAL_KEYS)):
+            axial = self.AXIAL_KEYS[axial_ind]
+            for sagittal_ind in range(len(self.SAGGITAL_KEYS)):
+                sagittal = self.SAGGITAL_KEYS[sagittal_ind]
+                for coronal_ind in range(len(self.CORONAL_KEYS)):
+                    coronal = self.CORONAL_KEYS[coronal_ind]
 
-        for axial in range(3):
-            axial_map = axial_data[axial]
-            for coronal in [self.MEDIAL_KEY, self.LATERAL_KEY]:
-                for sagittal in [self.ANTERIOR_KEY, self.CENTRAL_KEY, self.POSTERIOR_KEY]:
-                    curr_region_mask = (coronal_region_mask == coronal) * (sagittal_region_mask == sagittal) * axial_map
+                    curr_region_mask = np.asarray(np.bitwise_and(regions_mask, (axial | coronal | sagittal)), dtype=np.bool) * mask * quant_map.volume
+                    # discard all values that are <= 0
+                    qv_region_vals = curr_region_mask[curr_region_mask > 0]
 
-                    curr_region_mask[curr_region_mask == 0] = np.nan
-                    # discard all values that are 0
-                    c_mean = np.nanmean(curr_region_mask)
-                    c_std = np.nanstd(curr_region_mask)
-                    c_median = np.nanmedian(curr_region_mask)
+                    c_mean = np.nanmean(qv_region_vals)
+                    c_std = np.nanstd(qv_region_vals)
+                    c_median = np.nanmedian(qv_region_vals)
 
-                    row_info = [subject_pid, axial_names[axial], coronal_names[coronal], sagittal_names[sagittal],
+                    row_info = [subject_pid,
+                                self.AXIAL_NAMES[axial_ind], self.SAGITTAL_NAMES[sagittal_ind], self.CORONAL_NAMES[coronal_ind],
                                 c_mean, c_std, c_median]
 
                     pd_list.append(row_info)
@@ -311,9 +322,7 @@ class FemoralCartilage(Tissue):
 
         super().set_mask(mask_copy)
 
-        # set region map
-        total, _, _ = self.unroll(self.__mask__.volume)
-        self.split_regions(total)
+        self.regions_mask, self.theta_bins, self.ML_BOUNDARY, self.ACP_BOUNDARY = self.split_regions(self.__mask__.volume)
 
     def __save_quant_data__(self, dirpath):
         """Save quantitative data and 2D visualizations of femoral cartilage
@@ -387,11 +396,41 @@ class FemoralCartilage(Tissue):
         if self.regions_mask is None:
             return
 
+        sagital_region_mask, coronal_region_mask = self.__split_mask__()
+
         # Save region map - add by 1 because no key can be 0
-        coronal_region_mask = (self.regions_mask[..., 0] + 1) * 10
-        sagital_region_mask = (self.regions_mask[..., 1] + 1)
+        coronal_region_mask = (coronal_region_mask + 1) * 10
+        sagital_region_mask = (sagital_region_mask + 1)
         joined_mask = coronal_region_mask + sagital_region_mask
-        labels = ['medial anterior', 'medial central', 'medial posterior',
-                  'lateral anterior', 'lateral central', 'lateral posterior']
+        labels = ['medial posterior', 'medial central', 'medial anterior',
+                  'lateral posterior', 'lateral central', 'lateral anterior']
         plt_dict = {'labels': labels, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'title': 'Unrolled Regions'}
         img_utils.write_regions(os.path.join(save_dirpath, 'region_map.png'), joined_mask, plt_dict=plt_dict)
+
+    def __split_mask__(self):
+
+        assert self.ML_BOUNDARY is not None and self.ACP_BOUNDARY is not None, "medial/lateral and anterior/central/posterior boundaries should be specified"
+
+        # split into regions
+        unrolled_total, _, _ = self.unroll(np.asarray(self.__mask__.volume, dtype=np.float32), self.regions_mask, self.theta_bins)
+
+        acp_division_unrolled = np.zeros(unrolled_total.shape)
+
+        ac_threshold = self.ACP_BOUNDARY[0]
+        cp_threshold = self.ACP_BOUNDARY[1]
+        acp_division_unrolled[:ac_threshold, :] = self.ANTERIOR_KEY
+        acp_division_unrolled[ac_threshold:cp_threshold, :] = self.CENTRAL_KEY
+        acp_division_unrolled[cp_threshold:, :] = self.POSTERIOR_KEY
+
+        ml_division_unrolled = np.zeros(unrolled_total.shape)
+        if self.medial_to_lateral:
+            ml_division_unrolled[..., :self.ML_BOUNDARY] = self.MEDIAL_KEY
+            ml_division_unrolled[..., self.ML_BOUNDARY:] = self.LATERAL_KEY
+        else:
+            ml_division_unrolled[..., :self.ML_BOUNDARY] = self.LATERAL_KEY
+            ml_division_unrolled[..., self.ML_BOUNDARY:] = self.MEDIAL_KEY
+
+        acp_division_unrolled[np.isnan(unrolled_total)] = np.nan
+        ml_division_unrolled[np.isnan(unrolled_total)] = np.nan
+
+        return acp_division_unrolled, ml_division_unrolled
