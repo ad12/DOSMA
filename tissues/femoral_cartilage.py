@@ -44,7 +44,7 @@ class FemoralCartilage(Tissue):
     POSTERIOR_KEY = 2 ** 0
     CENTRAL_KEY = 2 ** 1
     ANTERIOR_KEY = 2 ** 2
-    CORONAL_KEYS = [ANTERIOR_KEY, CENTRAL_KEY, POSTERIOR_KEY]
+    CORONAL_KEYS = [POSTERIOR_KEY, CENTRAL_KEY, ANTERIOR_KEY]
 
     # Saggital Keys
     MEDIAL_KEY = 2 ** 3
@@ -402,8 +402,8 @@ class FemoralCartilage(Tissue):
         coronal_region_mask = (coronal_region_mask + 1) * 10
         sagital_region_mask = (sagital_region_mask + 1)
         joined_mask = coronal_region_mask + sagital_region_mask
-        labels = ['medial anterior', 'medial central', 'medial posterior',
-                  'lateral anterior', 'lateral central', 'lateral posterior']
+        labels = ['medial posterior', 'medial central', 'medial anterior',
+                  'lateral posterior', 'lateral central', 'lateral anterior']
         plt_dict = {'labels': labels, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'title': 'Unrolled Regions'}
         img_utils.write_regions(os.path.join(save_dirpath, 'region_map.png'), joined_mask, plt_dict=plt_dict)
 
