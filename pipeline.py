@@ -157,7 +157,6 @@ def handle_dess(vargin):
 
 def handle_cubequant(vargin):
     print('\nAnalyzing cubequant...')
-
     scan = CubeQuant(dicom_path=vargin[DICOM_KEY],
                      dicom_ext=vargin[EXT_KEY],
                      load_path=vargin[LOAD_KEY])
@@ -313,7 +312,7 @@ def parse_args():
 
     save_path = vargin[SAVE_KEY]
     if not save_path:
-        save_path = dicom_path if dicom_path else load_path
+        save_path = load_path if load_path else dicom_path
         vargin[SAVE_KEY] = save_path
 
     if not os.path.isdir(save_path):

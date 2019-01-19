@@ -36,7 +36,8 @@ class ScanSequence(ABC):
         self.volume = None
         self.ref_dicom = None
 
-        if load_path:
+        # Only load data if dicom path is not given, else assume user wants to rewrite information
+        if load_path and dicom_path is None:
             self.load_data(load_path)
 
         if dicom_path is not None:
