@@ -127,6 +127,7 @@ class Tissue(ABC):
 
         :param load_dirpath: base path to load data (same as 'save_dirpath' arg input to self.save_data(save_dirpath))
         """
+        import pdb; pdb.set_trace()
         load_dirpath = self.__save_dirpath__(load_dirpath)
         mask_filepath = os.path.join(load_dirpath, '%s.nii.gz' % self.STR_ID)
 

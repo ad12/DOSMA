@@ -26,7 +26,8 @@ class CubeQuant(NonTargetSequence):
 
         self.subvolumes = None
 
-        if load_path:
+        # Only load data if dicom path is not given, else assume user wants to rewrite information
+        if load_path and dicom_path is None:
             self.load_data(load_path)
 
         if dicom_path is not None:
@@ -95,7 +96,7 @@ class CubeQuant(NonTargetSequence):
 
             # only calculate for focused region if a mask is available, this speeds up computation
             mask = tissue.get_mask()
-
+            import pdb; pdb.set_trace()
             sorted_keys = natsorted(list(self.subvolumes.keys()))
             for spin_lock_time_index in sorted_keys:
                 subvolumes_list.append(self.subvolumes[spin_lock_time_index])
