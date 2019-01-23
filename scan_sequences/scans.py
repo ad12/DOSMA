@@ -43,11 +43,14 @@ class ScanSequence(ABC):
             else:
                 raise NotADirectoryError('%s is not a directory' % dicom_path)
 
+        # Only use dicoms if the path exists
+        is_dicom_available = (dicom_path is not None) and (os.path.isdir(dicom_path))
+
         # Only load data if dicom path is not given or doesn't exist, else assume user wants to rewrite information
-        if load_path and (dicom_path is None or not os.path.isdir(dicom_path)):
+        if load_path and not is_dicom_available:
             self.load_data(load_path)
 
-        if dicom_path is not None:
+        if is_dicom_available:
             self.__load_dicom__()
 
     def __load_dicom__(self):
