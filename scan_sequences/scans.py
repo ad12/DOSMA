@@ -45,9 +45,6 @@ class ScanSequence(ABC):
 
         # Only use dicoms if the path exists and path contains files ending in dicom_ext
         is_dicom_available = (dicom_path is not None) and (os.path.isdir(dicom_path))
-        if is_dicom_available:
-            files = os.listdir(dicom_path)
-            is_dicom_available = len(files) != 0 and ((dicom_ext is not None and dicom_ext in files[0]) or dicom_ext is None)
 
         # Only load data if dicom path is not given or doesn't exist, else assume user wants to rewrite information
         if load_path and not is_dicom_available:
