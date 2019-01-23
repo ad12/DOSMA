@@ -13,7 +13,7 @@ import file_constants as fc
 from med_objects.med_volume import MedicalVolume
 from utils import dicom_utils
 from utils import io_utils
-
+import warnings
 
 class ScanSequence(ABC):
     NAME = ''
@@ -36,8 +36,15 @@ class ScanSequence(ABC):
         self.volume = None
         self.ref_dicom = None
 
-        # Only load data if dicom path is not given, else assume user wants to rewrite information
-        if load_path and dicom_path is None:
+        # check if dicom path exists
+        if (dicom_path is not None) and (not os.path.isdir(dicom_path)):
+            if load_path is not None:
+                warnings.warn('Dicom_path %s not found. Will load data from %s' % (dicom_path, load_path))
+            else:
+                raise NotADirectoryError('%s is not a directory' % dicom_path)
+
+        # Only load data if dicom path is not given or doesn't exist, else assume user wants to rewrite information
+        if load_path and (dicom_path is None or not os.path.isdir(dicom_path)):
             self.load_data(load_path)
 
         if dicom_path is not None:
