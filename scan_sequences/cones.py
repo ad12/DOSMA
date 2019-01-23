@@ -28,9 +28,6 @@ class Cones(NonTargetSequence):
         self.subvolumes = None
         self.echo_times = []
 
-        if load_path:
-            self.load_data(load_path)
-
         if dicom_path is not None:
             self.subvolumes, self.echo_times = self.__split_volumes__(__EXPECTED_NUM_ECHO_TIMES__)
 

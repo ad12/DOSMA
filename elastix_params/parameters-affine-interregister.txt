@@ -32,7 +32,7 @@
 // *********************
 // * Optimizer settings
 // *********************
-(NumberOfResolutions 1)
+(NumberOfResolutions 4)
 (MaximumNumberOfIterations 1000)
 (ASGDParameterEstimationMethod "Original")
 (AutomaticParameterEstimation "true")
@@ -53,11 +53,11 @@
 // *********************
 // * Sampler parameters
 // *********************
-(NumberOfSpatialSamples 2000)
+(NumberOfSpatialSamples 4000)
 (ImageSampler "RandomSparseMask")
 (CheckNumberOfSamples "true")
 (NewSamplesEveryIteration "true")
-(FinalBSplineInterpolationOrder 3)
+(FinalBSplineInterpolationOrder 0)
 
 // *********************
 // * Output settings

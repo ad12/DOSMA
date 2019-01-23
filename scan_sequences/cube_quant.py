@@ -26,9 +26,6 @@ class CubeQuant(NonTargetSequence):
 
         self.subvolumes = None
 
-        if load_path:
-            self.load_data(load_path)
-
         if dicom_path is not None:
             self.subvolumes, self.spin_lock_times = self.__split_volumes__(__EXPECTED_NUM_SPIN_LOCK_TIMES__)
             self.intraregistered_data = self.__intraregister__(self.subvolumes)
@@ -95,7 +92,6 @@ class CubeQuant(NonTargetSequence):
 
             # only calculate for focused region if a mask is available, this speeds up computation
             mask = tissue.get_mask()
-
             sorted_keys = natsorted(list(self.subvolumes.keys()))
             for spin_lock_time_index in sorted_keys:
                 subvolumes_list.append(self.subvolumes[spin_lock_time_index])
