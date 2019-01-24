@@ -143,7 +143,7 @@ class ScanSequence(ABC):
         for key in metadata.keys():
             self.__setattr__(key, metadata[key])
 
-        self.__load_dicom__()
+        #self.__load_dicom__()
 
     def __save_dir__(self, dirpath, create_dir=True):
         """Returns directory specific to this scan
