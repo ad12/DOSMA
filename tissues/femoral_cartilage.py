@@ -60,7 +60,7 @@ class FemoralCartilage(Tissue):
     # Do not change order of below. Order reflects order of CORONAL_KEYS, SAGGITAL_KEYS, AXIAL_KEYS
     AXIAL_NAMES = ['deep', 'superficial', 'total']
     SAGITTAL_NAMES = ['medial', 'lateral']
-    CORONAL_NAMES = ['anterior', 'central', 'posterior']
+    CORONAL_NAMES = ['posterior', 'central', 'anterior']
 
     ML_BOUNDARY = None
     ACP_BOUNDARY = None
@@ -210,8 +210,8 @@ class FemoralCartilage(Tissue):
 
                 Unrolled_Cartilage[curr_bin, slice_ind] = np.nanmean(qv_bin)
 
-                qv_superficial = qv_slice[np.logical_and(theta_bins == curr_bin, np.bitwise_and(curr_slice, self.SUPERFICIAL_KEY))]
-                qv_deep = qv_slice[np.logical_and(theta_bins == curr_bin, np.bitwise_and(curr_slice, self.DEEP_KEY))]
+                qv_superficial = qv_slice[np.logical_and(theta_bins == curr_bin, self.__binarize_region_mask__(curr_slice, self.SUPERFICIAL_KEY))]
+                qv_deep = qv_slice[np.logical_and(theta_bins == curr_bin, self.__binarize_region_mask__(curr_slice, self.DEEP_KEY))]
 
                 qv_superficial = np.nan_to_num(qv_superficial)
                 qv_deep = np.nan_to_num(qv_deep)
@@ -220,12 +220,6 @@ class FemoralCartilage(Tissue):
                 qv_deep_mean = np.mean(qv_deep[qv_deep > 0])
                 Sup_layer[curr_bin, slice_ind] = qv_sup_mean
                 Deep_layer[curr_bin, slice_ind] = qv_deep_mean
-
-                if qv_sup_mean == 0:
-                    import pdb; pdb.set_trace()
-
-                if qv_deep_mean == 0:
-                    import pdb; pdb.set_trace()
 
         Unrolled_Cartilage[Unrolled_Cartilage == 0] = np.nan
         Sup_layer[Sup_layer == 0] = np.nan
@@ -272,7 +266,7 @@ class FemoralCartilage(Tissue):
         mask = self.__mask__.volume
 
         subject_pid = self.pid
-        pd_header = ['Subject', 'Location', 'Side', 'Region', 'Mean', 'Std', 'Median']
+        pd_header = ['Subject', 'Location', 'Side', 'Region', 'Mean', 'Std', 'Median', '# Voxels']
         pd_list = []
 
         # Replace strings with values - eg. DMA = 'deep, medial, anterior'
@@ -281,16 +275,22 @@ class FemoralCartilage(Tissue):
         #                  ['TMA', 'TMC', 'TMP'], ['TLA', 'TLC', 'TLP']]
         # tissue_values = []
 
+
         for axial_ind in range(len(self.AXIAL_KEYS)):
             axial = self.AXIAL_KEYS[axial_ind]
+
             for sagittal_ind in range(len(self.SAGGITAL_KEYS)):
                 sagittal = self.SAGGITAL_KEYS[sagittal_ind]
                 for coronal_ind in range(len(self.CORONAL_KEYS)):
                     coronal = self.CORONAL_KEYS[coronal_ind]
 
-                    curr_region_mask = np.asarray(np.bitwise_and(regions_mask, (axial | coronal | sagittal)), dtype=np.bool) * mask * quant_map.volume
+                    curr_region_mask = self.__binarize_region_mask__(regions_mask, (axial | coronal | sagittal))
+                    curr_region_mask = curr_region_mask * mask * quant_map.volume
+
                     # discard all values that are <= 0
                     qv_region_vals = curr_region_mask[curr_region_mask > 0]
+
+                    num_voxels = len(qv_region_vals)
 
                     c_mean = np.nanmean(qv_region_vals)
                     c_std = np.nanstd(qv_region_vals)
@@ -298,7 +298,7 @@ class FemoralCartilage(Tissue):
 
                     row_info = [subject_pid,
                                 self.AXIAL_NAMES[axial_ind], self.SAGITTAL_NAMES[sagittal_ind], self.CORONAL_NAMES[coronal_ind],
-                                c_mean, c_std, c_median]
+                                c_mean, c_std, c_median, num_voxels]
 
                     pd_list.append(row_info)
 
@@ -406,6 +406,9 @@ class FemoralCartilage(Tissue):
                   'lateral posterior', 'lateral central', 'lateral anterior']
         plt_dict = {'labels': labels, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'title': 'Unrolled Regions'}
         img_utils.write_regions(os.path.join(save_dirpath, 'region_map.png'), joined_mask, plt_dict=plt_dict)
+
+    def __binarize_region_mask__(self, region_mask, roi):
+        return np.asarray(np.bitwise_and(region_mask, roi) == roi, dtype=np.bool)
 
     def __split_mask__(self):
 
