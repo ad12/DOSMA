@@ -21,3 +21,9 @@ debug_runs.py
 
 # ignore ismrm
 **/ismrm_2019_scripts
+
+# ignore runtime generated package scripts
+**/._*
+
+# pyscripts
+**/py_scripts
