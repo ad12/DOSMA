@@ -133,6 +133,9 @@ def handle_segmentation(vargin, scan):
 
 def handle_dess(vargin):
     print('\nAnalyzing DESS...')
+
+    tissues = vargin['tissues']
+
     scan = Dess(dicom_path=vargin[DICOM_KEY], dicom_ext=vargin[EXT_KEY], load_path=vargin[LOAD_KEY])
 
     scan.use_rms = vargin[USE_RMS_KEY] if USE_RMS_KEY in vargin.keys() else False
@@ -142,14 +145,13 @@ def handle_dess(vargin):
 
     if vargin[T2_KEY]:
         print('')
-        tissues = vargin['tissues']
         for tissue in tissues:
             print('Calculating T2 - %s' % tissue.FULL_NAME)
             scan.generate_t2_map(tissue)
 
     scan.save_data(vargin[SAVE_KEY])
 
-    for tissue in scan.tissues:
+    for tissue in tissues:
         tissue.save_data(vargin[SAVE_KEY])
 
     return scan
