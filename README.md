@@ -41,7 +41,7 @@ Analysis for the following anatomical regions are supported
 Download this repo to your disk. Note that the path to this repo should not have any spaces. In general, this pipeline does not handle folder paths that have spaces in between folder names.
 
 ### Virtual Environment
-We recommend using the (Anaconda)[https://www.anaconda.com/download] virtual environment to run python.
+We recommend using the [Anaconda](https://www.anaconda.com/download) virtual environment to run python.
 
 An `environment.yml` file is provided in this repo containing all libraries used.
 
