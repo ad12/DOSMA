@@ -32,7 +32,7 @@ class Tissue(ABC):
             self.weights_filepath = self.find_weights(weights_dir)
 
         # quantitative value list
-        quantitative_values = []
+        self.quantitative_values = []
 
     @abstractmethod
     def split_regions(self, base_map):
