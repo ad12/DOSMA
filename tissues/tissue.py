@@ -19,9 +19,6 @@ class Tissue(ABC):
     # Expected quantitative param values
     T1_EXPECTED = None
 
-    # quantitative value list
-    quantitative_values = []
-
     def __init__(self, weights_dir=None):
         """
         :param weights_dir: Directory with segmentation weights
@@ -33,6 +30,9 @@ class Tissue(ABC):
 
         if weights_dir is not None:
             self.weights_filepath = self.find_weights(weights_dir)
+
+        # quantitative value list
+        quantitative_values = []
 
     @abstractmethod
     def split_regions(self, base_map):
