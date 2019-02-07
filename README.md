@@ -4,6 +4,27 @@ This pipeline is an open-source pipeline for MRI image segmentation, registratio
 
 The current code uses the [command line interface](https://www.computerhope.com/jargon/c/commandi.htm) for use. Pull requests for a GUI to command-line translation are welcome.
 
+If you are using any part of this code, please cite the work below:
+```
+@misc{arjun_d_desai_2019_2559549,
+  author       = {Arjun D. Desai and
+                  Marco Barbieri and
+                  Valentina Mazzoli and
+                  Elka Rubin and
+                  Marianne S. Black and
+                  Lauren E. Watkins and
+                  Garry E. Gold and
+                  Brian A. Hargreaves and
+                  Akshay S. Chaudhari},
+  title        = {ad12/DOSMA: v0.0.9: DOSMA (prerelease)},
+  month        = feb,
+  year         = 2019,
+  doi          = {10.5281/zenodo.2559549},
+  url          = {https://doi.org/10.5281/zenodo.2559549}
+}
+```
+Additional citation details can be found [here](https://zenodo.org/record/2559549#.XFyRrs9KjyJ).
+
 ## Overview
 This repo is to serve as an open-source location for developers to add MRI processing techniques. This includes, but is not limited to:
 - image processing tasks (denoising, super-resolution, segmentation, etc)
