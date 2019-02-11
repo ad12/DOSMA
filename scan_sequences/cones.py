@@ -23,10 +23,9 @@ class Cones(NonTargetSequence):
     NAME = 'cones'
 
     def __init__(self, dicom_path=None, dicom_ext=None, load_path=None):
-        super().__init__(dicom_path, dicom_ext)
-
         self.subvolumes = None
         self.echo_times = []
+        super().__init__(dicom_path, dicom_ext)
 
         if dicom_path is not None:
             self.subvolumes, self.echo_times = self.__split_volumes__(__EXPECTED_NUM_ECHO_TIMES__)
@@ -166,7 +165,3 @@ class Cones(NonTargetSequence):
         var_names.extend(['echo_times'])
 
         return var_names
-
-
-if __name__ == '__main__':
-    cq = Cones('../dicoms/healthy07/009', 'dcm', './')
