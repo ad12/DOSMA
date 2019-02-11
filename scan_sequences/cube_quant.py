@@ -22,9 +22,8 @@ class CubeQuant(NonTargetSequence):
     NAME = 'cubequant'
 
     def __init__(self, dicom_path=None, dicom_ext=None, load_path=None):
-        super().__init__(dicom_path, dicom_ext, load_path=load_path)
-
         self.subvolumes = None
+        super().__init__(dicom_path, dicom_ext, load_path=load_path)
 
         if dicom_path is not None:
             self.subvolumes, self.spin_lock_times = self.__split_volumes__(__EXPECTED_NUM_SPIN_LOCK_TIMES__)
