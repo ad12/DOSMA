@@ -4,7 +4,7 @@ This pipeline is an open-source pipeline for MRI image segmentation, registratio
 
 The current code uses the [command line interface](https://www.computerhope.com/jargon/c/commandi.htm) for use. Pull requests for a GUI to command-line translation are welcome.
 
-If you are using any part of this code, please cite the work below:
+## How to Cite
 ```
 @misc{arjun_d_desai_2019_2559549,
   author       = {Arjun D. Desai and
