@@ -2,22 +2,45 @@ import os
 
 import numpy as np
 import pydicom
+import nibabel as nib
 from natsort import natsorted
 
 from data_io.format_io import DataReader, DataWriter
 from data_io.med_volume import MedicalVolume
+from data_io import orientation
+import SimpleITK as sitk
 
+__DICOM_EXTENSIONS__ = ('.dcm')
+TOTAL_NUM_ECHOS_KEY = (0x19, 0x107e)
+
+
+def contains_dicom_extension(a_str: str):
+    bool_list = [a_str.endswith(ext) for ext in __DICOM_EXTENSIONS__]
+    return bool(sum(bool_list))
+
+
+def LPSplus_to_RASplus(direction_LPSplus, scanner_origin_LPSplus):
+    affine = np.zeros([4,4])
+    affine[:3,:3] = direction_LPSplus
+    affine[:3, 3] = scanner_origin_LPSplus
+    affine[:2,:] = -1*affine[:2,:]
+    affine[3,3] = 1
+
+    affine[affine == 0] = 0
+    nib_axcodes = nib.aff2axcodes(affine)
+    std_orientation = orientation.__orientation_nib_to_standard__(nib_axcodes)
+
+    return std_orientation, affine[:3, 3]
 
 class DicomReader(DataReader):
-    #
-    # def __sitk_dicom_reader__(self, dicom_dirpath):
-    #     reader = sitk.ImageSeriesReader()
-    #     dicom_names = reader.GetGDCMSeriesFileNames(dicom_dirpath)
-    #     reader.SetFileNames(dicom_names)
-    #
-    #     image = reader.Execute()
-
-    def load_dicom(self, dicom_dirpath, dicom_ext=None):
+    """
+    Key Notes:
+    ------------------
+    1. Dicom utilizes LPS convention:
+        - LPS: right --> left, anterior --> posterior, inferior --> superior
+        - we will call it LPS+, such that letters correspond to increasing end of axis
+    """
+    def load(self, dicom_dirpath):
         """Load dicoms into numpy array
 
         Required:
@@ -39,7 +62,7 @@ class DicomReader(DataReader):
         lstFilesDCM = []
         for dirName, subdirList, fileList in os.walk(dicom_dirpath):
             for filename in fileList:
-                if (dicom_ext is None) or (dicom_ext is not None and dicom_ext in filename.lower()):
+                if contains_dicom_extension(filename):
                     lstFilesDCM.append(os.path.join(dirName, filename))
 
         lstFilesDCM = natsorted(lstFilesDCM)
@@ -48,27 +71,63 @@ class DicomReader(DataReader):
 
         # Get reference file
         ref_dicom = pydicom.read_file(lstFilesDCM[0])
-
-        # Load dimensions based on rows, columns, and slices along Z axis
-        pixelDims = (int(ref_dicom.Rows), int(ref_dicom.Columns), len(lstFilesDCM))
+        max_num_echos = ref_dicom[TOTAL_NUM_ECHOS_KEY].value
 
         # Load spacing values (in mm)
         pixelSpacing = (float(ref_dicom.PixelSpacing[0]),
                         float(ref_dicom.PixelSpacing[1]),
                         float(ref_dicom.SpacingBetweenSlices))
 
-        dicom_array = np.zeros(pixelDims, dtype=ref_dicom.pixel_array.dtype)
+        dicom_data = []
+        for i in range(max_num_echos):
+            dicom_data.append({'headers':[], 'arr':[]})
 
-        refs_dicom = []
         for dicom_filename in lstFilesDCM:
             # read the file
             ds = pydicom.read_file(dicom_filename, force=True)
-            refs_dicom.append(ds)
-            dicom_array[:, :, lstFilesDCM.index(dicom_filename)] = ds.pixel_array
+            echo_number = ds.EchoNumbers
+            dicom_data[echo_number-1]['headers'].append(ds)
+            dicom_data[echo_number-1]['arr'].append(ds.pixel_array)
 
-        volume = MedicalVolume(dicom_array, pixelSpacing)
+        vols = []
+        for dd in dicom_data:
+            headers = dd['headers']
+            if len(headers) == 0:
+                continue
+            arr = np.stack(dd['arr'], axis = -1)
 
-        return volume, refs_dicom
+            im_dir = headers[0].ImageOrientationPatient
+
+            orientation = np.zeros([3,3])
+            orientation[:, 0] = im_dir[:3]
+            orientation[:, 1] = im_dir[3:]
+
+            k_orientation = np.asarray(headers[-1].ImagePositionPatient) - np.asarray(headers[0].ImagePositionPatient)
+            k_div = np.abs(k_orientation)
+            k_div[k_div == 0] += 1
+            orientation[:, 2] = k_orientation / k_div
+            scanner_origin = headers[0].ImagePositionPatient
+
+            rasplus_orientation, rasplus_origin = LPSplus_to_RASplus(orientation, scanner_origin)
+
+            vol = MedicalVolume(arr,
+                                pixel_spacing=pixelSpacing,
+                                orientation=rasplus_orientation,
+                                scanner_origin=rasplus_origin,
+                                headers=headers)
+            vols.append(vol)
+
+        return vols
 
 class DicomWriter(DataWriter):
     pass
+
+
+if __name__ == '__main__':
+    dicom_filepath = '../dicoms/healthy07/007'
+    save_path = '../dicoms/healthy07/dcm-nifti.nii.gz'
+    r = DicomReader()
+    A = r.load(dicom_filepath)
+    from data_io.nifti_io import NiftiWriter
+    r = NiftiWriter()
+    r.save(A[0], save_path)

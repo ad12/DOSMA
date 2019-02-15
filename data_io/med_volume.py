@@ -9,7 +9,7 @@ from utils import io_utils
 class MedicalVolume():
     """Wrapper for 3D volumes """
 
-    def __init__(self, volume: np.ndarray, pixel_spacing: tuple, orientation: tuple, scanner_origin: tuple):
+    def __init__(self, volume: np.ndarray, pixel_spacing: tuple, orientation: tuple, scanner_origin: tuple, headers=None):
         """
         :param volume: a 3D numpy array
         :param pixel_spacing: pixel/voxel spacing for volume
@@ -20,6 +20,7 @@ class MedicalVolume():
         self.pixel_spacing = pixel_spacing
         self.orientation = orientation
         self.scanner_origin = scanner_origin
+        self.headers = headers
 
     def save_volume(self, filepath, data_format='nifti'):
         """
