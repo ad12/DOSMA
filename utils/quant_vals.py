@@ -76,7 +76,7 @@ class QuantitativeValue(ABC):
 
     def add_additional_volume(self, name, volume):
         if not isinstance(volume, MedicalVolume):
-            raise TypeError('`volume` must be of type MedicalVolume')
+            raise TypeError('`volumes` must be of type MedicalVolume')
         self.additional_volumes[name] = volume
 
     @abstractmethod

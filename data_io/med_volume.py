@@ -10,7 +10,7 @@ class MedicalVolume():
     def __init__(self, volume: np.ndarray, pixel_spacing: tuple, orientation: tuple, scanner_origin: tuple, headers=None):
         """
         :param volume: a 3D numpy array
-        :param pixel_spacing: pixel/voxel spacing for volume
+        :param pixel_spacing: pixel/voxel spacing for volumes
         :param orientation: tuple of standardized orientation in RAS+ format
         :param scanner_origin: origin in scanner coordinate system
         """
@@ -22,11 +22,11 @@ class MedicalVolume():
 
     def save_volume(self, filepath, data_format='nifti'):
         """
-        Write volume to nifti format
+        Write volumes to nifti format
         :param filepath: filepath to save data
         """
-        import data_io.io_utils
-        writer = data_io.io_utils.get_writer(data_format)
+        import data_io.format_io_utils
+        writer = data_io.format_io_utils.get_writer(data_format)
         writer.save(self, filepath)
 
     def reformat(self, new_orientation: tuple):

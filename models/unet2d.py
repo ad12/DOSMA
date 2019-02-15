@@ -5,7 +5,10 @@ from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, 
 from keras.models import Model
 
 from models.model import SegModel
-
+from data_io.med_volume import MedicalVolume
+from data_io.orientation import SAGITTAL
+from utils import dicom_utils
+from copy import deepcopy
 
 class Unet2D(SegModel):
     sigmoid_threshold = 0.5
@@ -97,12 +100,17 @@ class Unet2D(SegModel):
 
         return model
 
-    def generate_mask(self, volume):
-        if type(volume) is not np.ndarray or len(volume.shape) != 3:
-            raise ValueError("Volume must be a 3D numpy array")
+    def generate_mask(self, volume: MedicalVolume):
+        vol_copy = deepcopy(volume)
 
-        # reshape volume to be (slice, x, y, 1)
-        v = np.transpose(volume, (2, 0, 1))
+        # reorient to the sagittal plane
+        vol_copy.reformat(SAGITTAL)
+
+        vol = vol_copy.volume
+        dicom_utils.whiten_volume(vol)
+
+        # reshape volumes to be (slice, x, y, 1)
+        v = np.transpose(vol, (2, 0, 1))
         v = np.expand_dims(v, axis=-1)
         model = self.keras_model
 
@@ -113,4 +121,10 @@ class Unet2D(SegModel):
         mask = np.transpose(np.squeeze(mask, axis=-1), (1, 2, 0))
 
         K.clear_session()
+
+        vol_copy.volume = mask
+
+        # reorient to match with original volume
+        vol_copy.reformat(volume.orientation)
+
         return mask

@@ -2,7 +2,7 @@ import os
 import re
 import warnings
 from abc import ABC, abstractmethod
-from time import gmtime, strftime
+from time import localtime, strftime
 
 import numpy as np
 import scipy.ndimage as sni
@@ -12,6 +12,7 @@ from nipype.interfaces.elastix import Registration, ApplyWarp
 import defaults
 import file_constants as fc
 from data_io.med_volume import MedicalVolume
+from data_io.dicom_io import DicomReader
 from utils import dicom_utils
 from utils import io_utils
 
@@ -29,13 +30,13 @@ class ScanSequence(ABC):
         If both are specified, the dicom_path is used, and all information in load_path is ignored
         """
         self.temp_path = os.path.join(fc.TEMP_FOLDER_PATH, '%s', '%s') % (self.NAME,
-                                                                          strftime("%Y-%m-%d-%H-%M-%S", gmtime()))
+                                                                          strftime("%Y-%m-%d-%H-%M-%S", localtime()))
         self.tissues = []
         self.dicom_path = os.path.abspath(dicom_path) if dicom_path is not None else None
-        self.dicom_ext = dicom_ext
 
-        self.volume = None
+        self.volumes = None
         self.ref_dicom = None
+        self.series_number = None
 
         # check if dicom path exists
         if (dicom_path is not None) and (not os.path.isdir(dicom_path)):
@@ -59,18 +60,30 @@ class ScanSequence(ABC):
         Store the dicoms to MedicalVolume and store a list of the dicom headers
         """
         dicom_path = self.dicom_path
-        dicom_ext = self.dicom_ext
 
-        self.volume, self.refs_dicom = dicom_utils.load_dicom(dicom_path, dicom_ext)
+        if dicom_path is None or not os.path.isdir(dicom_path):
+            raise NotADirectoryError('%s not found' % dicom_path)
 
-        self.ref_dicom = self.refs_dicom[0]
+        dr = DicomReader()
+
+        self.volumes = dr.load(dicom_path)
+        self.ref_dicom = self.volumes[0].headers[0]
+
+        self.__set_series_number__(self.ref_dicom.SeriesNumber)
+
+    def __set_series_number__(self, sn):
+        if self.series_number is not None:
+            assert self.series_number == sn, "Series numbers must be identical if loading the same scan"
+            return
+        else:
+            self.series_number = sn
 
     def get_dimensions(self):
         """
-        Get shape of volume
+        Get shape of volumes
         :return: tuple of ints
         """
-        return self.volume.volume.shape
+        return self.volumes[0].volume.shape
 
     def __add_tissue__(self, new_tissue):
         """Add a tissue to the list of tissues associated with this scan
@@ -142,7 +155,8 @@ class ScanSequence(ABC):
 
         metadata = io_utils.load_pik(filepath)
         for key in metadata.keys():
-            self.__setattr__(key, metadata[key])
+            if hasattr(self, key):
+                self.__setattr__(key, metadata[key])
 
         self.__load_dicom__()
 
@@ -151,15 +165,23 @@ class ScanSequence(ABC):
 
         :param dirpath: base directory path to locate data directory for this scan
         :param create_dir: create the data directory
-        :return: data directory for this scan type
+        :return: data directory for this scan
         """
-        name_len = len(self.NAME) + 2  # buffer
-        if self.NAME in dirpath[-name_len:]:
-            scan_dirpath = os.path.join(dirpath, '%s_data' % self.NAME)
-        else:
-            scan_dirpath = dirpath
+        folder_id = '%s-%03d' % (self.NAME, self.series_number)
 
-        scan_dirpath = os.path.join(scan_dirpath, '%s_data' % self.NAME)
+        # if dirpath already contains folder_id as the end directory, skip
+        if os.path.basename(dirpath) == folder_id:
+            scan_dirpath = dirpath
+        else:
+            scan_dirpath = os.path.join(dirpath, folder_id)
+
+        # name_len = len(self.NAME) + 2  # buffer
+        # if self.NAME in dirpath[-name_len:]:
+        #     scan_dirpath = os.path.join(dirpath, folder_id)
+        # else:
+        #     scan_dirpath = dirpath
+
+        scan_dirpath = os.path.join(scan_dirpath, folder_id)
 
         if create_dir:
             scan_dirpath = io_utils.check_dir(scan_dirpath)
@@ -167,7 +189,7 @@ class ScanSequence(ABC):
         return scan_dirpath
 
     def __serializable_variables__(self):
-        return ['volume', 'dicom_path', 'dicom_ext']
+        return ['dicom_path', 'series_number']
 
 
 class TargetSequence(ScanSequence):
@@ -175,11 +197,11 @@ class TargetSequence(ScanSequence):
 
     def preprocess_volume(self, volume):
         """
-        Preprocess segmentation volume
+        Preprocess segmentation volumes
 
-        Default: whitening the volume (X - mean(X)) / std(X)
+        Default: whitening the volumes (X - mean(X)) / std(X)
 
-        :param volume: 3D segmentation volume (numpy array)
+        :param volume: 3D segmentation volumes (numpy array)
         :return: 3D preprocessed numpy array
         """
         return dicom_utils.whiten_volume(volume)
@@ -202,7 +224,7 @@ class NonTargetSequence(ScanSequence):
     @abstractmethod
     def interregister(self, target_path, mask_path=None):
         """
-        Register this scan to the target scan - save as parameter in scan (volume, subvolumes, etc)
+        Register this scan to the target scan - save as parameter in scan (volumes, subvolumes, etc)
 
         If there are many subvolumes to interregister with the base scan, typically the following actions are used to
             reduce error accumulation with multiple registrations
@@ -218,10 +240,11 @@ class NonTargetSequence(ScanSequence):
         """
         pass
 
+    #TODO: fix split volumes
     def __split_volumes__(self, expected_num_subvolumes):
         """
-        Split the volume into multiple subvolumes based on the echo time
-        Each subvolume represents a single volume of slices acquired with the same TR and TE times
+        Split the volumes into multiple subvolumes based on the echo time
+        Each subvolume represents a single volumes of slices acquired with the same TR and TE times
 
         For example, Cubequant uses 4 spin lock times -- this will produce 4 subvolumes
 
@@ -236,18 +259,19 @@ class NonTargetSequence(ScanSequence):
                     1. If subvolume sizes are not equal - aka len(ref_dicoms) % num_echos != 0
                     2. If # slices in subvolume != len(ref_dicoms) % num_echos
         """
-        refs_dicom = self.refs_dicom
-        volume = self.volume
+        volumes = self.volumes
 
+        assert len(volumes) == expected_num_subvolumes, "Expected %d subvolumes but got %d" % (expected_num_subvolumes, len(volumes))
+
+        num_echo_times = len(volumes)
         echo_times = []
-        # get echo_time time for each refs_dicom
-        for i in range(len(refs_dicom)):
-            echo_time = float(refs_dicom[i].EchoTime)
+
+        for i in range(num_echo_times):
+            echo_time = float(volumes[i].headers[0].EchoTime)
             echo_times.append(echo_time)
 
         # rank echo times from 0 --> num_echos-1
         ordered_echo_times = natsorted(list(set(echo_times)))
-        num_echo_times = len(ordered_echo_times)
 
         assert num_echo_times == expected_num_subvolumes
 
@@ -262,21 +286,9 @@ class NonTargetSequence(ScanSequence):
 
         subvolumes_dict = ordered_subvolumes_dict
 
-        # number of spin lock times should go evenly into subvolume
-        if (len(refs_dicom) % num_echo_times) != 0:
-            raise ValueError('Uneven number of dicom files - %d dicoms, %d spin lock times/echos' % (
-                len(refs_dicom), num_echo_times))
-
-        num_slices_per_subvolume = len(refs_dicom) / num_echo_times
-
         for key in subvolumes_dict.keys():
-            if len(subvolumes_dict[key]) != num_slices_per_subvolume:
-                raise ValueError('subvolume \'%s\' (echo_time %s) has %d slices. Expected %d slices' % (
-                    key, echo_times[key - 1], len(subvolumes_dict[key]), num_slices_per_subvolume))
-
-        for key in subvolumes_dict.keys():
-            sv = subvolumes_dict[key]
-            sv = MedicalVolume(volume.volume[..., sv], volume.pixel_spacing)
+            ind = subvolumes_dict[key]
+            sv = volumes[ind]
 
             subvolumes_dict[key] = sv
 

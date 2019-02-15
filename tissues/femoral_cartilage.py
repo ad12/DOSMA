@@ -244,7 +244,7 @@ class FemoralCartilage(Tissue):
                  M=medial, L=lateral,
                  A=anterior, C=central, P=posterior
 
-        :param quant_map: The 3D volume of quantitative values (np.nan for all pixels that are not accurate)
+        :param quant_map: The 3D volumes of quantitative values (np.nan for all pixels that are not accurate)
         :param map_type: A QuantitativeValue instance
         """
 
@@ -318,7 +318,7 @@ class FemoralCartilage(Tissue):
         self.__store_quant_vals__(maps, df, map_type)
 
     def set_mask(self, mask):
-        # get the largest connected component from the mask - we expect femoral cartilage to be a smooth volume
+        # get the largest connected component from the mask - we expect femoral cartilage to be a smooth volumes
         msk = np.asarray(nlm.largest_cc(mask.volume), dtype=np.uint8)
         mask_copy = MedicalVolume(msk, mask.pixel_spacing)
 
