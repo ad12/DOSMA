@@ -103,7 +103,7 @@ class ScanSequence(ABC):
         """
         return '%s.%s' % (self.NAME, io_utils.DATA_EXT)
 
-    def save_data(self, base_save_dirpath):
+    def save_data(self, base_save_dirpath, data_format='nifti'):
         """Save data in base_save_dirpath
         Serializes variables specified in by self.__serializable_variables__()
 
@@ -170,7 +170,8 @@ class ScanSequence(ABC):
         :param create_dir: create the data directory
         :return: data directory for this scan
         """
-        folder_id = '%s-%03d' % (self.NAME, self.series_number)
+        #folder_id = '%s-%03d' % (self.NAME, self.series_number)
+        folder_id = self.NAME
 
         name_len = len(folder_id) + 2  # buffer
         if self.NAME in dirpath[-name_len:]:

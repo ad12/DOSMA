@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 
 from data_io.med_volume import MedicalVolume
+from data_io import format_io_utils as fio_utils
 from utils import io_utils
 
 
@@ -72,7 +73,14 @@ class QuantitativeValue(ABC):
                                                                           (self.NAME, volume_name)))
 
     def load_data(self, dirpath):
-        self.volumetric_map = io_utils.load_nifti(os.path.join(dirpath, self.NAME, '%s.nii.gz' % self.NAME))
+        filepath = os.path.join(dirpath, self.NAME, '%s.nii.gz' % self.NAME)
+        qv_volume = fio_utils.generic_load(filepath)
+        assert type(qv_volume) is MedicalVolume or (
+                    type(qv_volume) is list and len(qv_volume) is 1), "Only one volume can be loaded as the qv_volume"
+        if type(qv_volume) is list:
+            msk = qv_volume[0]
+
+        self.volumetric_map = qv_volume
 
     def add_additional_volume(self, name, volume):
         if not isinstance(volume, MedicalVolume):

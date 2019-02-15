@@ -5,6 +5,7 @@ from data_io.med_volume import MedicalVolume
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues, QuantitativeValue
 from data_io.orientation import SAGITTAL
+from data_io import format_io_utils as fio_utils
 
 
 WEIGHTS_FILE_EXT = 'h5'
@@ -133,8 +134,16 @@ class Tissue(ABC):
         mask_filepath = os.path.join(load_dirpath, '%s.nii.gz' % self.STR_ID)
 
         # try to load mask, if file exists
-        if os.path.isfile(mask_filepath):
-            self.set_mask(io_utils.load_nifti(mask_filepath))
+        try:
+            msk = fio_utils.generic_load(mask_filepath)
+            assert type(msk) is MedicalVolume or (type(msk) is list and len(msk) is 1), "Only one volume can be loaded as the mask"
+            if type(msk) is list:
+                msk = msk[0]
+
+            self.set_mask(msk)
+        except FileNotFoundError:
+            # do nothing
+            pass
 
         self.quantitative_values = QuantitativeValue.load_qvs(load_dirpath)
 
