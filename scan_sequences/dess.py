@@ -5,12 +5,13 @@ import numpy as np
 from pydicom.tag import Tag
 
 from data_io.med_volume import MedicalVolume
-from data_io.dicom_io import DicomReader
 from data_io.nifti_io import NiftiReader
+from data_io import format_io_utils as fio_utils
+
 from scan_sequences.scans import TargetSequence
-from utils import dicom_utils, io_utils
 from utils.quant_vals import T2
 from copy import deepcopy
+
 
 class Dess(TargetSequence):
     """Handles analysis for DESS scan sequence """
@@ -72,13 +73,9 @@ class Dess(TargetSequence):
         if self.volumes is None or self.ref_dicom is None:
             raise ValueError('volumes and ref_dicom fields must be initialized')
 
-        dicom_array = self.volumes.volume
         ref_dicom = self.ref_dicom
 
-        if len(dicom_array.shape) != 3:
-            raise ValueError("dicom_array must be 3D volumes")
-
-        r, c, num_slices = dicom_array.shape
+        r, c, num_slices = self.volumes[0].volume.shape
         subvolumes = self.volumes
 
         # Split echos
@@ -108,7 +105,7 @@ class Dess(TargetSequence):
         c1 = (TR - Tg / 3) * (math.pow(dkL, 2)) * self.__D__
 
         # T2 fit
-        mask = np.ones([r, c, int(num_slices / 2)])
+        mask = np.ones([r, c, num_slices])
 
         ratio = mask * echo_2 / echo_1
         ratio = np.nan_to_num(ratio)
@@ -125,7 +122,7 @@ class Dess(TargetSequence):
 
         t2map = np.around(t2map, self.__T2_DECIMAL_PRECISION__)
 
-        t2_map_wrapped = MedicalVolume(t2map, subvolumes[0].pixel_spacing)
+        t2_map_wrapped = MedicalVolume(t2map, subvolumes[0].pixel_spacing, subvolumes[0].orientation, subvolumes[0].scanner_origin)
 
         tissue.add_quantitative_value(T2(t2_map_wrapped))
 
@@ -137,20 +134,22 @@ class Dess(TargetSequence):
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
 
         # write echos
-        for i in range(len(self.subvolumes)):
+        for i in range(len(self.volumes)):
             nii_registration_filepath = os.path.join(base_save_dirpath, 'echo%d.nii.gz' % (i + 1))
-            self.volumes[i].save_volume(nii_registration_filepath, data_format=data_format)
+            filepath = fio_utils.convert_format_filename(nii_registration_filepath, data_format)
+            self.volumes[i].save_volume(filepath, data_format=data_format)
 
     def load_data(self, base_load_dirpath):
         super().load_data(base_load_dirpath)
 
         base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
-        self.subvolumes = []
+
+        self.volumes = []
         # Load subvolumes from nifti file
         for i in range(self.__NUM_ECHOS__):
             nii_registration_filepath = os.path.join(base_load_dirpath, 'echo%d.nii.gz' % (i + 1))
-            subvolume = io_utils.load_nifti(nii_registration_filepath)
-            self.subvolumes.append(subvolume)
+            subvolume = NiftiReader().load(nii_registration_filepath)
+            self.volumes.append(subvolume)
 
     def calc_rms(self):
         """Calculate RMS of 2 echos

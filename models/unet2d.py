@@ -107,7 +107,7 @@ class Unet2D(SegModel):
         vol_copy.reformat(SAGITTAL)
 
         vol = vol_copy.volume
-        dicom_utils.whiten_volume(vol)
+        vol = dicom_utils.whiten_volume(vol)
 
         # reshape volumes to be (slice, x, y, 1)
         v = np.transpose(vol, (2, 0, 1))
@@ -127,4 +127,4 @@ class Unet2D(SegModel):
         # reorient to match with original volume
         vol_copy.reformat(volume.orientation)
 
-        return mask
+        return vol_copy

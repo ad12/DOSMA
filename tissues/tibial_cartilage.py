@@ -11,6 +11,7 @@ from data_io.med_volume import MedicalVolume
 from tissues.tissue import Tissue
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues
+from copy import deepcopy
 
 # milliseconds
 BOUNDS = {QuantitativeValues.T2: 60.0,
@@ -156,8 +157,8 @@ class TibialCartilage(Tissue):
 
         self.__store_quant_vals__(maps, df, map_type)
 
-    def set_mask(self, mask):
-        mask_copy = MedicalVolume(mask.volume, mask.pixel_spacing)
+    def set_mask(self, mask: MedicalVolume):
+        mask_copy = deepcopy(mask)
 
         super().set_mask(mask_copy)
 

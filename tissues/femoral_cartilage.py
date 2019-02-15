@@ -13,6 +13,7 @@ from tissues.tissue import Tissue
 from utils import io_utils, img_utils
 from utils.geometry_utils import circle_fit, cart2pol
 from utils.quant_vals import QuantitativeValues
+from copy import deepcopy
 
 # milliseconds
 BOUNDS = {QuantitativeValues.T2: 60.0,
@@ -317,10 +318,11 @@ class FemoralCartilage(Tissue):
 
         self.__store_quant_vals__(maps, df, map_type)
 
-    def set_mask(self, mask):
+    def set_mask(self, mask: MedicalVolume):
         # get the largest connected component from the mask - we expect femoral cartilage to be a smooth volumes
         msk = np.asarray(nlm.largest_cc(mask.volume), dtype=np.uint8)
-        mask_copy = MedicalVolume(msk, mask.pixel_spacing)
+        mask_copy = deepcopy(mask)
+        mask_copy.volume = msk
 
         super().set_mask(mask_copy)
 

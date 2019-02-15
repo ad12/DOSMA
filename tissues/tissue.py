@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from data_io.med_volume import MedicalVolume
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues, QuantitativeValue
+from data_io.orientation import SAGITTAL
+
 
 WEIGHTS_FILE_EXT = 'h5'
 
@@ -148,6 +150,7 @@ class Tissue(ABC):
         :param mask: a MedicalVolume
         """
         assert type(mask) is MedicalVolume, "mask for tissue must be of type MedicalVolume"
+        mask.reformat(SAGITTAL)
         self.__mask__ = mask
 
     def get_mask(self):

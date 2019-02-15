@@ -158,7 +158,10 @@ class ScanSequence(ABC):
             if hasattr(self, key):
                 self.__setattr__(key, metadata[key])
 
-        self.__load_dicom__()
+        try:
+            self.__load_dicom__()
+        except:
+            print('Dicom directory %s not found. Will try to load from %s' % (self.dicom_path, base_load_dirpath))
 
     def __save_dir__(self, dirpath, create_dir=True):
         """Returns directory specific to this scan
@@ -169,17 +172,11 @@ class ScanSequence(ABC):
         """
         folder_id = '%s-%03d' % (self.NAME, self.series_number)
 
-        # if dirpath already contains folder_id as the end directory, skip
-        if os.path.basename(dirpath) == folder_id:
-            scan_dirpath = dirpath
-        else:
+        name_len = len(folder_id) + 2  # buffer
+        if self.NAME in dirpath[-name_len:]:
             scan_dirpath = os.path.join(dirpath, folder_id)
-
-        # name_len = len(self.NAME) + 2  # buffer
-        # if self.NAME in dirpath[-name_len:]:
-        #     scan_dirpath = os.path.join(dirpath, folder_id)
-        # else:
-        #     scan_dirpath = dirpath
+        else:
+            scan_dirpath = dirpath
 
         scan_dirpath = os.path.join(scan_dirpath, folder_id)
 
