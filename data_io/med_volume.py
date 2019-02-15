@@ -1,9 +1,7 @@
 import numpy as np
 import nibabel.orientations as nibo
 
-from data_io import format_io
 from data_io.orientation import get_transpose_inds, get_flip_inds, __orientation_standard_to_nib__
-from utils import io_utils
 
 
 class MedicalVolume():
@@ -27,7 +25,8 @@ class MedicalVolume():
         Write volume to nifti format
         :param filepath: filepath to save data
         """
-        writer = format_io.get_writer(data_format)
+        import data_io.io_utils
+        writer = data_io.io_utils.get_writer(data_format)
         writer.save(self, filepath)
 
     def reformat(self, new_orientation: tuple):
@@ -52,7 +51,19 @@ class MedicalVolume():
                 scanner_origin[r_ind] = -pixel_spacing[i] * (volume.shape[i] - 1) + scanner_origin[r_ind]
 
         self.volume = volume
-        self.pixel_spacing = pixel_spacing
-        self.orientation = new_orientation
-        self.scanner_origin = scanner_origin
+        self.pixel_spacing = tuple(pixel_spacing)
+        self.orientation = tuple(new_orientation)
+        self.scanner_origin = tuple(scanner_origin)
 
+    def is_identical(self, mv):
+        if type(mv) != type(self):
+            raise TypeError('type(mv) must be %s' % str(type(self)))
+
+        # TODO: check for headers
+        return self.is_same_dimensions(mv) and (mv.volume == self.volume).all()
+
+    def is_same_dimensions(self, mv):
+        if type(mv) != type(self):
+            raise TypeError('type(mv) must be %s' % str(type(self)))
+
+        return mv.pixel_spacing == self.pixel_spacing and mv.orientation == self.orientation and mv.scanner_origin == self.scanner_origin

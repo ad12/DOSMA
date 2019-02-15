@@ -7,7 +7,7 @@ from natsort import natsorted
 
 from data_io.format_io import DataReader, DataWriter
 from data_io.med_volume import MedicalVolume
-from data_io import orientation
+from data_io import orientation as stdo
 import SimpleITK as sitk
 
 __DICOM_EXTENSIONS__ = ('.dcm')
@@ -19,16 +19,27 @@ def contains_dicom_extension(a_str: str):
     return bool(sum(bool_list))
 
 
-def LPSplus_to_RASplus(direction_LPSplus, scanner_origin_LPSplus):
+def LPSplus_to_RASplus(headers):
+    im_dir = headers[0].ImageOrientationPatient
+    orientation = np.zeros([3, 3])
+    i_vec, j_vec = im_dir[3:], im_dir[:3]  # unique to pydicom, please revise if using different library to load dicoms
+    k_vec = np.asarray(headers[-1].ImagePositionPatient) - np.asarray(headers[0].ImagePositionPatient)
+    k_vec = k_vec * np.dot(headers[0].ImagePositionPatient, np.cross(i_vec, j_vec))
+    # k_div = np.abs(k_vec)
+    # k_div[k_div == 0] += 1
+    # orientation[:, 2] = k_vec / k_div
+    orientation[:3, :3] = np.stack([i_vec, j_vec, k_vec], axis=1)
+    scanner_origin = headers[0].ImagePositionPatient
+
     affine = np.zeros([4,4])
-    affine[:3,:3] = direction_LPSplus
-    affine[:3, 3] = scanner_origin_LPSplus
+    affine[:3,:3] = orientation
+    affine[:3, 3] = scanner_origin
     affine[:2,:] = -1*affine[:2,:]
     affine[3,3] = 1
 
     affine[affine == 0] = 0
     nib_axcodes = nib.aff2axcodes(affine)
-    std_orientation = orientation.__orientation_nib_to_standard__(nib_axcodes)
+    std_orientation = stdo.__orientation_nib_to_standard__(nib_axcodes)
 
     return std_orientation, affine[:3, 3]
 
@@ -94,21 +105,9 @@ class DicomReader(DataReader):
             headers = dd['headers']
             if len(headers) == 0:
                 continue
-            arr = np.stack(dd['arr'], axis = -1)
+            arr = np.stack(dd['arr'], axis=-1)
 
-            im_dir = headers[0].ImageOrientationPatient
-
-            orientation = np.zeros([3,3])
-            orientation[:, 0] = im_dir[:3]
-            orientation[:, 1] = im_dir[3:]
-
-            k_orientation = np.asarray(headers[-1].ImagePositionPatient) - np.asarray(headers[0].ImagePositionPatient)
-            k_div = np.abs(k_orientation)
-            k_div[k_div == 0] += 1
-            orientation[:, 2] = k_orientation / k_div
-            scanner_origin = headers[0].ImagePositionPatient
-
-            rasplus_orientation, rasplus_origin = LPSplus_to_RASplus(orientation, scanner_origin)
+            rasplus_orientation, rasplus_origin = LPSplus_to_RASplus(headers)
 
             vol = MedicalVolume(arr,
                                 pixel_spacing=pixelSpacing,

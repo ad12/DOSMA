@@ -28,7 +28,6 @@ class NiftiReader(DataReader):
         assert len(ps_i) == 1 and len(ps_j) == 1 and len(ps_k) == 1, \
             "Multiple nonzero values found: There should only be 1 nonzero element in first 3 columns of Nibabel affine matrix"
 
-        print(nib_affine)
         return (abs(ps_i[0]), abs(ps_j[0]), abs(ps_k[0]))
 
     def load(self, filepath):
