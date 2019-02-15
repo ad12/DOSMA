@@ -41,7 +41,7 @@ class NiftiReader(DataReader):
         nib_img = nib.load(filepath)
         nib_img_affine = nib_img.affine
         orientation = __orientation_nib_to_standard__(nib.aff2axcodes(nib_img_affine))
-        origin = nib_img_affine[:3, 3]
+        origin = tuple(nib_img_affine[:3, 3])
         pixel_spacing = self.__get_pixel_spacing__(nib_img_affine)
         np_img = nib_img.get_fdata()
 
@@ -51,7 +51,7 @@ class NiftiReader(DataReader):
 class NiftiWriter(DataWriter):
     def __get_nib_affine__(self, im: MedicalVolume):
         pixel_spacing = im.pixel_spacing
-        origin = im.origin
+        origin = im.scanner_origin
 
         nib_orientation_inds = nibo.axcodes2ornt(__orientation_standard_to_nib__(im.orientation))
         assert nib_orientation_inds.shape == (3, 2), "Currently only supporting perfectly orthogonal scans"
@@ -81,18 +81,25 @@ class NiftiWriter(DataWriter):
 
 
 if __name__ == '__main__':
-    load_filepath = '/Users/arjundesai/Documents/stanford/research/msk_pipeline_raw/dicoms/healthy07/h7.nii.gz'
-    save_filepath = '/Users/arjundesai/Documents/stanford/research/msk_pipeline_raw/dicoms/healthy07/h7_nifti_writer.nii.gz'
+    load_filepath = '../dicoms/healthy07/h7.nii.gz'
+    save_filepath = '../dicoms/healthy07/h7_nifti_writer-transpose.nii.gz'
+    save_filepath2 = '../dicoms/healthy07/h7_nifti_writer-flip.nii.gz'
 
     nr = NiftiReader()
     med_vol = nr.load(load_filepath)
     o = med_vol.orientation
-    o = (o[1], o[0], o[2])
 
-    med_vol.reformat(o)
     nw = NiftiWriter()
+    o1 = (o[1], o[0], o[2])
+    med_vol.reformat(o1)
     nw.save(med_vol, save_filepath)
 
+    o2 = (o[0][::-1], o[1], o[2])
+    med_vol.reformat(o2)
+    nw.save(med_vol, save_filepath2)
+
+    print('')
     a = nr.load(load_filepath)
     b = nr.load(save_filepath)
+    c = nr.load(save_filepath2)
 

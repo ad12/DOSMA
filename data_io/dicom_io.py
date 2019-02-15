@@ -4,7 +4,7 @@ import numpy as np
 import pydicom
 from natsort import natsorted
 
-from data_io.format_io import DataReader
+from data_io.format_io import DataReader, DataWriter
 from data_io.med_volume import MedicalVolume
 
 
@@ -69,3 +69,6 @@ class DicomReader(DataReader):
         volume = MedicalVolume(dicom_array, pixelSpacing)
 
         return volume, refs_dicom
+
+class DicomWriter(DataWriter):
+    pass

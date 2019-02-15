@@ -69,11 +69,12 @@ def get_flip_inds(curr_orientation: tuple, new_orientation: tuple):
     if curr_orientation_ids != new_orientation_ids:
         raise ValueError('All axis orientations (S/I, L/R, A/P) must be in the same location in tuple')
 
-    flip_list = []
-    for i in len(__EXPECTED_ORIENTATION_TUPLE_LEN__):
-        flip_list.append(curr_orientation[i] != new_orientation[i])
+    flip_axs_inds = []
+    for i in range(__EXPECTED_ORIENTATION_TUPLE_LEN__):
+        if curr_orientation[i] != new_orientation[i]:
+            flip_axs_inds.append(i)
 
-    return flip_list
+    return flip_axs_inds
 
 
 # Nibabel to standard orientation conversion utils
