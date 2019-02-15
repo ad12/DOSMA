@@ -30,6 +30,7 @@ class TestNiftiIO(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.nw.save(mv, '../dicoms/healthy07/h7_nifti_writer.dcm')
 
+
 class TestDicomIO(unittest.TestCase):
     pass
 
@@ -74,8 +75,10 @@ class TestInterIo(unittest.TestCase):
         e1_itksnap.reformat(o)
         e2_itksnap.reformat(o)
 
-        assert (e1_dcm.volume == e1_itksnap.volume).all(), "e1 volumes (dcm, itksnap) should be identical in the same format"
-        assert (e2_dcm.volume == e2_itksnap.volume).all(), "e2 volumes (dcm, itksnap) should be identical in the same format"
+        assert (
+                    e1_dcm.volume == e1_itksnap.volume).all(), "e1 volumes (dcm, itksnap) should be identical in the same format"
+        assert (
+                    e2_dcm.volume == e2_itksnap.volume).all(), "e2 volumes (dcm, itksnap) should be identical in the same format"
 
         # Use NiftiWriter to save volumes (read in as dicoms)
         self.nw.save(e1_dcm, self.e1_nifti_save_path)
@@ -90,7 +93,6 @@ class TestInterIo(unittest.TestCase):
 
         assert (e1_dcm.volume == e1_itksnap.volume).all()
         assert (e2_dcm.volume == e2_itksnap.volume).all()
-
 
 
 if __name__ == '__main__':

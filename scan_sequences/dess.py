@@ -1,16 +1,15 @@
 import math
 import os
+from copy import deepcopy
 
 import numpy as np
 from pydicom.tag import Tag
 
+from data_io import format_io_utils as fio_utils
 from data_io.med_volume import MedicalVolume
 from data_io.nifti_io import NiftiReader
-from data_io import format_io_utils as fio_utils
-
 from scan_sequences.scans import TargetSequence
 from utils.quant_vals import T2
-from copy import deepcopy
 
 
 class Dess(TargetSequence):
@@ -44,7 +43,8 @@ class Dess(TargetSequence):
         :return: a boolean
         """
         ref_dicom = self.ref_dicom
-        return self.__GL_AREA_TAG__ in ref_dicom and self.__TG_TAG__ in ref_dicom and len(self.volumes) == self.__NUM_ECHOS__
+        return self.__GL_AREA_TAG__ in ref_dicom and self.__TG_TAG__ in ref_dicom and len(
+            self.volumes) == self.__NUM_ECHOS__
 
     def segment(self, model, tissue):
         # Use first echo for segmentation
@@ -122,7 +122,8 @@ class Dess(TargetSequence):
 
         t2map = np.around(t2map, self.__T2_DECIMAL_PRECISION__)
 
-        t2_map_wrapped = MedicalVolume(t2map, subvolumes[0].pixel_spacing, subvolumes[0].orientation, subvolumes[0].scanner_origin)
+        t2_map_wrapped = MedicalVolume(t2map, subvolumes[0].pixel_spacing, subvolumes[0].orientation,
+                                       subvolumes[0].scanner_origin)
 
         tissue.add_quantitative_value(T2(t2_map_wrapped))
 

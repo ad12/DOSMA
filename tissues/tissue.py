@@ -1,12 +1,11 @@
 import os
 from abc import ABC, abstractmethod
 
+from data_io import format_io_utils as fio_utils
 from data_io.med_volume import MedicalVolume
+from data_io.orientation import SAGITTAL
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues, QuantitativeValue
-from data_io.orientation import SAGITTAL
-from data_io import format_io_utils as fio_utils
-
 
 WEIGHTS_FILE_EXT = 'h5'
 
@@ -136,7 +135,8 @@ class Tissue(ABC):
         # try to load mask, if file exists
         try:
             msk = fio_utils.generic_load(mask_filepath)
-            assert type(msk) is MedicalVolume or (type(msk) is list and len(msk) is 1), "Only one volume can be loaded as the mask"
+            assert type(msk) is MedicalVolume or (
+                        type(msk) is list and len(msk) is 1), "Only one volume can be loaded as the mask"
             if type(msk) is list:
                 msk = msk[0]
 

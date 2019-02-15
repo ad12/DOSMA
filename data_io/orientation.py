@@ -33,15 +33,18 @@ __ORIENTATIONS_TO_AXIS_ID__ = {'LR': 0, 'RL': 0,
 
 
 def __check_orientation__(orientation: tuple):
-    is_orientation_format = len(orientation) == __EXPECTED_ORIENTATION_TUPLE_LEN__ and sum([type(o) is str for o in orientation]) == __EXPECTED_ORIENTATION_TUPLE_LEN__
+    is_orientation_format = len(orientation) == __EXPECTED_ORIENTATION_TUPLE_LEN__ and sum(
+        [type(o) is str for o in orientation]) == __EXPECTED_ORIENTATION_TUPLE_LEN__
 
-    orientation_str_exists = sum([o in __SUPPORTED_ORIENTATIONS__ for o in orientation]) == __EXPECTED_ORIENTATION_TUPLE_LEN__
+    orientation_str_exists = sum(
+        [o in __SUPPORTED_ORIENTATIONS__ for o in orientation]) == __EXPECTED_ORIENTATION_TUPLE_LEN__
 
     orientation_ids = [__ORIENTATIONS_TO_AXIS_ID__[o] for o in orientation]
     unique_ids = len(orientation_ids) == len(set(orientation_ids))
 
     if not is_orientation_format or not orientation_str_exists or not unique_ids:
-        raise ValueError("Orientation format mismatch: Orientations must be tuple of strings of length %d." % __EXPECTED_ORIENTATION_TUPLE_LEN__)
+        raise ValueError(
+            "Orientation format mismatch: Orientations must be tuple of strings of length %d." % __EXPECTED_ORIENTATION_TUPLE_LEN__)
 
 
 def get_transpose_inds(curr_orientation: tuple, new_orientation: tuple):

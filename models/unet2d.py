@@ -1,14 +1,16 @@
+from copy import deepcopy
+
 import keras.backend as K
 import numpy as np
 from keras.layers import BatchNormalization as BN
 from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, Concatenate
 from keras.models import Model
 
-from models.model import SegModel
 from data_io.med_volume import MedicalVolume
 from data_io.orientation import SAGITTAL
+from models.model import SegModel
 from utils import dicom_utils
-from copy import deepcopy
+
 
 class Unet2D(SegModel):
     sigmoid_threshold = 0.5

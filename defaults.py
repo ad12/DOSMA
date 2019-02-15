@@ -29,7 +29,7 @@ DEFAULT_DPI = 400
 # Matplotlib initialization
 import matplotlib
 
-#matplotlib.use('Agg')
+matplotlib.use('Agg')
 
 # Default font size
 DEFAULT_FONT_SIZE = 16

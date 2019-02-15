@@ -1,5 +1,6 @@
 import os
 import warnings
+from copy import deepcopy
 
 import matplotlib.pyplot as plt
 import nipy.labs.mask as nlm
@@ -13,7 +14,6 @@ from tissues.tissue import Tissue
 from utils import io_utils, img_utils
 from utils.geometry_utils import circle_fit, cart2pol
 from utils.quant_vals import QuantitativeValues
-from copy import deepcopy
 
 # milliseconds
 BOUNDS = {QuantitativeValues.T2: 60.0,

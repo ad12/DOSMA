@@ -2,9 +2,8 @@ import os
 from abc import ABC, abstractmethod
 from enum import Enum
 
-from data_io.med_volume import MedicalVolume
 from data_io import format_io_utils as fio_utils
-from utils import io_utils
+from data_io.med_volume import MedicalVolume
 
 
 class QuantitativeValues(Enum):
@@ -76,7 +75,7 @@ class QuantitativeValue(ABC):
         filepath = os.path.join(dirpath, self.NAME, '%s.nii.gz' % self.NAME)
         qv_volume = fio_utils.generic_load(filepath)
         assert type(qv_volume) is MedicalVolume or (
-                    type(qv_volume) is list and len(qv_volume) is 1), "Only one volume can be loaded as the qv_volume"
+                type(qv_volume) is list and len(qv_volume) is 1), "Only one volume can be loaded as the qv_volume"
         if type(qv_volume) is list:
             msk = qv_volume[0]
 

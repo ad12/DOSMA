@@ -101,4 +101,3 @@ if __name__ == '__main__':
     a = nr.load(load_filepath)
     b = nr.load(save_filepath)
     c = nr.load(save_filepath2)
-

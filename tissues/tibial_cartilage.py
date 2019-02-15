@@ -1,5 +1,6 @@
 import os
 import warnings
+from copy import deepcopy
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,7 +12,6 @@ from data_io.med_volume import MedicalVolume
 from tissues.tissue import Tissue
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues
-from copy import deepcopy
 
 # milliseconds
 BOUNDS = {QuantitativeValues.T2: 60.0,
@@ -129,7 +129,7 @@ class TibialCartilage(Tissue):
             for coronal in [self.MEDIAL_KEY, self.LATERAL_KEY]:
                 for sagittal in [self.ANTERIOR_KEY, self.POSTERIOR_KEY]:
                     curr_region_mask = quant_map_volume * (coronal_region_mask == coronal) * (
-                                sagittal_region_mask == sagittal) * axial_map
+                            sagittal_region_mask == sagittal) * axial_map
                     curr_region_mask[curr_region_mask == 0] = np.nan
                     # discard all values that are 0
                     c_mean = np.nanmean(curr_region_mask)

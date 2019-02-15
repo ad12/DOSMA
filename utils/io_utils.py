@@ -1,10 +1,7 @@
 import os
 import pickle
-import warnings
 
-import SimpleITK as sitk
 import h5py
-import numpy as np
 import pandas as pd
 
 DATA_EXT = 'data'

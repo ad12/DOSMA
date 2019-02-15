@@ -1,8 +1,8 @@
-from data_io.dicom_io import DicomWriter, DicomReader, __DICOM_EXTENSIONS__, contains_dicom_extension
-from data_io.format_io import SUPPORTED_FORMATS
-from data_io.nifti_io import NiftiWriter, NiftiReader, __NIFTI_EXTENSIONS__, contains_nifti_extension
-
 import os
+
+from data_io.dicom_io import DicomWriter, DicomReader, contains_dicom_extension
+from data_io.format_io import SUPPORTED_FORMATS
+from data_io.nifti_io import NiftiWriter, NiftiReader, contains_nifti_extension
 
 
 def get_writer(data_format: str):
@@ -14,6 +14,7 @@ def get_writer(data_format: str):
     elif data_format == 'dicom':
         return DicomWriter()
 
+
 def get_reader(data_format: str):
     if data_format not in SUPPORTED_FORMATS:
         raise ValueError('Only formats %s are supported' % str(SUPPORTED_FORMATS))
@@ -22,6 +23,7 @@ def get_reader(data_format: str):
         return NiftiReader()
     elif data_format == 'dicom':
         return DicomReader()
+
 
 def get_data_format(file_or_dirname: str):
     # if a directory, assume that format is dicom
@@ -44,12 +46,12 @@ def convert_format_filename(file_or_dirname: str, new_data_format: str):
     if current_format == new_data_format:
         return file_or_dirname
 
-    if current_format=='dicom' and new_data_format == 'nifti':
+    if current_format == 'dicom' and new_data_format == 'nifti':
         dirname = os.path.dirname(file_or_dirname)
         basename = os.path.basename(file_or_dirname)
         return os.path.join(dirname, '%s.nii.gz' % basename)
 
-    if current_format=='nifti' and new_data_format == 'dicom':
+    if current_format == 'nifti' and new_data_format == 'dicom':
         dirname = os.path.dirname(file_or_dirname)
         basename = os.path.basename(file_or_dirname)
         basename, ext = os.path.splitext(basename)
@@ -70,7 +72,8 @@ def generic_load(file_or_dirname):
     for fp in possible_filepaths:
         if os.path.exists(fp):
             if exist_path is not None:
-                raise ValueError('Ambiguous loading state - multiple possible files to load from %s' % str(possible_filepaths))
+                raise ValueError(
+                    'Ambiguous loading state - multiple possible files to load from %s' % str(possible_filepaths))
             exist_path = fp
 
     if exist_path is None:

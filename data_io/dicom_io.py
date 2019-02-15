@@ -1,14 +1,13 @@
 import os
 
+import nibabel as nib
 import numpy as np
 import pydicom
-import nibabel as nib
 from natsort import natsorted
 
+from data_io import orientation as stdo
 from data_io.format_io import DataReader, DataWriter
 from data_io.med_volume import MedicalVolume
-from data_io import orientation as stdo
-import SimpleITK as sitk
 
 __DICOM_EXTENSIONS__ = ('.dcm')
 TOTAL_NUM_ECHOS_KEY = (0x19, 0x107e)
@@ -31,17 +30,18 @@ def LPSplus_to_RASplus(headers):
     orientation[:3, :3] = np.stack([i_vec, j_vec, k_vec], axis=1)
     scanner_origin = headers[0].ImagePositionPatient
 
-    affine = np.zeros([4,4])
-    affine[:3,:3] = orientation
+    affine = np.zeros([4, 4])
+    affine[:3, :3] = orientation
     affine[:3, 3] = scanner_origin
-    affine[:2,:] = -1*affine[:2,:]
-    affine[3,3] = 1
+    affine[:2, :] = -1 * affine[:2, :]
+    affine[3, 3] = 1
 
     affine[affine == 0] = 0
     nib_axcodes = nib.aff2axcodes(affine)
     std_orientation = stdo.__orientation_nib_to_standard__(nib_axcodes)
 
     return std_orientation, affine[:3, 3]
+
 
 class DicomReader(DataReader):
     """
@@ -51,6 +51,7 @@ class DicomReader(DataReader):
         - LPS: right --> left, anterior --> posterior, inferior --> superior
         - we will call it LPS+, such that letters correspond to increasing end of axis
     """
+
     def load(self, dicom_dirpath):
         """Load dicoms into numpy array
 
@@ -91,14 +92,14 @@ class DicomReader(DataReader):
 
         dicom_data = []
         for i in range(max_num_echos):
-            dicom_data.append({'headers':[], 'arr':[]})
+            dicom_data.append({'headers': [], 'arr': []})
 
         for dicom_filename in lstFilesDCM:
             # read the file
             ds = pydicom.read_file(dicom_filename, force=True)
             echo_number = ds.EchoNumbers
-            dicom_data[echo_number-1]['headers'].append(ds)
-            dicom_data[echo_number-1]['arr'].append(ds.pixel_array)
+            dicom_data[echo_number - 1]['headers'].append(ds)
+            dicom_data[echo_number - 1]['arr'].append(ds.pixel_array)
 
         vols = []
         for dd in dicom_data:
@@ -118,6 +119,7 @@ class DicomReader(DataReader):
 
         return vols
 
+
 class DicomWriter(DataWriter):
     pass
 
@@ -128,5 +130,6 @@ if __name__ == '__main__':
     r = DicomReader()
     A = r.load(dicom_filepath)
     from data_io.nifti_io import NiftiWriter
+
     r = NiftiWriter()
     r.save(A[0], save_path)

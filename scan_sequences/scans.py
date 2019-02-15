@@ -11,8 +11,8 @@ from nipype.interfaces.elastix import Registration, ApplyWarp
 
 import defaults
 import file_constants as fc
-from data_io.med_volume import MedicalVolume
 from data_io.dicom_io import DicomReader
+from data_io.med_volume import MedicalVolume
 from utils import dicom_utils
 from utils import io_utils
 
@@ -170,7 +170,7 @@ class ScanSequence(ABC):
         :param create_dir: create the data directory
         :return: data directory for this scan
         """
-        #folder_id = '%s-%03d' % (self.NAME, self.series_number)
+        # folder_id = '%s-%03d' % (self.NAME, self.series_number)
         folder_id = self.NAME
 
         name_len = len(folder_id) + 2  # buffer
@@ -238,7 +238,7 @@ class NonTargetSequence(ScanSequence):
         """
         pass
 
-    #TODO: fix split volumes
+    # TODO: fix split volumes
     def __split_volumes__(self, expected_num_subvolumes):
         """
         Split the volumes into multiple subvolumes based on the echo time
@@ -259,7 +259,8 @@ class NonTargetSequence(ScanSequence):
         """
         volumes = self.volumes
 
-        assert len(volumes) == expected_num_subvolumes, "Expected %d subvolumes but got %d" % (expected_num_subvolumes, len(volumes))
+        assert len(volumes) == expected_num_subvolumes, "Expected %d subvolumes but got %d" % (
+        expected_num_subvolumes, len(volumes))
 
         num_echo_times = len(volumes)
         echo_times = []

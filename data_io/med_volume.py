@@ -1,5 +1,5 @@
-import numpy as np
 import nibabel.orientations as nibo
+import numpy as np
 
 from data_io.orientation import get_transpose_inds, get_flip_inds, __orientation_standard_to_nib__
 
@@ -7,7 +7,8 @@ from data_io.orientation import get_transpose_inds, get_flip_inds, __orientation
 class MedicalVolume():
     """Wrapper for 3D volumes """
 
-    def __init__(self, volume: np.ndarray, pixel_spacing: tuple, orientation: tuple, scanner_origin: tuple, headers=None):
+    def __init__(self, volume: np.ndarray, pixel_spacing: tuple, orientation: tuple, scanner_origin: tuple,
+                 headers=None):
         """
         :param volume: a 3D numpy array
         :param pixel_spacing: pixel/voxel spacing for volumes

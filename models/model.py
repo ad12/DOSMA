@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
 import defaults
-
 from data_io.med_volume import MedicalVolume
 
 
