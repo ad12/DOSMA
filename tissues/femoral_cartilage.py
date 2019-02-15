@@ -6,10 +6,9 @@ import nipy.labs.mask as nlm
 import numpy as np
 import pandas as pd
 import scipy.ndimage as sni
-import time
 
 import defaults
-from med_objects.med_volume import MedicalVolume
+from data_io.med_volume import MedicalVolume
 from tissues.tissue import Tissue
 from utils import io_utils, img_utils
 from utils.geometry_utils import circle_fit, cart2pol
@@ -95,7 +94,7 @@ class FemoralCartilage(Tissue):
         yv, xv = np.meshgrid(range(height), range(width), indexing='ij')
 
         rho, theta = cart2pol(xv - xc_fit, yc_fit - yv)
-        theta = (theta >= 90) * (theta-360) + (theta < 90)*theta  # range: [-270, 90)
+        theta = (theta >= 90) * (theta - 360) + (theta < 90) * theta  # range: [-270, 90)
 
         assert (np.min(theta) >= THETA_MIN) and (np.max(theta) < THETA_MAX), \
             "Expected Theta range is [%d, %d) degrees. Recieved min: %d max: %d)." % (THETA_MIN, THETA_MAX,
@@ -127,7 +126,7 @@ class FemoralCartilage(Tissue):
         central_region = self.CENTRAL_KEY * np.logical_and((theta >= -105), (theta < -75))
         posterior_region = self.POSTERIOR_KEY * (theta >= -75)
         acp_map = anterior_region + central_region + posterior_region
-        acp_volume = np.asarray(np.stack([acp_map]*num_slices, axis=-1), dtype=np.uint16)
+        acp_volume = np.asarray(np.stack([acp_map] * num_slices, axis=-1), dtype=np.uint16)
         regions_volume += acp_volume
 
         # medial/lateral division
@@ -145,7 +144,7 @@ class FemoralCartilage(Tissue):
         regions_volume += ml_volume
 
         # deep/superficial division
-        rho_volume = np.stack([rho]*num_slices, axis=-1)
+        rho_volume = np.stack([rho] * num_slices, axis=-1)
         deep_volume = (rho_volume <= rhos_threshold_volume) * self.DEEP_KEY
         superficial_volume = (rho_volume >= rhos_threshold_volume) * self.SUPERFICIAL_KEY
         ds_volume = np.asarray(deep_volume + superficial_volume + self.TOTAL_AXIAL_KEY, dtype=np.uint16)
@@ -179,7 +178,7 @@ class FemoralCartilage(Tissue):
         if len(qv_map.shape) != 3:
             raise ValueError('t2_map and mask must be 3D')
 
-        #assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
+        # assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
 
         num_slices = qv_map.shape[-1]
 
@@ -187,9 +186,9 @@ class FemoralCartilage(Tissue):
         qv_map = np.multiply(mask, qv_map)  # apply binary mask
         qv_map[qv_map <= 0] = np.nan  # wherever qv_map is 0, either no cartilage or qv=0 ms, which is impractical
 
-        #theta_bins = self.theta_bins  # binning with theta
+        # theta_bins = self.theta_bins  # binning with theta
 
-        #regions_mask = self.regions_mask
+        # regions_mask = self.regions_mask
 
         Unrolled_Cartilage = np.zeros([NB_BINS, num_slices])
         Sup_layer = np.zeros([NB_BINS, num_slices])
@@ -210,8 +209,11 @@ class FemoralCartilage(Tissue):
 
                 Unrolled_Cartilage[curr_bin, slice_ind] = np.nanmean(qv_bin)
 
-                qv_superficial = qv_slice[np.logical_and(theta_bins == curr_bin, self.__binarize_region_mask__(curr_slice, self.SUPERFICIAL_KEY))]
-                qv_deep = qv_slice[np.logical_and(theta_bins == curr_bin, self.__binarize_region_mask__(curr_slice, self.DEEP_KEY))]
+                qv_superficial = qv_slice[np.logical_and(theta_bins == curr_bin,
+                                                         self.__binarize_region_mask__(curr_slice,
+                                                                                       self.SUPERFICIAL_KEY))]
+                qv_deep = qv_slice[
+                    np.logical_and(theta_bins == curr_bin, self.__binarize_region_mask__(curr_slice, self.DEEP_KEY))]
 
                 qv_superficial = np.nan_to_num(qv_superficial)
                 qv_deep = np.nan_to_num(qv_deep)
@@ -251,7 +253,7 @@ class FemoralCartilage(Tissue):
         if self.__mask__ is None:
             raise ValueError('Please initialize mask')
 
-        #assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
+        # assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
 
         # We have to call this every time we load a new quantitative map
         # mask = segmentation_mask * clipped_quant_map
@@ -262,7 +264,7 @@ class FemoralCartilage(Tissue):
         assert total.shape == deep.shape
         assert deep.shape == superficial.shape
 
-        #regions_mask = self.regions_mask
+        # regions_mask = self.regions_mask
         mask = self.__mask__.volume
 
         subject_pid = self.pid
@@ -274,7 +276,6 @@ class FemoralCartilage(Tissue):
         #                  ['SMA', 'SMC', 'SMP'], ['SLA', 'SLC', 'SLP'],
         #                  ['TMA', 'TMC', 'TMP'], ['TLA', 'TLC', 'TLP']]
         # tissue_values = []
-
 
         for axial_ind in range(len(self.AXIAL_KEYS)):
             axial = self.AXIAL_KEYS[axial_ind]
@@ -297,7 +298,8 @@ class FemoralCartilage(Tissue):
                     c_median = np.nanmedian(qv_region_vals)
 
                     row_info = [subject_pid,
-                                self.AXIAL_NAMES[axial_ind], self.SAGITTAL_NAMES[sagittal_ind], self.CORONAL_NAMES[coronal_ind],
+                                self.AXIAL_NAMES[axial_ind], self.SAGITTAL_NAMES[sagittal_ind],
+                                self.CORONAL_NAMES[coronal_ind],
                                 c_mean, c_std, c_median, num_voxels]
 
                     pd_list.append(row_info)
@@ -322,7 +324,8 @@ class FemoralCartilage(Tissue):
 
         super().set_mask(mask_copy)
 
-        self.regions_mask, self.theta_bins, self.ML_BOUNDARY, self.ACP_BOUNDARY = self.split_regions(self.__mask__.volume)
+        self.regions_mask, self.theta_bins, self.ML_BOUNDARY, self.ACP_BOUNDARY = self.split_regions(
+            self.__mask__.volume)
 
     def __save_quant_data__(self, dirpath):
         """Save quantitative data and 2D visualizations of femoral cartilage
@@ -415,7 +418,8 @@ class FemoralCartilage(Tissue):
         assert self.ML_BOUNDARY is not None and self.ACP_BOUNDARY is not None, "medial/lateral and anterior/central/posterior boundaries should be specified"
 
         # split into regions
-        unrolled_total, _, _ = self.unroll(np.asarray(self.__mask__.volume, dtype=np.float32), self.regions_mask, self.theta_bins)
+        unrolled_total, _, _ = self.unroll(np.asarray(self.__mask__.volume, dtype=np.float32), self.regions_mask,
+                                           self.theta_bins)
 
         acp_division_unrolled = np.zeros(unrolled_total.shape)
 

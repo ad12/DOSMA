@@ -4,7 +4,7 @@ import os
 import numpy as np
 from pydicom.tag import Tag
 
-from med_objects.med_volume import MedicalVolume
+from data_io.med_volume import MedicalVolume
 from scan_sequences.scans import TargetSequence
 from utils import dicom_utils, io_utils
 from utils.quant_vals import T2

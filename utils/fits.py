@@ -5,7 +5,7 @@ import numpy as np
 from scipy import optimize as sop
 
 import defaults
-from med_objects.med_volume import MedicalVolume
+from data_io.med_volume import MedicalVolume
 
 
 class Fit(ABC):

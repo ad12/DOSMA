@@ -1,10 +1,8 @@
 import itertools
 
-import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-
-import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 import defaults

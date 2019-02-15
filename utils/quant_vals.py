@@ -2,7 +2,7 @@ import os
 from abc import ABC, abstractmethod
 from enum import Enum
 
-from med_objects.med_volume import MedicalVolume
+from data_io.med_volume import MedicalVolume
 from utils import io_utils
 
 

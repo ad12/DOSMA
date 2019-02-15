@@ -4,7 +4,7 @@ import numpy as np
 import pydicom
 from natsort import natsorted
 
-from med_objects.med_volume import MedicalVolume
+from data_io.med_volume import MedicalVolume
 
 __VOLUME_DIMENSIONS__ = 3
 __EPSILON__ = 1e-8

@@ -1,14 +1,16 @@
-from tissues.tissue import Tissue
-import scipy.ndimage as sni
-import numpy as np
-from med_objects.med_volume import MedicalVolume
-import pandas as pd
-import matplotlib.pyplot as plt
-from utils.quant_vals import QuantitativeValues
-from utils import io_utils
-import warnings
-import defaults
 import os
+import warnings
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scipy.ndimage as sni
+
+import defaults
+from data_io.med_volume import MedicalVolume
+from tissues.tissue import Tissue
+from utils import io_utils
+from utils.quant_vals import QuantitativeValues
 
 # milliseconds
 BOUNDS = {QuantitativeValues.T2: 60.0,
@@ -72,7 +74,7 @@ class TibialCartilage(Tissue):
         return total, superior, inferior
 
     def split_regions(self, base_map):
-        center_of_mass = sni.measurements.center_of_mass(base_map) # zero indexed
+        center_of_mass = sni.measurements.center_of_mass(base_map)  # zero indexed
 
         com_sup_inf = int(np.ceil(center_of_mass[0]))
         com_ant_post = int(np.ceil(center_of_mass[1]))
@@ -125,7 +127,8 @@ class TibialCartilage(Tissue):
 
             for coronal in [self.MEDIAL_KEY, self.LATERAL_KEY]:
                 for sagittal in [self.ANTERIOR_KEY, self.POSTERIOR_KEY]:
-                    curr_region_mask = quant_map_volume * (coronal_region_mask == coronal) * (sagittal_region_mask == sagittal) * axial_map
+                    curr_region_mask = quant_map_volume * (coronal_region_mask == coronal) * (
+                                sagittal_region_mask == sagittal) * axial_map
                     curr_region_mask[curr_region_mask == 0] = np.nan
                     # discard all values that are 0
                     c_mean = np.nanmean(curr_region_mask)

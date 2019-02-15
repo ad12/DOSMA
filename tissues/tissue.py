@@ -1,7 +1,7 @@
 import os
 from abc import ABC, abstractmethod
 
-from med_objects.med_volume import MedicalVolume
+from data_io.med_volume import MedicalVolume
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues, QuantitativeValue
 

@@ -1,5 +1,6 @@
 import os
 import re
+import warnings
 from abc import ABC, abstractmethod
 from time import gmtime, strftime
 
@@ -10,10 +11,10 @@ from nipype.interfaces.elastix import Registration, ApplyWarp
 
 import defaults
 import file_constants as fc
-from med_objects.med_volume import MedicalVolume
+from data_io.med_volume import MedicalVolume
 from utils import dicom_utils
 from utils import io_utils
-import warnings
+
 
 class ScanSequence(ABC):
     NAME = ''

@@ -125,7 +125,7 @@ def load_nifti(filepath):
     :param filepath: filepath to nifti file - must have extension '.nii.gz'
     :return: a MedicalVolume
     """
-    from med_objects.med_volume import MedicalVolume
+    from data_io.med_volume import MedicalVolume
 
     assert filepath.endswith('.nii.gz')
     image = sitk.ReadImage(filepath)
