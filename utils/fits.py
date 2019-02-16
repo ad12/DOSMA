@@ -20,7 +20,7 @@ class Fit(ABC):
 class MonoExponentialFit(Fit):
     """Fit data using monoexponential fit of model A*exp(b*t)"""
 
-    def __init__(self, ts, subvolumes, mask=None, bounds=(0, 100.0), tc0=30.0, decimal_precision=1):
+    def __init__(self, ts, subvolumes, mask: MedicalVolume = None, bounds=(0, 100.0), tc0=30.0, decimal_precision=1):
         """
         :param ts: 1D list or numpy array of times corresponding to different subvolumes
         :param subvolumes: list of MedicalVolumes
@@ -39,11 +39,9 @@ class MonoExponentialFit(Fit):
 
         self.subvolumes = subvolumes
 
-        if mask is not None:
-            assert (type(mask) is MedicalVolume)
         self.mask = mask
 
-        assert (type(bounds) is tuple and len(bounds) == 2)
+        assert len(bounds) == 2, "Bounds should provide upper lower bound in format (lb, ub)"
         self.bounds = bounds
 
         self.tc0 = tc0
@@ -63,12 +61,16 @@ class MonoExponentialFit(Fit):
         if self.mask:
             assert subvolumes[0].is_same_dimensions(self.mask), "Mask dimension mismatch"
             msk = self.mask.volume
+
+            # test line
+            msk = np.zeros(msk.shape)
+
             msk = msk.reshape(1, -1)
 
-        original_shape = subvolumes[0].shape
+        original_shape = subvolumes[0].volume.shape
         pixel_spacing = self.subvolumes[0].pixel_spacing
         orientation = self.subvolumes[0].orientation
-        scanner_origin = self.subvolumes[0].scanner_volume
+        scanner_origin = self.subvolumes[0].scanner_origin
 
         for i in range(len(self.ts)):
             sv = subvolumes[i].volume
@@ -120,7 +122,7 @@ def __fit_mono_exp__(x, y, p0=None):
     x = np.asarray(x)
     y = np.asarray(y)
 
-    popt, _ = sop.curve_fit(func, x, y, p0=p0, maxfev=1000)
+    popt, _ = sop.curve_fit(func, x, y, p0=p0, maxfev=100)
 
     residuals = y - func(x, popt[0], popt[1])
     ss_res = np.sum(residuals ** 2)
@@ -141,7 +143,7 @@ def fit_monoexp_tc(x, ys, tc0):
         y = ys[..., i]
         if (y < 0).any() and not warned_negative:
             warned_negative = True
-            warnings.warn("Negative values found. Failure in monoexponential fit will result in t1_rho=np.nan")
+            warnings.warn("Negative values found. Failure in monoexponential fit will result in np.nan")
 
         # Skip any negative values or all values that are 0s
         if (y < 0).any() or (y == 0).all():
