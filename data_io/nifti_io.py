@@ -4,7 +4,7 @@ import nibabel as nib
 import nibabel.orientations as nibo
 import numpy as np
 
-from data_io.format_io import DataReader, DataWriter
+from data_io.format_io import DataReader, DataWriter, ImageDataFormat
 from data_io.med_volume import MedicalVolume
 from data_io.orientation import __orientation_nib_to_standard__, __orientation_standard_to_nib__
 from utils import io_utils
@@ -18,6 +18,7 @@ def contains_nifti_extension(a_str: str):
 
 
 class NiftiReader(DataReader):
+    data_format_code = ImageDataFormat.nifti
     def __get_pixel_spacing__(self, nib_affine):
         col_i, col_j, col_k = nib_affine[..., 0], nib_affine[..., 1], nib_affine[..., 2]
 
@@ -48,6 +49,7 @@ class NiftiReader(DataReader):
 
 
 class NiftiWriter(DataWriter):
+    data_format_code = ImageDataFormat.nifti
     def __get_nib_affine__(self, im: MedicalVolume):
         pixel_spacing = im.pixel_spacing
         origin = im.scanner_origin

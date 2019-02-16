@@ -10,6 +10,7 @@ from data_io.med_volume import MedicalVolume
 from data_io.nifti_io import NiftiReader
 from scan_sequences.scans import TargetSequence
 from utils.quant_vals import T2
+from data_io.format_io import ImageDataFormat
 
 
 class Dess(TargetSequence):
@@ -129,7 +130,8 @@ class Dess(TargetSequence):
 
         return t2map
 
-    def save_data(self, base_save_dirpath, data_format='nifti'):
+
+    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = ImageDataFormat.nifti):
         super().save_data(base_save_dirpath)
 
         base_save_dirpath = self.__save_dir__(base_save_dirpath)

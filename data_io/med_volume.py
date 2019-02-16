@@ -2,7 +2,7 @@ import numpy as np
 import nibabel.orientations as nibo
 
 from data_io.orientation import get_transpose_inds, get_flip_inds, __orientation_standard_to_nib__
-
+from data_io.format_io import ImageDataFormat
 
 class MedicalVolume():
     """Wrapper for 3D volumes """
@@ -21,10 +21,11 @@ class MedicalVolume():
         self.scanner_origin = scanner_origin
         self.headers = headers
 
-    def save_volume(self, filepath, data_format='nifti'):
+    def save_volume(self, filepath, data_format: ImageDataFormat = ImageDataFormat.nifti):
         """
-        Write volumes to nifti format
+        Write volumes to specified image data format
         :param filepath: filepath to save data
+        :param data_format: an ImageDataFormat
         """
         import data_io.format_io_utils
         writer = data_io.format_io_utils.get_writer(data_format)

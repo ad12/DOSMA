@@ -23,10 +23,9 @@ class Cones(NonTargetSequence):
     NAME = 'cones'
 
     def __init__(self, dicom_path=None, dicom_ext=None, load_path=None):
-        super().__init__(dicom_path, dicom_ext)
-
         self.subvolumes = None
         self.echo_times = []
+        super().__init__(dicom_path, dicom_ext)
 
         if dicom_path is not None:
             self.subvolumes, self.echo_times = self.__split_volumes__(__EXPECTED_NUM_ECHO_TIMES__)
@@ -142,7 +141,7 @@ class Cones(NonTargetSequence):
 
         return quant_maps
 
-    def save_data(self, base_save_dirpath):
+    def save_data(self, base_save_dirpath, data_format='nifti'):
         super().save_data(base_save_dirpath)
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
 

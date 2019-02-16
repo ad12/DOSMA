@@ -15,10 +15,12 @@ from data_io.dicom_io import DicomReader
 from data_io.med_volume import MedicalVolume
 from data_io.nifti_io import NiftiReader
 from data_io import format_io_utils as fio_utils
+from data_io.format_io import ImageDataFormat
 
 from utils import dicom_utils
 from utils import io_utils
 
+from tissues.tissue import Tissue
 
 class ScanSequence(ABC):
     NAME = ''
@@ -74,7 +76,7 @@ class ScanSequence(ABC):
 
         self.__set_series_number__(self.ref_dicom.SeriesNumber)
 
-    def __set_series_number__(self, sn):
+    def __set_series_number__(self, sn: int):
         if self.series_number is not None:
             assert self.series_number == sn, "Series numbers must be identical if loading the same scan"
             return
@@ -88,7 +90,7 @@ class ScanSequence(ABC):
         """
         return self.volumes[0].volume.shape
 
-    def __add_tissue__(self, new_tissue):
+    def __add_tissue__(self, new_tissue: Tissue):
         """Add a tissue to the list of tissues associated with this scan
         :param new_tissue: a Tissue instance
         :raise ValueError: tissue type already exists in list
@@ -106,7 +108,7 @@ class ScanSequence(ABC):
         """
         return '%s.%s' % (self.NAME, io_utils.DATA_EXT)
 
-    def save_data(self, base_save_dirpath, data_format='nifti'):
+    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = ImageDataFormat.nifti):
         """Save data in base_save_dirpath
         Serializes variables specified in by self.__serializable_variables__()
 
@@ -120,6 +122,7 @@ class ScanSequence(ABC):
             Call this function (super().save_data(base_save_dirpath)) before adding code to override this method
 
         :param base_save_dirpath: base directory to store data
+        :param data_format: image data format (nifti, dicom, etc) that scan data should be stored as
         """
 
         # write other data as ref
@@ -132,7 +135,7 @@ class ScanSequence(ABC):
 
         io_utils.save_pik(filepath, metadata)
 
-    def load_data(self, base_load_dirpath):
+    def load_data(self, base_load_dirpath: str):
         """Load data in base_load_dirpath
 
         Save location:
@@ -166,7 +169,7 @@ class ScanSequence(ABC):
         except:
             print('Dicom directory %s not found. Will try to load from %s' % (self.dicom_path, base_load_dirpath))
 
-    def __save_dir__(self, dirpath, create_dir=True):
+    def __save_dir__(self, dirpath: str, create_dir=True):
         """Returns directory specific to this scan
 
         :param dirpath: base directory path to locate data directory for this scan

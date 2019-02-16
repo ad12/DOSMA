@@ -6,7 +6,7 @@ import pydicom
 from natsort import natsorted
 
 from data_io import orientation as stdo
-from data_io.format_io import DataReader, DataWriter
+from data_io.format_io import DataReader, DataWriter, ImageDataFormat
 from data_io.med_volume import MedicalVolume
 
 __DICOM_EXTENSIONS__ = ('.dcm')
@@ -51,7 +51,7 @@ class DicomReader(DataReader):
         - LPS: right --> left, anterior --> posterior, inferior --> superior
         - we will call it LPS+, such that letters correspond to increasing end of axis
     """
-
+    data_format_code = ImageDataFormat.nifti
     def load(self, dicom_dirpath):
         """Load dicoms into numpy array
 
@@ -121,7 +121,7 @@ class DicomReader(DataReader):
 
 
 class DicomWriter(DataWriter):
-    pass
+    data_format_code = ImageDataFormat.nifti
 
 
 if __name__ == '__main__':

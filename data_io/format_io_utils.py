@@ -3,41 +3,42 @@ import os
 from data_io.dicom_io import DicomWriter, DicomReader, contains_dicom_extension
 from data_io.format_io import SUPPORTED_FORMATS
 from data_io.nifti_io import NiftiWriter, NiftiReader, contains_nifti_extension
+from data_io.format_io import ImageDataFormat, DataReader, DataWriter
 
 
-def get_writer(data_format: str):
+def get_writer(data_format: ImageDataFormat) -> DataWriter:
     if data_format not in SUPPORTED_FORMATS:
         raise ValueError('Only formats %s are supported' % str(SUPPORTED_FORMATS))
 
-    if data_format == 'nifti':
+    if data_format == ImageDataFormat.nifti:
         return NiftiWriter()
-    elif data_format == 'dicom':
+    elif data_format == ImageDataFormat.dicom:
         return DicomWriter()
 
 
-def get_reader(data_format: str):
+def get_reader(data_format: ImageDataFormat) -> DataReader:
     if data_format not in SUPPORTED_FORMATS:
         raise ValueError('Only formats %s are supported' % str(SUPPORTED_FORMATS))
 
-    if data_format == 'nifti':
+    if data_format == ImageDataFormat.nifti:
         return NiftiReader()
-    elif data_format == 'dicom':
+    elif data_format == ImageDataFormat.dicom:
         return DicomReader()
 
 
-def get_data_format(file_or_dirname: str):
+def get_data_format(file_or_dirname: str) -> ImageDataFormat:
     # if a directory, assume that format is dicom
     filename_base, ext = os.path.splitext(file_or_dirname)
     if ext == '' or contains_dicom_extension(file_or_dirname):
-        return 'dicom'
+        return ImageDataFormat.dicom
 
     if contains_nifti_extension(file_or_dirname):
-        return 'nifti'
+        return ImageDataFormat.nifti
 
     raise ValueError('This data format supported: %s' % file_or_dirname)
 
 
-def convert_format_filename(file_or_dirname: str, new_data_format: str):
+def convert_format_filename(file_or_dirname: str, new_data_format: ImageDataFormat) -> str:
     if new_data_format not in SUPPORTED_FORMATS:
         raise ValueError('Only formats %s are supported' % str(SUPPORTED_FORMATS))
 
@@ -46,12 +47,12 @@ def convert_format_filename(file_or_dirname: str, new_data_format: str):
     if current_format == new_data_format:
         return file_or_dirname
 
-    if current_format == 'dicom' and new_data_format == 'nifti':
+    if current_format == ImageDataFormat.dicom and new_data_format == ImageDataFormat.nifti:
         dirname = os.path.dirname(file_or_dirname)
         basename = os.path.basename(file_or_dirname)
         return os.path.join(dirname, '%s.nii.gz' % basename)
 
-    if current_format == 'nifti' and new_data_format == 'dicom':
+    if current_format == ImageDataFormat.nifti and new_data_format == ImageDataFormat.dicom:
         dirname = os.path.dirname(file_or_dirname)
         basename = os.path.basename(file_or_dirname)
         basename, ext = os.path.splitext(basename)
