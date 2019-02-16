@@ -134,12 +134,7 @@ class Tissue(ABC):
 
         # try to load mask, if file exists
         try:
-            msk = fio_utils.generic_load(mask_filepath)
-            assert type(msk) is MedicalVolume or (
-                        type(msk) is list and len(msk) is 1), "Only one volume can be loaded as the mask"
-            if type(msk) is list:
-                msk = msk[0]
-
+            msk = fio_utils.generic_load(mask_filepath, expected_num_volumes=1)
             self.set_mask(msk)
         except FileNotFoundError:
             # do nothing

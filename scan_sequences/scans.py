@@ -13,6 +13,9 @@ import defaults
 import file_constants as fc
 from data_io.dicom_io import DicomReader
 from data_io.med_volume import MedicalVolume
+from data_io.nifti_io import NiftiReader
+from data_io import format_io_utils as fio_utils
+
 from utils import dicom_utils
 from utils import io_utils
 
@@ -238,7 +241,6 @@ class NonTargetSequence(ScanSequence):
         """
         pass
 
-    # TODO: fix split volumes
     def __split_volumes__(self, expected_num_subvolumes):
         """
         Split the volumes into multiple subvolumes based on the echo time
@@ -252,44 +254,30 @@ class NonTargetSequence(ScanSequence):
                     e.g. {0: MedicalVolume A, 1:MedicalVolume B}, [10, 50]
                             10 (at index 0 in the --> key 0 --> MedicalVolume A
                             50 --> key 1 --> MedicalVolume B
-
-        :raise ValueError:
-                    1. If subvolume sizes are not equal - aka len(ref_dicoms) % num_echos != 0
-                    2. If # slices in subvolume != len(ref_dicoms) % num_echos
         """
         volumes = self.volumes
 
-        assert len(volumes) == expected_num_subvolumes, "Expected %d subvolumes but got %d" % (
-        expected_num_subvolumes, len(volumes))
-
+        assert len(volumes) == expected_num_subvolumes, "Expected %d subvolumes but got %d" % (expected_num_subvolumes,
+                                                                                               len(volumes))
         num_echo_times = len(volumes)
         echo_times = []
 
         for i in range(num_echo_times):
             echo_time = float(volumes[i].headers[0].EchoTime)
-            echo_times.append(echo_time)
+            echo_times.append((i, echo_time))
 
-        # rank echo times from 0 --> num_echos-1
-        ordered_echo_times = natsorted(list(set(echo_times)))
-
-        assert num_echo_times == expected_num_subvolumes
+        # Sort list of tuples (ind, echo_time) by echo_time
+        ordered_echo_times = sorted(echo_times, key=lambda x: x[1])
 
         ordered_subvolumes_dict = dict()
 
         for i in range(num_echo_times):
-            echo_time = ordered_echo_times[i]
-            inds = np.where(np.asarray(echo_times) == echo_time)
-            inds = inds[0]
-
-            ordered_subvolumes_dict[i] = inds
+            volume_ind, echo_time = ordered_echo_times[i]
+            ordered_subvolumes_dict[i] = volumes[volume_ind]
 
         subvolumes_dict = ordered_subvolumes_dict
 
-        for key in subvolumes_dict.keys():
-            ind = subvolumes_dict[key]
-            sv = volumes[ind]
-
-            subvolumes_dict[key] = sv
+        echo_times = [x for _, x in echo_times]
 
         return subvolumes_dict, echo_times
 
@@ -317,6 +305,7 @@ class NonTargetSequence(ScanSequence):
 
         indices = []
         subvolumes = []
+        nifti_reader = NiftiReader()
         for subfile in subfiles:
             subfile_nums = re.findall(r"[-+]?\d*\.\d+|\d+", subfile)
             if len(subfile_nums) == 0:
@@ -326,7 +315,7 @@ class NonTargetSequence(ScanSequence):
             indices.append(subfile_num)
 
             filepath = os.path.join(interregistered_dirpath, subfile)
-            subvolume = io_utils.load_nifti(filepath)
+            subvolume = nifti_reader.load(filepath)
 
             subvolumes.append(subvolume)
 
@@ -363,7 +352,7 @@ class NonTargetSequence(ScanSequence):
         if dil_threshold < 0 or dil_threshold > 1:
             raise ValueError('dil_threshold must be in range [0, 1]')
 
-        mask = io_utils.load_nifti(mask_path)
+        mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
 
         dilated_mask = sni.gaussian_filter(np.asarray(mask.volume, dtype=np.float32),
                                            sigma=dil_rate) > dil_threshold
@@ -371,13 +360,16 @@ class NonTargetSequence(ScanSequence):
                                 dtype=np.int8)
         fixed_mask_filepath = os.path.join(io_utils.check_dir(temp_path), 'dilated-mask.nii.gz')
 
-        dilated_mask_volume = MedicalVolume(fixed_mask, mask.pixel_spacing)
+        dilated_mask_volume = MedicalVolume(fixed_mask,
+                                            pixel_spacing=mask.pixel_spacing,
+                                            orientation=mask.orientation,
+                                            scanner_origin=mask.scanner_origin)
         dilated_mask_volume.save_volume(fixed_mask_filepath)
 
         return fixed_mask_filepath
 
     def __interregister_base_file__(self, base_image_info, target_path, temp_path, mask_path=None,
-                                    parameter_files=[fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE]):
+                                    parameter_files=(fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE)):
         """Interregister the base moving image to the target image
 
         :param base_image_info: tuple of filepath, echo index (eg. 'scans/000.nii.gz, 0)

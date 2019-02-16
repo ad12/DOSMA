@@ -65,7 +65,7 @@ def get_filepath_variations(file_or_dirname: str):
     return filepath_variations
 
 
-def generic_load(file_or_dirname):
+def generic_load(file_or_dirname: str, expected_num_volumes=None):
     possible_filepaths = get_filepath_variations(file_or_dirname)
     exist_path = None
 
@@ -81,4 +81,17 @@ def generic_load(file_or_dirname):
 
     io_format = get_data_format(exist_path)
     r = get_reader(io_format)
-    return r.load(exist_path)
+    vols = r.load(exist_path)
+
+    if expected_num_volumes is None:
+        return vols
+
+    if type(vols) is not list:
+        vols = [vols]
+
+    assert len(vols) == expected_num_volumes, "Expected %d volumes, got %d" % (expected_num_volumes, len(vols))
+
+    if len(vols) == 1:
+        return vols[0]
+
+    return vols

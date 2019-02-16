@@ -6,6 +6,7 @@ from scipy import optimize as sop
 
 import defaults
 from data_io.med_volume import MedicalVolume
+from copy import deepcopy
 
 
 class Fit(ABC):
@@ -52,22 +53,25 @@ class MonoExponentialFit(Fit):
         """Fit data used to initialize object
         :return: tuple of MedicalVolumes of time-constant estimate, r2 vals
         """
-        original_shape = None
         svs = []
         msk = None
+
+        subvolumes = self.subvolumes
+        for sv in subvolumes[1:]:
+            assert subvolumes[0].is_same_dimensions(sv), "Dimension mismatch"
+
         if self.mask:
+            assert subvolumes[0].is_same_dimensions(self.mask), "Mask dimension mismatch"
             msk = self.mask.volume
             msk = msk.reshape(1, -1)
 
+        original_shape = subvolumes[0].shape
         pixel_spacing = self.subvolumes[0].pixel_spacing
+        orientation = self.subvolumes[0].orientation
+        scanner_origin = self.subvolumes[0].scanner_volume
 
         for i in range(len(self.ts)):
-            sv = self.subvolumes[i].volume
-
-            if original_shape is None:
-                original_shape = sv.shape
-            else:
-                assert (sv.shape == original_shape)
+            sv = subvolumes[i].volume
 
             svr = sv.reshape((1, -1))
             if msk is not None:
@@ -82,9 +86,10 @@ class MonoExponentialFit(Fit):
         map_unfiltered = vals.reshape(original_shape)
         r_squared = r_squared.reshape(original_shape)
 
-        tc_map = map_unfiltered * (r_squared > defaults.DEFAULT_R2_THRESHOLD)
+        # All accepted values must meet an Rsquared threshold of DEFAULT_R2_THRESHOLD
+        tc_map = map_unfiltered * (r_squared >= defaults.DEFAULT_R2_THRESHOLD)
 
-        # Filter calculated T1-rho values that are below 0ms and over 100ms
+        # Filter calculated values that are below limit bounds
         tc_map[tc_map <= self.bounds[0]] = np.nan
         tc_map = np.nan_to_num(tc_map)
         tc_map[tc_map > self.bounds[1]] = np.nan
@@ -92,7 +97,16 @@ class MonoExponentialFit(Fit):
 
         tc_map = np.around(tc_map, self.decimal_precision)
 
-        return MedicalVolume(tc_map, pixel_spacing), MedicalVolume(r_squared, pixel_spacing)
+        time_constant_volume = MedicalVolume(tc_map,
+                                             pixel_spacing=pixel_spacing,
+                                             orientation=orientation,
+                                             scanner_origin=scanner_origin)
+        rsquared_volume = MedicalVolume(r_squared,
+                                        pixel_spacing=pixel_spacing,
+                                        orientation=orientation,
+                                        scanner_origin=scanner_origin)
+
+        return time_constant_volume, rsquared_volume
 
 
 __EPSILON__ = 1e-8

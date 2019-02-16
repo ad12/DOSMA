@@ -1,5 +1,5 @@
-import nibabel.orientations as nibo
 import numpy as np
+import nibabel.orientations as nibo
 
 from data_io.orientation import get_transpose_inds, get_flip_inds, __orientation_standard_to_nib__
 
@@ -60,11 +60,20 @@ class MedicalVolume():
         if type(mv) != type(self):
             raise TypeError('type(mv) must be %s' % str(type(self)))
 
-        # TODO: check for headers
         return self.is_same_dimensions(mv) and (mv.volume == self.volume).all()
 
     def is_same_dimensions(self, mv):
         if type(mv) != type(self):
             raise TypeError('type(mv) must be %s' % str(type(self)))
 
-        return mv.pixel_spacing == self.pixel_spacing and mv.orientation == self.orientation and mv.scanner_origin == self.scanner_origin
+        return mv.pixel_spacing == self.pixel_spacing and mv.orientation == self.orientation and mv.scanner_origin == self.scanner_origin and mv.volume.shape == self.volume.shape
+
+    def match_orientation(self, mv):
+        if type(mv) != type(self):
+            raise TypeError('type(mv) must be %s' % str(type(self)))
+
+        mv.reformat(self.orientation)
+
+    def match_orientation_batch(self, mvs):
+        for mv in mvs:
+            self.match_orientation(mv)

@@ -8,7 +8,9 @@ from scan_sequences.scans import NonTargetSequence
 from utils import io_utils
 from utils import quant_vals as qv
 from utils.fits import MonoExponentialFit
+from data_io.nifti_io import NiftiReader
 
+from data_io import format_io_utils as fio_utils
 __EXPECTED_NUM_SPIN_LOCK_TIMES__ = 4
 __R_SQUARED_THRESHOLD__ = 0.9
 __INITIAL_T1_RHO_VAL__ = 70.0
@@ -23,6 +25,8 @@ class CubeQuant(NonTargetSequence):
 
     def __init__(self, dicom_path=None, dicom_ext=None, load_path=None):
         self.subvolumes = None
+        self.spin_lock_times = None
+        self.intraregistered_data = None
         super().__init__(dicom_path, dicom_ext, load_path=load_path)
 
         if dicom_path is not None:
@@ -58,6 +62,7 @@ class CubeQuant(NonTargetSequence):
                                                                              parameter_files=parameter_files)
         warped_files = [(base_spin_lock_time, warped_file)]
 
+        nifti_reader = NiftiReader()
         # Load the transformation file. Apply same transform to the remaining images
         for spin_lock_time, filename in files:
             warped_file = self.__apply_transform__((filename, spin_lock_time),
@@ -69,7 +74,7 @@ class CubeQuant(NonTargetSequence):
         # copy each of the interregistered warped files to their own output
         subvolumes = dict()
         for spin_lock_time, warped_file in warped_files:
-            subvolumes[spin_lock_time] = io_utils.load_nifti(warped_file)
+            subvolumes[spin_lock_time] = nifti_reader.load(warped_file)
 
         self.subvolumes = subvolumes
 
@@ -172,7 +177,7 @@ class CubeQuant(NonTargetSequence):
         return {'BASE': (ordered_spin_lock_time_indices[0], spin_lock_nii_files[0]),
                 'FILES': intraregistered_files}
 
-    def save_data(self, base_save_dirpath):
+    def save_data(self, base_save_dirpath: str, data_format='nifti'):
         super().save_data(base_save_dirpath)
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
 
@@ -180,10 +185,12 @@ class CubeQuant(NonTargetSequence):
         interregistered_dirpath = os.path.join(base_save_dirpath, 'interregistered')
 
         for spin_lock_time_index in self.subvolumes.keys():
-            filepath = os.path.join(interregistered_dirpath, '%03d.nii.gz' % spin_lock_time_index)
+            nii_filepath = os.path.join(interregistered_dirpath, '%03d.nii.gz' % spin_lock_time_index)
+            filepath = fio_utils.convert_format_filename(nii_filepath, data_format)
+
             self.subvolumes[spin_lock_time_index].save_volume(filepath)
 
-    def load_data(self, base_load_dirpath):
+    def load_data(self, base_load_dirpath: str):
         super().load_data(base_load_dirpath)
         base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
 

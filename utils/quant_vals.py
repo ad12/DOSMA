@@ -73,12 +73,7 @@ class QuantitativeValue(ABC):
 
     def load_data(self, dirpath):
         filepath = os.path.join(dirpath, self.NAME, '%s.nii.gz' % self.NAME)
-        qv_volume = fio_utils.generic_load(filepath)
-        assert type(qv_volume) is MedicalVolume or (
-                type(qv_volume) is list and len(qv_volume) is 1), "Only one volume can be loaded as the qv_volume"
-        if type(qv_volume) is list:
-            msk = qv_volume[0]
-
+        qv_volume = fio_utils.generic_load(filepath, expected_num_volumes=1)
         self.volumetric_map = qv_volume
 
     def add_additional_volume(self, name, volume):
