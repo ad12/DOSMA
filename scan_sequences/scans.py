@@ -25,7 +25,7 @@ from tissues.tissue import Tissue
 class ScanSequence(ABC):
     NAME = ''
 
-    def __init__(self, dicom_path=None, dicom_ext=None, load_path=None):
+    def __init__(self, dicom_path=None, load_path=None):
         """
         :param dicom_path: a path to the folder containing all dicoms for this scan
         :param dicom_ext: extension of these dicom files

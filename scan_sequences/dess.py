@@ -33,8 +33,8 @@ class Dess(TargetSequence):
 
     use_rms = False
 
-    def __init__(self, dicom_path, dicom_ext=None, load_path=None):
-        super().__init__(dicom_path, dicom_ext, load_path)
+    def __init__(self, dicom_path, load_path=None):
+        super().__init__(dicom_path=dicom_path, load_path=load_path)
 
         if not self.validate_dess():
             raise ValueError('dicoms in \'%s\' are not acquired from DESS sequence' % self.dicom_path)

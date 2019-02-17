@@ -22,10 +22,10 @@ class Cones(NonTargetSequence):
     """Handles analysis for Cones scan sequence """
     NAME = 'cones'
 
-    def __init__(self, dicom_path=None, dicom_ext=None, load_path=None):
+    def __init__(self, dicom_path=None, load_path=None):
         self.subvolumes = None
         self.echo_times = []
-        super().__init__(dicom_path, dicom_ext)
+        super().__init__(dicom_path=dicom_path, load_path=load_path)
 
         if dicom_path is not None:
             self.subvolumes, self.echo_times = self.__split_volumes__(__EXPECTED_NUM_ECHO_TIMES__)

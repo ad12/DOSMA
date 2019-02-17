@@ -24,11 +24,11 @@ __T1_RHO_DECIMAL_PRECISION__ = 3
 class CubeQuant(NonTargetSequence):
     NAME = 'cubequant'
 
-    def __init__(self, dicom_path=None, dicom_ext=None, load_path=None):
+    def __init__(self, dicom_path=None, load_path=None):
         self.subvolumes = None
         self.spin_lock_times = None
         self.intraregistered_data = None
-        super().__init__(dicom_path, dicom_ext, load_path=load_path)
+        super().__init__(dicom_path=dicom_path, load_path=load_path)
 
         if dicom_path is not None:
             self.subvolumes, self.spin_lock_times = self.__split_volumes__(__EXPECTED_NUM_SPIN_LOCK_TIMES__)
