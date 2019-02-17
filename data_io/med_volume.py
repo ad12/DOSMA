@@ -4,6 +4,7 @@ import nibabel.orientations as nibo
 from data_io.orientation import get_transpose_inds, get_flip_inds, __orientation_standard_to_nib__
 from data_io.format_io import ImageDataFormat
 
+
 class MedicalVolume():
     """Wrapper for 3D volumes """
 
@@ -15,11 +16,11 @@ class MedicalVolume():
         :param orientation: tuple of standardized orientation in RAS+ format
         :param scanner_origin: origin in scanner coordinate system
         """
-        self.volume = volume
-        self.pixel_spacing = pixel_spacing
-        self.orientation = orientation
-        self.scanner_origin = scanner_origin
-        self.headers = headers
+        self._volume = volume
+        self.pixel_spacing = tuple(pixel_spacing)
+        self.orientation = tuple(orientation)
+        self.scanner_origin = tuple(scanner_origin)
+        self._headers = headers
 
     def save_volume(self, filepath, data_format: ImageDataFormat = ImageDataFormat.nifti):
         """
@@ -33,6 +34,7 @@ class MedicalVolume():
 
     def reformat(self, new_orientation: tuple):
         # Check if new_orientation is the same as current orientation
+        assert type(new_orientation) is tuple, "Orientation must be a tuple"
         if new_orientation == self.orientation:
             return
 
@@ -50,9 +52,10 @@ class MedicalVolume():
         for i in range(len(scanner_origin)):
             if i in flip_axs_inds:
                 r_ind = int(nib_coords[i, 0])
-                scanner_origin[r_ind] = -pixel_spacing[i] * (volume.shape[i] - 1) + scanner_origin[r_ind]
+                alpha_val = int(nib_coords[i,1])
+                scanner_origin[r_ind] = alpha_val*pixel_spacing[i] * (volume.shape[i] - 1) + scanner_origin[r_ind]
 
-        self.volume = volume
+        self._volume = volume
         self.pixel_spacing = tuple(pixel_spacing)
         self.orientation = tuple(new_orientation)
         self.scanner_origin = tuple(scanner_origin)
@@ -78,3 +81,24 @@ class MedicalVolume():
     def match_orientation_batch(self, mvs):
         for mv in mvs:
             self.match_orientation(mv)
+
+    # Properties
+    @property
+    def volume(self):
+        return self._volume
+
+    @volume.setter
+    def volume(self, value: np.ndarray):
+        assert value.ndim == 3, "Volume must be 3D"
+
+        # if the volume is of a different shape, the headers are no longer valid, so delete
+        # all reorientations are done as part of MedicalVolume, so reorientations are permitted
+        # however, external setting of the volume to a different shape array is not allowed
+        if self._volume.shape != value.shape:
+            self._headers = None
+
+        self._volume = value
+
+    @property
+    def headers(self):
+        return self._headers

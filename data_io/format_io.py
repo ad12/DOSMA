@@ -17,7 +17,7 @@ class DataReader(ABC):
     data_format_code = ImageDataFormat.unsupported
 
     @abstractmethod
-    def load(self, filepath):
+    def load(self, filepath: str):
         pass
 
 class DataWriter(ABC):
@@ -26,6 +26,7 @@ class DataWriter(ABC):
     """
     data_format_code = ImageDataFormat.unsupported
 
+    from data_io.med_volume import MedicalVolume
     @abstractmethod
-    def save(self, im, filepath):
+    def save(self, im: MedicalVolume, filepath: str):
         pass

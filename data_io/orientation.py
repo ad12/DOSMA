@@ -57,9 +57,9 @@ def get_transpose_inds(curr_orientation: tuple, new_orientation: tuple):
     if set(curr_orientation_ids) != set(new_orientation_ids):
         raise ValueError("Orientation mismatch: Both curr_orientation and new_orientation must contain the same axes")
 
-    transpose_inds = [new_orientation_ids.index(co) for co in curr_orientation_ids]
+    transpose_inds = [curr_orientation_ids.index(n_o) for n_o in new_orientation_ids]
 
-    return transpose_inds
+    return tuple(transpose_inds)
 
 
 def get_flip_inds(curr_orientation: tuple, new_orientation: tuple):

@@ -50,6 +50,7 @@ class NiftiReader(DataReader):
 
 class NiftiWriter(DataWriter):
     data_format_code = ImageDataFormat.nifti
+
     def __get_nib_affine__(self, im: MedicalVolume):
         pixel_spacing = im.pixel_spacing
         origin = im.scanner_origin

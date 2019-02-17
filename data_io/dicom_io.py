@@ -8,6 +8,9 @@ from natsort import natsorted
 from data_io import orientation as stdo
 from data_io.format_io import DataReader, DataWriter, ImageDataFormat
 from data_io.med_volume import MedicalVolume
+from math import log10, ceil
+
+from utils import io_utils
 
 __DICOM_EXTENSIONS__ = ('.dcm')
 TOTAL_NUM_ECHOS_KEY = (0x19, 0x107e)
@@ -52,6 +55,7 @@ class DicomReader(DataReader):
         - we will call it LPS+, such that letters correspond to increasing end of axis
     """
     data_format_code = ImageDataFormat.nifti
+
     def load(self, dicom_dirpath):
         """Load dicoms into numpy array
 
@@ -123,6 +127,47 @@ class DicomReader(DataReader):
 class DicomWriter(DataWriter):
     data_format_code = ImageDataFormat.nifti
 
+    def __write_dicom_file__(self, np_slice: np.ndarray, header: pydicom.FileDataset, filepath: str):
+        expected_dimensions = header.Rows, header.Columns
+        assert np_slice.shape == expected_dimensions, "In-plane dimension mismatch - expected shape %s, got %s" % (str(expected_dimensions),
+                                                                                                                   str(np_slice.shape))
+
+        header.PixelData = np_slice.tobytes()
+        header.save_as(filepath)
+
+    def save(self, im, filepath):
+        # Get orientation indicated by headers
+        headers = im.headers
+        if headers is None:
+            raise ValueError('MedicalVolume headers must be initialized to save as a dicom')
+
+        orientation, scanner_origin = LPSplus_to_RASplus(headers)
+
+        # Currently do not support mismatch in scanner_origin
+        if tuple(scanner_origin) != im.scanner_origin:
+            raise ValueError('Scanner origin mismatch. Currently we do not handle mismatch in scanner origin (i.e. cannot flip across axis)')
+
+        # reformat medical volume to expected orientation specified by dicom headers
+        # store original orientation so we can undo the dicom-specific reformatting
+        original_orientation = im.orientation
+
+        im.reformat(orientation)
+        volume = im.volume
+        assert volume.shape[2] == len(headers), "Dimension mismatch - %d slices but %d headers" % (volume.shape[-1], len(headers))
+
+        # check if filepath exists
+        filepath = io_utils.check_dir(filepath)
+
+        num_slices = len(headers)
+        filename_format = 'I%0' + str(max(4, ceil(log10(num_slices)))) + 'd.dcm'
+
+        for s in range(num_slices):
+            s_filepath = os.path.join(filepath, filename_format % (s+1))
+            self.__write_dicom_file__(volume[..., s], headers[s], s_filepath)
+
+        # reformat image to original orientation (before saving)
+        # we do this, because saving should not affect the existing state of any variable
+        im.reformat(original_orientation)
 
 if __name__ == '__main__':
     dicom_filepath = '../dicoms/healthy07/007'
