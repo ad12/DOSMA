@@ -24,7 +24,6 @@ DICOM_KEY = 'dicom'
 MASK_KEY = 'mask'
 SAVE_KEY = 'save'
 LOAD_KEY = 'load'
-EXT_KEY = 'ext'
 GPU_KEY = 'gpu'
 
 SCAN_KEY = 'scan'
@@ -136,7 +135,7 @@ def handle_dess(vargin):
 
     tissues = vargin['tissues']
 
-    scan = Dess(dicom_path=vargin[DICOM_KEY], dicom_ext=vargin[EXT_KEY], load_path=vargin[LOAD_KEY])
+    scan = Dess(dicom_path=vargin[DICOM_KEY], load_path=vargin[LOAD_KEY])
 
     scan.use_rms = vargin[USE_RMS_KEY] if USE_RMS_KEY in vargin.keys() else False
 
@@ -160,7 +159,6 @@ def handle_dess(vargin):
 def handle_cubequant(vargin):
     print('\nAnalyzing cubequant...')
     scan = CubeQuant(dicom_path=vargin[DICOM_KEY],
-                     dicom_ext=vargin[EXT_KEY],
                      load_path=vargin[LOAD_KEY])
 
     scan.tissues = vargin['tissues']
@@ -189,7 +187,6 @@ def handle_cubequant(vargin):
 def handle_cones(vargin):
     print('\nAnalyzing cones...')
     scan = Cones(dicom_path=vargin[DICOM_KEY],
-                 dicom_ext=vargin[EXT_KEY],
                  load_path=vargin[LOAD_KEY])
 
     scan.tissues = vargin['tissues']
@@ -239,11 +236,7 @@ def parse_args():
     parser.add_argument('-s', '--%s' % SAVE_KEY, metavar='S', type=str, default=None, nargs='?',
                         help='path to data directory to save to. Default: L/D')
 
-    # If user wants to filter by extension, allow them to specify extension
-    parser.add_argument('-e', '--%s' % EXT_KEY, metavar='E', type=str, default='dcm', nargs='?',
-                        help='extension of dicom files. Default: \'dcm\'')
-
-    parser.add_argument('--%s' % GPU_KEY, metavar='G', type=str, default=None, nargs='?', help='gpu id. Default: None')
+    parser.add_argument('-%s' % GPU_KEY, metavar='G', type=str, default=None, nargs='?', help='gpu id. Default: None')
 
     subparsers = parser.add_subparsers(help='sub-command help', dest=SCAN_KEY)
 
