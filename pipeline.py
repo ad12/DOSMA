@@ -15,6 +15,7 @@ from scan_sequences.cones import Cones
 from scan_sequences.cube_quant import CubeQuant
 from scan_sequences.dess import Dess
 from utils.quant_vals import QuantitativeValues as QV
+from data_io.format_io import ImageDataFormat, SUPPORTED_FORMATS
 
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
@@ -24,7 +25,7 @@ DICOM_KEY = 'dicom'
 MASK_KEY = 'mask'
 SAVE_KEY = 'save'
 LOAD_KEY = 'load'
-EXT_KEY = 'ext'
+DATA_FORMAT_KEY = 'format'
 GPU_KEY = 'gpu'
 
 SCAN_KEY = 'scan'
@@ -136,7 +137,7 @@ def handle_dess(vargin):
 
     tissues = vargin['tissues']
 
-    scan = Dess(dicom_path=vargin[DICOM_KEY], dicom_ext=vargin[EXT_KEY], load_path=vargin[LOAD_KEY])
+    scan = Dess(dicom_path=vargin[DICOM_KEY], load_path=vargin[LOAD_KEY])
 
     scan.use_rms = vargin[USE_RMS_KEY] if USE_RMS_KEY in vargin.keys() else False
 
@@ -149,10 +150,10 @@ def handle_dess(vargin):
             print('Calculating T2 - %s' % tissue.FULL_NAME)
             scan.generate_t2_map(tissue)
 
-    scan.save_data(vargin[SAVE_KEY])
+    scan.save_data(vargin[SAVE_KEY], data_format=vargin[DATA_FORMAT_KEY])
 
     for tissue in tissues:
-        tissue.save_data(vargin[SAVE_KEY])
+        tissue.save_data(vargin[SAVE_KEY], data_format=vargin[DATA_FORMAT_KEY])
 
     return scan
 
@@ -160,7 +161,6 @@ def handle_dess(vargin):
 def handle_cubequant(vargin):
     print('\nAnalyzing cubequant...')
     scan = CubeQuant(dicom_path=vargin[DICOM_KEY],
-                     dicom_ext=vargin[EXT_KEY],
                      load_path=vargin[LOAD_KEY])
 
     scan.tissues = vargin['tissues']
@@ -172,16 +172,16 @@ def handle_cubequant(vargin):
 
         scan.interregister(target_scan, vargin[TARGET_MASK_KEY])
 
-    scan.save_data(vargin[SAVE_KEY])
+    scan.save_data(vargin[SAVE_KEY], data_format=vargin[DATA_FORMAT_KEY])
 
     if vargin[T1_RHO_Key]:
         print('\nCalculating T1_rho')
         scan.generate_t1_rho_map()
 
-    scan.save_data(vargin[SAVE_KEY])
+    scan.save_data(vargin[SAVE_KEY], data_format=vargin[DATA_FORMAT_KEY])
 
     for tissue in scan.tissues:
-        tissue.save_data(vargin[SAVE_KEY])
+        tissue.save_data(vargin[SAVE_KEY], data_format=vargin[DATA_FORMAT_KEY])
 
     return scan
 
@@ -189,7 +189,6 @@ def handle_cubequant(vargin):
 def handle_cones(vargin):
     print('\nAnalyzing cones...')
     scan = Cones(dicom_path=vargin[DICOM_KEY],
-                 dicom_ext=vargin[EXT_KEY],
                  load_path=vargin[LOAD_KEY])
 
     scan.tissues = vargin['tissues']
@@ -198,17 +197,17 @@ def handle_cones(vargin):
         target_scan = vargin[TARGET_SCAN_KEY]
         scan.interregister(target_scan[0], vargin[TARGET_MASK_KEY])
 
-    scan.save_data(vargin[SAVE_KEY])
+    scan.save_data(vargin[SAVE_KEY], data_format=vargin[DATA_FORMAT_KEY])
 
     load_filepath = vargin[LOAD_KEY] if vargin[LOAD_KEY] else vargin[SAVE_KEY]
     if vargin[T2_STAR_KEY]:
         print('Calculating T2_star')
         scan.generate_t2_star_map()
 
-    scan.save_data(vargin[SAVE_KEY])
+    scan.save_data(vargin[SAVE_KEY], data_format=vargin[DATA_FORMAT_KEY])
 
     for tissue in scan.tissues:
-        tissue.save_data(vargin[SAVE_KEY])
+        tissue.save_data(vargin[SAVE_KEY], data_format=vargin[DATA_FORMAT_KEY])
 
     return scan
 
@@ -239,11 +238,12 @@ def parse_args():
     parser.add_argument('-s', '--%s' % SAVE_KEY, metavar='S', type=str, default=None, nargs='?',
                         help='path to data directory to save to. Default: L/D')
 
-    # If user wants to filter by extension, allow them to specify extension
-    parser.add_argument('-e', '--%s' % EXT_KEY, metavar='E', type=str, default='dcm', nargs='?',
-                        help='extension of dicom files. Default: \'dcm\'')
+    parser.add_argument('-df', '--%s' % DATA_FORMAT_KEY, metavar='F', type=str,
+                        default=defaults.DEFAULT_OUTPUT_IMAGE_DATA_FORMAT.name, nargs='?',
+                        choices=[data_format.name for data_format in SUPPORTED_FORMATS],
+                        help='data format to store information in. Default: NIfTI')
 
-    parser.add_argument('--%s' % GPU_KEY, metavar='G', type=str, default=None, nargs='?', help='gpu id. Default: None')
+    parser.add_argument('-%s' % GPU_KEY, metavar='G', type=str, default=None, nargs='?', help='gpu id. Default: None')
 
     subparsers = parser.add_subparsers(help='sub-command help', dest=SCAN_KEY)
 
@@ -322,6 +322,7 @@ def parse_args():
 
     tissues = parse_tissues(vargin)
     vargin['tissues'] = tissues
+    vargin[DATA_FORMAT_KEY] = ImageDataFormat[vargin[DATA_FORMAT_KEY]]
 
     # Call func for specific scan (dess, cubequant, cones, etc)
     scan_or_tissues = args.func(vargin)

@@ -1,10 +1,15 @@
+from copy import deepcopy
+
 import keras.backend as K
 import numpy as np
 from keras.layers import BatchNormalization as BN
 from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, Concatenate
 from keras.models import Model
 
+from data_io.med_volume import MedicalVolume
+from data_io.orientation import SAGITTAL
 from models.model import SegModel
+from utils import dicom_utils
 
 
 class Unet2D(SegModel):
@@ -97,12 +102,17 @@ class Unet2D(SegModel):
 
         return model
 
-    def generate_mask(self, volume):
-        if type(volume) is not np.ndarray or len(volume.shape) != 3:
-            raise ValueError("Volume must be a 3D numpy array")
+    def generate_mask(self, volume: MedicalVolume):
+        vol_copy = deepcopy(volume)
 
-        # reshape volume to be (slice, x, y, 1)
-        v = np.transpose(volume, (2, 0, 1))
+        # reorient to the sagittal plane
+        vol_copy.reformat(SAGITTAL)
+
+        vol = vol_copy.volume
+        vol = dicom_utils.whiten_volume(vol)
+
+        # reshape volumes to be (slice, x, y, 1)
+        v = np.transpose(vol, (2, 0, 1))
         v = np.expand_dims(v, axis=-1)
         model = self.keras_model
 
@@ -113,4 +123,10 @@ class Unet2D(SegModel):
         mask = np.transpose(np.squeeze(mask, axis=-1), (1, 2, 0))
 
         K.clear_session()
-        return mask
+
+        vol_copy.volume = mask
+
+        # reorient to match with original volume
+        vol_copy.reformat(volume.orientation)
+
+        return vol_copy

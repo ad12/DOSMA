@@ -228,7 +228,7 @@ class UtilsTest(unittest.TestCase):
         print("Testing: ", self._testMethodName)
 
     def test_simpleitk_io(self):
-        # Read and write dicom volume using simpleitk
+        # Read and write dicom volumes using simpleitk
         arr, refs_dicom, spacing = dicom_utils.load_dicom(DESS_DICOM_PATH, 'dcm')
 
         filepath = './dicoms/ex.nii.gz'

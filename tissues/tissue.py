@@ -1,9 +1,13 @@
 import os
 from abc import ABC, abstractmethod
 
-from med_objects.med_volume import MedicalVolume
+from data_io import format_io_utils as fio_utils
+from data_io.med_volume import MedicalVolume
+from data_io.orientation import SAGITTAL
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues, QuantitativeValue
+from data_io.format_io import ImageDataFormat
+from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 
 WEIGHTS_FILE_EXT = 'h5'
 
@@ -94,7 +98,7 @@ class Tissue(ABC):
 
         return weights_file
 
-    def save_data(self, save_dirpath):
+    def save_data(self, save_dirpath, data_format: ImageDataFormat=DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
         """Save data for tissue
 
         Saves mask and quantitative values associated with this tissue
@@ -103,20 +107,27 @@ class Tissue(ABC):
                                             e.g. femoral_cartilage.py
 
         :param save_dirpath: base path to save data
+        :param data_format: an ImageDataFormat enum specifying which format to save data in
         """
         save_dirpath = self.__save_dirpath__(save_dirpath)
 
         if self.__mask__ is not None:
             mask_filepath = os.path.join(save_dirpath, '%s.nii.gz' % self.STR_ID)
-            self.__mask__.save_volume(mask_filepath)
+            mask_filepath = fio_utils.convert_format_filename(mask_filepath, data_format)
+            self.__mask__.save_volume(mask_filepath, data_format=data_format)
 
         for qv in self.quantitative_values:
-            qv.save_data(save_dirpath)
+            qv.save_data(save_dirpath, data_format)
 
         self.__save_quant_data__(save_dirpath)
 
     @abstractmethod
     def __save_quant_data__(self, dirpath):
+        """
+        Save quantitative data generated for this tissue
+        :param dirpath: Path to directory where to save quantitative information
+        :return:
+        """
         pass
 
     def load_data(self, load_dirpath):
@@ -131,8 +142,12 @@ class Tissue(ABC):
         mask_filepath = os.path.join(load_dirpath, '%s.nii.gz' % self.STR_ID)
 
         # try to load mask, if file exists
-        if os.path.isfile(mask_filepath):
-            self.set_mask(io_utils.load_nifti(mask_filepath))
+        try:
+            msk = fio_utils.generic_load(mask_filepath, expected_num_volumes=1)
+            self.set_mask(msk)
+        except FileNotFoundError:
+            # do nothing
+            pass
 
         self.quantitative_values = QuantitativeValue.load_qvs(load_dirpath)
 
@@ -148,6 +163,7 @@ class Tissue(ABC):
         :param mask: a MedicalVolume
         """
         assert type(mask) is MedicalVolume, "mask for tissue must be of type MedicalVolume"
+        mask.reformat(SAGITTAL)
         self.__mask__ = mask
 
     def get_mask(self):
