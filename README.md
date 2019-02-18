@@ -4,7 +4,7 @@ This pipeline is an open-source pipeline for MRI image segmentation, registratio
 
 The current code uses the [command line interface](https://www.computerhope.com/jargon/c/commandi.htm) for use. Pull requests for a GUI to command-line translation are welcome.
 
-If you are using any part of this code, please cite the work below:
+## How to Cite
 ```
 @misc{arjun_d_desai_2019_2559549,
   author       = {Arjun D. Desai and
@@ -33,8 +33,8 @@ This repo is to serve as an open-source location for developers to add MRI proce
 
 We hope that this open-source pipeline will be useful for quick anatomy/pathology analysis from MRI and will serve as a hub for adding support for analyzing different anatomies and scan sequences.
 
-## Supported Features
-Currently, this pipeline supports analysis of the femoral cartilage in the knee using cubequant, cones, and [DESS](https://onlinelibrary.wiley.com/doi/pdf/10.1002/mrm.26577) scanning protocols. Details are provided below.
+## Supported Commands
+Currently, this pipeline supports analysis of the femoral cartilage in the knee using [DESS](https://onlinelibrary.wiley.com/doi/pdf/10.1002/mrm.26577) and cubequant scanning protocols. Basic cones protocol is provided, but still under construction. Details are provided below.
 
 ### Scans
 The following scan sequences are supported. All sequences with multiple echos, spin_lock_times, etc. should have metadata in the dicom header specifying this information.
@@ -42,7 +42,7 @@ The following scan sequences are supported. All sequences with multiple echos, s
 #### Double echo steady state (DESS)
 
 ##### Data format
-All data should be provided in the dicom format. Currently only sagittal orientation dicoms are supported.
+All data should be provided in the dicom format.
 
 Dicom files should be named in the format *001.dcm: echo1*, *002.dcm: echo2*, *003.dcm: echo1*, etc.
 
@@ -76,7 +76,7 @@ To run the program from a shell, run `python -m opt/path/pipeline` with the flag
 
 ### Base information
 ```
-usage: pipeline [-h] [--debug] [-d [D]] [-l [L]] [-s [S]] [-e [E]] [--gpu [G]]
+usage: pipeline [-h] [--debug] [-d [D]] [-l [L]] [-s [S]] [-df [F]] [-gpu [G]]
                 {dess,cubequant,cq,cones,knee} ...
 
 Tool for segmenting MRI knee volumes
@@ -87,16 +87,20 @@ positional arguments:
     dess                analyze DESS sequence
     cubequant (cq)      analyze cubequant sequence
     cones               analyze cones sequence
-    knee                calculate/analyze quantitative data for MSK knee
+    knee                calculate/analyze quantitative data for knee
 
 optional arguments:
   -h, --help            show this help message and exit
   --debug               debug
   -d [D], --dicom [D]   path to directory storing dicom files
   -l [L], --load [L]    path to data directory to load from
-  -s [S], --save [S]    path to directory to save mask. Default: L/D
-  -e [E], --ext [E]     extension of dicom files. Default 'dcm'
-  --gpu [G]             gpu id
+  -s [S], --save [S]    path to data directory to save to. Default: L/D
+  -df [F], --format [F]
+                        data format to store information in ['nifti',
+                        'dicom']. Default: nifti
+  -gpu [G]              gpu id. Default: None
+
+Either `-d` or `-l` must be specified. If both are given, `-d` will be used
 ```
 
 ### DESS
@@ -208,6 +212,28 @@ optional arguments:
 If no quantitative value flag (`-t2`, `-t1_rho`, `-t2_star`) is specified, all quantitative values will be calculated by default.
 
 If no tissue flag (`-fc`) is specified, all tissues will be calculated by default.
+
+## Additional features
+### Input/Output (I/O)
+Currently, image data I/O is supported in two common formats: Dicom and NIfTI.
+
+By default, the output format is NIfTI. Advantages and disadvantages of this format are listed below:
+
+:white_check_mark: Store 3D volume, rather than slice by slice
+
+:white_check_mark: Less computational overhead
+
+:x: No header information
+
+We recommend using input as Dicom images, which is likely what is produced from any acquisition system, and output as NIfTI volumes.
+
+The default output file format can be changed in the [`defaults.py`](./defaults.py) file by updating the `DEFAULT_OUTPUT_IMAGE_DATA_FORMAT` field. Additionally, to use certain formats in specific cases, use the `--format` flag detailed in [Base Information](### Base information).
+
+### Multiple Orientations
+We support volumes acquired in the sagittal, axial, and coronal planes and support reformatting to the expected plane during computation.
+
+Our machine learning methods are trained using sagittally acquired images, so performance may vary for images acquired in different planes (caused by differences in in-plane resolution, FOV, etc.).
+
 
 ## Machine Learning Disclaimer
 All weights/parameters trained for any task are likely to be most closely correlated to data used for training. If scans from a particular sequence were used for training, the performance of those weights are likely optimized for that specific scan type. As a result, they may not perform as well on segmenting images acquired using different scan types.

@@ -3,7 +3,7 @@ import os
 
 import scipy.io as sio
 
-from med_objects.med_volume import MedicalVolume
+from data_io.med_volume import MedicalVolume
 from utils import dicom_utils, io_utils
 
 INPUT_KEY = 'input'

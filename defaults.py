@@ -26,6 +26,11 @@ DEFAULT_R2_THRESHOLD = 0.9
 # DPI to save images
 DEFAULT_DPI = 400
 
+# Default image data format to save results in
+from data_io.format_io import ImageDataFormat
+
+DEFAULT_OUTPUT_IMAGE_DATA_FORMAT = ImageDataFormat.nifti
+
 # Matplotlib initialization
 import matplotlib
 

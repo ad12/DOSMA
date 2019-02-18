@@ -4,7 +4,7 @@ import numpy as np
 import pydicom
 from natsort import natsorted
 
-from med_objects.med_volume import MedicalVolume
+from data_io.med_volume import MedicalVolume
 
 __VOLUME_DIMENSIONS__ = 3
 __EPSILON__ = 1e-8
@@ -81,8 +81,8 @@ def load_dicom(dicom_path, dicom_ext=None):
 
 
 def whiten_volume(x):
-    """Whiten volume by mean and std of all pixels
-    :param x: 3D numpy array (MRI volume)
+    """Whiten volumes by mean and std of all pixels
+    :param x: 3D numpy array (MRI volumes)
     :rtype: whitened 3D numpy array
     """
     if len(x.shape) != __VOLUME_DIMENSIONS__:

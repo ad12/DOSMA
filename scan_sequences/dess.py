@@ -1,12 +1,16 @@
 import math
 import os
+from copy import deepcopy
 
 import numpy as np
 from pydicom.tag import Tag
 
-from med_objects.med_volume import MedicalVolume
+from data_io import format_io_utils as fio_utils
+from data_io.format_io import ImageDataFormat
+from data_io.med_volume import MedicalVolume
+from data_io.nifti_io import NiftiReader
+from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 from scan_sequences.scans import TargetSequence
-from utils import dicom_utils, io_utils
 from utils.quant_vals import T2
 
 
@@ -30,55 +34,19 @@ class Dess(TargetSequence):
 
     use_rms = False
 
-    def __init__(self, dicom_path, dicom_ext=None, load_path=None):
-        super().__init__(dicom_path, dicom_ext, load_path)
-
-        if not load_path:
-            self.subvolumes = self.__split_volume__(self.__NUM_ECHOS__)
+    def __init__(self, dicom_path, load_path=None):
+        super().__init__(dicom_path=dicom_path, load_path=load_path)
 
         if not self.validate_dess():
             raise ValueError('dicoms in \'%s\' are not acquired from DESS sequence' % self.dicom_path)
-
-    def __split_volume__(self, expected_num_subvolumes):
-        """
-        Split the volume into multiple subvolumes based on the echo time
-        Each subvolume represents a single volume of slices acquired with the same TR and TE times
-
-        For example, dess uses 2 echos -- this will produce 2 subvolumes
-
-        :param expected_num_subvolumes: Expected number of subvolumes
-        :return: list of MedicalVolumes
-
-        :raise ValueError:
-                    1. If base_volume is not 3D
-                    2. If < 1 echo is specified
-        """
-        volume = self.volume.volume
-        echos = expected_num_subvolumes
-
-        if len(volume.shape) != self.__VOLUME_DIMENSIONS__:
-            raise ValueError(
-                "Dimension Error: input has %d dimensions. Expected %d" % (volume.ndims, self.__VOLUME_DIMENSIONS__))
-
-        if echos <= 0:
-            raise ValueError('There must be at least 1 echo per volume')
-
-        depth = volume.shape[2]
-        if depth % echos != 0:
-            raise ValueError('Number of slices per echo must be the same')
-
-        sub_volumes = []
-        for i in range(echos):
-            sub_volumes.append(MedicalVolume(volume[:, :, i::echos], self.volume.pixel_spacing))
-
-        return sub_volumes
 
     def validate_dess(self):
         """Validate that the dicoms are of DESS sequence by checking for dicom header tags
         :return: a boolean
         """
         ref_dicom = self.ref_dicom
-        return self.__GL_AREA_TAG__ in ref_dicom and self.__TG_TAG__ in ref_dicom
+        return self.__GL_AREA_TAG__ in ref_dicom and self.__TG_TAG__ in ref_dicom and len(
+            self.volumes) == self.__NUM_ECHOS__
 
     def segment(self, model, tissue):
         # Use first echo for segmentation
@@ -87,17 +55,12 @@ class Dess(TargetSequence):
         if self.use_rms:
             segmentation_volume = self.calc_rms()
         else:
-            segmentation_volume = self.subvolumes[0]
-
-        pixel_spacing = segmentation_volume.pixel_spacing
-        segmentation_volume = segmentation_volume.volume
-
-        volume = dicom_utils.whiten_volume(segmentation_volume)
+            segmentation_volume = self.volumes[0]
 
         # Segment tissue and add it to list
-        mask = model.generate_mask(volume)
+        mask = model.generate_mask(segmentation_volume)
+        tissue.set_mask(mask)
 
-        tissue.set_mask(MedicalVolume(mask, pixel_spacing))
         self.__add_tissue__(tissue)
 
         return mask
@@ -109,17 +72,13 @@ class Dess(TargetSequence):
                 all invalid pixels are denoted by the value 0
         """
 
-        if self.volume is None or self.ref_dicom is None:
-            raise ValueError('volume and ref_dicom fields must be initialized')
+        if self.volumes is None or self.ref_dicom is None:
+            raise ValueError('volumes and ref_dicom fields must be initialized')
 
-        dicom_array = self.volume.volume
         ref_dicom = self.ref_dicom
 
-        if len(dicom_array.shape) != 3:
-            raise ValueError("dicom_array must be 3D volume")
-
-        r, c, num_slices = dicom_array.shape
-        subvolumes = self.subvolumes
+        r, c, num_slices = self.volumes[0].volume.shape
+        subvolumes = self.volumes
 
         # Split echos
         echo_1 = subvolumes[0].volume
@@ -148,7 +107,7 @@ class Dess(TargetSequence):
         c1 = (TR - Tg / 3) * (math.pow(dkL, 2)) * self.__D__
 
         # T2 fit
-        mask = np.ones([r, c, int(num_slices / 2)])
+        mask = np.ones([r, c, num_slices])
 
         ratio = mask * echo_2 / echo_1
         ratio = np.nan_to_num(ratio)
@@ -165,44 +124,50 @@ class Dess(TargetSequence):
 
         t2map = np.around(t2map, self.__T2_DECIMAL_PRECISION__)
 
-        t2_map_wrapped = MedicalVolume(t2map, subvolumes[0].pixel_spacing)
+        t2_map_wrapped = MedicalVolume(t2map,
+                                       pixel_spacing=subvolumes[0].pixel_spacing,
+                                       orientation=subvolumes[0].orientation,
+                                       scanner_origin=subvolumes[0].scanner_origin,
+                                       headers=deepcopy(subvolumes[0].headers))
 
         tissue.add_quantitative_value(T2(t2_map_wrapped))
 
         return t2map
 
-    def save_data(self, base_save_dirpath):
-        super().save_data(base_save_dirpath)
+    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
+        super().save_data(base_save_dirpath, data_format=data_format)
 
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
 
         # write echos
-        for i in range(len(self.subvolumes)):
+        for i in range(len(self.volumes)):
             nii_registration_filepath = os.path.join(base_save_dirpath, 'echo%d.nii.gz' % (i + 1))
-            self.subvolumes[i].save_volume(nii_registration_filepath)
+            filepath = fio_utils.convert_format_filename(nii_registration_filepath, data_format)
+            self.volumes[i].save_volume(filepath, data_format=data_format)
 
     def load_data(self, base_load_dirpath):
         super().load_data(base_load_dirpath)
 
         base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
-        self.subvolumes = []
+
+        self.volumes = []
         # Load subvolumes from nifti file
         for i in range(self.__NUM_ECHOS__):
             nii_registration_filepath = os.path.join(base_load_dirpath, 'echo%d.nii.gz' % (i + 1))
-            subvolume = io_utils.load_nifti(nii_registration_filepath)
-            self.subvolumes.append(subvolume)
+            subvolume = NiftiReader().load(nii_registration_filepath)
+            self.volumes.append(subvolume)
 
     def calc_rms(self):
         """Calculate RMS of 2 echos
         :return: A MedicalVolume
         """
-        if self.subvolumes is None:
-            raise ValueError('Subvolumes must be initialized')
+        if self.volumes is None:
+            raise ValueError('Volumes must be initialized')
 
-        assert len(self.subvolumes) == 2, "2 Echos expected"
+        assert len(self.volumes) == 2, "2 Echos expected"
 
-        echo1 = np.asarray(self.subvolumes[0].volume, dtype=np.float64)
-        echo2 = np.asarray(self.subvolumes[1].volume, dtype=np.float64)
+        echo1 = np.asarray(self.volumes[0].volume, dtype=np.float64)
+        echo2 = np.asarray(self.volumes[1].volume, dtype=np.float64)
 
         assert (echo1 >= 0).all()
         assert (echo2 >= 0).all()
@@ -215,4 +180,7 @@ class Dess(TargetSequence):
 
         rms = np.sqrt(echo1 ** 2 + echo2 ** 2)
 
-        return MedicalVolume(rms, self.subvolumes[0].pixel_spacing)
+        mv = deepcopy(self.volumes[0])
+        mv.volume = rms
+
+        return mv

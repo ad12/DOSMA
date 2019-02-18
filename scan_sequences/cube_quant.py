@@ -4,6 +4,10 @@ from natsort import natsorted
 from nipype.interfaces.elastix import Registration
 
 import file_constants as fc
+from data_io import format_io_utils as fio_utils
+from data_io.format_io import ImageDataFormat
+from data_io.nifti_io import NiftiReader
+from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 from scan_sequences.scans import NonTargetSequence
 from utils import io_utils
 from utils import quant_vals as qv
@@ -21,9 +25,11 @@ __T1_RHO_DECIMAL_PRECISION__ = 3
 class CubeQuant(NonTargetSequence):
     NAME = 'cubequant'
 
-    def __init__(self, dicom_path=None, dicom_ext=None, load_path=None):
+    def __init__(self, dicom_path=None, load_path=None):
         self.subvolumes = None
-        super().__init__(dicom_path, dicom_ext, load_path=load_path)
+        self.spin_lock_times = None
+        self.intraregistered_data = None
+        super().__init__(dicom_path=dicom_path, load_path=load_path)
 
         if dicom_path is not None:
             self.subvolumes, self.spin_lock_times = self.__split_volumes__(__EXPECTED_NUM_SPIN_LOCK_TIMES__)
@@ -58,6 +64,7 @@ class CubeQuant(NonTargetSequence):
                                                                              parameter_files=parameter_files)
         warped_files = [(base_spin_lock_time, warped_file)]
 
+        nifti_reader = NiftiReader()
         # Load the transformation file. Apply same transform to the remaining images
         for spin_lock_time, filename in files:
             warped_file = self.__apply_transform__((filename, spin_lock_time),
@@ -69,7 +76,7 @@ class CubeQuant(NonTargetSequence):
         # copy each of the interregistered warped files to their own output
         subvolumes = dict()
         for spin_lock_time, warped_file in warped_files:
-            subvolumes[spin_lock_time] = io_utils.load_nifti(warped_file)
+            subvolumes[spin_lock_time] = nifti_reader.load(warped_file)
 
         self.subvolumes = subvolumes
 
@@ -172,18 +179,20 @@ class CubeQuant(NonTargetSequence):
         return {'BASE': (ordered_spin_lock_time_indices[0], spin_lock_nii_files[0]),
                 'FILES': intraregistered_files}
 
-    def save_data(self, base_save_dirpath):
-        super().save_data(base_save_dirpath)
+    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
+        super().save_data(base_save_dirpath, data_format=data_format)
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
 
         # Save interregistered files
         interregistered_dirpath = os.path.join(base_save_dirpath, 'interregistered')
 
         for spin_lock_time_index in self.subvolumes.keys():
-            filepath = os.path.join(interregistered_dirpath, '%03d.nii.gz' % spin_lock_time_index)
+            nii_filepath = os.path.join(interregistered_dirpath, '%03d.nii.gz' % spin_lock_time_index)
+            filepath = fio_utils.convert_format_filename(nii_filepath, data_format)
+
             self.subvolumes[spin_lock_time_index].save_volume(filepath)
 
-    def load_data(self, base_load_dirpath):
+    def load_data(self, base_load_dirpath: str):
         super().load_data(base_load_dirpath)
         base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
 
