@@ -32,8 +32,7 @@ class TestNiftiIO(unittest.TestCase):
 
 
 class TestDicomIO(unittest.TestCase):
-    from data_io.dicom_io import DicomReader, DicomWriter, TOTAL_NUM_ECHOS_KEY
-    from data_io.med_volume import MedicalVolume
+    from data_io.dicom_io import DicomReader, DicomWriter
 
     dr = DicomReader()
     dw = DicomWriter()
@@ -89,7 +88,7 @@ class TestDicomIO(unittest.TestCase):
         # Headers for e1 should all have EchoNumbers field = 1
         for i in range(len(volumes)):
             for h in volumes[i].headers:
-                assert h.EchoNumbers == i+1, "e%d headers should have all EchoNumbers=%d" % (i+1, i+1)
+                assert h.EchoNumbers == i + 1, "e%d headers should have all EchoNumbers=%d" % (i + 1, i + 1)
 
     def test_dicom_reader_separate(self):
         # User manually separates two echos into different folders

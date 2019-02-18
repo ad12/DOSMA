@@ -30,7 +30,8 @@ class TestOrientation(unittest.TestCase):
             assert mv.orientation == o_base, "Orientation mismatch: Expected %s, got %s" % (str(o_base),
                                                                                             str(mv.orientation))
             assert mv.scanner_origin == so_base, "Scanner Origin mismatch: Expected %s, got %s" % (str(so_base),
-                                                                                                   str(mv.scanner_origin))
+                                                                                                   str(
+                                                                                                       mv.scanner_origin))
             assert mv.pixel_spacing == ps_base, "Pixel Spacing mismatch: Expected %s, got %s" % (str(ps_base),
                                                                                                  str(mv.pixel_spacing))
 
@@ -61,7 +62,7 @@ class TestOrientation(unittest.TestCase):
 
         # generate all possible transposed versions of the existing orientation
         transpose_orientations = list(permutations(o))
-        flip_orientations_indices = [[0], [1], [2], [0,1], [0,2], [1,2], [0,1,2]]
+        flip_orientations_indices = [[0], [1], [2], [0, 1], [0, 2], [1, 2], [0, 1, 2]]
         orientations = []
         for to in transpose_orientations:
             for fo_inds in flip_orientations_indices:
@@ -71,4 +72,3 @@ class TestOrientation(unittest.TestCase):
                 orientations.append(tuple(o_test))
 
         self.check_orientations(e1, orientations)
-

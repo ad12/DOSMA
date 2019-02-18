@@ -4,17 +4,15 @@ from natsort import natsorted
 from nipype.interfaces.elastix import Registration
 
 import file_constants as fc
+from data_io import format_io_utils as fio_utils
+from data_io.format_io import ImageDataFormat
+from data_io.nifti_io import NiftiReader
+from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 from scan_sequences.scans import NonTargetSequence
 from utils import io_utils
 from utils import quant_vals as qv
 from utils.fits import MonoExponentialFit
-from data_io.nifti_io import NiftiReader
-from data_io.format_io import ImageDataFormat
 
-from data_io.format_io import ImageDataFormat
-from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
-
-from data_io import format_io_utils as fio_utils
 __EXPECTED_NUM_SPIN_LOCK_TIMES__ = 4
 __R_SQUARED_THRESHOLD__ = 0.9
 __INITIAL_T1_RHO_VAL__ = 70.0
@@ -181,7 +179,7 @@ class CubeQuant(NonTargetSequence):
         return {'BASE': (ordered_spin_lock_time_indices[0], spin_lock_nii_files[0]),
                 'FILES': intraregistered_files}
 
-    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat=DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
+    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
         super().save_data(base_save_dirpath, data_format=data_format)
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
 

@@ -11,19 +11,16 @@ from nipype.interfaces.elastix import Registration, ApplyWarp
 
 import defaults
 import file_constants as fc
+from data_io import format_io_utils as fio_utils
 from data_io.dicom_io import DicomReader
+from data_io.format_io import ImageDataFormat
 from data_io.med_volume import MedicalVolume
 from data_io.nifti_io import NiftiReader
-from data_io import format_io_utils as fio_utils
-from data_io.format_io import ImageDataFormat
-
+from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
+from tissues.tissue import Tissue
 from utils import dicom_utils
 from utils import io_utils
 
-from data_io.format_io import ImageDataFormat
-from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
-
-from tissues.tissue import Tissue
 
 class ScanSequence(ABC):
     NAME = ''
@@ -111,7 +108,7 @@ class ScanSequence(ABC):
         """
         return '%s.%s' % (self.NAME, io_utils.DATA_EXT)
 
-    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat=DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
+    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
         """Save data in base_save_dirpath
         Serializes variables specified in by self.__serializable_variables__()
 

@@ -6,7 +6,6 @@ from scipy import optimize as sop
 
 import defaults
 from data_io.med_volume import MedicalVolume
-from copy import deepcopy
 
 
 class Fit(ABC):

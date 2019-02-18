@@ -8,6 +8,7 @@ import time
 
 import defaults
 import file_constants as fc
+from data_io.format_io import ImageDataFormat, SUPPORTED_FORMATS
 from models.get_model import SUPPORTED_MODELS
 from models.get_model import get_model
 from msk import knee
@@ -15,7 +16,6 @@ from scan_sequences.cones import Cones
 from scan_sequences.cube_quant import CubeQuant
 from scan_sequences.dess import Dess
 from utils.quant_vals import QuantitativeValues as QV
-from data_io.format_io import ImageDataFormat, SUPPORTED_FORMATS
 
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
@@ -238,10 +238,12 @@ def parse_args():
     parser.add_argument('-s', '--%s' % SAVE_KEY, metavar='S', type=str, default=None, nargs='?',
                         help='path to data directory to save to. Default: L/D')
 
+    supported_format_names = [data_format.name for data_format in SUPPORTED_FORMATS]
     parser.add_argument('-df', '--%s' % DATA_FORMAT_KEY, metavar='F', type=str,
                         default=defaults.DEFAULT_OUTPUT_IMAGE_DATA_FORMAT.name, nargs='?',
-                        choices=[data_format.name for data_format in SUPPORTED_FORMATS],
-                        help='data format to store information in. Default: NIfTI')
+                        choices=supported_format_names,
+                        help='data format to store information in %s. Default: %s' % (str(supported_format_names),
+                                                                                      defaults.DEFAULT_OUTPUT_IMAGE_DATA_FORMAT.name))
 
     parser.add_argument('-%s' % GPU_KEY, metavar='G', type=str, default=None, nargs='?', help='gpu id. Default: None')
 

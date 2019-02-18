@@ -19,6 +19,7 @@ def contains_nifti_extension(a_str: str):
 
 class NiftiReader(DataReader):
     data_format_code = ImageDataFormat.nifti
+
     def __get_pixel_spacing__(self, nib_affine):
         col_i, col_j, col_k = nib_affine[..., 0], nib_affine[..., 1], nib_affine[..., 2]
 

@@ -1,9 +1,9 @@
 import os
 
 from data_io.dicom_io import DicomWriter, DicomReader, contains_dicom_extension
+from data_io.format_io import ImageDataFormat, DataReader, DataWriter
 from data_io.format_io import SUPPORTED_FORMATS
 from data_io.nifti_io import NiftiWriter, NiftiReader, contains_nifti_extension
-from data_io.format_io import ImageDataFormat, DataReader, DataWriter
 
 
 def get_writer(data_format: ImageDataFormat) -> DataWriter:

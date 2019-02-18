@@ -1,4 +1,5 @@
 import os
+from math import log10, ceil
 
 import nibabel as nib
 import numpy as np
@@ -8,10 +9,7 @@ from natsort import natsorted
 from data_io import orientation as stdo
 from data_io.format_io import DataReader, DataWriter, ImageDataFormat
 from data_io.med_volume import MedicalVolume
-from math import log10, ceil
-
 from utils import io_utils
-
 
 __DICOM_EXTENSIONS__ = ('.dcm')
 TOTAL_NUM_ECHOS_KEY = (0x19, 0x107e)
@@ -33,7 +31,7 @@ def __update_np_dtype__(np_array, bit_depth):
     """
     assert bit_depth in [8, 16], "Only bit-depths of 8 and 16 are currently supported."
     dtype_dict = {8: [(np.int8, -128, 127), (np.uint8, 0, 255)],
-                  16:[(np.float16, -6.55e4, 6.55e4-1), (np.int16, -2**15, 2**15), (np.uint16, 0, 2**16-1)]}
+                  16: [(np.float16, -6.55e4, 6.55e4 - 1), (np.int16, -2 ** 15, 2 ** 15), (np.uint16, 0, 2 ** 16 - 1)]}
     supported_floats = [np.float16]
     curr_min = np.min(np_array)
     curr_max = np.max(np_array)
@@ -165,8 +163,9 @@ class DicomWriter(DataWriter):
 
     def __write_dicom_file__(self, np_slice: np.ndarray, header: pydicom.FileDataset, filepath: str):
         expected_dimensions = header.Rows, header.Columns
-        assert np_slice.shape == expected_dimensions, "In-plane dimension mismatch - expected shape %s, got %s" % (str(expected_dimensions),
-                                                                                                                   str(np_slice.shape))
+        assert np_slice.shape == expected_dimensions, "In-plane dimension mismatch - expected shape %s, got %s" % (
+        str(expected_dimensions),
+        str(np_slice.shape))
 
         np_slice_bytes = np_slice.tobytes()
         bit_depth = int(len(np_slice_bytes) / (np_slice.shape[0] * np_slice.shape[1]) * 8)
@@ -176,7 +175,7 @@ class DicomWriter(DataWriter):
             bit_depth = int(len(np_slice_bytes) / (np_slice.shape[0] * np_slice.shape[1]) * 8)
 
         assert bit_depth == header.BitsAllocated, "Bit depth mismatch: Expected %d got %d" % (header.BitsAllocated,
-                                                                                                bit_depth)
+                                                                                              bit_depth)
 
         header.PixelData = np_slice_bytes
 
@@ -192,7 +191,8 @@ class DicomWriter(DataWriter):
 
         # Currently do not support mismatch in scanner_origin
         if tuple(scanner_origin) != im.scanner_origin:
-            raise ValueError('Scanner origin mismatch. Currently we do not handle mismatch in scanner origin (i.e. cannot flip across axis)')
+            raise ValueError(
+                'Scanner origin mismatch. Currently we do not handle mismatch in scanner origin (i.e. cannot flip across axis)')
 
         # reformat medical volume to expected orientation specified by dicom headers
         # store original orientation so we can undo the dicom-specific reformatting
@@ -200,7 +200,8 @@ class DicomWriter(DataWriter):
 
         im.reformat(orientation)
         volume = im.volume
-        assert volume.shape[2] == len(headers), "Dimension mismatch - %d slices but %d headers" % (volume.shape[-1], len(headers))
+        assert volume.shape[2] == len(headers), "Dimension mismatch - %d slices but %d headers" % (
+        volume.shape[-1], len(headers))
 
         # check if filepath exists
         filepath = io_utils.check_dir(filepath)
@@ -209,12 +210,13 @@ class DicomWriter(DataWriter):
         filename_format = 'I%0' + str(max(4, ceil(log10(num_slices)))) + 'd.dcm'
 
         for s in range(num_slices):
-            s_filepath = os.path.join(filepath, filename_format % (s+1))
+            s_filepath = os.path.join(filepath, filename_format % (s + 1))
             self.__write_dicom_file__(volume[..., s], headers[s], s_filepath)
 
         # reformat image to original orientation (before saving)
         # we do this, because saving should not affect the existing state of any variable
         im.reformat(original_orientation)
+
 
 if __name__ == '__main__':
     dicom_filepath = '../dicoms/healthy07/007'

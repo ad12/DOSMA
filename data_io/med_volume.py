@@ -1,8 +1,8 @@
-import numpy as np
 import nibabel.orientations as nibo
+import numpy as np
 
-from data_io.orientation import get_transpose_inds, get_flip_inds, __orientation_standard_to_nib__
 from data_io.format_io import ImageDataFormat
+from data_io.orientation import get_transpose_inds, get_flip_inds, __orientation_standard_to_nib__
 
 
 class MedicalVolume():
@@ -53,8 +53,8 @@ class MedicalVolume():
         for i in range(len(scanner_origin)):
             if i in flip_axs_inds:
                 r_ind = int(nib_coords[i, 0])
-                alpha_val = int(nib_coords[i,1])
-                scanner_origin[r_ind] = alpha_val*pixel_spacing[i] * (volume.shape[i] - 1) + scanner_origin[r_ind]
+                alpha_val = int(nib_coords[i, 1])
+                scanner_origin[r_ind] = alpha_val * pixel_spacing[i] * (volume.shape[i] - 1) + scanner_origin[r_ind]
 
         self._volume = volume
         self.pixel_spacing = tuple(pixel_spacing)

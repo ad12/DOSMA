@@ -6,13 +6,13 @@ import numpy as np
 from pydicom.tag import Tag
 
 from data_io import format_io_utils as fio_utils
+from data_io.format_io import ImageDataFormat
 from data_io.med_volume import MedicalVolume
 from data_io.nifti_io import NiftiReader
+from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 from scan_sequences.scans import TargetSequence
 from utils.quant_vals import T2
-from data_io.format_io import ImageDataFormat
-from data_io.format_io import ImageDataFormat
-from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
+
 
 class Dess(TargetSequence):
     """Handles analysis for DESS scan sequence """
@@ -134,8 +134,7 @@ class Dess(TargetSequence):
 
         return t2map
 
-
-    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat=DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
+    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
         super().save_data(base_save_dirpath, data_format=data_format)
 
         base_save_dirpath = self.__save_dir__(base_save_dirpath)

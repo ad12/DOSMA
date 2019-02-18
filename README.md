@@ -76,7 +76,7 @@ To run the program from a shell, run `python -m opt/path/pipeline` with the flag
 
 ### Base information
 ```
-usage: pipeline [-h] [--debug] [-d [D]] [-l [L]] [-s [S]] [-gpu [G]]
+usage: pipeline [-h] [--debug] [-d [D]] [-l [L]] [-s [S]] [-df [F]] [-gpu [G]]
                 {dess,cubequant,cq,cones,knee} ...
 
 Tool for segmenting MRI knee volumes
@@ -87,15 +87,20 @@ positional arguments:
     dess                analyze DESS sequence
     cubequant (cq)      analyze cubequant sequence
     cones               analyze cones sequence
-    knee                calculate/analyze quantitative data for MSK knee
+    knee                calculate/analyze quantitative data for knee
 
 optional arguments:
   -h, --help            show this help message and exit
   --debug               debug
   -d [D], --dicom [D]   path to directory storing dicom files
   -l [L], --load [L]    path to data directory to load from
-  -s [S], --save [S]    path to directory to save mask. Default: L/D
-  -gpu [G]             gpu id
+  -s [S], --save [S]    path to data directory to save to. Default: L/D
+  -df [F], --format [F]
+                        data format to store information in ['nifti',
+                        'dicom']. Default: nifti
+  -gpu [G]              gpu id. Default: None
+
+Either `-d` or `-l` must be specified. If both are given, `-d` will be used
 ```
 
 ### DESS

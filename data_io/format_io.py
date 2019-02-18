@@ -1,11 +1,12 @@
+import enum
 from abc import ABC, abstractmethod
 
-import enum
 
 class ImageDataFormat(enum.Enum):
     unsupported = 0
     nifti = 1
     dicom = 2
+
 
 SUPPORTED_FORMATS = (ImageDataFormat.nifti, ImageDataFormat.dicom)
 
@@ -19,6 +20,7 @@ class DataReader(ABC):
     @abstractmethod
     def load(self, filepath: str):
         pass
+
 
 class DataWriter(ABC):
     """

@@ -2,12 +2,12 @@ import os
 from abc import ABC, abstractmethod
 
 from data_io import format_io_utils as fio_utils
+from data_io.format_io import ImageDataFormat
 from data_io.med_volume import MedicalVolume
 from data_io.orientation import SAGITTAL
+from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues, QuantitativeValue
-from data_io.format_io import ImageDataFormat
-from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 
 WEIGHTS_FILE_EXT = 'h5'
 
@@ -98,7 +98,7 @@ class Tissue(ABC):
 
         return weights_file
 
-    def save_data(self, save_dirpath, data_format: ImageDataFormat=DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
+    def save_data(self, save_dirpath, data_format: ImageDataFormat = DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
         """Save data for tissue
 
         Saves mask and quantitative values associated with this tissue
