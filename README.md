@@ -210,7 +210,25 @@ If no tissue flag (`-fc`) is specified, all tissues will be calculated by defaul
 
 ## Additional features
 ### Input/Output (I/O)
-Currently, image data I/O is supported in two formats: Dicom and NIfTI. 
+Currently, image data I/O is supported in two common formats: Dicom and NIfTI.
+
+By default, the output format is NIfTI. Advantages and disadvantages of this format are listed below:
+
+:white_check_mark: Store 3D volume, rather than slice by slice
+
+:white_check_mark: Less computational overhead
+
+:x: No header information
+
+We recommend using input as Dicom images, which is likely what is produced from any acquisition system, and output as NIfTI volumes.
+
+The default output file format can be changed in the [`defaults.py`](./defaults.py) file by updating the `DEFAULT_OUTPUT_IMAGE_DATA_FORMAT` field. Additionally, to use certain formats in specific cases, use the `--format` flag detailed in [Base Information](### Base information).
+
+### Multiple Orientations
+We support volumes acquired in the sagittal, axial, and coronal planes and support reformatting to the expected plane during computation.
+
+Our machine learning methods are trained using sagittally acquired images, so performance may vary for images acquired in different planes (caused by differences in in-plane resolution, FOV, etc.).
+
 
 ## Machine Learning Disclaimer
 All weights/parameters trained for any task are likely to be most closely correlated to data used for training. If scans from a particular sequence were used for training, the performance of those weights are likely optimized for that specific scan type. As a result, they may not perform as well on segmenting images acquired using different scan types.
