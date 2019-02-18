@@ -12,6 +12,7 @@ from math import log10, ceil
 
 from utils import io_utils
 
+
 __DICOM_EXTENSIONS__ = ('.dcm')
 TOTAL_NUM_ECHOS_KEY = (0x19, 0x107e)
 
@@ -19,6 +20,41 @@ TOTAL_NUM_ECHOS_KEY = (0x19, 0x107e)
 def contains_dicom_extension(a_str: str):
     bool_list = [a_str.endswith(ext) for ext in __DICOM_EXTENSIONS__]
     return bool(sum(bool_list))
+
+
+def __update_np_dtype__(np_array, bit_depth):
+    """
+    Return copy of np_array with bit-depth and type specified here
+    Try to use float whenever possible - if float does not capture range, try to use
+    Note pydicom only supports writing dicoms with bit-depth 8/16 - only supports bit depths 8/16
+    :param np_array: a Numpy array
+    :param bit_depth: the bit depth to
+    :return: a copy of input np_array with dtype
+    """
+    assert bit_depth in [8, 16], "Only bit-depths of 8 and 16 are currently supported."
+    dtype_dict = {8: [(np.int8, -128, 127), (np.uint8, 0, 255)],
+                  16:[(np.float16, -6.55e4, 6.55e4-1), (np.int16, -2**15, 2**15), (np.uint16, 0, 2**16-1)]}
+    supported_floats = [np.float16]
+    curr_min = np.min(np_array)
+    curr_max = np.max(np_array)
+    contains_float = (np_array % 1 != 0).any()
+
+    dtypes = dtype_dict[bit_depth]
+
+    new_dtype = None
+    for dtype, dtype_min, dtype_max in dtypes:
+        if curr_min < dtype_min or curr_max > dtype_max:
+            continue
+        new_dtype = dtype
+        break
+    if not new_dtype:
+        raise ValueError('Cannot cast numpy array (%s) to bit-depth of %d bits' % (str(np_array.dtype), bit_depth))
+
+    if contains_float and new_dtype not in supported_floats:
+        raise TypeError('Array contains float. Cannot cast to numpy array (%s) to %s' % (str(np_array.dtype),
+                                                                                         new_dtype))
+
+    return np_array.astype(new_dtype)
 
 
 def LPSplus_to_RASplus(headers):
@@ -54,7 +90,7 @@ class DicomReader(DataReader):
         - LPS: right --> left, anterior --> posterior, inferior --> superior
         - we will call it LPS+, such that letters correspond to increasing end of axis
     """
-    data_format_code = ImageDataFormat.nifti
+    data_format_code = ImageDataFormat.dicom
 
     def load(self, dicom_dirpath):
         """Load dicoms into numpy array
@@ -125,14 +161,25 @@ class DicomReader(DataReader):
 
 
 class DicomWriter(DataWriter):
-    data_format_code = ImageDataFormat.nifti
+    data_format_code = ImageDataFormat.dicom
 
     def __write_dicom_file__(self, np_slice: np.ndarray, header: pydicom.FileDataset, filepath: str):
         expected_dimensions = header.Rows, header.Columns
         assert np_slice.shape == expected_dimensions, "In-plane dimension mismatch - expected shape %s, got %s" % (str(expected_dimensions),
                                                                                                                    str(np_slice.shape))
 
-        header.PixelData = np_slice.tobytes()
+        np_slice_bytes = np_slice.tobytes()
+        bit_depth = int(len(np_slice_bytes) / (np_slice.shape[0] * np_slice.shape[1]) * 8)
+        if bit_depth != header.BitsAllocated:
+            np_slice = __update_np_dtype__(np_slice, header.BitsAllocated)
+            np_slice_bytes = np_slice.tobytes()
+            bit_depth = int(len(np_slice_bytes) / (np_slice.shape[0] * np_slice.shape[1]) * 8)
+
+        assert bit_depth == header.BitsAllocated, "Bit depth mismatch: Expected %d got %d" % (header.BitsAllocated,
+                                                                                                bit_depth)
+
+        header.PixelData = np_slice_bytes
+
         header.save_as(filepath)
 
     def save(self, im, filepath):

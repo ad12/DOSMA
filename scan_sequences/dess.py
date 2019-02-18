@@ -11,7 +11,8 @@ from data_io.nifti_io import NiftiReader
 from scan_sequences.scans import TargetSequence
 from utils.quant_vals import T2
 from data_io.format_io import ImageDataFormat
-
+from data_io.format_io import ImageDataFormat
+from defaults import DEFAULT_IMAGE_DATA_FORMAT
 
 class Dess(TargetSequence):
     """Handles analysis for DESS scan sequence """
@@ -123,16 +124,19 @@ class Dess(TargetSequence):
 
         t2map = np.around(t2map, self.__T2_DECIMAL_PRECISION__)
 
-        t2_map_wrapped = MedicalVolume(t2map, subvolumes[0].pixel_spacing, subvolumes[0].orientation,
-                                       subvolumes[0].scanner_origin)
+        t2_map_wrapped = MedicalVolume(t2map,
+                                       pixel_spacing=subvolumes[0].pixel_spacing,
+                                       orientation=subvolumes[0].orientation,
+                                       scanner_origin=subvolumes[0].scanner_origin,
+                                       headers=deepcopy(subvolumes[0].headers))
 
         tissue.add_quantitative_value(T2(t2_map_wrapped))
 
         return t2map
 
 
-    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = ImageDataFormat.nifti):
-        super().save_data(base_save_dirpath)
+    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat=DEFAULT_IMAGE_DATA_FORMAT):
+        super().save_data(base_save_dirpath, data_format=data_format)
 
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
 

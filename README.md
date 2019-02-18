@@ -76,7 +76,7 @@ To run the program from a shell, run `python -m opt/path/pipeline` with the flag
 
 ### Base information
 ```
-usage: pipeline [-h] [--debug] [-d [D]] [-l [L]] [-s [S]] [-e [E]] [--gpu [G]]
+usage: pipeline [-h] [--debug] [-d [D]] [-l [L]] [-s [S]] [-gpu [G]]
                 {dess,cubequant,cq,cones,knee} ...
 
 Tool for segmenting MRI knee volumes
@@ -95,8 +95,7 @@ optional arguments:
   -d [D], --dicom [D]   path to directory storing dicom files
   -l [L], --load [L]    path to data directory to load from
   -s [S], --save [S]    path to directory to save mask. Default: L/D
-  -e [E], --ext [E]     extension of dicom files. Default 'dcm'
-  --gpu [G]             gpu id
+  -gpu [G]             gpu id
 ```
 
 ### DESS

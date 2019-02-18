@@ -4,7 +4,8 @@ from enum import Enum
 
 from data_io import format_io_utils as fio_utils
 from data_io.med_volume import MedicalVolume
-
+from data_io.format_io import ImageDataFormat
+from defaults import DEFAULT_IMAGE_DATA_FORMAT
 
 class QuantitativeValues(Enum):
     """Enum of quantitative values that can be analyzed"""
@@ -63,13 +64,27 @@ class QuantitativeValue(ABC):
         # these results will not be loaded
         self.additional_volumes = dict()
 
-    def save_data(self, dirpath):
+    def save_data(self, dirpath, data_format: ImageDataFormat=DEFAULT_IMAGE_DATA_FORMAT):
+        """
+
+        :param dirpath:
+        :param data_format:
+        :return:
+        """
+        if data_format != ImageDataFormat.nifti:
+            import warnings
+            warnings.warn("Due to bit depth issues, only nifti format is supported for quantitative values. Writing as nifti file...")
+            data_format = ImageDataFormat.nifti
+
         if self.volumetric_map is not None:
-            self.volumetric_map.save_volume(os.path.join(dirpath, self.NAME, '%s.nii.gz' % self.NAME))
+            filepath = os.path.join(dirpath, self.NAME, '%s.nii.gz' % self.NAME)
+            #filepath = fio_utils.convert_format_filename(filepath, data_format)
+            self.volumetric_map.save_volume(filepath, data_format=data_format)
 
         for volume_name in self.additional_volumes.keys():
-            self.additional_volumes[volume_name].save_volume(os.path.join(dirpath, self.NAME, '%s-%s.nii.gz' %
-                                                                          (self.NAME, volume_name)))
+            add_vol_filepath = os.path.join(dirpath, self.NAME, '%s-%s.nii.gz' % (self.NAME, volume_name))
+            #add_vol_filepath = fio_utils.convert_format_filename(add_vol_filepath, data_format)
+            self.additional_volumes[volume_name].save_volume(add_vol_filepath, data_format=data_format)
 
     def load_data(self, dirpath):
         filepath = os.path.join(dirpath, self.NAME, '%s.nii.gz' % self.NAME)

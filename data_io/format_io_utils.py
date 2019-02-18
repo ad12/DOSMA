@@ -55,7 +55,7 @@ def convert_format_filename(file_or_dirname: str, new_data_format: ImageDataForm
     if current_format == ImageDataFormat.nifti and new_data_format == ImageDataFormat.dicom:
         dirname = os.path.dirname(file_or_dirname)
         basename = os.path.basename(file_or_dirname)
-        basename, ext = os.path.splitext(basename)
+        basename = basename.split('.', 1)[0]
         return os.path.join(dirname, basename)
 
 

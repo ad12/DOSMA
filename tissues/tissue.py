@@ -6,6 +6,8 @@ from data_io.med_volume import MedicalVolume
 from data_io.orientation import SAGITTAL
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues, QuantitativeValue
+from data_io.format_io import ImageDataFormat
+from defaults import DEFAULT_IMAGE_DATA_FORMAT
 
 WEIGHTS_FILE_EXT = 'h5'
 
@@ -96,7 +98,7 @@ class Tissue(ABC):
 
         return weights_file
 
-    def save_data(self, save_dirpath):
+    def save_data(self, save_dirpath, data_format: ImageDataFormat=DEFAULT_IMAGE_DATA_FORMAT):
         """Save data for tissue
 
         Saves mask and quantitative values associated with this tissue
@@ -105,20 +107,27 @@ class Tissue(ABC):
                                             e.g. femoral_cartilage.py
 
         :param save_dirpath: base path to save data
+        :param data_format: an ImageDataFormat enum specifying which format to save data in
         """
         save_dirpath = self.__save_dirpath__(save_dirpath)
 
         if self.__mask__ is not None:
             mask_filepath = os.path.join(save_dirpath, '%s.nii.gz' % self.STR_ID)
-            self.__mask__.save_volume(mask_filepath)
+            mask_filepath = fio_utils.convert_format_filename(mask_filepath, data_format)
+            self.__mask__.save_volume(mask_filepath, data_format=data_format)
 
         for qv in self.quantitative_values:
-            qv.save_data(save_dirpath)
+            qv.save_data(save_dirpath, data_format)
 
         self.__save_quant_data__(save_dirpath)
 
     @abstractmethod
     def __save_quant_data__(self, dirpath):
+        """
+        Save quantitative data generated for this tissue
+        :param dirpath: Path to directory where to save quantitative information
+        :return:
+        """
         pass
 
     def load_data(self, load_dirpath):

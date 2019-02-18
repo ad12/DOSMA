@@ -30,6 +30,7 @@ class MedicalVolume():
         """
         import data_io.format_io_utils
         writer = data_io.format_io_utils.get_writer(data_format)
+
         writer.save(self, filepath)
 
     def reformat(self, new_orientation: tuple):

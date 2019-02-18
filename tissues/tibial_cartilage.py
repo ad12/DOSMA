@@ -12,6 +12,8 @@ from data_io.med_volume import MedicalVolume
 from tissues.tissue import Tissue
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues
+from data_io.format_io import ImageDataFormat
+from defaults import DEFAULT_IMAGE_DATA_FORMAT
 
 # milliseconds
 BOUNDS = {QuantitativeValues.T2: 60.0,
@@ -167,13 +169,13 @@ class TibialCartilage(Tissue):
     def __save_quant_data__(self, dirpath):
         """Save quantitative data and 2D visualizations of meniscus
 
-               Check which quantitative values (T2, T1rho, etc) are defined for meniscus and analyze these
-               1. Save 2D total, superficial, and deep visualization maps
-               2. Save {'medial', 'lateral'}, {'anterior', 'posterior'}, {'superior', 'inferior', 'total'} data to excel
-                       file
+        Check which quantitative values (T2, T1rho, etc) are defined for meniscus and analyze these
+        1. Save 2D total, superficial, and deep visualization maps
+        2. Save {'medial', 'lateral'}, {'anterior', 'posterior'}, {'superior', 'inferior', 'total'} data to excel
+               file
 
-               :param dirpath: base filepath to save data
-               """
+        :param dirpath: base filepath to save data
+        """
         q_names = []
         dfs = []
 

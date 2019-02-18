@@ -9,6 +9,9 @@ from utils import io_utils
 from utils import quant_vals as qv
 from utils.fits import MonoExponentialFit
 
+from data_io.format_io import ImageDataFormat
+from defaults import DEFAULT_IMAGE_DATA_FORMAT
+
 __EXPECTED_NUM_ECHO_TIMES__ = 4
 
 __INITIAL_T2_STAR_VAL__ = 30.0
@@ -141,8 +144,8 @@ class Cones(NonTargetSequence):
 
         return quant_maps
 
-    def save_data(self, base_save_dirpath, data_format='nifti'):
-        super().save_data(base_save_dirpath)
+    def save_data(self, base_save_dirpath, data_format: ImageDataFormat=DEFAULT_IMAGE_DATA_FORMAT):
+        super().save_data(base_save_dirpath, data_format=data_format)
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
 
         # Save interregistered files
