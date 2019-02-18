@@ -14,7 +14,7 @@ from models.get_model import get_model
 from msk import knee
 from scan_sequences.cones import Cones
 from scan_sequences.cube_quant import CubeQuant
-from scan_sequences.dess import Dess
+from scan_sequences.qdess import Dess
 from utils.quant_vals import QuantitativeValues as QV
 
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]

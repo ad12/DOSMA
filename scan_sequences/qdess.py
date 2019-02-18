@@ -16,7 +16,7 @@ from utils.quant_vals import T2
 
 class Dess(TargetSequence):
     """Handles analysis for DESS scan sequence """
-    NAME = 'dess'
+    NAME = 'qdess'
 
     # DESS DICOM header keys
     __GL_AREA_TAG__ = Tag(0x001910b6)

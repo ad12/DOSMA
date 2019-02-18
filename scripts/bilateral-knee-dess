@@ -97,17 +97,17 @@ DATA_DIR="$base_dicom_path/data/$base_filename"
 
 echo "Save path: $DATA_DIR"
 
-# 2. run analysis on the dess files
+# 2. run analysis on the qdess files
 #    if data directory already exist, skip analysis
 
 DATA_DIR_LEFT="$DATA_DIR/LEFT"
 
-python -m pipeline -d $LEFT_DIR -s $DATA_DIR_LEFT dess -t2 -fc segment -rms --weights_dir $WEIGHTS_DIRECTORY
+python -m pipeline -d $LEFT_DIR -s $DATA_DIR_LEFT qdess -t2 -fc segment -rms --weights_dir $WEIGHTS_DIRECTORY
 python -m pipeline -l $DATA_DIR_LEFT knee -pid $PID
 
 
 DATA_DIR_RIGHT="$DATA_DIR/RIGHT"
 
-python -m pipeline -d $RIGHT_DIR -s $DATA_DIR_RIGHT dess -t2 -fc segment -rms --weights_dir $WEIGHTS_DIRECTORY
+python -m pipeline -d $RIGHT_DIR -s $DATA_DIR_RIGHT qdess -t2 -fc segment -rms --weights_dir $WEIGHTS_DIRECTORY
 python -m pipeline -l $DATA_DIR_RIGHT knee -ml -pid $PID
 
