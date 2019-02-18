@@ -14,7 +14,7 @@ from scan_sequences.scans import TargetSequence
 from utils.quant_vals import T2
 
 
-class Dess(TargetSequence):
+class QDess(TargetSequence):
     """Handles analysis for DESS scan sequence """
     NAME = 'qdess'
 
