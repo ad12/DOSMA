@@ -12,7 +12,7 @@ from data_io.nifti_io import NiftiReader
 from data_io.format_io import ImageDataFormat
 
 from data_io.format_io import ImageDataFormat
-from defaults import DEFAULT_IMAGE_DATA_FORMAT
+from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 
 from data_io import format_io_utils as fio_utils
 __EXPECTED_NUM_SPIN_LOCK_TIMES__ = 4
@@ -181,7 +181,7 @@ class CubeQuant(NonTargetSequence):
         return {'BASE': (ordered_spin_lock_time_indices[0], spin_lock_nii_files[0]),
                 'FILES': intraregistered_files}
 
-    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat=DEFAULT_IMAGE_DATA_FORMAT):
+    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat=DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
         super().save_data(base_save_dirpath, data_format=data_format)
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
 

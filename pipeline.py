@@ -239,7 +239,7 @@ def parse_args():
                         help='path to data directory to save to. Default: L/D')
 
     parser.add_argument('-df', '--%s' % DATA_FORMAT_KEY, metavar='F', type=str,
-                        default=defaults.DEFAULT_IMAGE_DATA_FORMAT.name, nargs='?',
+                        default=defaults.DEFAULT_OUTPUT_IMAGE_DATA_FORMAT.name, nargs='?',
                         choices=[data_format.name for data_format in SUPPORTED_FORMATS],
                         help='data format to store information in. Default: NIfTI')
 

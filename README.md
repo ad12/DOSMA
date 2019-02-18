@@ -33,8 +33,8 @@ This repo is to serve as an open-source location for developers to add MRI proce
 
 We hope that this open-source pipeline will be useful for quick anatomy/pathology analysis from MRI and will serve as a hub for adding support for analyzing different anatomies and scan sequences.
 
-## Supported Features
-Currently, this pipeline supports analysis of the femoral cartilage in the knee using cubequant, cones, and [DESS](https://onlinelibrary.wiley.com/doi/pdf/10.1002/mrm.26577) scanning protocols. Details are provided below.
+## Supported Commands
+Currently, this pipeline supports analysis of the femoral cartilage in the knee using [DESS](https://onlinelibrary.wiley.com/doi/pdf/10.1002/mrm.26577) and cubequant scanning protocols. Basic cones protocol is provided, but still under construction. Details are provided below.
 
 ### Scans
 The following scan sequences are supported. All sequences with multiple echos, spin_lock_times, etc. should have metadata in the dicom header specifying this information.
@@ -42,7 +42,7 @@ The following scan sequences are supported. All sequences with multiple echos, s
 #### Double echo steady state (DESS)
 
 ##### Data format
-All data should be provided in the dicom format. Currently only sagittal orientation dicoms are supported.
+All data should be provided in the dicom format.
 
 Dicom files should be named in the format *001.dcm: echo1*, *002.dcm: echo2*, *003.dcm: echo1*, etc.
 
@@ -207,6 +207,10 @@ optional arguments:
 If no quantitative value flag (`-t2`, `-t1_rho`, `-t2_star`) is specified, all quantitative values will be calculated by default.
 
 If no tissue flag (`-fc`) is specified, all tissues will be calculated by default.
+
+## Additional features
+### Input/Output (I/O)
+Currently, image data I/O is supported in two formats: Dicom and NIfTI. 
 
 ## Machine Learning Disclaimer
 All weights/parameters trained for any task are likely to be most closely correlated to data used for training. If scans from a particular sequence were used for training, the performance of those weights are likely optimized for that specific scan type. As a result, they may not perform as well on segmenting images acquired using different scan types.

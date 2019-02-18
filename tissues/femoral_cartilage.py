@@ -15,7 +15,7 @@ from utils import io_utils, img_utils
 from utils.geometry_utils import circle_fit, cart2pol
 from utils.quant_vals import QuantitativeValues
 from data_io.format_io import ImageDataFormat
-from defaults import DEFAULT_IMAGE_DATA_FORMAT
+from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 
 # milliseconds
 BOUNDS = {QuantitativeValues.T2: 60.0,
@@ -395,7 +395,7 @@ class FemoralCartilage(Tissue):
         if len(dfs) > 0:
             io_utils.save_tables(os.path.join(dirpath, 'data.xlsx'), dfs, q_names)
 
-    def save_data(self, save_dirpath, data_format: ImageDataFormat=DEFAULT_IMAGE_DATA_FORMAT):
+    def save_data(self, save_dirpath, data_format: ImageDataFormat=DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
         super().save_data(save_dirpath, data_format=data_format)
 
         save_dirpath = self.__save_dirpath__(save_dirpath)

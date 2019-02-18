@@ -13,7 +13,7 @@ from tissues.tissue import Tissue
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues
 from data_io.format_io import ImageDataFormat
-from defaults import DEFAULT_IMAGE_DATA_FORMAT
+from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 
 # milliseconds
 BOUNDS = {QuantitativeValues.T2: 60.0,

@@ -28,7 +28,7 @@ DEFAULT_DPI = 400
 
 # Default image data format to save results in
 from data_io.format_io import ImageDataFormat
-DEFAULT_IMAGE_DATA_FORMAT = ImageDataFormat.nifti
+DEFAULT_OUTPUT_IMAGE_DATA_FORMAT = ImageDataFormat.nifti
 
 # Matplotlib initialization
 import matplotlib

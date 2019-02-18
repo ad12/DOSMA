@@ -21,7 +21,7 @@ from utils import dicom_utils
 from utils import io_utils
 
 from data_io.format_io import ImageDataFormat
-from defaults import DEFAULT_IMAGE_DATA_FORMAT
+from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 
 from tissues.tissue import Tissue
 
@@ -111,7 +111,7 @@ class ScanSequence(ABC):
         """
         return '%s.%s' % (self.NAME, io_utils.DATA_EXT)
 
-    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat=DEFAULT_IMAGE_DATA_FORMAT):
+    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat=DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
         """Save data in base_save_dirpath
         Serializes variables specified in by self.__serializable_variables__()
 
