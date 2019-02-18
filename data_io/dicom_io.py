@@ -1,3 +1,10 @@
+"""
+File detailing modules for Dicom format IO
+
+@author: Arjun Desai
+        (C) Stanford University, 2019
+"""
+
 import os
 from math import log10, ceil
 
@@ -16,6 +23,11 @@ TOTAL_NUM_ECHOS_KEY = (0x19, 0x107e)
 
 
 def contains_dicom_extension(a_str: str):
+    """
+    Check if a string ends with one of the accepted dicom extensions
+    :param a_str: a string
+    :return: a boolean
+    """
     bool_list = [a_str.endswith(ext) for ext in __DICOM_EXTENSIONS__]
     return bool(sum(bool_list))
 
@@ -56,6 +68,11 @@ def __update_np_dtype__(np_array, bit_depth):
 
 
 def LPSplus_to_RASplus(headers):
+    """
+    Convert from LPS+ orientation (default for Dicom) to RAS+ standardized orientation
+    :param headers: a list of FileDatasets
+    :return: a tuple of orientation and scanner origin
+    """
     im_dir = headers[0].ImageOrientationPatient
     orientation = np.zeros([3, 3])
     i_vec, j_vec = im_dir[3:], im_dir[:3]  # unique to pydicom, please revise if using different library to load dicoms
@@ -82,6 +99,8 @@ def LPSplus_to_RASplus(headers):
 
 class DicomReader(DataReader):
     """
+    A class for reading dicom files
+
     Key Notes:
     ------------------
     1. Dicom utilizes LPS convention:
@@ -96,15 +115,13 @@ class DicomReader(DataReader):
         Required:
         :param dicom_dirpath: string path to directory where dicoms are stored
 
-        Optional:
-        :param dicom_ext: string extension for dicom files. Default is None, meaning the extension will not be checked
-
-        :return tuple of MedicalVolume, list of dicom headers
+        :return list of MedicalVolumes
 
         :raises NotADirectoryError if dicom pat does not exist or is not a directory
+        :raises FileNotFoundError if no dicom files found in directory
 
-        Note: this function sorts files using natsort, an intelligent sorting tool.
-            Please label your dicoms in a sequenced manner (e.g.: dicom1,dicom2,dicom3,...)
+        Note: This function sorts files using natsort, an intelligent sorting tool.
+              Please label your dicoms in a sequenced manner (e.g.: dicom1,dicom2,dicom3,...)
         """
         if not os.path.isdir(dicom_dirpath):
             raise NotADirectoryError("Directory %s does not exist" % dicom_dirpath)
@@ -159,13 +176,22 @@ class DicomReader(DataReader):
 
 
 class DicomWriter(DataWriter):
+    """
+    A class for writing data in dicom format
+    """
     data_format_code = ImageDataFormat.dicom
 
     def __write_dicom_file__(self, np_slice: np.ndarray, header: pydicom.FileDataset, filepath: str):
+        """
+        Replace data in header with 2D numpy array and write to filepath
+        :param np_slice: a 2D numpy array
+        :param header: a pydicom.FileDataset with fields populated
+        :param filepath: Filepath to write dicom to
+        """
         expected_dimensions = header.Rows, header.Columns
         assert np_slice.shape == expected_dimensions, "In-plane dimension mismatch - expected shape %s, got %s" % (
-        str(expected_dimensions),
-        str(np_slice.shape))
+            str(expected_dimensions),
+            str(np_slice.shape))
 
         np_slice_bytes = np_slice.tobytes()
         bit_depth = int(len(np_slice_bytes) / (np_slice.shape[0] * np_slice.shape[1]) * 8)
@@ -182,6 +208,14 @@ class DicomWriter(DataWriter):
         header.save_as(filepath)
 
     def save(self, im, filepath):
+        """
+        Save a medical volume in dicom format
+        :param im: a Medical Volume
+        :param filepath: a path to a directory to store dicom files
+
+        :raises ValueError if im (MedicalVolume) does not have initialized headers
+        :raises ValueError if im was flipped across any axis. Flipping changes scanner origin, which is currently not handled
+        """
         # Get orientation indicated by headers
         headers = im.headers
         if headers is None:
@@ -201,7 +235,7 @@ class DicomWriter(DataWriter):
         im.reformat(orientation)
         volume = im.volume
         assert volume.shape[2] == len(headers), "Dimension mismatch - %d slices but %d headers" % (
-        volume.shape[-1], len(headers))
+            volume.shape[-1], len(headers))
 
         # check if filepath exists
         filepath = io_utils.check_dir(filepath)
