@@ -1,3 +1,10 @@
+"""
+MedicalVolume: Wrapper for 3D volumes
+
+@author: Arjun Desai
+        (C) Stanford University, 2019
+"""
+
 import nibabel.orientations as nibo
 import numpy as np
 

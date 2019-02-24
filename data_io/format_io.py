@@ -1,3 +1,10 @@
+"""
+File detailing abstract classes for reading/writing data of different formats
+
+@author: Arjun Desai
+        (C) Stanford University, 2019
+"""
+
 import enum
 from abc import ABC, abstractmethod
 
@@ -11,6 +18,7 @@ class ImageDataFormat(enum.Enum):
     dicom = 2
 
 
+# These formats are currently supported for reading/writing volumes
 SUPPORTED_FORMATS = (ImageDataFormat.nifti, ImageDataFormat.dicom)
 
 

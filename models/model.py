@@ -1,3 +1,12 @@
+"""
+Abstract classes to wrap Keras model
+
+SegModel: Abstract wrapper for Keras model used for semantic segmentation
+
+@author: Arjun Desai
+        (C) Stanford University, 2019
+"""
+
 from abc import ABC, abstractmethod
 
 import defaults
