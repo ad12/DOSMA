@@ -1,3 +1,11 @@
+"""
+Abstract classes defining implementation of scan
+All scan types/protocols should inherit from these abstract classes
+
+@author: Arjun Desai
+        (C) Stanford University, 2019
+"""
+
 import os
 import re
 import warnings

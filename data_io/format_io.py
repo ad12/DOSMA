@@ -1,19 +1,31 @@
+"""
+File detailing abstract classes for reading/writing data of different formats
+
+@author: Arjun Desai
+        (C) Stanford University, 2019
+"""
+
 import enum
 from abc import ABC, abstractmethod
 
 
 class ImageDataFormat(enum.Enum):
+    """
+    Enum describing image data formats for IO
+    """
     unsupported = 0
     nifti = 1
     dicom = 2
 
 
+# These formats are currently supported for reading/writing volumes
 SUPPORTED_FORMATS = (ImageDataFormat.nifti, ImageDataFormat.dicom)
 
 
 class DataReader(ABC):
     """
-    This is the class for reading in medical data in various formats
+    An abstract class for reading medical data
+    Format-specific readers should inherit from this class (i.e. DicomReader, NiftiReader)
     """
     data_format_code = ImageDataFormat.unsupported
 
@@ -24,7 +36,8 @@ class DataReader(ABC):
 
 class DataWriter(ABC):
     """
-    This is the class for writing medical data in various formats
+    An abstract class for writing medical data
+    Format-specific writers should inherit from this class (i.e. DicomWriter, NiftiWriter)
     """
     data_format_code = ImageDataFormat.unsupported
 

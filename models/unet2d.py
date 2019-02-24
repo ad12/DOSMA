@@ -1,3 +1,8 @@
+"""
+@author: Arjun Desai
+        (C) Stanford University, 2019
+"""
+
 from copy import deepcopy
 
 import keras.backend as K

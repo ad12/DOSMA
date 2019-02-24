@@ -1,3 +1,10 @@
+"""
+MedicalVolume: Wrapper for 3D volumes
+
+@author: Arjun Desai
+        (C) Stanford University, 2019
+"""
+
 import nibabel.orientations as nibo
 import numpy as np
 
@@ -34,6 +41,10 @@ class MedicalVolume():
         writer.save(self, filepath)
 
     def reformat(self, new_orientation: tuple):
+        """
+        Reorients self to a specified orientation
+        :param new_orientation: a tuple specifying orientation
+        """
         # Check if new_orientation is the same as current orientation
         assert type(new_orientation) is tuple, "Orientation must be a tuple"
         if new_orientation == self.orientation:
@@ -62,24 +73,44 @@ class MedicalVolume():
         self.scanner_origin = tuple(scanner_origin)
 
     def is_identical(self, mv):
+        """
+        Check if another medical volume is identical to self
+        Two volumes are identical if they have the same pixel_spacing, orientation, scanner_origin, and volume
+        :param mv: a MedicalVolume
+        :return: a boolean
+        """
         if type(mv) != type(self):
             raise TypeError('type(mv) must be %s' % str(type(self)))
 
         return self.is_same_dimensions(mv) and (mv.volume == self.volume).all()
 
     def is_same_dimensions(self, mv):
+        """
+        Check if two volumes have the same dimensions
+        Two volumes have the same dimensions if they have the same pixel_spacing, orientation, and scanner_origin
+        :param mv:
+        :return: a boolean
+        """
         if type(mv) != type(self):
             raise TypeError('type(mv) must be %s' % str(type(self)))
 
         return mv.pixel_spacing == self.pixel_spacing and mv.orientation == self.orientation and mv.scanner_origin == self.scanner_origin and mv.volume.shape == self.volume.shape
 
     def match_orientation(self, mv):
+        """
+        Reorient another MedicalVolume to orientation specified by self.orientation
+        :param mv: a MedicalVolume
+        """
         if type(mv) != type(self):
             raise TypeError('type(mv) must be %s' % str(type(self)))
 
         mv.reformat(self.orientation)
 
     def match_orientation_batch(self, mvs):
+        """
+        Reorient a group of MedicalVolumes to orientation specified by self.orientation
+        :param mvs: a list/tuple of MedicalVolumes
+        """
         for mv in mvs:
             self.match_orientation(mv)
 

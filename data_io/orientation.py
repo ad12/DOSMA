@@ -33,6 +33,12 @@ __ORIENTATIONS_TO_AXIS_ID__ = {'LR': 0, 'RL': 0,
 
 
 def __check_orientation__(orientation: tuple):
+    """
+    Check if orientation tuple defines a valid orientation
+    :param orientation: a tuple defining image orientation using standard orientation format
+
+    :raises ValueError if orientation tuple is invalid
+    """
     is_orientation_format = len(orientation) == __EXPECTED_ORIENTATION_TUPLE_LEN__ and sum(
         [type(o) is str for o in orientation]) == __EXPECTED_ORIENTATION_TUPLE_LEN__
 
@@ -48,6 +54,13 @@ def __check_orientation__(orientation: tuple):
 
 
 def get_transpose_inds(curr_orientation: tuple, new_orientation: tuple):
+    """
+    Get indices for transposing orientation axes to format volume in different plane
+    i.e. sagittal <--> axial, sagittal <--> coronal, coronal <--> axial
+    :param curr_orientation: a tuple defining image orientation using standard orientation format
+    :param new_orientation: a tuple defining image orientation using standard orientation format
+    :return: a tuple of ints
+    """
     __check_orientation__(curr_orientation)
     __check_orientation__(new_orientation)
 
@@ -63,6 +76,15 @@ def get_transpose_inds(curr_orientation: tuple, new_orientation: tuple):
 
 
 def get_flip_inds(curr_orientation: tuple, new_orientation: tuple):
+    """
+    Get indices for flipping orientation around axis - i.e. x --> -x, y --> -y, z --> -z
+    :param curr_orientation: a tuple defining image orientation using standard orientation format
+    :param new_orientation: a tuple defining image orientation using standard orientation format
+
+    :raises ValueError if mismatch in orientation indices. To avoid this error, apply transpose prior to flipping
+
+    :return: indices in tuple to flip
+    """
     __check_orientation__(curr_orientation)
     __check_orientation__(new_orientation)
 
@@ -88,9 +110,9 @@ nib_to_standard_orientation_map = {'R': 'LR', 'L': 'RL',
 
 def __orientation_nib_to_standard__(nib_orientation):
     """
-    Convert Nibabel orientation to the standard orientation
-    :param nib_orientation:
-    :return:
+    Convert Nibabel orientation to the standard orientation format
+    :param nib_orientation: a RAS+ tuple orientation used by Nibabel
+    :return: a tuple corresponding to the standard orientation format
     """
     orientation = []
     for symb in nib_orientation:
@@ -100,9 +122,9 @@ def __orientation_nib_to_standard__(nib_orientation):
 
 def __orientation_standard_to_nib__(orientation):
     """
-    Convert standard orientation to Nibabel orientation
-    :param orientation:
-    :return:
+    Convert standard orientation format to Nibabel orientation
+    :param orientation: a tuple corresponding to the standard orientation format
+    :return: a RAS+ tuple orientation used by Nibabel
     """
     nib_orientation = []
     for symb in orientation:
