@@ -1,4 +1,8 @@
 #!/bin/bash
+
+echo "This file is currently deprecated - if needed, please make an issue on the corresponding Github repository"
+exit 125
+
 WEIGHTS_DIRECTORY="/Users/arjundesai/Documents/stanford/research/msk_pipeline_raw/weights"
 if [ -z "$WEIGHTS_DIRECTORY" ]; then
     echo "Please define WEIGHTS_DIRECTORY in script. Use the absolute path"
@@ -7,7 +11,7 @@ fi
 
 if [ $# -eq 1 ]
 then
-SERIES="dess"
+SERIES="qdess"
 else
 SERIES=$2
 fi
@@ -23,7 +27,7 @@ for i in $FILES; do
     SAVE_DIRNAME="$DIRNAME/data"
     CUBEQUANT_DIRNAME="$DIRNAME/cubequant"
     CONES_DIRNAME="$DIRNAME/cones"
-    TARGET_SCAN="$SAVE_DIRNAME/dess_data/echo1.nii.gz"
+    TARGET_SCAN="$SAVE_DIRNAME/qdess_data/echo1.nii.gz"
     MASK="$SAVE_DIRNAME/fc/fc.nii.gz"
 
     CUBEQUANT_INTERREGISTERED_DATA="$SAVE_DIRNAME/cubequant_data/interregistered"
@@ -36,12 +40,12 @@ for i in $FILES; do
     echo ""
     echo "----------Analyzing $DIRNAME---------"
 
-    # use DESS to get femoral cartilage segmentation + 3D t2 maps
-    echo "DESS T2map time:"
-    python -m pipeline -d $i -s $SAVE_DIRNAME dess -t2
+    # use qDESS to get femoral cartilage segmentation + 3D t2 maps
+    echo "qDESS T2map time:"
+    python -m pipeline -d $i -s $SAVE_DIRNAME qdess -fc -t2
 
    	echo "segmentation time:"
-    python -m pipeline -l $SAVE_DIRNAME -s $SAVE_DIRNAME dess -rms segment -fc --weights_dir $WEIGHTS_DIRECTORY
+    python -m pipeline -l $SAVE_DIRNAME -s $SAVE_DIRNAME qdess -fc segment -rms --weights_dir $WEIGHTS_DIRECTORY
 
     echo "cubequant registration time:"
 	echo $CUBEQUANT_INTERREGISTERED_DATA

@@ -167,7 +167,3 @@ class Cones(NonTargetSequence):
         var_names.extend(['echo_times'])
 
         return var_names
-
-
-if __name__ == '__main__':
-    cq = Cones('../dicoms/healthy07/009', 'dcm', './')

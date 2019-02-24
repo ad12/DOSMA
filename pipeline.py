@@ -14,7 +14,7 @@ from models.get_model import get_model
 from msk import knee
 from scan_sequences.cones import Cones
 from scan_sequences.cube_quant import CubeQuant
-from scan_sequences.dess import Dess
+from scan_sequences.qdess import QDess
 from utils.quant_vals import QuantitativeValues as QV
 
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
@@ -29,7 +29,7 @@ DATA_FORMAT_KEY = 'format'
 GPU_KEY = 'gpu'
 
 SCAN_KEY = 'scan'
-DESS_SCAN_KEY = 'dess'
+qDESS_SCAN_KEY = 'qdess'
 CUBEQUANT_SCAN_KEYS = ['cubequant', 'cq']
 CONES_KEY = 'cones'
 
@@ -132,12 +132,12 @@ def handle_segmentation(vargin, scan):
         scan.segment(model, tissue)
 
 
-def handle_dess(vargin):
-    print('\nAnalyzing DESS...')
+def handle_qdess(vargin):
+    print('\nAnalyzing qDESS...')
 
     tissues = vargin['tissues']
 
-    scan = Dess(dicom_path=vargin[DICOM_KEY], load_path=vargin[LOAD_KEY])
+    scan = QDess(dicom_path=vargin[DICOM_KEY], load_path=vargin[LOAD_KEY])
 
     scan.use_rms = vargin[USE_RMS_KEY] if USE_RMS_KEY in vargin.keys() else False
 
@@ -249,20 +249,20 @@ def parse_args():
 
     subparsers = parser.add_subparsers(help='sub-command help', dest=SCAN_KEY)
 
-    # DESS parser
-    parser_dess = subparsers.add_parser(DESS_SCAN_KEY, help='analyze DESS sequence')
-    parser_dess.add_argument('-%s' % T2_KEY, action='store_const', default=False, const=True, help='compute T2 map')
+    # qDESS parser
+    parser_qdess = subparsers.add_parser(qDESS_SCAN_KEY, help='analyze qDESS sequence')
+    parser_qdess.add_argument('-%s' % T2_KEY, action='store_const', default=False, const=True, help='compute T2 map')
 
-    add_tissues(parser_dess)
+    add_tissues(parser_qdess)
 
-    subparsers_dess = parser_dess.add_subparsers(help='sub-command help', dest=ACTION_KEY)
-    segmentation_parser_dess = add_segmentation_subparser(subparsers_dess)
+    subparsers_qdess = parser_qdess.add_subparsers(help='sub-command help', dest=ACTION_KEY)
+    segmentation_parser_qdess = add_segmentation_subparser(subparsers_qdess)
 
     # add additional fields to base segmentation
-    segmentation_parser_dess.add_argument('-%s' % USE_RMS_KEY, action='store_const', default=False, const=True,
+    segmentation_parser_qdess.add_argument('-%s' % USE_RMS_KEY, action='store_const', default=False, const=True,
                                           help='use root mean square (rms) of two echos for segmentation')
 
-    parser_dess.set_defaults(func=handle_dess)
+    parser_qdess.set_defaults(func=handle_qdess)
 
     # Cubequant parser
     parser_cubequant = subparsers.add_parser(CUBEQUANT_SCAN_KEYS[0],
@@ -326,7 +326,7 @@ def parse_args():
     vargin['tissues'] = tissues
     vargin[DATA_FORMAT_KEY] = ImageDataFormat[vargin[DATA_FORMAT_KEY]]
 
-    # Call func for specific scan (dess, cubequant, cones, etc)
+    # Call func for specific scan (qDESS, cubequant, cones, etc)
     scan_or_tissues = args.func(vargin)
 
     print('Time Elapsed: %0.2f seconds' % (time.time() - start_time))
