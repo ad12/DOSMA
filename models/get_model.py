@@ -1,3 +1,10 @@
+"""
+Functions for loading Keras models
+
+@author: Arjun Desai
+        (C) Stanford University, 2019
+"""
+
 from models.unet2d import Unet2D
 
 # Network architectures currently supported

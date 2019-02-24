@@ -1,3 +1,10 @@
+"""
+Utils for data I/O
+
+@author: Arjun Desai
+        (C) Stanford University, 2019
+"""
+
 import os
 
 from data_io.dicom_io import DicomWriter, DicomReader, contains_dicom_extension
