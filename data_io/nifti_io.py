@@ -1,3 +1,10 @@
+"""
+File detailing modules for NIfTI format IO
+
+@author: Arjun Desai
+        (C) Stanford University, 2019
+"""
+
 import os
 
 import nibabel as nib

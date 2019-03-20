@@ -13,7 +13,8 @@ WEIGHTS_FILE_EXT = 'h5'
 
 
 class Tissue(ABC):
-    """Handles analysis for all tissues
+    """
+    Handles analysis for all tissues
     Technically this includes non-tissue anatomy, like bone
     """
     ID = -1  # should be unique to all tissues, and should not change - replace with a unique identifier

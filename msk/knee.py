@@ -1,3 +1,10 @@
+"""
+Command line interface declaration for knee-related analyses
+
+@author: Arjun Desai
+        (C) Stanford University, 2019
+"""
+
 import uuid
 
 from tissues.femoral_cartilage import FemoralCartilage
