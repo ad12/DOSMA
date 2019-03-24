@@ -38,6 +38,9 @@ class CubeQuant(NonTargetSequence):
         if self.subvolumes is None:
             raise ValueError('Either dicom_path or load_path must be specified')
 
+    def __validate_scan(self):
+        return True
+
     def interregister(self, target_path, mask_path=None):
         base_spin_lock_time, base_image = self.intraregistered_data['BASE']
         files = self.intraregistered_data['FILES']

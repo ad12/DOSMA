@@ -37,16 +37,19 @@ class QDess(TargetSequence):
     def __init__(self, dicom_path, load_path=None):
         super().__init__(dicom_path=dicom_path, load_path=load_path)
 
-        if not self.validate_dess():
+        if not self.__validate_scan():
             raise ValueError('dicoms in \'%s\' are not acquired from DESS sequence' % self.dicom_path)
 
-    def validate_dess(self):
-        """Validate that the dicoms are of DESS sequence by checking for dicom header tags
+    def __validate_scan(self):
+        """Validate that the dicoms are of qDESS sequence
+        Scans should have 2 echos and dicom metadata for GL_AREA and TG
         :return: a boolean
         """
         ref_dicom = self.ref_dicom
-        return self.__GL_AREA_TAG__ in ref_dicom and self.__TG_TAG__ in ref_dicom and len(
-            self.volumes) == self.__NUM_ECHOS__
+        contains_expected_dicom_metadata = self.__GL_AREA_TAG__ in ref_dicom and self.__TG_TAG__ in ref_dicom
+        has_expected_num_echos = len(self.volumes) == self.__NUM_ECHOS__
+
+        return contains_expected_dicom_metadata & has_expected_num_echos
 
     def segment(self, model, tissue):
         # Use first echo for segmentation
