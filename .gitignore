@@ -29,5 +29,4 @@ debug_runs.py
 **/py_scripts
 
 # playgrounds
-gui/gui_playground.py
-*playground
+/gui/gui_playground.py
