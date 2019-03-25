@@ -27,3 +27,7 @@ debug_runs.py
 
 # pyscripts
 **/py_scripts
+
+# playgrounds
+gui/gui_playground.py
+*playground
