@@ -24,6 +24,8 @@ All directions point to the increasing direction - i.e. from -x to x
 
 # Default Orientations
 SAGITTAL = ('SI', 'AP', 'LR')
+CORONAL = ('SI', 'LR', 'AP')
+AXIAL = ('AP', 'LR', 'SI')
 
 __EXPECTED_ORIENTATION_TUPLE_LEN__ = 3
 __SUPPORTED_ORIENTATIONS__ = ['LR', 'RL', 'PA', 'AP', 'IS', 'SI']

@@ -15,10 +15,11 @@ class IndexTracker():
         self.x = x
 
     def onscroll(self, event):
-        if event.button == 'up':
-            self.ind = (self.ind + 1) % self.slices
-        else:
-            self.ind = (self.ind - 1) % self.slices
+        if event.button == 'down':
+            self.ind = min(self.ind + 1, self.num_slices-1)
+        elif event.button == 'up':
+            self.ind = max(self.ind - 1, 0)
+
         self.update()
 
     def update(self):
@@ -26,6 +27,8 @@ class IndexTracker():
         x_im = np.squeeze(x_im[:, :, self.ind, :])
         if self.im is None:
             self.im = self.ax.imshow(x_im, cmap='gray')
+            self.ax.get_xaxis().set_ticks([])
+            self.ax.get_yaxis().set_ticks([])
 
         self.im.set_data(x_im)
         self.ax.set_ylabel('slice %s' % (self.ind + 1))
@@ -42,7 +45,7 @@ class IndexTracker():
             value = value[..., np.newaxis]
 
         self._x = value
-        self.slices = self._x.shape[2]
+        self.num_slices = self._x.shape[2]
         self._x_normalized = self._x
 
         self.update()

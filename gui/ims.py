@@ -6,7 +6,7 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
 
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, Radiobutton, IntVar
 import tkinter as tk
 from tkinter import ttk
 
@@ -15,9 +15,10 @@ from data_io import format_io_utils as fio_utils
 from data_io.nifti_io import __NIFTI_EXTENSIONS__
 from data_io.dicom_io import __DICOM_EXTENSIONS__
 import os
-from data_io.orientation import SAGITTAL
+from data_io.orientation import SAGITTAL, CORONAL, AXIAL
 from skimage.measure import label
 from skimage.color import label2rgb
+from copy import deepcopy
 LARGE_FONT = ("Verdana", 12)
 
 
@@ -100,12 +101,17 @@ class PageTwo(tk.Frame):
 
 class PageThree(tk.Frame):
     SUPPORTED_FORMATS = (('nifti files', '*.nii\.gz'), ('dicom files', '*.dcm'))
+    __base_filepath = '../'
+
+    _ORIENTATIONS = [('sagittal', SAGITTAL), ('coronal', CORONAL), ('axial', AXIAL)]
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-
+        self._im_display = None
+        self.binding_vars = dict()
         fig, ax = plt.subplots(1, 1)
         X = np.random.rand(20, 20, 40)
+
         self.tracker = IndexTracker(ax, X)
 
         canvas = FigureCanvasTkAgg(fig, self)
@@ -113,8 +119,13 @@ class PageThree(tk.Frame):
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         canvas.mpl_connect('scroll_event', self.tracker.onscroll)
 
+        toolbar = NavigationToolbar2Tk(canvas, self)
+        toolbar.update()
+        canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
         self.im = None
         self.mask = None
+        self._im_display = None
 
         button1 = ttk.Button(self, text="Back to Home",
                              command=lambda: controller.show_frame(StartPage))
@@ -125,13 +136,26 @@ class PageThree(tk.Frame):
 
         button3 = ttk.Button(self, text='Load mask', command=self.load_mask_callback)
         button3.pack()
-        #
-        # toolbar = NavigationToolbar2Tk(canvas, self)
-        # toolbar.update()
-        # canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        self.init_reformat_display()
+
+    def __reformat_callback(self, *args):
+        self.im_update()
+
+    def init_reformat_display(self):
+        orientation_var = IntVar(0)
+        orientation_var.trace_add('write', self.__reformat_callback)
+        count = 0
+        for text, value in self._ORIENTATIONS:
+            b = Radiobutton(self, text=text, variable=orientation_var, value=count)
+            b.pack(side=tk.TOP, anchor='w')
+            count += 1
+        self._orientation = orientation_var
 
     def load_volume_callback(self):
         im = self.load_volume()
+        if not im:
+            return
         self.im = im
         self.mask = None
 
@@ -142,14 +166,15 @@ class PageThree(tk.Frame):
             messagebox.showerror('Loading mask failed', 'Main image must be loaded prior to mask')
             return
 
-        self.mask = self.load_volume("Load mask")
-
+        mask = self.load_volume("Load mask")
+        mask.reformat(self.im.orientation)
         try:
-            self.__verify_mask_size(self.im.volume, self.mask.volume)
+            self.__verify_mask_size(self.im.volume, mask.volume)
         except Exception as e:
             messagebox.showerror('Loading mask failed', str(e))
             return
 
+        self.mask = mask
         self.im_update()
 
     def __verify_mask_size(self, im: np.ndarray, mask: np.ndarray):
@@ -160,17 +185,18 @@ class PageThree(tk.Frame):
                                                                                               str(mask.shape)))
 
     def im_update(self):
-        self.im.reformat(SAGITTAL)
+        orientation = self.orientation
+        self.im.reformat(orientation)
         im = self.im.volume
         im = im / np.max(im)
         if self.mask:
-            self.mask.reformat(SAGITTAL)
+            self.mask.reformat(orientation)
             label_image = label(self.mask.volume)
             im = self.__labeltorgb_3d__(im, label_image, 0.3)
 
-        self.tracker.x = im
+        self.im_display = im
 
-    def __labeltorgb_3d__(self, im: np.ndarray, labels:np.ndarray, alpha: float=0.5):
+    def __labeltorgb_3d__(self, im: np.ndarray, labels:np.ndarray, alpha: float=0.3):
         im_rgb = np.zeros(im.shape + (3,))  # rgb channel
         for s in range(im.shape[2]):
             im_slice = im[..., s]
@@ -179,18 +205,37 @@ class PageThree(tk.Frame):
         return im_rgb
 
     def load_volume(self, title='Select volume file(s)'):
-        files = filedialog.askopenfilenames(initialdir='../', title=title)
-
+        files = filedialog.askopenfilenames(initialdir=self.__base_filepath, title=title)
         if len(files) == 0:
             return
 
         filepath = files[0]
+        self.__base_filepath = os.path.dirname(filepath)
+
         if filepath.endswith('.dcm'):
             filepath = os.path.dirname(filepath)
 
         im = fio_utils.generic_load(filepath, 1)
 
         return im
+
+    @property
+    def orientation(self):
+        ind = self._orientation.get()
+        return self._ORIENTATIONS[ind][1]
+
+    @property
+    def im_display(self):
+        return self._im_display
+
+    @im_display.setter
+    def im_display(self, value):
+        self._im_display = value
+        self.tracker.x = self._im_display
+
+
+
+
 
 
 
