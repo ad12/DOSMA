@@ -234,13 +234,5 @@ class PageThree(tk.Frame):
         self.tracker.x = self._im_display
 
 
-
-
-
-
-
-
-
-
 app = DosmaViewer()
 app.mainloop()
