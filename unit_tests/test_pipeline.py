@@ -1,16 +1,13 @@
 import os
 import unittest
 
-import keras.backend as K
 import numpy as np
-import scipy.io as sio
 
 import file_constants as fc
 import pipeline
 from scan_sequences.cube_quant import CubeQuant
 from tissues.femoral_cartilage import FemoralCartilage
 from utils import io_utils, dicom_utils
-from utils.quant_vals import QuantitativeValues
 
 DESS_003_DICOM_PATH = '../dicoms/003'
 DESS_003_T2_MAP_PATH = '../dicoms/003_t2_map.mat'

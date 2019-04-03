@@ -10,7 +10,10 @@ from data_io.format_io import ImageDataFormat
 from data_io.med_volume import MedicalVolume
 from data_io.nifti_io import NiftiReader
 from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
+from models.model import SegModel
 from scan_sequences.scans import TargetSequence
+from tissues.tissue import Tissue
+from utils.cmd_line_utils import ActionWrapper
 from utils.quant_vals import T2
 
 
@@ -32,15 +35,13 @@ class QDess(TargetSequence):
     __T2_UPPER_BOUND__ = 100
     __T2_DECIMAL_PRECISION__ = 1  # 0.1 ms
 
-    use_rms = False
-
     def __init__(self, dicom_path, load_path=None):
         super().__init__(dicom_path=dicom_path, load_path=load_path)
 
-        if not self.__validate_scan():
+        if not self.__validate_scan__():
             raise ValueError('dicoms in \'%s\' are not acquired from DESS sequence' % self.dicom_path)
 
-    def __validate_scan(self):
+    def __validate_scan__(self) -> bool:
         """Validate that the dicoms are of qDESS sequence
         Scans should have 2 echos and dicom metadata for GL_AREA and TG
         :return: a boolean
@@ -51,11 +52,11 @@ class QDess(TargetSequence):
 
         return contains_expected_dicom_metadata & has_expected_num_echos
 
-    def segment(self, model, tissue):
+    def segment(self, model: SegModel, tissue: Tissue, use_rms: bool = False):
         # Use first echo for segmentation
         print('Segmenting %s...' % tissue.FULL_NAME)
 
-        if self.use_rms:
+        if use_rms:
             segmentation_volume = self.calc_rms()
         else:
             segmentation_volume = self.volumes[0]
@@ -68,7 +69,7 @@ class QDess(TargetSequence):
 
         return mask
 
-    def generate_t2_map(self, tissue):
+    def generate_t2_map(self, tissue: Tissue):
         """ Generate 3D t2 map
 
         :return MedicalVolume with 3D map of t2 values
@@ -187,3 +188,18 @@ class QDess(TargetSequence):
         mv.volume = rms
 
         return mv
+
+    @classmethod
+    def cmd_line_actions(cls):
+        """Provide command line information (such as name, help strings, etc) as list of dictionary"""
+
+        segment_action = ActionWrapper(name=cls.segment.__name__,
+                                       help='generate automatic segmentation',
+                                       param_help={
+                                           'use_rms': 'use root mean square (rms) of two echos for segmentation'},
+                                       alternative_param_names={'use_rms': ['rms']})
+        generate_t2_map_action = ActionWrapper(name=cls.generate_t2_map.__name__,
+                                               aliases=['t2'],
+                                               help='generate T2 map')
+
+        return [(cls.segment, segment_action), (cls.generate_t2_map, generate_t2_map_action)]

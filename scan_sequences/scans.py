@@ -25,16 +25,15 @@ from data_io.format_io import ImageDataFormat
 from data_io.med_volume import MedicalVolume
 from data_io.nifti_io import NiftiReader
 from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
+from models.model import SegModel
 from tissues.tissue import Tissue
 from utils import io_utils
-
-from models.model import SegModel
 
 
 class ScanSequence(ABC):
     NAME = ''
 
-    def __init__(self, dicom_path: str=None, load_path: str=None):
+    def __init__(self, dicom_path: str = None, load_path: str = None):
         """
         :param dicom_path: a path to the folder containing all dicoms for this scan
         :param dicom_ext: extension of these dicom files
@@ -70,7 +69,7 @@ class ScanSequence(ABC):
             self.__load_dicom__()
 
     @abstractmethod
-    def __validate_scan(self) -> bool:
+    def __validate_scan__(self) -> bool:
         """Validate this scan (usually done by checking dicom header tags, if available)
         :return a boolean
         """
@@ -185,7 +184,7 @@ class ScanSequence(ABC):
         except:
             print('Dicom directory %s not found. Will try to load from %s' % (self.dicom_path, base_load_dirpath))
 
-    def __save_dir__(self, dirpath: str, create_dir: bool=True):
+    def __save_dir__(self, dirpath: str, create_dir: bool = True):
         """Returns directory specific to this scan
 
         :param dirpath: base directory path to locate data directory for this scan
@@ -232,7 +231,7 @@ class NonTargetSequence(ScanSequence):
     """
 
     @abstractmethod
-    def interregister(self, target_path: str, mask_path: str=None):
+    def interregister(self, target_path: str, mask_path: str = None):
         """
         Register this scan to the target scan - save as parameter in scan (volumes, subvolumes, etc)
 
@@ -340,8 +339,8 @@ class NonTargetSequence(ScanSequence):
         return subvolumes_dict
 
     def __dilate_mask__(self, mask_path: str, temp_path: str,
-                        dil_rate: float=defaults.DEFAULT_MASK_DIL_RATE,
-                        dil_threshold: float=defaults.DEFAULT_MASK_DIL_THRESHOLD):
+                        dil_rate: float = defaults.DEFAULT_MASK_DIL_RATE,
+                        dil_threshold: float = defaults.DEFAULT_MASK_DIL_THRESHOLD):
         """Dilate mask using gaussian blur and write to disk to use with elastix
 
         :param mask_path: path to mask to use to use as focus points for registration, mask must be binary
@@ -379,7 +378,7 @@ class NonTargetSequence(ScanSequence):
         return fixed_mask_filepath
 
     def __interregister_base_file__(self, base_image_info: tuple, target_path: str, temp_path: str,
-                                    mask_path: str=None,
+                                    mask_path: str = None,
                                     parameter_files=(fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE)):
         """Interregister the base moving image to the target image
 

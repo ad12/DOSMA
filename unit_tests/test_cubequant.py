@@ -1,15 +1,11 @@
 import os
 import unittest
 
-import keras.backend as K
 import numpy as np
-import scipy.io as sio
 
-import file_constants as fc
 from scan_sequences.cube_quant import CubeQuant
 from tissues.femoral_cartilage import FemoralCartilage
 from utils import io_utils, dicom_utils
-from utils.quant_vals import QuantitativeValues
 
 CUBEQUANT_DICOM_PATH = '../dicoms/healthy07/008'
 CUBEQUANT_INTERREGISTERED_PATH = '../dicoms/healthy07/data/cube_quant_data/interregistered'
@@ -105,4 +101,3 @@ class CubeQuantTest(unittest.TestCase):
             arr, _ = io_utils.load_nifti(filepath)
 
             assert np.sum(arr < 0) == 0, "Failed %03d: no values should be negative" % sl
-

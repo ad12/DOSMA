@@ -9,8 +9,10 @@ from data_io.format_io import ImageDataFormat
 from data_io.nifti_io import NiftiReader
 from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 from scan_sequences.scans import NonTargetSequence
+from tissues.tissue import Tissue
 from utils import io_utils
 from utils import quant_vals as qv
+from utils.cmd_line_utils import ActionWrapper
 from utils.fits import MonoExponentialFit
 
 __EXPECTED_NUM_SPIN_LOCK_TIMES__ = 4
@@ -38,10 +40,10 @@ class CubeQuant(NonTargetSequence):
         if self.subvolumes is None:
             raise ValueError('Either dicom_path or load_path must be specified')
 
-    def __validate_scan(self):
+    def __validate_scan__(self):
         return True
 
-    def interregister(self, target_path, mask_path=None):
+    def interregister(self, target_path: str, target_mask_path: str = None):
         base_spin_lock_time, base_image = self.intraregistered_data['BASE']
         files = self.intraregistered_data['FILES']
 
@@ -51,11 +53,11 @@ class CubeQuant(NonTargetSequence):
         print('==' * 40)
         print('Interregistering...')
         print('Target: %s' % target_path)
-        if mask_path is not None:
-            print('Mask: %s' % mask_path)
+        if target_mask_path:
+            print('Mask: %s' % target_mask_path)
         print('==' * 40)
 
-        if not mask_path:
+        if not target_mask_path:
             parameter_files = [fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE]
         else:
             parameter_files = [fc.ELASTIX_RIGID_INTERREGISTER_PARAMS_FILE, fc.ELASTIX_AFFINE_INTERREGISTER_PARAMS_FILE]
@@ -63,11 +65,12 @@ class CubeQuant(NonTargetSequence):
         warped_file, transformation_files = self.__interregister_base_file__((base_image, base_spin_lock_time),
                                                                              target_path,
                                                                              temp_interregistered_dirpath,
-                                                                             mask_path=mask_path,
+                                                                             mask_path=target_mask_path,
                                                                              parameter_files=parameter_files)
         warped_files = [(base_spin_lock_time, warped_file)]
 
         nifti_reader = NiftiReader()
+
         # Load the transformation file. Apply same transform to the remaining images
         for spin_lock_time, filename in files:
             warped_file = self.__apply_transform__((filename, spin_lock_time),
@@ -83,45 +86,36 @@ class CubeQuant(NonTargetSequence):
 
         self.subvolumes = subvolumes
 
-    def generate_t1_rho_map(self, tissues=None):
+    def generate_t1_rho_map(self, tissue: Tissue):
         """Generate 3D T1-rho map and r2 fit map using monoexponential fit across subvolumes acquired at different
                 echo times
-        :param tissues: A list of Tissue instances specifying which tissue to examine
-                        if None, use list of tissues class initialized with
-        :return: a list of T1Rho instances
+        :param tissue: A Tissue instance
+        :return: a T1Rho instance
         """
+        spin_lock_times = []
+        subvolumes_list = []
 
-        if tissues is None:
-            tissues = self.tissues
+        # only calculate for focused region if a mask is available, this speeds up computation
+        mask = tissue.get_mask()
+        sorted_keys = natsorted(list(self.subvolumes.keys()))
+        for spin_lock_time_index in sorted_keys:
+            subvolumes_list.append(self.subvolumes[spin_lock_time_index])
+            spin_lock_times.append(self.spin_lock_times[spin_lock_time_index])
 
-        quant_maps = []
-        for tissue in tissues:
-            spin_lock_times = []
-            subvolumes_list = []
+        mef = MonoExponentialFit(spin_lock_times, subvolumes_list,
+                                 mask=mask,
+                                 bounds=(__T1_RHO_LOWER_BOUND__, __T1_RHO_UPPER_BOUND__),
+                                 tc0=__INITIAL_T1_RHO_VAL__,
+                                 decimal_precision=__T1_RHO_DECIMAL_PRECISION__)
 
-            # only calculate for focused region if a mask is available, this speeds up computation
-            mask = tissue.get_mask()
-            sorted_keys = natsorted(list(self.subvolumes.keys()))
-            for spin_lock_time_index in sorted_keys:
-                subvolumes_list.append(self.subvolumes[spin_lock_time_index])
-                spin_lock_times.append(self.spin_lock_times[spin_lock_time_index])
+        t1rho_map, r2 = mef.fit()
 
-            mef = MonoExponentialFit(spin_lock_times, subvolumes_list,
-                                     mask=mask,
-                                     bounds=(__T1_RHO_LOWER_BOUND__, __T1_RHO_UPPER_BOUND__),
-                                     tc0=__INITIAL_T1_RHO_VAL__,
-                                     decimal_precision=__T1_RHO_DECIMAL_PRECISION__)
+        quant_val_map = qv.T1Rho(t1rho_map)
+        quant_val_map.add_additional_volume('r2', r2)
 
-            t1rho_map, r2 = mef.fit()
+        tissue.add_quantitative_value(quant_val_map)
 
-            quant_val_map = qv.T1Rho(t1rho_map)
-            quant_val_map.add_additional_volume('r2', r2)
-
-            quant_maps.append(quant_val_map)
-
-            tissue.add_quantitative_value(quant_val_map)
-
-        return quant_maps
+        return quant_val_map
 
     def __intraregister__(self, subvolumes):
         """Intraregister cubequant subvolumes to each other
@@ -207,3 +201,17 @@ class CubeQuant(NonTargetSequence):
         var_names = super().__serializable_variables__()
         var_names.extend(['spin_lock_times'])
         return var_names
+
+    @classmethod
+    def cmd_line_actions(cls):
+        """Provide command line information (such as name, help strings, etc) as list of dictionary"""
+
+        interregister_action = ActionWrapper(name=cls.interregister.__name__,
+                                             param_help={
+                                                 'target_path': 'path to target image in nifti format (.nii.gz)',
+                                                 'target_mask_path': 'path to target mask in nifti format (.nii.gz)'},
+                                             alternative_param_names={'target_path': ['tp', 'target'],
+                                                                      'target_mask_path': ['tm', 'target_mask']})
+        generate_t1rho_map_action = ActionWrapper(name=cls.generate_t1_rho_map.__name__, aliases=['t1_rho'])
+
+        return [(cls.interregister, interregister_action), (cls.generate_t1_rho_map, generate_t1rho_map_action)]
