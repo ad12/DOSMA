@@ -206,6 +206,8 @@ def add_scans(dosma_subparser):
                                   param_help=param_help,
                                   additional_param_names=alternative_param_names)
 
+        scan_parser.set_defaults(func=handle_scan)
+
 
 def handle_scan(vargin):
     scan_name = vargin[SCAN_KEY]
@@ -326,7 +328,8 @@ def parse_args():
     tissues = parse_tissues(vargin)
     vargin['tissues'] = tissues
     vargin[DATA_FORMAT_KEY] = ImageDataFormat[vargin[DATA_FORMAT_KEY]]
-    handle_scan(vargin)
+
+    args.func(vargin)
 
     print('Time Elapsed: %0.2f seconds' % (time.time() - start_time))
 
