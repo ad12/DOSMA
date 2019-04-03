@@ -165,14 +165,6 @@ class MAPSS(NonTargetSequence):
 
             self.volumes[volume_ind].save_volume(filepath)
 
-    def load_data(self, base_load_dirpath: str):
-        super().load_data(base_load_dirpath)
-        base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
-
-        interregistered_dirpath = os.path.join(base_load_dirpath, 'interregistered')
-
-        self.subvolumes = self.__load_interregistered_files__(interregistered_dirpath)
-
     def __serializable_variables__(self):
         var_names = super().__serializable_variables__()
         var_names.extend(['echo_times'])
