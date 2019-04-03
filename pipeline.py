@@ -15,6 +15,7 @@ from msk import knee
 from scan_sequences.cones import Cones
 from scan_sequences.cube_quant import CubeQuant
 from scan_sequences.qdess import QDess
+from scan_sequences.mapss import MAPSS
 from utils.quant_vals import QuantitativeValues as QV
 
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
@@ -32,6 +33,7 @@ SCAN_KEY = 'scan'
 qDESS_SCAN_KEY = 'qdess'
 CUBEQUANT_SCAN_KEYS = ['cubequant', 'cq']
 CONES_KEY = 'cones'
+MAPSS_KEY = 'mapss'
 
 T2_KEY = 't2'
 T1_RHO_Key = 't1_rho'
@@ -212,6 +214,39 @@ def handle_cones(vargin):
     return scan
 
 
+def handle_mapss(vargin):
+    print('\nAnalyzing mapss...')
+    scan = MAPSS(dicom_path=vargin[DICOM_KEY],
+                     load_path=vargin[LOAD_KEY])
+
+    scan.tissues = vargin['tissues']
+
+    if vargin[ACTION_KEY] is not None and vargin[ACTION_KEY] == 'interregister':
+        target_scan = vargin[TARGET_SCAN_KEY][0]
+        if not os.path.isfile(target_scan):
+            raise FileNotFoundError('%s is not a file' % target_scan)
+
+        scan.interregister(target_scan, vargin[TARGET_MASK_KEY])
+
+    scan.save_data(vargin[SAVE_KEY], data_format=vargin[DATA_FORMAT_KEY])
+
+    for tissue in scan.tissues:
+        if vargin[T1_RHO_Key]:
+            print('\nCalculating T1_rho')
+            scan.generate_t1_rho_map(tissue)
+
+        if vargin[T2_KEY]:
+            print('\nCalculating T2')
+            scan.generate_t2_map(tissue)
+
+    scan.save_data(vargin[SAVE_KEY], data_format=vargin[DATA_FORMAT_KEY])
+
+    for tissue in scan.tissues:
+        tissue.save_data(vargin[SAVE_KEY], data_format=vargin[DATA_FORMAT_KEY])
+
+    return scan
+
+
 def add_tissues(parser):
     for tissue in knee.SUPPORTED_TISSUES:
         parser.add_argument('-%s' % tissue.STR_ID, action='store_const', default=False, const=True,
@@ -288,6 +323,17 @@ def parse_args():
     subparsers_cones = parser_cones.add_subparsers(help='sub-command help', dest=ACTION_KEY)
     add_interregister_subparser(subparsers_cones)
     parser_cones.set_defaults(func=handle_cones)
+
+    # MAPSS parser
+    parser_mapss = subparsers.add_parser(MAPSS_KEY, help='analyze mapss sequence')
+    parser_mapss.add_argument('-%s' % T2_KEY, action='store_const', default=False, const=True,
+                              help='do t2 analysis')
+    parser_mapss.add_argument('-%s' % T1_RHO_Key, action='store_const', default=False, const=True,
+                              help='do t1rho analysis')
+    add_tissues(parser_mapss)
+    subparsers_mapss = parser_mapss.add_subparsers(help='sub-command help', dest=ACTION_KEY)
+    add_interregister_subparser(subparsers_mapss)
+    parser_mapss.set_defaults(func=handle_mapss)
 
     # MSK knee parser
     knee.knee_parser(subparsers)
