@@ -72,11 +72,6 @@ class MAPSS(NonTargetSequence):
             print('Mask: %s' % mask_path)
         print('==' * 40)
 
-        # if not mask_path:
-        #     parameter_files = [fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE]
-        # else:
-        #     parameter_files = [fc.ELASTIX_RIGID_INTERREGISTER_PARAMS_FILE, fc.ELASTIX_AFFINE_INTERREGISTER_PARAMS_FILE]
-
         warped_file, transformation_files = self.__interregister_base_file__((base_image, base_index),
                                                                              target_path,
                                                                              temp_interregistered_dirpath,
