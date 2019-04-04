@@ -1,5 +1,5 @@
 // *********************
-// * affine
+// * rigid
 // *********************
 
 // *********************
@@ -18,10 +18,10 @@
 (Interpolator "BSplineInterpolator")
 (ResampleInterpolator "FinalBSplineInterpolator")
 (Metric "AdvancedMattesMutualInformation")
-(BSplineInterpolationOrder 1)
+(BSplineInterpolationOrder 3)
 (Resampler "DefaultResampler")
 (Optimizer "AdaptiveStochasticGradientDescent")
-(Transform "AffineTransform")
+(Transform "EulerTransform")
 
 // *********************
 // * Mask settings
@@ -32,8 +32,8 @@
 // *********************
 // * Optimizer settings
 // *********************
-(NumberOfResolutions 4)
-(MaximumNumberOfIterations 1000)
+(NumberOfResolutions 3)
+(MaximumNumberOfIterations 400)
 (ASGDParameterEstimationMethod "Original")
 (AutomaticParameterEstimation "true")
 (AutomaticTransformInitialization "true")
@@ -53,8 +53,9 @@
 // *********************
 // * Sampler parameters
 // *********************
-(NumberOfSpatialSamples 4000)
-(ImageSampler "RandomSparseMask")
+(NumberOfSpatialSamples 2000)
+//(ImageSampler "RandomSparseMask")
+(ImageSampler "RandomCoordinate")
 (CheckNumberOfSamples "true")
 (NewSamplesEveryIteration "true")
 (FinalBSplineInterpolationOrder 0)

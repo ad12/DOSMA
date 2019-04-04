@@ -1,4 +1,4 @@
-name: tf_ex
+name: dosma
 channels:
 - conda-forge
 - defaults

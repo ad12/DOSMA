@@ -39,7 +39,14 @@ SEGMENTATION_BATCH_SIZE_KEY = 'batch_size'
 TISSUES_KEY = 'tissues'
 
 SUPPORTED_SCAN_TYPES = [QDess, CubeQuant]
+BASIC_TYPES = [bool, str, float, int, list, tuple]
 
+
+def get_nargs_for_basic_type(base_type):
+    if base_type in [str, float, int]:
+        return 1
+    elif base_type in [list, tuple]:
+        return '+'
 
 def add_tissues(parser):
     for tissue in knee.SUPPORTED_TISSUES:
@@ -79,10 +86,11 @@ def parse_tissues(vargin):
 
 
 def add_segmentation_subparser(parser):
+    parser.add_argument('--%s' % SEGMENTATION_WEIGHTS_DIR_KEY, type=str, nargs=1,
+                        required=True,
+                        help='path to directory with weights')
     parser.add_argument('--%s' % SEGMENTATION_MODEL_KEY, choices=SUPPORTED_MODELS, nargs='?', default='unet2d',
                         help='Model to use for segmentation. Choices: {%s}' % 'unet2d')
-    parser.add_argument('--%s' % SEGMENTATION_WEIGHTS_DIR_KEY, type=str, nargs=1,
-                        help='path to directory with weights')
     parser.add_argument('--%s' % SEGMENTATION_BATCH_SIZE_KEY, metavar='B', type=int,
                         default=defaults.DEFAULT_BATCH_SIZE, nargs='?',
                         help='batch size for inference. Default: %d' % defaults.DEFAULT_BATCH_SIZE)
@@ -120,6 +128,8 @@ def add_custom_argument(parser, param_type):
 
 def add_base_argument(parser: argparse.ArgumentParser, param_name, param_type, param_default, param_help,
                       additional_param_names: list = []):
+    assert param_type in BASIC_TYPES, "type %s not in BASIC_TYPES" % param_type
+
     # add default value to param help
     has_default = param_default is not inspect._empty
     if has_default:
@@ -142,7 +152,7 @@ def add_base_argument(parser: argparse.ArgumentParser, param_name, param_type, p
         return
 
     # all other values with default have this parameter
-    nargs_no_default = '?' if param_type is str else '+'
+    nargs_no_default = get_nargs_for_basic_type(param_type)
     nargs = '?' if has_default else nargs_no_default
 
     parser.add_argument(*param_names, nargs=nargs,
@@ -151,6 +161,19 @@ def add_base_argument(parser: argparse.ArgumentParser, param_name, param_type, p
                         help=param_help,
                         required=not has_default)
 
+def parse_basic_type(val, param_type):
+    if type(val) is param_type:
+        return val
+
+    assert type(val) is list
+    if param_type in [list, tuple]:
+        return param_type(val)
+
+    nargs = get_nargs_for_basic_type(param_type)
+    if nargs == 1:
+        return val[0]
+
+    raise ValueError('Error parsing basic type - reached code that is unexpected')
 
 def add_scans(dosma_subparser):
     for scan in SUPPORTED_SCAN_TYPES:
@@ -245,7 +268,7 @@ def handle_scan(vargin):
             if param_type in CUSTOM_TYPE_TO_HANDLE_DICT:
                 param_dict[param_name] = CUSTOM_TYPE_TO_HANDLE_DICT[param_type](vargin, scan, tissue)
             else:
-                param_dict[param_name] = vargin[param_name]
+                param_dict[param_name] = parse_basic_type(vargin[param_name], param_type)
 
         scan.__getattribute__(action.__name__)(**param_dict)
 
