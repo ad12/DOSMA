@@ -130,24 +130,6 @@ class NiftiWriter(DataWriter):
 
 
 if __name__ == '__main__':
-    load_filepath = '../dicoms/healthy07/h7.nii.gz'
-    save_filepath = '../dicoms/healthy07/h7_nifti_writer-transpose.nii.gz'
-    save_filepath2 = '../dicoms/healthy07/h7_nifti_writer-flip.nii.gz'
-
-    nr = NiftiReader()
-    med_vol = nr.load(load_filepath)
-    o = med_vol.orientation
-
-    nw = NiftiWriter()
-    o1 = (o[1], o[0], o[2])
-    med_vol.reformat(o1)
-    nw.save(med_vol, save_filepath)
-
-    o2 = (o[0][::-1], o[1], o[2])
-    med_vol.reformat(o2)
-    nw.save(med_vol, save_filepath2)
-
-    print('')
-    a = nr.load(load_filepath)
-    b = nr.load(save_filepath)
-    c = nr.load(save_filepath2)
+    np = '../dicoms/mapss-eg-nifti.nii.gz'
+    r = NiftiReader()
+    r.load(np)
