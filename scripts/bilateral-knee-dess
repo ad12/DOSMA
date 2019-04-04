@@ -21,7 +21,7 @@
 #          (c) Stanford University, 2018
 
 
-WEIGHTS_DIRECTORY="/home/marco.b215/msk_pipeline_data/weights"
+WEIGHTS_DIRECTORY="/DOSMA/weights"
 if [ -z "$WEIGHTS_DIRECTORY" ]; then
     echo "Please define WEIGHTS_DIRECTORY in script. Use the absolute path"
     exit 125
