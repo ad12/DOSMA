@@ -30,16 +30,11 @@ DATA_FORMAT_KEY = 'format'
 GPU_KEY = 'gpu'
 
 SCAN_KEY = 'scan'
-
-ACTION_KEY = 'action'
 SCAN_ACTION_KEY = 'scan_action'
 
 SEGMENTATION_MODEL_KEY = 'model'
 SEGMENTATION_WEIGHTS_DIR_KEY = 'weights_dir'
 SEGMENTATION_BATCH_SIZE_KEY = 'batch_size'
-
-TARGET_SCAN_KEY = 'ts'
-TARGET_MASK_KEY = 'tm'
 
 TISSUES_KEY = 'tissues'
 
@@ -48,7 +43,7 @@ SUPPORTED_SCAN_TYPES = [QDess, CubeQuant]
 
 def add_tissues(parser):
     for tissue in knee.SUPPORTED_TISSUES:
-        parser.add_argument('-%s' % tissue.STR_ID, action='store_const', default=False, const=True,
+        parser.add_argument('--%s' % tissue.STR_ID, action='store_const', default=False, const=True,
                             help='analyze %s' % tissue.FULL_NAME)
 
 
@@ -269,26 +264,32 @@ def parse_args():
     """
     parser = argparse.ArgumentParser(prog='DOSMA',
                                      description='A deep-learning powered open source MRI analysis pipeline',
-                                     epilog='Either `-d` or `-l` must be specified. '
+                                     epilog='Either `--d` or `---l` must be specified. '
                                             'If both are given, `-d` will be used')
     parser.add_argument('--%s' % DEBUG_KEY, action='store_true', help='use debug mode')
 
     # Dicom and results paths
-    parser.add_argument('-d', '--%s' % DICOM_KEY, metavar='D', type=str, default=None, nargs='?',
+    parser.add_argument('--d', '--%s' % DICOM_KEY, metavar='D', type=str, default=None, nargs='?',
+                        dest=DICOM_KEY,
                         help='path to directory storing dicom files')
-    parser.add_argument('-l', '--%s' % LOAD_KEY, metavar='L', type=str, default=None, nargs='?',
+    parser.add_argument('--l', '--%s' % LOAD_KEY, metavar='L', type=str, default=None, nargs='?',
+                        dest=LOAD_KEY,
                         help='path to data directory to load from')
-    parser.add_argument('-s', '--%s' % SAVE_KEY, metavar='S', type=str, default=None, nargs='?',
+    parser.add_argument('--s', '--%s' % SAVE_KEY, metavar='S', type=str, default=None, nargs='?',
+                        dest=SAVE_KEY,
                         help='path to data directory to save to. Default: L/D')
 
     supported_format_names = [data_format.name for data_format in SUPPORTED_FORMATS]
-    parser.add_argument('-df', '--%s' % DATA_FORMAT_KEY, metavar='F', type=str,
+    parser.add_argument('--df', '--%s' % DATA_FORMAT_KEY, metavar='F', type=str,
+                        dest=DATA_FORMAT_KEY,
                         default=defaults.DEFAULT_OUTPUT_IMAGE_DATA_FORMAT.name, nargs='?',
                         choices=supported_format_names,
                         help='data format to store information in %s. Default: %s' % (str(supported_format_names),
                                                                                       defaults.DEFAULT_OUTPUT_IMAGE_DATA_FORMAT.name))
 
-    parser.add_argument('--%s' % GPU_KEY, metavar='G', type=str, default=None, nargs='?', help='gpu id. Default: None')
+    parser.add_argument('--%s' % GPU_KEY, metavar='G', type=str, default=None, nargs='?',
+                        dest=GPU_KEY,
+                        help='gpu id. Default: None')
 
     subparsers = parser.add_subparsers(help='sub-command help', dest=SCAN_KEY)
     add_scans(subparsers)

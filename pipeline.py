@@ -333,4 +333,5 @@ def parse_args():
 
 
 if __name__ == '__main__':
+    raise DeprecationWarning('This file is deprecated. Use dosma.py instead')
     parse_args()

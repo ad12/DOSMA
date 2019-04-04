@@ -14,6 +14,8 @@ from utils import io_utils
 from utils import quant_vals as qv
 from utils.cmd_line_utils import ActionWrapper
 from utils.fits import MonoExponentialFit
+import numpy as np
+
 
 __EXPECTED_NUM_SPIN_LOCK_TIMES__ = 4
 __R_SQUARED_THRESHOLD__ = 0.9
@@ -97,6 +99,9 @@ class CubeQuant(NonTargetSequence):
 
         # only calculate for focused region if a mask is available, this speeds up computation
         mask = tissue.get_mask()
+        if not mask or np.sum(mask.volume) == 0:
+            raise ValueError('%s does not have mask' % tissue.FULL_NAME)
+
         sorted_keys = natsorted(list(self.subvolumes.keys()))
         for spin_lock_time_index in sorted_keys:
             subvolumes_list.append(self.subvolumes[spin_lock_time_index])
@@ -207,11 +212,14 @@ class CubeQuant(NonTargetSequence):
         """Provide command line information (such as name, help strings, etc) as list of dictionary"""
 
         interregister_action = ActionWrapper(name=cls.interregister.__name__,
+                                             help='register to another scan',
                                              param_help={
                                                  'target_path': 'path to target image in nifti format (.nii.gz)',
                                                  'target_mask_path': 'path to target mask in nifti format (.nii.gz)'},
                                              alternative_param_names={'target_path': ['tp', 'target'],
                                                                       'target_mask_path': ['tm', 'target_mask']})
-        generate_t1rho_map_action = ActionWrapper(name=cls.generate_t1_rho_map.__name__, aliases=['t1_rho'])
+        generate_t1rho_map_action = ActionWrapper(name=cls.generate_t1_rho_map.__name__,
+                                                  help='generate T1-rho map',
+                                                  aliases=['t1_rho'])
 
         return [(cls.interregister, interregister_action), (cls.generate_t1_rho_map, generate_t1rho_map_action)]

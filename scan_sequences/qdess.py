@@ -69,9 +69,10 @@ class QDess(TargetSequence):
 
         return mask
 
-    def generate_t2_map(self, tissue: Tissue):
+    def generate_t2_map(self, tissue: Tissue, suppress_fat: bool=False):
         """ Generate 3D t2 map
-
+        :param tissue: A Tissue instance
+        :param suppress_fat: Suppress fat region in t2 computation (i.e. reduce noise)
         :return MedicalVolume with 3D map of t2 values
                 all invalid pixels are denoted by the value 0
         """
@@ -127,6 +128,9 @@ class QDess(TargetSequence):
         t2map = np.nan_to_num(t2map)
 
         t2map = np.around(t2map, self.__T2_DECIMAL_PRECISION__)
+
+        if suppress_fat:
+            t2map = t2map * (echo_1 > 0.15*np.max(echo_1))
 
         t2_map_wrapped = MedicalVolume(t2map,
                                        pixel_spacing=subvolumes[0].pixel_spacing,
@@ -200,6 +204,7 @@ class QDess(TargetSequence):
                                        alternative_param_names={'use_rms': ['rms']})
         generate_t2_map_action = ActionWrapper(name=cls.generate_t2_map.__name__,
                                                aliases=['t2'],
+                                               param_help={'suppress_fat': 'suppress computation on low SNR fat regions'},
                                                help='generate T2 map')
 
         return [(cls.segment, segment_action), (cls.generate_t2_map, generate_t2_map_action)]
