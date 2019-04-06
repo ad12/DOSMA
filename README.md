@@ -1,6 +1,6 @@
 # DOSMA: Deep Open-Source MRI Analysis
 
-This pipeline is an open-source pipeline for MRI image segmentation, registration, and quantitative analysis.
+This repository hosts an open-source pipeline for MRI image segmentation, registration, and quantitative analysis.
 
 The current code uses the [command line interface](https://www.computerhope.com/jargon/c/commandi.htm) for use. Pull requests for a GUI to command-line translation are welcome.
 
@@ -34,12 +34,12 @@ This repo is to serve as an open-source location for developers to add MRI proce
 We hope that this open-source pipeline will be useful for quick anatomy/pathology analysis from MRI and will serve as a hub for adding support for analyzing different anatomies and scan sequences.
 
 ## Supported Commands
-Currently, this pipeline supports analysis of the femoral cartilage in the knee using [DESS](https://onlinelibrary.wiley.com/doi/pdf/10.1002/mrm.26577) and cubequant scanning protocols. Basic cones protocol is provided, but still under construction. Details are provided below.
+Currently, this pipeline supports analysis of the femoral cartilage in the knee using [qDESS](https://onlinelibrary.wiley.com/doi/pdf/10.1002/mrm.26577) and cubequant scanning protocols. Basic cones protocol is provided, but still under construction. Details are provided below.
 
 ### Scans
 The following scan sequences are supported. All sequences with multiple echos, spin_lock_times, etc. should have metadata in the dicom header specifying this information.
 
-#### Double echo steady state (DESS)
+#### Quantitative Double echo steady state (qDESS)
 
 ##### Data format
 All data should be provided in the dicom format.
@@ -64,7 +64,12 @@ Download this repo to your disk. Note that the path to this repo should not have
 ### Virtual Environment
 We recommend using the [Anaconda](https://www.anaconda.com/download) virtual environment to run python.
 
-An `environment.yml` file is provided in this repo containing all libraries used.
+An environment file `envs/dosma_env.yml` file is provided in this repo containing all libraries used.
+
+To automatically install this environment (assumes Anaconda/Miniconda is installed):
+1. Navigate to the DOSMA directory in the Terminal
+2. Run `chmod +x initialize-dosma`
+3. Run `./initialize-dosma`
 
 ### Weights
 For pretrained weights for MSK knee segmentation, request access using this [Google form](https://goo.gl/forms/JlxgS3aoUeeUUlVh2). Note that these weights are optimized to run on single-echo RMS DESS sequence as used in the [OsteoArthritis Initiative (OAI)](https://oai.epi-ucsf.org/datarelease/).
@@ -72,7 +77,7 @@ For pretrained weights for MSK knee segmentation, request access using this [Goo
 Save these weights in an accessible location. **Do not rename these files**.
 
 ## Shell interface help
-To run the program from a shell, run `python -m opt/path/pipeline` with the flags detailed below. `opt/path` is the path to the file `python`
+To run the program from a shell, run `python -m opt/path/dosma` with the flags detailed below. `opt/path` is the path to the file `python`
 
 ### Base information
 ```
@@ -103,15 +108,10 @@ optional arguments:
 Either `--d` or `---l` must be specified. If both are given, `-d` will be used
 ```
 
-### DESS
-The DESS protocol used here is detailed in [this](https://onlinelibrary.wiley.com/doi/pdf/10.1002/jmri.25883) paper referenced below:
+### qDESS
+The qDESS protocol used here is detailed in [this](https://onlinelibrary.wiley.com/doi/pdf/10.1002/jmri.25883) paper referenced below:
 
 *Chaudhari, Akshay S., et al. "Five‐minute knee MRI for simultaneous morphometry and T2 relaxometry of cartilage and meniscus and for semiquantitative radiological assessment using double‐echo in steady‐state at 3T." JMRI 47.5 (2018): 1328-1341.*
-
-The figure below details the DESS protocol used in this paper:
-
-![alt text](readme_ims/dess_protocol.png)
-Figure 1: Supported DESS protocol as referenced [here]((https://onlinelibrary.wiley.com/doi/pdf/10.1002/jmri.25883))
 
 
 ```
@@ -274,20 +274,20 @@ research_data
     ...
 ```
 
-All use cases assume that the [current working directory](https://www.computerhope.com/jargon/c/currentd.htm) is this repo. If the working directory is different, make sure to specify the path to ```pipeline.py``` when running the script. For example, ```python -m ~/MyRepo/pipeline.py``` if the repo is located in the user directory.
+All use cases assume that the [current working directory](https://www.computerhope.com/jargon/c/currentd.htm) is this repo. If the working directory is different, make sure to specify the path to ```dosma.py``` when running the script. For example, ```python -m ~/DOSMA/dosma.py``` if the repo is located in the user directory.
 
 ### qDESS
 *Analyze patient01's femoral cartilage T<sub>2</sub> properties using qDESS sequence*
 
 ```bash
 # 1. Calculate 3D T2 map
-python -m pipeline --d research_data/patient01/dess --s research_data/patient01/data --fc qdess t2
+python -m dosma --d research_data/patient01/dess --s research_data/patient01/data --fc qdess t2
 
 # 2. Segment femoral cartilage using root mean square (RMS) of two echo qDESS echos
-python -m pipeline --d research_data/patient01/dess --s research_data/patient01/data qdess --fc segment --rms --weights_dir unet_weights
+python -m dosma --d research_data/patient01/dess --s research_data/patient01/data qdess --fc segment --rms --weights_dir unet_weights
 
 # 3. Calculate/visualize T2 for knee tissues per region*
-python -m pipeline --l research_data/patient01/data --s research_data/patient01/data knee --fc --t2
+python -m dosma --l research_data/patient01/data --s research_data/patient01/data knee --fc --t2
 ```
 
 ### Cubequant
@@ -295,11 +295,11 @@ python -m pipeline --l research_data/patient01/data --s research_data/patient01/
 
 ```bash
 # 1. Register cubequant volume to first echo of qDESS sequence
-python -m pipeline --d research_data/patient01/cubequant --s research_data/patient01/data cubequant --fc interregister --ts research_data/patient01/data/dess/echo1.nii.gz --tm research_data/patient01/data/fc/fc.nii.gz
+python -m dosma --d research_data/patient01/cubequant --s research_data/patient01/data cubequant --fc interregister --ts research_data/patient01/data/dess/echo1.nii.gz --tm research_data/patient01/data/fc/fc.nii.gz
 
 # 2. Calculate 3D T1-rho map of interregistered sequence
-python -m pipeline --l research_data/patient01/data cubequant --fc t1_rho
+python -m dosma --l research_data/patient01/data cubequant --fc t1_rho
 
 # 3. Calculate/visualize T1-rho for knee tissues per region
-python -m pipeline --l research_data/patient01/data --s research_data/patient01/data knee --fc --t1_rho
+python -m dosma --l research_data/patient01/data --s research_data/patient01/data knee --fc --t1_rho
 ```
