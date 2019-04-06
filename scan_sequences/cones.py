@@ -25,6 +25,8 @@ class Cones(NonTargetSequence):
     NAME = 'cones'
 
     def __init__(self, dicom_path=None, load_path=None):
+        raise NotImplementedError('%s currently not supported') % self.NAME
+
         self.subvolumes = None
         self.echo_times = []
         super().__init__(dicom_path=dicom_path, load_path=load_path)

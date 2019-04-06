@@ -2,9 +2,10 @@
 
 # msk-qdess
 #
-# @brief: Run DESS analysis on patient folder specified as an argument
-#           1. Calculate t2 map
-#           2.
+# @brief: Run DESS analysis for femoral cartilage on patient folder specified as an argument
+#           1. Do automatic segmentation
+#           2. Calculate T2 map
+#           3. Analyze all supp
 #
 # @usage (from terminal/command line):
 #   ./msk-qdess PATH_TO_PATIENT_FOLDER qDESS_DICOM_FOLDER_NAME
@@ -39,6 +40,7 @@ cd ..
 for i in $FILES; do
     DIRNAME=$(dirname $i)
     DIRNAME="$DIRNAME/data"
-    python -m pipeline -d $i -s $DIRNAME qdess -t2 -fc segment -rms --weights_dir $WEIGHTS_DIRECTORY
-    python -m pipeline -l $DIRNAME knee
+    python -m dosma --d $i --s $DIRNAME qdess --fc segment --rms --weights_dir $WEIGHTS_DIRECTORY
+    python -m dosma --l $DIRNAME qdess --fc t2
+    python -m dosma --l $DIRNAME knee --fc --t2
 done

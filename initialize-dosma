@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Create virtual environment named (dosma_env) using conda
+#
+# @usage (from terminal/command line):
+# ./initialize-dosma
+#
+# @initialization protocol:
+#   1. Run "chmod +x create-env" from command-line (Linux) or Terminal (MacOS)
+#
+# @author: Arjun Desai, Stanford University
+#          (c) Stanford University, 2018
+
+
+# Check if conda exists
+ANACONDA_KEYWORD="anaconda"
+MINICONDA_KEYWORD="miniconda"
+
+hasAnaconda=0
+
+if echo $PATH | grep -q $ANACONDA_KEYWORD; then
+    hasAnaconda=1
+    echo "Conda found in path"
+fi
+
+if echo $PATH | grep -q $MINICONDA_KEYWORD
+then
+    hasAnaconda=1
+    echo "Miniconda found in path"
+fi
+
+if [ $hasAnaconda -eq 0 ]; then
+    echo "Anaconda/Miniconda not installed - install from https://www.anaconda.com/distribution/"
+    exit 125
+fi
+
+# Check if OS is supported
+env_file=`pwd`/envs/dosma_env.yml
+
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+        env_file=`pwd`/envs/dosma_env.yml
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # Mac OSX
+        env_file=`pwd`/envs/dosma_env.yml
+else
+    echo "only Linux and MacOS are supported"
+    exit 125
+fi
+
+# create dosma_env
+conda env create -f $env_file

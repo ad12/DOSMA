@@ -260,7 +260,7 @@ def parse_args():
 
     # add additional fields to base segmentation
     segmentation_parser_qdess.add_argument('-%s' % USE_RMS_KEY, action='store_const', default=False, const=True,
-                                          help='use root mean square (rms) of two echos for segmentation')
+                                           help='use root mean square (rms) of two echos for segmentation')
 
     parser_qdess.set_defaults(func=handle_qdess)
 
@@ -333,4 +333,5 @@ def parse_args():
 
 
 if __name__ == '__main__':
+    raise DeprecationWarning('This file is deprecated. Use dosma.py instead')
     parse_args()

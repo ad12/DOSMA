@@ -114,7 +114,7 @@ class Unet2D(SegModel):
         vol_copy.reformat(SAGITTAL)
 
         vol = vol_copy.volume
-        vol = dicom_utils.whiten_volume(vol)
+        vol = self.__preprocess_volume__(vol)
 
         # reshape volumes to be (slice, x, y, 1)
         v = np.transpose(vol, (2, 0, 1))
@@ -135,3 +135,6 @@ class Unet2D(SegModel):
         vol_copy.reformat(volume.orientation)
 
         return vol_copy
+
+    def __preprocess_volume__(self, volume: np.ndarray):
+        return dicom_utils.whiten_volume(volume)
