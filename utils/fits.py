@@ -60,10 +60,6 @@ class MonoExponentialFit(Fit):
         if self.mask:
             assert subvolumes[0].is_same_dimensions(self.mask), "Mask dimension mismatch"
             msk = self.mask.volume
-
-            # test line
-            msk = np.zeros(msk.shape)
-
             msk = msk.reshape(1, -1)
 
         original_shape = subvolumes[0].volume.shape

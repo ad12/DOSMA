@@ -77,10 +77,8 @@ def LPSplus_to_RASplus(headers):
     orientation = np.zeros([3, 3])
     i_vec, j_vec = im_dir[3:], im_dir[:3]  # unique to pydicom, please revise if using different library to load dicoms
     k_vec = np.asarray(headers[-1].ImagePositionPatient) - np.asarray(headers[0].ImagePositionPatient)
-    k_vec = k_vec * np.dot(headers[0].ImagePositionPatient, np.cross(i_vec, j_vec))
-    # k_div = np.abs(k_vec)
-    # k_div[k_div == 0] += 1
-    # orientation[:, 2] = k_vec / k_div
+    #k_vec = k_vec * np.dot(headers[0].ImagePositionPatient, np.cross(i_vec, j_vec))
+    k_vec = k_vec * np.cross(i_vec, j_vec)
     orientation[:3, :3] = np.stack([i_vec, j_vec, k_vec], axis=1)
     scanner_origin = headers[0].ImagePositionPatient
 
