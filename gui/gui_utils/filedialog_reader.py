@@ -60,3 +60,13 @@ class FileDialogReader():
             self.string_var.set(file_str)
 
         return file_str
+
+    def get_save_dirpath(self):
+        file_str = filedialog.askdirectory(initialdir=self.__base_filepath, mustexist=False)
+        if not file_str:
+            return
+
+        if self.string_var:
+            self.string_var.set(file_str)
+
+        return file_str

@@ -70,6 +70,9 @@ class Tissue(ABC):
         assert type(quant_map) is MedicalVolume
         assert type(map_type) is QuantitativeValues
 
+        if self.__mask__ is None:
+            raise ValueError('Please initialize mask for %s' % self.FULL_NAME)
+
         pass
 
     def __store_quant_vals__(self, quant_map, quant_df, map_type):

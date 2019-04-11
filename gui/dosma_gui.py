@@ -2,11 +2,13 @@ import inspect
 import tkinter as tk
 from tkinter import IntVar
 
+import Pmw
+
 from dosma import SEGMENTATION_WEIGHTS_DIR_KEY
 from gui.gui_utils import gui_utils as gutils
 from models.model import SegModel
 from tissues.tissue import Tissue
-import Pmw
+
 
 class ScanReader():
     def __init__(self, parent):

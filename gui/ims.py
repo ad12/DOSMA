@@ -18,11 +18,12 @@ from skimage.color import label2rgb
 from gui.preferences_viewer import PreferencesManager
 
 LARGE_FONT = ("Verdana", 12)
-from dosma import SUPPORTED_SCAN_TYPES, parse_args
+from dosma import SUPPORTED_SCAN_TYPES, parse_args, SUPPORTED_QUANTITATIVE_VALUES
 from msk import knee
 from gui.dosma_gui import ScanReader
 from gui.gui_utils.filedialog_reader import FileDialogReader
 import Pmw
+
 
 class DosmaViewer(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -35,7 +36,7 @@ class DosmaViewer(tk.Tk):
 
         self.frames = {}
 
-        for F in (StartPage, DosmaFrame, PageThree):
+        for F in (StartPage, DosmaFrame, PageThree, AnalysisFrame):
             frame = F(container, self)
 
             self.frames[F] = frame
@@ -65,9 +66,13 @@ class StartPage(tk.Frame):
         label = tk.Label(self, text="Start Page", font=LARGE_FONT)
         label.pack(pady=10, padx=10)
 
-        button2 = ttk.Button(self, text="DOSMA",
+        button2 = ttk.Button(self, text="Scan",
                              command=lambda: controller.show_frame(DosmaFrame))
         button2.pack()
+
+        button3 = ttk.Button(self, text="Knee Analysis",
+                             command=lambda: controller.show_frame(AnalysisFrame))
+        button3.pack()
 
         button3 = ttk.Button(self, text="Image Viewer",
                              command=lambda: controller.show_frame(PageThree))
@@ -78,6 +83,156 @@ class StartPage(tk.Frame):
         button3.pack()
 
 
+class AnalysisFrame(tk.Frame):
+    __TISSUES_KEY = 'Tissues'
+    __QUANTITATIVE_VALUES_KEY = 'Quantitative values'
+    __LOAD_PATH_KEY = 'Load data'
+
+    __PID_KEY = 'pid'
+    __MEDIAL_TO_LATERAL_ORIENTATION_KEY = 'ml'
+
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+
+        self.manager = dict()
+        self.gui_manager = dict()
+        self.balloon = Pmw.Balloon()
+
+        self.__init_manager()
+
+        self.__base_gui()
+        self.preferences = PreferencesManager()
+        self.file_dialog_reader = FileDialogReader()
+        self.scan_reader = ScanReader(self)
+
+        button1 = ttk.Button(self, text="Home",
+                             command=lambda: controller.show_frame(StartPage))
+        button1.pack(anchor='se', side='right')
+
+        button1 = ttk.Button(self, text="Run",
+                             command=lambda: self.execute())
+        button1.pack(anchor='sw', side='left')
+
+    def execute(self):
+        try:
+            load_path = self.manager[self.__LOAD_PATH_KEY].get()
+            if not load_path:
+                raise ValueError('Load path not defined')
+
+            preferences_str = self.preferences.get_cmd_line_str().strip()
+
+            tissue_str = ''
+            for c, t in enumerate(self.manager[self.__TISSUES_KEY]):
+                if t.get():
+                    tissue_str += '--%s ' % knee.SUPPORTED_TISSUES[c].STR_ID
+            tissue_str = tissue_str.strip()
+
+            if not tissue_str:
+                raise ValueError('No tissues selected')
+
+
+            qv_str = ''
+            for c, qv in enumerate(self.manager[self.__QUANTITATIVE_VALUES_KEY]):
+                if qv.get():
+                    qv_str += '--%s ' % SUPPORTED_QUANTITATIVE_VALUES[c].name.lower()
+            qv_str = qv_str.strip()
+
+            if not qv_str:
+                raise ValueError('No quantitative values selected')
+
+            pid = self.manager[self.__PID_KEY].get()
+            medial_to_lateral = self.manager[self.__MEDIAL_TO_LATERAL_ORIENTATION_KEY].get()
+
+            if not pid:
+                raise ValueError('No PID was provided')
+
+            # analysis string
+            str_f = '--l %s %s knee %s --pid %s %s %s' % (load_path,
+                                                       preferences_str,
+                                                       tissue_str,
+                                                       pid,
+                                                       '--ml' if medial_to_lateral else '',
+                                                          qv_str)
+            str_f = str_f.strip()
+            parse_args(str_f.split())
+        except Exception as e:
+            tk.messagebox.showerror(str(type(e)), e.__str__())
+
+    def __init_manager(self):
+        self.manager[self.__LOAD_PATH_KEY] = tk.StringVar()
+        self.manager[self.__TISSUES_KEY] = [tk.BooleanVar() for i in range(len(knee.SUPPORTED_TISSUES))]
+        self.manager[self.__QUANTITATIVE_VALUES_KEY] = [tk.BooleanVar() for i in range(len(SUPPORTED_QUANTITATIVE_VALUES))]
+
+        self.manager[self.__PID_KEY] = tk.StringVar()
+        self.manager[self.__MEDIAL_TO_LATERAL_ORIENTATION_KEY] = tk.BooleanVar()
+
+    def __display_pid_info(self):
+        hb = tk.Frame(self)
+        hb.pack(side='top', anchor='nw')
+        l = tk.Label(hb, text=self.__PID_KEY.upper())
+        l.pack(side='left', anchor='w', pady=10)
+        t = tk.Entry(hb, textvariable=self.manager[self.__PID_KEY])
+        t.pack(side='left', anchor='w', pady=10)
+        self.balloon.bind(l, 'Patient id')
+
+    def __display_data_loader(self):
+        hb = tk.Frame(self)
+
+        filedialog = FileDialogReader(self.manager[self.__LOAD_PATH_KEY])
+        b = tk.Button(hb, text=self.__LOAD_PATH_KEY,
+                      command=lambda fd=filedialog: self.manager[self.__LOAD_PATH_KEY].set(fd.get_save_dirpath()))
+        b.pack(side='left', anchor='nw', pady=10)
+
+        l = tk.Label(hb, textvariable=self.manager[self.__LOAD_PATH_KEY])
+        l.pack(side='left', anchor='nw', pady=10)
+
+        hb.pack(side='top', anchor='nw')
+
+    def __display_multi_option(self, label, options_list, boolvar_list):
+        hb = tk.Frame(self)
+        l = tk.Label(hb, text='%s:' % label)
+        l.pack(side='left', anchor='w')
+        hb.pack(side='top', anchor='nw')
+        frames = [tk.Frame(hb)] * (len(options_list) // 3 + 1)
+        for ind, option in enumerate(options_list):
+            f = frames[ind // 3]
+            b = tk.Checkbutton(f, text=option, variable=boolvar_list[ind])
+            b.pack(side='top', anchor='nw', pady=5)
+
+        for f in frames:
+            f.pack(side='left', anchor='nw')
+
+        return hb
+
+    def __display_tissues(self):
+        tissue_names = [x.FULL_NAME for x in knee.SUPPORTED_TISSUES]
+        l = self.__display_multi_option(self.__TISSUES_KEY, tissue_names, self.manager[self.__TISSUES_KEY])
+        self.balloon.bind(l, 'Tissues to analyze')
+
+    def __display_quant_vals(self):
+        quantitative_value_names = [x.name for x in SUPPORTED_QUANTITATIVE_VALUES]
+        l = self.__display_multi_option(self.__QUANTITATIVE_VALUES_KEY, quantitative_value_names,
+                                        self.manager[self.__QUANTITATIVE_VALUES_KEY])
+        self.balloon.bind(l, 'Quantitative values to analyze')
+
+    def __display_knee_info(self):
+        hb = tk.Frame(self)
+        hb.pack(side='top', anchor='nw')
+        l = tk.Label(hb, text='Medial -> Lateral: ')
+        l.pack(side='left', anchor='w', pady=10)
+        t = tk.Checkbutton(hb, variable=self.manager[self.__MEDIAL_TO_LATERAL_ORIENTATION_KEY])
+        t.pack(side='left', anchor='w', pady=10)
+
+        self.balloon.bind(l, 'Select if Dicoms proceed in medial->lateral direction')
+
+    def __base_gui(self):
+        self.__display_data_loader()
+        self.__display_pid_info()
+        self.__display_tissues()
+        self.__display_knee_info()
+        self.__display_quant_vals()
+
+
 class DosmaFrame(tk.Frame):
     __SCAN_KEY = 'Scan'
     __TISSUES_KEY = 'Tissues'
@@ -85,11 +240,10 @@ class DosmaFrame(tk.Frame):
     __DICOM_PATH_KEY = 'Read dicoms'
     __LOAD_PATH_KEY = 'Load data'
 
+    __SAVE_PATH_KEY = 'Save path'
+
     __DATA_KEY = 'data'  # Track option menu for dicom/load path
     __DATA_PATH_KEY = 'datapath'  # Track filepath associated with option menu
-
-    __PID_KEY = 'pid'
-    __MEDIAL_TO_LATERAL_ORIENTATION_KEY = 'ml'
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -117,6 +271,10 @@ class DosmaFrame(tk.Frame):
 
     def execute(self):
         try:
+            save_path = self.manager[self.__SAVE_PATH_KEY].get()
+            if not save_path:
+                raise ValueError('Save path not defined')
+
             action_str = self.scan_reader.get_cmd_line_str().strip()
             if not action_str:
                 raise ValueError('No action selected')
@@ -124,10 +282,8 @@ class DosmaFrame(tk.Frame):
             preferences_str = self.preferences.get_cmd_line_str().strip()
 
             source = 'd'
-            load_path = '%s/data' % self.manager[self.__DATA_PATH_KEY].get()
             if self.manager[self.__DATA_KEY].get() == self.__LOAD_PATH_KEY:
                 source = 'l'
-                load_path = self.manager[self.__DATA_PATH_KEY].get()
 
             tissue_str = ''
             for c, t in enumerate(self.manager[self.__TISSUES_KEY]):
@@ -138,30 +294,14 @@ class DosmaFrame(tk.Frame):
             if not tissue_str:
                 raise ValueError('No tissues selected')
 
-
-            pid = self.manager[self.__PID_KEY].get()
-            medial_to_lateral = self.manager[self.__MEDIAL_TO_LATERAL_ORIENTATION_KEY].get()
-
-            if not pid:
-                raise ValueError('No PID was provided')
-
-            str_f = '--%s %s %s %s %s %s' % (source, self.manager[self.__DATA_PATH_KEY].get(),
-                                             preferences_str,
-                                             self.manager[self.__SCAN_KEY].get(),
-                                             tissue_str,
-                                             action_str)
+            str_f = '--%s %s --s %s %s %s %s %s' % (source, self.manager[self.__DATA_PATH_KEY].get(), save_path,
+                                                    preferences_str,
+                                                    self.manager[self.__SCAN_KEY].get(),
+                                                    tissue_str,
+                                                    action_str)
 
             # print(str_f)
 
-            parse_args(str_f.split())
-
-            # analysis string
-            str_f = '--l %s %s knee %s --pid %s %s' % (load_path,
-                                                       preferences_str,
-                                                    tissue_str,
-                                                    pid,
-                                                    '--ml' if medial_to_lateral else '')
-            str_f = str_f.strip()
             parse_args(str_f.split())
         except Exception as e:
             tk.messagebox.showerror(str(type(e)), e.__str__())
@@ -172,10 +312,8 @@ class DosmaFrame(tk.Frame):
         self.manager[self.__DATA_KEY] = tk.StringVar()
         self.manager[self.__DATA_PATH_KEY] = tk.StringVar()
 
-        self.manager[self.__PID_KEY] = tk.StringVar()
-        self.manager[self.__MEDIAL_TO_LATERAL_ORIENTATION_KEY] = tk.BooleanVar()
-
         self.manager[self.__SCAN_KEY].trace_add('write', self.__on_scan_change)
+        self.manager[self.__SAVE_PATH_KEY] = tk.StringVar()
 
     def __on_scan_change(self, *args):
         scan_id = self.manager[self.__SCAN_KEY].get()
@@ -204,14 +342,8 @@ class DosmaFrame(tk.Frame):
 
         svar.set(fp)
 
-    def __display_pid_info(self):
-        hb = tk.Frame(self)
-        hb.pack(side='top', anchor='nw')
-        l = tk.Label(hb, text=self.__PID_KEY.upper())
-        l.pack(side='left', anchor='w', pady=10)
-        t = tk.Entry(hb, textvariable=self.manager[self.__PID_KEY])
-        t.pack(side='left', anchor='w', pady=10)
-        self.balloon.bind(l, 'Patient id')
+        if selected_option == self.__LOAD_PATH_KEY:
+            self.manager[self.__SAVE_PATH_KEY].set(fp)
 
     def __display_data_loader(self):
         s_var = self.manager[self.__DATA_PATH_KEY]
@@ -227,6 +359,19 @@ class DosmaFrame(tk.Frame):
         menu.pack(side='left', anchor='nw', pady=10)
 
         l = tk.Label(hb, textvariable=s_var)
+        l.pack(side='left', anchor='nw', pady=10)
+
+        hb.pack(side='top', anchor='nw')
+        self.balloon.bind(hb, "Read dicoms or load data")
+
+        hb = tk.Frame(self)
+
+        filedialog = FileDialogReader(self.manager[self.__SAVE_PATH_KEY])
+        b = tk.Button(hb, text=self.__SAVE_PATH_KEY,
+                      command=lambda fd=filedialog: self.manager[self.__SAVE_PATH_KEY].set(fd.get_save_dirpath()))
+        b.pack(side='left', anchor='nw', pady=10)
+
+        l = tk.Label(hb, textvariable=self.manager[self.__SAVE_PATH_KEY])
         l.pack(side='left', anchor='nw', pady=10)
 
         hb.pack(side='top', anchor='nw')
@@ -247,21 +392,11 @@ class DosmaFrame(tk.Frame):
 
         self.balloon.bind(l, 'Tissues to analyze')
 
-    def __display_knee_info(self):
-        hb = tk.Frame(self)
-        hb.pack(side='top', anchor='nw')
-        l = tk.Label(hb, text='Medial -> Lateral: ')
-        l.pack(side='left', anchor='w', pady=10)
-        t = tk.Checkbutton(hb, variable=self.manager[self.__MEDIAL_TO_LATERAL_ORIENTATION_KEY])
-        t.pack(side='left', anchor='w', pady=10)
-
         self.balloon.bind(l, 'Select if Dicoms proceed in medial->lateral direction')
 
     def __base_gui(self):
         self.__display_data_loader()
-        self.__display_pid_info()
         self.__display_tissues()
-        self.__display_knee_info()
 
         hb = tk.Frame(self)
         scan_label = tk.Label(hb, text='Scan:')
@@ -272,8 +407,9 @@ class DosmaFrame(tk.Frame):
         hb.pack(side='top', anchor='nw')
 
     def InitUI(self):
-        self.text_box = tk.Text(self, wrap='word', height = 11, width=50)
+        self.text_box = tk.Text(self, wrap='word', height=11, width=50)
         self.text_box.pack(anchor='s', side='bottom')
+
 
 class PageThree(tk.Frame):
     SUPPORTED_FORMATS = (('nifti files', '*.nii\.gz'), ('dicom files', '*.dcm'))

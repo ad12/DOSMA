@@ -40,7 +40,7 @@ class IndexTracker():
     @x.setter
     def x(self, value):
         assert type(value) is np.ndarray and (
-                    value.ndim == 3 or value.ndim == 4), "image must be 3d (grayscale) or 4d (rgb) ndarray"
+                value.ndim == 3 or value.ndim == 4), "image must be 3d (grayscale) or 4d (rgb) ndarray"
         if value.ndim == 3:
             value = value[..., np.newaxis]
 

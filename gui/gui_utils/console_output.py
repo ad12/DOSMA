@@ -1,6 +1,6 @@
 import logging
-import tkinter as tk
 import sys
+import tkinter as tk
 
 
 class WidgetLogger(logging.StreamHandler):
