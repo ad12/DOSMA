@@ -1,10 +1,9 @@
 from __future__ import print_function
+
 import matplotlib
+
 matplotlib.use("TkAgg")
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from matplotlib.figure import Figure
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 class IndexTracker():
@@ -16,7 +15,7 @@ class IndexTracker():
 
     def onscroll(self, event):
         if event.button == 'down':
-            self.ind = min(self.ind + 1, self.num_slices-1)
+            self.ind = min(self.ind + 1, self.num_slices - 1)
         elif event.button == 'up':
             self.ind = max(self.ind - 1, 0)
 
@@ -40,7 +39,8 @@ class IndexTracker():
 
     @x.setter
     def x(self, value):
-        assert type(value) is np.ndarray and (value.ndim == 3 or value.ndim == 4), "image must be 3d (grayscale) or 4d (rgb) ndarray"
+        assert type(value) is np.ndarray and (
+                    value.ndim == 3 or value.ndim == 4), "image must be 3d (grayscale) or 4d (rgb) ndarray"
         if value.ndim == 3:
             value = value[..., np.newaxis]
 
@@ -49,4 +49,3 @@ class IndexTracker():
         self._x_normalized = self._x
 
         self.update()
-

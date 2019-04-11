@@ -30,3 +30,8 @@ debug_runs.py
 
 # playgrounds
 /gui/gui_playground.py
+
+# build files
+**/build
+**/dist
+*.spec

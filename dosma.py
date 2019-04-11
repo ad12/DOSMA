@@ -279,7 +279,7 @@ def handle_scan(vargin):
     return scan
 
 
-def parse_args():
+def parse_args(f_input=None):
     """Parse arguments given through command line (argv)
 
     :raises ValueError if dicom path is not provided
@@ -321,7 +321,10 @@ def parse_args():
     knee.knee_parser(subparsers)
 
     start_time = time.time()
-    args = parser.parse_args()
+    if f_input:
+        args = parser.parse_args(f_input)
+    else:
+        args = parser.parse_args()
     vargin = vars(args)
 
     if vargin[DEBUG_KEY]:
@@ -343,7 +346,7 @@ def parse_args():
 
     save_path = vargin[SAVE_KEY]
     if not save_path:
-        save_path = load_path if load_path else dicom_path
+        save_path = load_path if load_path else '%s/data' % dicom_path
         vargin[SAVE_KEY] = save_path
 
     if not os.path.isdir(save_path):

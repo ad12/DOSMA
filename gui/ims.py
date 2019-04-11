@@ -2,7 +2,6 @@ import matplotlib
 
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -12,15 +11,18 @@ from tkinter import ttk
 
 from gui.im_viewer import IndexTracker
 from data_io import format_io_utils as fio_utils
-from data_io.nifti_io import __NIFTI_EXTENSIONS__
-from data_io.dicom_io import __DICOM_EXTENSIONS__
 import os
 from data_io.orientation import SAGITTAL, CORONAL, AXIAL
 from skimage.measure import label
 from skimage.color import label2rgb
-from copy import deepcopy
-LARGE_FONT = ("Verdana", 12)
+from gui.preferences_viewer import PreferencesManager
 
+LARGE_FONT = ("Verdana", 12)
+from dosma import SUPPORTED_SCAN_TYPES, parse_args
+from msk import knee
+from gui.dosma_gui import ScanReader
+from gui.gui_utils.filedialog_reader import FileDialogReader
+import Pmw
 
 class DosmaViewer(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -33,7 +35,7 @@ class DosmaViewer(tk.Tk):
 
         self.frames = {}
 
-        for F in (StartPage, PageOne, PageTwo, PageThree):
+        for F in (StartPage, DosmaFrame, PageThree):
             frame = F(container, self)
 
             self.frames[F] = frame
@@ -42,62 +44,236 @@ class DosmaViewer(tk.Tk):
 
         self.show_frame(StartPage)
 
+        self.pref = PreferencesManager()
+
     def show_frame(self, cont):
         frame = self.frames[cont]
         frame.tkraise()
+
+    def show_preferences(self):
+        self.pref.show_window(self)
 
 
 class StartPage(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+        # photo = tk.PhotoImage(file="./defaults/skel-rotate.gif")
+        # label1 = tk.Label(image=photo)
+        # label1.pack()
+
         label = tk.Label(self, text="Start Page", font=LARGE_FONT)
         label.pack(pady=10, padx=10)
 
-        # button = ttk.Button(self, text="Visit Page 1",
-        #                     command=lambda: controller.show_frame(PageOne))
-        # button.pack()
-        #
-        # button2 = ttk.Button(self, text="Visit Page 2",
-        #                      command=lambda: controller.show_frame(PageTwo))
-        # button2.pack()
+        button2 = ttk.Button(self, text="DOSMA",
+                             command=lambda: controller.show_frame(DosmaFrame))
+        button2.pack()
 
         button3 = ttk.Button(self, text="Image Viewer",
                              command=lambda: controller.show_frame(PageThree))
         button3.pack()
 
+        button3 = ttk.Button(self, text="Preferences",
+                             command=lambda: controller.show_preferences())
+        button3.pack()
 
-class PageOne(tk.Frame):
+
+class DosmaFrame(tk.Frame):
+    __SCAN_KEY = 'Scan'
+    __TISSUES_KEY = 'Tissues'
+
+    __DICOM_PATH_KEY = 'Read dicoms'
+    __LOAD_PATH_KEY = 'Load data'
+
+    __DATA_KEY = 'data'  # Track option menu for dicom/load path
+    __DATA_PATH_KEY = 'datapath'  # Track filepath associated with option menu
+
+    __PID_KEY = 'pid'
+    __MEDIAL_TO_LATERAL_ORIENTATION_KEY = 'ml'
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Page One!!!", font=LARGE_FONT)
-        label.pack(pady=10, padx=10)
 
-        button1 = ttk.Button(self, text="Back to Home",
+        self.manager = dict()
+        self.gui_manager = dict()
+        self.balloon = Pmw.Balloon()
+
+        self.__init_manager()
+
+        self.__base_gui()
+        self.preferences = PreferencesManager()
+        self.file_dialog_reader = FileDialogReader()
+        self.scan_reader = ScanReader(self)
+
+        button1 = ttk.Button(self, text="Home",
                              command=lambda: controller.show_frame(StartPage))
-        button1.pack()
+        button1.pack(anchor='se', side='right')
 
-        button2 = ttk.Button(self, text="Page Two",
-                             command=lambda: controller.show_frame(PageTwo))
-        button2.pack()
+        button1 = ttk.Button(self, text="Run",
+                             command=lambda: self.execute())
+        button1.pack(anchor='sw', side='left')
+
+        self.InitUI()
+
+    def execute(self):
+        try:
+            action_str = self.scan_reader.get_cmd_line_str().strip()
+            if not action_str:
+                raise ValueError('No action selected')
+
+            preferences_str = self.preferences.get_cmd_line_str().strip()
+
+            source = 'd'
+            load_path = '%s/data' % self.manager[self.__DATA_PATH_KEY].get()
+            if self.manager[self.__DATA_KEY].get() == self.__LOAD_PATH_KEY:
+                source = 'l'
+                load_path = self.manager[self.__DATA_PATH_KEY].get()
+
+            tissue_str = ''
+            for c, t in enumerate(self.manager[self.__TISSUES_KEY]):
+                if t.get():
+                    tissue_str += '--%s ' % knee.SUPPORTED_TISSUES[c].STR_ID
+            tissue_str = tissue_str.strip()
+
+            if not tissue_str:
+                raise ValueError('No tissues selected')
 
 
-class PageTwo(tk.Frame):
+            pid = self.manager[self.__PID_KEY].get()
+            medial_to_lateral = self.manager[self.__MEDIAL_TO_LATERAL_ORIENTATION_KEY].get()
 
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Page Two!!!", font=LARGE_FONT)
-        label.pack(pady=10, padx=10)
+            if not pid:
+                raise ValueError('No PID was provided')
 
-        button1 = ttk.Button(self, text="Back to Home",
-                             command=lambda: controller.show_frame(StartPage))
-        button1.pack()
+            str_f = '--%s %s %s %s %s %s' % (source, self.manager[self.__DATA_PATH_KEY].get(),
+                                             preferences_str,
+                                             self.manager[self.__SCAN_KEY].get(),
+                                             tissue_str,
+                                             action_str)
 
-        button2 = ttk.Button(self, text="Page One",
-                             command=lambda: controller.show_frame(PageOne))
-        button2.pack()
+            # print(str_f)
 
+            parse_args(str_f.split())
+
+            # analysis string
+            str_f = '--l %s %s knee %s --pid %s %s' % (load_path,
+                                                       preferences_str,
+                                                    tissue_str,
+                                                    pid,
+                                                    '--ml' if medial_to_lateral else '')
+            str_f = str_f.strip()
+            parse_args(str_f.split())
+        except Exception as e:
+            tk.messagebox.showerror(str(type(e)), e.__str__())
+
+    def __init_manager(self):
+        self.manager[self.__SCAN_KEY] = tk.StringVar()
+        self.manager[self.__TISSUES_KEY] = [tk.BooleanVar() for i in range(len(knee.SUPPORTED_TISSUES))]
+        self.manager[self.__DATA_KEY] = tk.StringVar()
+        self.manager[self.__DATA_PATH_KEY] = tk.StringVar()
+
+        self.manager[self.__PID_KEY] = tk.StringVar()
+        self.manager[self.__MEDIAL_TO_LATERAL_ORIENTATION_KEY] = tk.BooleanVar()
+
+        self.manager[self.__SCAN_KEY].trace_add('write', self.__on_scan_change)
+
+    def __on_scan_change(self, *args):
+        scan_id = self.manager[self.__SCAN_KEY].get()
+        scan = None
+        for x in SUPPORTED_SCAN_TYPES:
+            if x.NAME == scan_id:
+                scan = x
+
+        self.scan_reader.load_scan(scan)
+
+        assert scan is not None, "No scan selected"
+
+    def __update_svar(self, *args):
+        svar = self.manager[self.__DATA_PATH_KEY]
+        selected_option = self.manager[self.__DATA_KEY].get()
+        if selected_option == self.__DICOM_PATH_KEY:
+            fp = self.file_dialog_reader.get_volume_filepath(selected_option, im_type=fio_utils.ImageDataFormat.dicom)
+        elif selected_option == self.__LOAD_PATH_KEY:
+            fp = self.file_dialog_reader.get_dirpath(selected_option)
+        else:
+            raise ValueError('%s key not found' % self.__DATA_KEY)
+
+        if not fp:
+            svar.set('')
+            return
+
+        svar.set(fp)
+
+    def __display_pid_info(self):
+        hb = tk.Frame(self)
+        hb.pack(side='top', anchor='nw')
+        l = tk.Label(hb, text=self.__PID_KEY.upper())
+        l.pack(side='left', anchor='w', pady=10)
+        t = tk.Entry(hb, textvariable=self.manager[self.__PID_KEY])
+        t.pack(side='left', anchor='w', pady=10)
+        self.balloon.bind(l, 'Patient id')
+
+    def __display_data_loader(self):
+        s_var = self.manager[self.__DATA_PATH_KEY]
+
+        hb = tk.Frame(self)
+
+        l = tk.Label(hb, text='Data source: ')
+        l.pack(side='left', anchor='nw', pady=10)
+
+        options = [self.__DICOM_PATH_KEY, self.__LOAD_PATH_KEY]
+        menu = tk.OptionMenu(hb, self.manager[self.__DATA_KEY], *options,
+                             command=self.__update_svar)
+        menu.pack(side='left', anchor='nw', pady=10)
+
+        l = tk.Label(hb, textvariable=s_var)
+        l.pack(side='left', anchor='nw', pady=10)
+
+        hb.pack(side='top', anchor='nw')
+
+    def __display_tissues(self):
+        hb = tk.Frame(self)
+        l = tk.Label(hb, text='Tissues:')
+        l.pack(side='left', anchor='w')
+        hb.pack(side='top', anchor='nw')
+        frames = [tk.Frame(hb)] * (len(knee.SUPPORTED_TISSUES) // 3 + 1)
+        for ind, tissue in enumerate(knee.SUPPORTED_TISSUES):
+            f = frames[ind // 3]
+            b = tk.Checkbutton(f, text=tissue.FULL_NAME, variable=self.manager[self.__TISSUES_KEY][ind])
+            b.pack(side='top', anchor='nw', pady=5)
+
+        for f in frames:
+            f.pack(side='left', anchor='nw')
+
+        self.balloon.bind(l, 'Tissues to analyze')
+
+    def __display_knee_info(self):
+        hb = tk.Frame(self)
+        hb.pack(side='top', anchor='nw')
+        l = tk.Label(hb, text='Medial -> Lateral: ')
+        l.pack(side='left', anchor='w', pady=10)
+        t = tk.Checkbutton(hb, variable=self.manager[self.__MEDIAL_TO_LATERAL_ORIENTATION_KEY])
+        t.pack(side='left', anchor='w', pady=10)
+
+        self.balloon.bind(l, 'Select if Dicoms proceed in medial->lateral direction')
+
+    def __base_gui(self):
+        self.__display_data_loader()
+        self.__display_pid_info()
+        self.__display_tissues()
+        self.__display_knee_info()
+
+        hb = tk.Frame(self)
+        scan_label = tk.Label(hb, text='Scan:')
+        scan_label.pack(side='left', anchor='nw', pady=10)
+        options = [x.NAME for x in SUPPORTED_SCAN_TYPES]
+        scan_dropdown = tk.OptionMenu(hb, self.manager[self.__SCAN_KEY], *options)
+        scan_dropdown.pack(side='left', anchor='nw', pady=10)
+        hb.pack(side='top', anchor='nw')
+
+    def InitUI(self):
+        self.text_box = tk.Text(self, wrap='word', height = 11, width=50)
+        self.text_box.pack(anchor='s', side='bottom')
 
 class PageThree(tk.Frame):
     SUPPORTED_FORMATS = (('nifti files', '*.nii\.gz'), ('dicom files', '*.dcm'))
@@ -196,7 +372,7 @@ class PageThree(tk.Frame):
 
         self.im_display = im
 
-    def __labeltorgb_3d__(self, im: np.ndarray, labels:np.ndarray, alpha: float=0.3):
+    def __labeltorgb_3d__(self, im: np.ndarray, labels: np.ndarray, alpha: float = 0.3):
         im_rgb = np.zeros(im.shape + (3,))  # rgb channel
         for s in range(im.shape[2]):
             im_slice = im[..., s]
@@ -232,7 +408,3 @@ class PageThree(tk.Frame):
     def im_display(self, value):
         self._im_display = value
         self.tracker.x = self._im_display
-
-
-app = DosmaViewer()
-app.mainloop()
