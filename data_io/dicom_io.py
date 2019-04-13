@@ -18,7 +18,7 @@ from data_io.format_io import DataReader, DataWriter, ImageDataFormat
 from data_io.med_volume import MedicalVolume
 from utils import io_utils
 
-__DICOM_EXTENSIONS__ = ('.dcm')
+__DICOM_EXTENSIONS__ = ('.dcm',)
 TOTAL_NUM_ECHOS_KEY = (0x19, 0x107e)
 
 
@@ -79,20 +79,20 @@ def LPSplus_to_RASplus(headers):
     orientation = np.zeros([3, 3])
 
     # determine vector for in-plane pixel directions (i, j)
-    i_vec, j_vec = np.asarray(im_dir[3:]), np.asarray(im_dir[:3])  # unique to pydicom, please revise if using different library to load dicoms
-    i_vec = i_vec * in_plane_pixel_spacing[1]
-    j_vec = j_vec * in_plane_pixel_spacing[0]
+    i_vec, j_vec = np.asarray(im_dir[:3]), np.asarray(im_dir[3:])  # unique to pydicom, please revise if using different library to load dicoms
+    i_vec = i_vec * in_plane_pixel_spacing[0]
+    j_vec = j_vec * in_plane_pixel_spacing[1]
 
     # determine vector for through-plane pixel direction (k)
     # 1. Normalize k_vector by magnitude
     # 2. Multiply by magnitude given by SpacingBetweenSlices field
     # These actions are done to avoid rounding errors that might result from float subtraction
-    k_vec = np.asarray(headers[-2].ImagePositionPatient) - np.asarray(headers[-1].ImagePositionPatient)
+    k_vec = np.asarray(headers[1].ImagePositionPatient) - np.asarray(headers[0].ImagePositionPatient)
     k_vec_magnitude = np.sqrt(np.sum(k_vec**2))
     k_vec = k_vec / k_vec_magnitude * headers[0].SpacingBetweenSlices
 
-    orientation[:3, :3] = np.stack([i_vec, j_vec, k_vec], axis=1)
-    scanner_origin = headers[-1].ImagePositionPatient
+    orientation[:3, :3] = np.stack([j_vec, i_vec, k_vec], axis=1)
+    scanner_origin = headers[0].ImagePositionPatient
 
     affine = np.zeros([4, 4])
     affine[:3, :3] = orientation

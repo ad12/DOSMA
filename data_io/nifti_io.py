@@ -35,23 +35,6 @@ class NiftiReader(DataReader):
     """
     data_format_code = ImageDataFormat.nifti
 
-    def __get_pixel_spacing__(self, nib_affine):
-        """
-        Get pixel spacing given affine matrix
-        :param nib_affine: a numpy array defining the affine matrix for Nibabel NiftiImage
-        :return: a tuple defining pixel spacing in RAS+ coordinates
-        """
-        col_i, col_j, col_k = nib_affine[..., 0], nib_affine[..., 1], nib_affine[..., 2]
-
-        ps_i = col_i[np.nonzero(col_i)]
-        ps_j = col_j[np.nonzero(col_j)]
-        ps_k = col_k[np.nonzero(col_k)]
-
-        assert len(ps_i) == 1 and len(ps_j) == 1 and len(ps_k) == 1, \
-            "Multiple nonzero values found: There should only be 1 nonzero element in first 3 columns of Nibabel affine matrix"
-
-        return abs(ps_i[0]), abs(ps_j[0]), abs(ps_k[0])
-
     def load(self, filepath):
         """
         Load image data from filepath
