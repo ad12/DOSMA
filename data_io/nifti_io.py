@@ -72,12 +72,9 @@ class NiftiReader(DataReader):
 
         nib_img = nib.load(filepath)
         nib_img_affine = nib_img.affine
-        orientation = __orientation_nib_to_standard__(nib.aff2axcodes(nib_img_affine))
-        origin = tuple(nib_img_affine[:3, 3])
-        pixel_spacing = self.__get_pixel_spacing__(nib_img_affine)
         np_img = nib_img.get_fdata()
 
-        return MedicalVolume(np_img, pixel_spacing, orientation, origin)
+        return MedicalVolume(np_img, nib_img_affine)
 
 
 class NiftiWriter(DataWriter):
@@ -85,28 +82,6 @@ class NiftiWriter(DataWriter):
     A class for writing data in NIfTI format
     """
     data_format_code = ImageDataFormat.nifti
-
-    def __get_nib_affine__(self, im: MedicalVolume):
-        """
-        Get Nibabel affine matrix from a MedicalVolume
-        :param im: a MedicalVolume
-        :return: a numpy array defining Nibabel affine matrix in RAS+ coordinate system
-        """
-        pixel_spacing = im.pixel_spacing
-        origin = im.scanner_origin
-
-        nib_orientation_inds = nibo.axcodes2ornt(__orientation_standard_to_nib__(im.orientation))
-        assert nib_orientation_inds.shape == (3, 2), "Currently only supporting perfectly orthogonal scans"
-
-        nib_affine = np.zeros([4, 4])
-        rows, _ = nib_orientation_inds.shape
-        for r in range(rows):
-            ind, val = nib_orientation_inds[r, 0], nib_orientation_inds[r, 1]
-            nib_affine[int(ind), r] = val * pixel_spacing[r]
-
-        nib_affine[:, 3] = (np.append(np.asarray(origin), 1)).flatten()
-
-        return nib_affine
 
     def save(self, im: MedicalVolume, filepath: str):
         """
@@ -122,7 +97,7 @@ class NiftiWriter(DataWriter):
         # Create dir if does not exist
         io_utils.check_dir(os.path.dirname(filepath))
 
-        nib_affine = self.__get_nib_affine__(im)
+        nib_affine = im.affine
         np_im = im.volume
         nib_img = nib.Nifti1Image(np_im, nib_affine)
 
@@ -130,24 +105,10 @@ class NiftiWriter(DataWriter):
 
 
 if __name__ == '__main__':
-    load_filepath = '../dicoms/healthy07/h7.nii.gz'
-    save_filepath = '../dicoms/healthy07/h7_nifti_writer-transpose.nii.gz'
-    save_filepath2 = '../dicoms/healthy07/h7_nifti_writer-flip.nii.gz'
-
+    import scipy.io as sio
+    load_filepath = '../dicoms/mapss_eg/multi-echo/gt-%d.nii.gz'
+    save_path = '../dicoms/mapss_eg/matfiles-nii'
     nr = NiftiReader()
-    med_vol = nr.load(load_filepath)
-    o = med_vol.orientation
-
-    nw = NiftiWriter()
-    o1 = (o[1], o[0], o[2])
-    med_vol.reformat(o1)
-    nw.save(med_vol, save_filepath)
-
-    o2 = (o[0][::-1], o[1], o[2])
-    med_vol.reformat(o2)
-    nw.save(med_vol, save_filepath2)
-
-    print('')
-    a = nr.load(load_filepath)
-    b = nr.load(save_filepath)
-    c = nr.load(save_filepath2)
+    for i in range(7):
+        med_vol = nr.load(load_filepath % i)
+        sio.savemat(os.path.join(save_path, '%d.mat' % i), {'data': med_vol.volume})
