@@ -88,8 +88,9 @@ def LPSplus_to_RASplus(headers):
     # 2. Multiply by magnitude given by SpacingBetweenSlices field
     # These actions are done to avoid rounding errors that might result from float subtraction
     k_vec = np.asarray(headers[1].ImagePositionPatient) - np.asarray(headers[0].ImagePositionPatient)
-    # k_vec_magnitude = np.sqrt(np.sum(k_vec**2))
-    # k_vec = k_vec / k_vec_magnitude * headers[0].SpacingBetweenSlices
+    k_vec_magnitude = np.sqrt(np.sum(k_vec**2))
+    assert k_vec_magnitude == headers[0].SpacingBetweenSlices
+    #k_vec = k_vec / k_vec_magnitude * headers[0].SpacingBetweenSlices
 
     orientation[:3, :3] = np.stack([j_vec, i_vec, k_vec], axis=1)
     scanner_origin = headers[0].ImagePositionPatient

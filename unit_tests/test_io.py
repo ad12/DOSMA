@@ -269,6 +269,7 @@ class TestInterIO(unittest.TestCase):
 
                 nifti_vol = self.nr.load(nfp)
                 dicom_vol = self.dr.load(dfp)[0]
+                dicom_vol.reformat(nifti_vol.orientation)
 
                 assert nifti_vol.is_same_dimensions(dicom_vol)
                 assert (nifti_vol.volume == dicom_vol.volume).all()

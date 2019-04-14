@@ -35,7 +35,7 @@ class NiftiReader(DataReader):
     """
     data_format_code = ImageDataFormat.nifti
 
-    def __normalize_affine(self, affine, precision=6):
+    def __normalize_affine(self, affine, precision=4):
         # determine vector for through-plane pixel direction (k)
         # 1. Normalize k_vector by magnitude
         # 2. Multiply by magnitude given by SpacingBetweenSlices field
@@ -47,14 +47,20 @@ class NiftiReader(DataReader):
         k_vec = np.array(aff[:3, 2])
 
         vecs = [i_vec, j_vec, k_vec]
+        vecs_normalized = []
         for v in vecs:
             vec_magnitude = np.sqrt(np.sum(v ** 2))
             vec_mag_rounded = np.round(vec_magnitude, precision)
-            v = v / vec_magnitude * vec_mag_rounded
+            vec = v / vec_magnitude * vec_mag_rounded
+            assert np.sqrt(np.sum(vec**2)) == vec_mag_rounded, "got %0.20f, expected %0.20f" % (np.sqrt(np.sum(vec**2)), vec_mag_rounded)
 
-        aff[:3, 0] = i_vec
-        aff[:3, 1] = j_vec
-        aff[:3, 2] = k_vec
+            vecs_normalized.append(vec)
+
+        aff[:3, 0] = vecs_normalized[0]
+        aff[:3, 1] = vecs_normalized[1]
+        aff[:3, 2] = vecs_normalized[2]
+
+        #aff[:3, 3] = np.round(aff[:3, 3], precision)
 
         return aff
 
@@ -78,6 +84,7 @@ class NiftiReader(DataReader):
 
         nib_img = nib.load(filepath)
         nib_img_affine = nib_img.affine
+        #nib_img_affine = self.__normalize_affine(nib_img_affine)
 
         np_img = nib_img.get_fdata()
 
