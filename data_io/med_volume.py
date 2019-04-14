@@ -41,6 +41,21 @@ class MedicalVolume():
         """
         Reorients self to a specified orientation
         :param new_orientation: a tuple specifying orientation
+
+        Reorientation method:
+        ---------------------
+        - Axis transpose and flipping are linear operations and therefore can be treated independently
+        - working example: ('AP', 'SI', 'LR') --> ('RL', 'PA', 'SI')
+        1. Transpose volume and RAS orientation to appropriate column in matrix
+            eg. ('AP', 'SI', 'LR') --> ('LR', 'AP', 'SI') - transpose_inds=[2, 0, 1]
+        2. Flip volume across corresponding axes
+            eg. ('LR', 'AP', 'SI') --> ('RL', 'PA', 'SI') - flip axes 0,1
+
+        Reorientation method implementation:
+        ------------------------------------
+        1. Transpose: Switching (transposing) axes in volume is the same as switching columns in affine matrix
+        2. Flipping: Negate each column corresponding to pixel axis to flip (i, j, k) and reestablish origins based on
+                     flipped axes
         """
         # Check if new_orientation is the same as current orientation
         assert type(new_orientation) is tuple, "Orientation must be a tuple"
@@ -49,7 +64,6 @@ class MedicalVolume():
 
         temp_orientation = self.orientation
         temp_affine = np.array(self._affine)
-        pixel_spacing = self.pixel_spacing
 
         transpose_inds = get_transpose_inds(temp_orientation, new_orientation)
 
@@ -59,23 +73,35 @@ class MedicalVolume():
 
         temp_orientation = tuple([self.orientation[i] for i in transpose_inds])
 
-        flip_axs_inds = get_flip_inds(temp_orientation, new_orientation)
+        flip_axs_inds = list(get_flip_inds(temp_orientation, new_orientation))
 
         volume = np.flip(volume, axis=flip_axs_inds)
-        scanner_origin = list(temp_affine[:3, 3])
-        nib_coords = nibo.axcodes2ornt(__orientation_standard_to_nib__(temp_orientation))
 
-        for i in range(len(scanner_origin)):
-            if i in flip_axs_inds:
-                r_ind = int(nib_coords[i, 0])
-                alpha_val = int(nib_coords[i, 1])
-                scanner_origin[r_ind] = alpha_val * pixel_spacing[i] * (volume.shape[i] - 1) + scanner_origin[r_ind]
+        a_vecs = temp_affine[:3, :3]
+        a_origin = temp_affine[:3, 3]
 
-        temp_affine[:3, 3] = scanner_origin
+        # phi is a vector of 1s and -1s, where 1 indicates no flip, and -1 indicates flip
+        # phi is used to determine which columns in affine matrix to flip
+        phi = np.ones([1, len(a_origin)]).flatten()
+        phi[flip_axs_inds] *= -1
+
+        b_vecs = np.array(a_vecs)
+        for i in range(len(phi)):
+            b_vecs[:, i] *= phi[i]
+
+        # get number of pixels to shift by on each axis (should be 0 when not flipping - i.e. phi<0 mask)
+        vol_shape_vec = ((np.asarray(volume.shape) - 1) * (phi < 0).astype(np.float32)).transpose()
+        b_origin = a_origin.flatten()- np.matmul(b_vecs, vol_shape_vec).flatten()
+
+        temp_affine = np.array(self.affine)
+        temp_affine[:3, :3] = b_vecs
+        temp_affine[:3, 3] = b_origin
+        temp_affine[temp_affine == 0] = 0  # get rid of negative 0s
+
+        self._affine = temp_affine
 
         assert self.orientation == new_orientation, "Orientation mismatch: Expected: %s. Got %s" % (str(self.orientation),
                                                                                                     str(new_orientation))
-        self._affine = temp_affine
         self._volume = volume
 
     def is_identical(self, mv):

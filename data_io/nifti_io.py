@@ -35,6 +35,29 @@ class NiftiReader(DataReader):
     """
     data_format_code = ImageDataFormat.nifti
 
+    def __normalize_affine(self, affine, precision=6):
+        # determine vector for through-plane pixel direction (k)
+        # 1. Normalize k_vector by magnitude
+        # 2. Multiply by magnitude given by SpacingBetweenSlices field
+        # These actions are done to avoid rounding errors that might result from float subtraction
+
+        aff = np.array(affine)
+        i_vec = np.array(aff[:3, 0])
+        j_vec = np.array(aff[:3, 1])
+        k_vec = np.array(aff[:3, 2])
+
+        vecs = [i_vec, j_vec, k_vec]
+        for v in vecs:
+            vec_magnitude = np.sqrt(np.sum(v ** 2))
+            vec_mag_rounded = np.round(vec_magnitude, precision)
+            v = v / vec_magnitude * vec_mag_rounded
+
+        aff[:3, 0] = i_vec
+        aff[:3, 1] = j_vec
+        aff[:3, 2] = k_vec
+
+        return aff
+
     def load(self, filepath):
         """
         Load image data from filepath
@@ -55,6 +78,7 @@ class NiftiReader(DataReader):
 
         nib_img = nib.load(filepath)
         nib_img_affine = nib_img.affine
+
         np_img = nib_img.get_fdata()
 
         return MedicalVolume(np_img, nib_img_affine)
