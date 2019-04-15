@@ -6,6 +6,12 @@ This is the first file that is imported from this software - all initialization 
 
 # Parse preferences file
 
+
+# Default rounding for I/O (dicom, nifti, etc) - DO NOT CHANGE
+AFFINE_DECIMAL_PRECISION = 5
+SCANNER_ORIGIN_DECIMAL_PRECISION = 4
+
+
 # Default inference batch size - based on RAM of computer
 # for 16 GB RAM , recommend 16
 DEFAULT_BATCH_SIZE = 16

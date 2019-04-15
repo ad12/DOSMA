@@ -133,9 +133,7 @@ class QDess(TargetSequence):
             t2map = t2map * (echo_1 > 0.15*np.max(echo_1))
 
         t2_map_wrapped = MedicalVolume(t2map,
-                                       pixel_spacing=subvolumes[0].pixel_spacing,
-                                       orientation=subvolumes[0].orientation,
-                                       scanner_origin=subvolumes[0].scanner_origin,
+                                       affine=subvolumes[0].affine,
                                        headers=deepcopy(subvolumes[0].headers))
 
         tissue.add_quantitative_value(T2(t2_map_wrapped))

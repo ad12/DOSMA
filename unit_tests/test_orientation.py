@@ -1,4 +1,10 @@
 import unittest
+import numpy as np
+import sys
+
+sys.path.append('../')
+from unit_tests import unittest_utils as ututils
+from data_io.format_io import ImageDataFormat
 
 
 class TestOrientation(unittest.TestCase):
@@ -7,9 +13,12 @@ class TestOrientation(unittest.TestCase):
     nr = NiftiReader()
     nw = NiftiWriter()
 
-    # filepaths to DESS echo1 and echo2 volumes created by ITK-Snap - serve as ground truth
-    e1_nifti_itksnap_path = '../dicoms/h07-unittest/dess-e1-itksnap.nii.gz'
-    e2_nifti_itksnap_path = '../dicoms/h07-unittest/dess-e2-itksnap.nii.gz'
+    def setUp(self):
+        # filepaths to all separated echos (done in image-viewer such as ITK-Snap, Horos, etc)
+        filepaths = []
+        for fp in ututils.SCAN_DIRPATHS:
+            filepaths.extend(ututils.get_read_paths(fp, ImageDataFormat.nifti))
+        self.filepaths = filepaths
 
     def check_orientations(self, mv: MedicalVolume, orientations):
         """
@@ -19,6 +28,7 @@ class TestOrientation(unittest.TestCase):
         :param orientations: a list or tuple of orientation tuples
         """
         o_base, so_base, ps_base = mv.orientation, mv.scanner_origin, mv.pixel_spacing
+        ps_affine = np.array(mv.affine)
 
         for o in orientations:
             # Reorient to some orientation
@@ -35,40 +45,50 @@ class TestOrientation(unittest.TestCase):
             assert mv.pixel_spacing == ps_base, "Pixel Spacing mismatch: Expected %s, got %s" % (str(ps_base),
                                                                                                  str(mv.pixel_spacing))
 
+            assert (mv.affine == ps_affine).all(), "Affine matrix mismatch: Expected\n%s\ngot\n%s" % (str(ps_affine),
+                                                                                                      str(mv.affine))
+
     def test_flip(self):
         # tests flipping orientation across volume axis
-        e1 = self.nr.load(self.e1_nifti_itksnap_path)
-        o = e1.orientation
-        orientations = [(o[0][::-1], o[1], o[2]), (o[0], o[1][::-1], o[2]), (o[0], o[1][::-1], o[2]),
-                        (o[0][::-1], o[1][::-1], o[2]), (o[0][::-1], o[1], o[2][::-1]), (o[0], o[1][::-1], o[2][::-1]),
-                        (o[0][::-1], o[1][::-1], o[2][::-1])]
+        for fp in self.filepaths:
+            e1 = self.nr.load(fp)
+            o = e1.orientation
+            orientations = [(o[0][::-1], o[1], o[2]), (o[0], o[1][::-1], o[2]), (o[0], o[1][::-1], o[2]),
+                            (o[0][::-1], o[1][::-1], o[2]), (o[0][::-1], o[1], o[2][::-1]), (o[0], o[1][::-1], o[2][::-1]),
+                            (o[0][::-1], o[1][::-1], o[2][::-1])]
 
-        self.check_orientations(e1, orientations)
+            self.check_orientations(e1, orientations)
 
     def test_transpose(self):
         # tests transposing axes - i.e. changing vantage point on current volume
-        e1 = self.nr.load(self.e1_nifti_itksnap_path)
-        o = e1.orientation
+        for fp in self.filepaths:
+            e1 = self.nr.load(fp)
+            o = e1.orientation
 
-        orientations = [(o[1], o[2], o[0]), (o[2], o[0], o[1]), (o[1], o[0], o[2]),
-                        (o[2], o[1], o[0]), (o[0], o[2], o[1])]
+            orientations = [(o[1], o[2], o[0]), (o[2], o[0], o[1]), (o[1], o[0], o[2]),
+                            (o[2], o[1], o[0]), (o[0], o[2], o[1])]
 
-        self.check_orientations(e1, orientations)
+            self.check_orientations(e1, orientations)
 
     def test_transpose_and_flip(self):
         from itertools import permutations
-        e1 = self.nr.load(self.e1_nifti_itksnap_path)
-        o = e1.orientation
+        for fp in self.filepaths:
+            e1 = self.nr.load(fp)
+            o = e1.orientation
 
-        # generate all possible transposed versions of the existing orientation
-        transpose_orientations = list(permutations(o))
-        flip_orientations_indices = [[0], [1], [2], [0, 1], [0, 2], [1, 2], [0, 1, 2]]
-        orientations = []
-        for to in transpose_orientations:
-            for fo_inds in flip_orientations_indices:
-                o_test = list(to)
-                for i in fo_inds:
-                    o_test[i] = o_test[i][::-1]
-                orientations.append(tuple(o_test))
+            # generate all possible transposed versions of the existing orientation
+            transpose_orientations = list(permutations(o))
+            flip_orientations_indices = [[0], [1], [2], [0, 1], [0, 2], [1, 2], [0, 1, 2]]
+            orientations = []
+            for to in transpose_orientations:
+                for fo_inds in flip_orientations_indices:
+                    o_test = list(to)
+                    for i in fo_inds:
+                        o_test[i] = o_test[i][::-1]
+                    orientations.append(tuple(o_test))
 
-        self.check_orientations(e1, orientations)
+            self.check_orientations(e1, orientations)
+
+
+if __name__ == '__main__':
+    unittest.main()

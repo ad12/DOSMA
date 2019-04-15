@@ -370,9 +370,7 @@ class NonTargetSequence(ScanSequence):
         fixed_mask_filepath = os.path.join(io_utils.check_dir(temp_path), 'dilated-mask.nii.gz')
 
         dilated_mask_volume = MedicalVolume(fixed_mask,
-                                            pixel_spacing=mask.pixel_spacing,
-                                            orientation=mask.orientation,
-                                            scanner_origin=mask.scanner_origin)
+                                            affine=mask.affine)
         dilated_mask_volume.save_volume(fixed_mask_filepath)
 
         return fixed_mask_filepath

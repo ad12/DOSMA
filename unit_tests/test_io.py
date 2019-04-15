@@ -1,34 +1,51 @@
 import unittest
+import os, sys
+import re
+import random
+
+sys.path.append('../')
+from data_io.format_io import ImageDataFormat
+from unit_tests import unittest_utils as ututils
 
 
 class TestNiftiIO(unittest.TestCase):
     from data_io.nifti_io import NiftiReader, NiftiWriter
 
-    load_filepath = '../dicoms/h07-unittest/dess-e1-itksnap.nii.gz'
-    save_filepath = '../dicoms/h07-unittest/dess-e1-niftiwriter.nii.gz'
-
     nr = NiftiReader()
     nw = NiftiWriter()
 
+    data_format = ImageDataFormat.nifti
+
     def test_nifti_read(self):
-        mv = self.nr.load(self.load_filepath)
+        for dp in ututils.SCAN_DIRPATHS:
+            dicoms_path = ututils.get_dicoms_path(dp)
+            read_filepaths = ututils.get_read_paths(dp, self.data_format)
 
-        with self.assertRaises(FileNotFoundError):
-            mv = self.nr.load('../dicoms/healthy07/h7')
+            for read_filepath in read_filepaths:
+                mv = self.nr.load(read_filepath)
 
-        with self.assertRaises(FileNotFoundError):
-            mv = self.nr.load('../dicoms/healthy07')
+                with self.assertRaises(FileNotFoundError):
+                    mv = self.nr.load(os.path.join(dp, 'bleh'))
 
-        with self.assertRaises(ValueError):
-            mv = self.nr.load('../dicoms/healthy07/007/I0001.dcm')
+                with self.assertRaises(FileNotFoundError):
+                    mv = self.nr.load(dp)
+
+                with self.assertRaises(ValueError):
+                    mv = self.nr.load(os.path.join(dicoms_path, 'I0001.dcm'))
 
     def test_nifti_write(self):
-        mv = self.nr.load(self.load_filepath)
-        self.nw.save(mv, self.save_filepath)
-        self.nw.save(mv, '../dicoms/healthy07/h7_nifti_writer.nii')
+        for dp in ututils.SCAN_DIRPATHS:
+            read_filepaths = ututils.get_read_paths(dp, self.data_format)
+            save_dirpath = ututils.get_write_path(dp, self.data_format)
 
-        with self.assertRaises(ValueError):
-            self.nw.save(mv, '../dicoms/healthy07/h7_nifti_writer.dcm')
+            for rfp in read_filepaths:
+                save_filepath = os.path.join(save_dirpath, os.path.basename(rfp))
+                mv = self.nr.load(rfp)
+                self.nw.save(mv, save_filepath)
+
+                # cannot save with extensions other than nii or nii.gz
+                with self.assertRaises(ValueError):
+                    self.nw.save(mv, os.path.join(ututils.TEMP_PATH, 'eg.dcm'))
 
 
 class TestDicomIO(unittest.TestCase):
@@ -37,14 +54,7 @@ class TestDicomIO(unittest.TestCase):
     dr = DicomReader()
     dw = DicomWriter()
 
-    # Dicom load path - load both echos and separate using DicomReader
-    total_dcm_path = '../dicoms/h07-unittest/007'
-    e1_dcm_path = '../dicoms/h07-unittest/dess-e1'
-    e2_dcm_path = '../dicoms/h07-unittest/dess-e2'
-
-    # Dicom save paths - echos saved separately
-    e1_dcm_save_path = '../dicoms/h07-unittest/dess-e1-dicom_writer'
-    e2_dcm_save_path = '../dicoms/h07-unittest/dess-e2-dicom_writer'
+    data_format = ImageDataFormat.dicom
 
     @staticmethod
     def are_equivalent_headers(h1, h2):
@@ -69,157 +79,164 @@ class TestDicomIO(unittest.TestCase):
         return len(changes) == 0
 
     def test_dicom_reader_total(self):
-        # Dicom reader should read in both volumes separately for qDESS series
-        volumes = self.dr.load(self.total_dcm_path)
+        for ind, dp in enumerate(ututils.SCAN_DIRPATHS):
+            curr_scan = ututils.SCANS[ind]
+            curr_scan_info = ututils.SCANS_INFO[curr_scan]
 
-        assert type(volumes) is list, "Expected list output"
-        assert len(volumes) == 2, "Expected 2 volumes in qDESS, got %d" % len(volumes)
+            dicom_path = ututils.get_dicoms_path(dp)
+            volumes = self.dr.load(dicom_path)
 
-        # echo1 (e1) and echo2 (e2) should have same shape
-        e1 = volumes[0]
-        e2 = volumes[1]
+            assert type(volumes) is list, "Expected list output"
+            expected_num_echos = curr_scan_info['expected_num_echos']
+            assert len(volumes) == expected_num_echos, "Expected %d volumes in %s, got %d" % (expected_num_echos,
+                                                                                              curr_scan,
+                                                                                              len(volumes))
 
-        # Get dicom and itksnap in same orientation
-        o = e1.orientation
-        assert o == e2.orientation, "orientations of multiple dicom volumes loaded from single folder should be identical"
+            # if multiple echos, all echo volumes must share the same orientation, shape, scanner origin, and pixel spacing
+            e1 = volumes[0]
+            for echo_volume in volumes[1:]:
+                assert e1.orientation == echo_volume.orientation, "Orientation mismatch: orientations of multiple dicom volumes loaded from single folder should be identical"
 
-        assert e1.volume.shape == e2.volume.shape, "Both volumes should have same shape"
+                assert e1.volume.shape == echo_volume.volume.shape, "Shape mismatch: Both volumes should have same shape"
 
-        # Headers for e1 should all have EchoNumbers field = 1
-        for i in range(len(volumes)):
-            for h in volumes[i].headers:
-                assert h.EchoNumbers == i + 1, "e%d headers should have all EchoNumbers=%d" % (i + 1, i + 1)
+                assert e1.scanner_origin == echo_volume.scanner_origin, "Scanner origin mismatch: Both volumes should have same scanner_origin"
+
+                assert e1.pixel_spacing == echo_volume.pixel_spacing, "Pixel spacing mismatch: Both volumes must have the same pixel spacing"
+
+            # Headers for e1 should all have EchoNumbers field = 1
+            for i in range(len(volumes)):
+                for h in volumes[i].headers:
+                    assert h.EchoNumbers == i + 1, "e%d headers should have all EchoNumbers=%d" % (i + 1, i + 1)
 
     def test_dicom_reader_separate(self):
         # User manually separates two echos into different folders
         # still be able to read volume in
 
-        e1 = self.dr.load(self.e1_dcm_path)
-        assert type(e1) is list, "Output type should be list with length 1"
-        assert len(e1) == 1, "length of list must be 1"
+        for ind, dp in enumerate(ututils.SCAN_DIRPATHS):
+            curr_scan = ututils.SCANS[ind]
 
-        for h in e1[0].headers:
-            assert h.EchoNumbers == 1, "e1 headers should have all EchoNumbers=1"
+            multi_echo_read_paths = ututils.get_read_paths(dp, self.data_format)
 
-        e2 = self.dr.load(self.e2_dcm_path)
-        assert type(e2) is list, "Output type should be list with length 1"
-        assert len(e2) == 1, "length of list must be 1"
+            dicom_path = ututils.get_dicoms_path(dp)
+            volumes = self.dr.load(dicom_path)
 
-        for h in e2[0].headers:
-            assert h.EchoNumbers == 2, "e2 headers should have all EchoNumbers=2"
+            for rfp in multi_echo_read_paths:
+                echo_volume = self.dr.load(rfp)
+                echo_name = os.path.basename(rfp)
+                echo_number = int(re.match('.*?([0-9]+)$', echo_name).group(1))
 
-        # single element in a list, unpack it for easy access
-        e1 = e1[0]
-        e2 = e2[0]
+                assert type(echo_volume) is list, "Output type should be list with length 1"
+                assert len(echo_volume) == 1, "length of list must be 1"
 
-        # compare volumes to those read from total - should be identical
-        # e1-split (e1): echo1 loaded from the manually separated dicoms into respective echo folders
-        # e1-total (e1_t): echo1 loaded from the total (unseparated) dicoms
-        # similarly for e2 (echo2)
-        volumes = self.dr.load(self.total_dcm_path)
-        e1_t = volumes[0]
-        e2_t = volumes[1]
+                for h in echo_volume[0].headers:
+                    assert h.EchoNumbers == echo_number, "%s headers should have all EchoNumbers=%d" % (echo_name,
+                                                                                                        echo_number)
 
-        assert e1.is_identical(e1_t), "e1-split and e1-total should be identical"
-        assert e2.is_identical(e2_t), "e2-split and e2-total should be identical"
+                # compare volumes to those read from total - should be identical
+                # e1-split (e1): echo1 loaded from the manually separated dicoms into respective echo folders
+                # e1-total (e1_t): echo1 loaded from the total (unseparated) dicoms
+                echo_volume = echo_volume[0]
+                e_t = volumes[echo_number-1]
 
-        count = 0
-        # headers should also be identical
-        for e, et in [(e1, e1_t), (e2, e2_t)]:
-            count += 1
-            assert len(e.headers) == len(et.headers), "number of headers should be identical in echo%d" % count
+                assert echo_volume.is_identical(e_t), "e%d-split and e%d-total should be identical" % (echo_number,
+                                                                                                       echo_number)
 
-            for i in range(len(e.headers)):
-                h1 = e.headers[i]
-                h2 = et.headers[i]
+                # headers should also be identical
+                assert len(echo_volume.headers) == len(e_t.headers), "number of headers should be identical in echo %d" % echo_number
 
-                assert self.are_equivalent_headers(h1, h2), "headers for echoes %d must be equivalent" % count
+                for i in range(len(echo_volume.headers)):
+                    h1 = echo_volume.headers[i]
+                    h2 = e_t.headers[i]
+
+                    assert self.are_equivalent_headers(h1, h2), "headers for echos %d must be equivalent" % echo_number
 
     def test_dicom_writer(self):
-        # Read in dicom information, write out to different folder, compare with e1 and e2 dicoms
-        volumes = self.dr.load(self.total_dcm_path)
-        e1 = volumes[0]
-        e2 = volumes[1]
+        for dp_ind, dp in enumerate(ututils.SCAN_DIRPATHS):
+            curr_scan = ututils.SCANS[dp_ind]
+            curr_scan_info = ututils.SCANS_INFO[curr_scan]
 
-        self.dw.save(e1, self.e1_dcm_save_path)
-        self.dw.save(e2, self.e2_dcm_save_path)
+            dicom_path = ututils.get_dicoms_path(dp)
+            write_path = ututils.get_write_path(dp, self.data_format)
+            read_filepaths= ututils.get_read_paths(dp, self.data_format)
 
-        e1_loaded = self.dr.load(self.e1_dcm_save_path)
-        e2_loaded = self.dr.load(self.e2_dcm_save_path)
+            # Read in dicom information, write out to different folder (as multiple echos if possible)
+            # Compare to baseline echos separated manually
+            volumes = self.dr.load(dicom_path)
+            for ind, vol in enumerate(volumes):
+                write_fp = os.path.join(write_path, 'e%d' % (ind+1))
+                self.dw.save(vol, write_fp)
 
-        e1_loaded = e1_loaded[0]
-        e2_loaded = e2_loaded[0]
+            for ind, rfp in enumerate(read_filepaths):
+                echo_volume_loaded = self.dr.load(rfp)[0]
+                e_t = volumes[ind]
+                assert echo_volume_loaded.is_identical(e_t), "Loaded e1 and original e1 should be identical"
 
-        assert e1_loaded.is_identical(e1), "Loaded e1 and original e1 should be identical"
-        assert e2_loaded.is_identical(e2), "Loaded e2 and original e2 should be identical"
+                # headers should also be identical
+                assert len(echo_volume_loaded.headers) == len(e_t.headers), "number of headers should be identical in echo%d" % (ind+1)
 
-        count = 0
-        # headers should also be identical
-        for e, et in [(e1_loaded, e1), (e2_loaded, e2)]:
-            count += 1
-            assert len(e.headers) == len(et.headers), "number of headers should be identical in echo%d" % count
+                for i in range(len(echo_volume_loaded.headers)):
+                    h1 = echo_volume_loaded.headers[i]
+                    h2 = e_t.headers[i]
 
-            for i in range(len(e.headers)):
-                h1 = e.headers[i]
-                h2 = et.headers[i]
-
-                assert self.are_equivalent_headers(h1, h2), "headers for echoes %d must be equivalent" % count
+                    assert self.are_equivalent_headers(h1, h2), "headers for echoes %d must be equivalent" % (ind+1)
 
     def test_dicom_writer_orientation(self):
-        # Read in dicom information, reorient image, write out to different folder, compare with e1 and e2 dicoms
-        volumes = self.dr.load(self.total_dcm_path)
-        e1 = volumes[0]
-        e2 = volumes[1]
+        # Read in dicom information, reorient image, write out to different folder, compare with multi-echo dicoms
+        for dp_ind, dp in enumerate(ututils.SCAN_DIRPATHS):
+            curr_scan = ututils.SCANS[dp_ind]
+            curr_scan_info = ututils.SCANS_INFO[curr_scan]
 
-        # Reorient images
-        o = e1.orientation  # echo 1 and echo 2 have the same orientation, because loaded from the total dicom path
+            dicom_path = ututils.get_dicoms_path(dp)
+            write_path = ututils.get_write_path(dp, self.data_format)
 
-        o1 = (o[1], o[2], o[0])
-        e1.reformat(o1)
+            volumes = self.dr.load(dicom_path)
 
-        o2 = (o[2], o[0], o[1])
-        e2.reformat(o2)
+            # Reorient images
+            o = volumes[0].orientation  # echo 1 and echo 2 have the same orientation, because loaded from the total dicom path
 
-        # save images
-        self.dw.save(e1, self.e1_dcm_save_path)
-        self.dw.save(e2, self.e2_dcm_save_path)
+            # generate random permutations of orientations
+            orientations = []
+            for i in range(len(volumes)):
+                o_new = list(o)
+                random.shuffle(o_new)
+                o_new = tuple(o_new)
+                orientations.append(o_new)
 
-        # orientations should be preserved after saving
-        assert e1.orientation == o1, "Orientation of echo1 should not change after saving"
-        assert e2.orientation == o2, "Orientation of echo2 should not change after saving"
+                volumes[i].reformat(o_new)
+                self.dw.save(volumes[i], os.path.join(write_path, 'e%d' % (i+1)))
 
-        # Currently saving dicom flipped axis (i.e. changing scanner origin) is not supported
-        # check to make sure error is raised
-        o3 = (o[0][::-1], o[1], o[2])
-        e2.reformat(o3)
-        with self.assertRaises(ValueError):
-            self.dw.save(e2, self.e2_dcm_save_path)
+                # orientations should be preserved after saving
+                assert volumes[i].orientation == o_new, "Orientation of echo1 should not change after saving"
 
-        # reformat with dicom-specific orientation (o) to compare to loaded echos
-        e1.reformat(o)
-        e2.reformat(o)
+            # Currently saving dicom flipped axis (i.e. changing scanner origin) is not supported
+            # check to make sure error is raised
+            o3 = (o[0][::-1], o[1], o[2])
+            volumes[0].reformat(o3)
+            with self.assertRaises(ValueError):
+                self.dw.save(volumes[0], ututils.TEMP_PATH)
 
-        # Load echos from write path
-        e1_loaded = self.dr.load(self.e1_dcm_save_path)
-        e2_loaded = self.dr.load(self.e2_dcm_save_path)
+            # reformat with dicom-specific orientation (o) to compare to loaded echos
+            for vol in volumes:
+                vol.reformat(o)
 
-        e1_loaded = e1_loaded[0]
-        e2_loaded = e2_loaded[0]
+            # Load echos from write (save) path
+            load_echos_paths = [os.path.join(write_path, 'e%d' % (i+1)) for i in range(len(volumes))]
 
-        assert e1_loaded.is_identical(e1), "Loaded e1 and original e1 should be identical"
-        assert e2_loaded.is_identical(e2), "Loaded e2 and original e2 should be identical"
+            for ind, rfp in enumerate(load_echos_paths):
+                e_loaded = self.dr.load(rfp)[0]
+                e_vol = volumes[ind]
+                echo_num = ind + 1
 
-        count = 0
-        # headers should also be identical
-        for e, et in [(e1_loaded, e1), (e2_loaded, e2)]:
-            count += 1
-            assert len(e.headers) == len(et.headers), "number of headers should be identical in echo%d" % count
+                assert e_loaded.is_identical(e_vol), "Loaded e%d and original e%d should be identical" % (echo_num, echo_num)
 
-            for i in range(len(e.headers)):
-                h1 = e.headers[i]
-                h2 = et.headers[i]
+                # headers should also be identical
+                assert len(e_loaded.headers) == len(e_vol.headers), "number of headers should be identical in echo%d" % echo_num
 
-                assert self.are_equivalent_headers(h1, h2), "headers for echoes %d must be equivalent" % count
+                for i in range(len(e_loaded.headers)):
+                    h1 = e_loaded.headers[i]
+                    h2 = e_vol.headers[i]
+
+                    assert self.are_equivalent_headers(h1, h2), "headers for echoes %d must be equivalent" % echo_num
 
 
 class TestInterIO(unittest.TestCase):
@@ -232,52 +249,80 @@ class TestInterIO(unittest.TestCase):
     dr = DicomReader()
     dw = DicomWriter()
 
-    # filepaths to DESS echo1 and echo2 volumes created by ITK-Snap - serve as ground truth
-    e1_nifti_itksnap_path = '../dicoms/h07-unittest/dess-e1-itksnap.nii.gz'
-    e2_nifti_itksnap_path = '../dicoms/h07-unittest/dess-e2-itksnap.nii.gz'
+    @staticmethod
+    def compare_vols(vol1, vol2):
+        assert vol1.is_same_dimensions(vol2)
+        assert (vol1.volume == vol2.volume).all()
 
-    # Dicom load path - load both echos and separate using DicomReader
-    total_dcm_path = '../dicoms/h07-unittest/007'
-    e1_dcm_path = '../dicoms/h07-unittest/dess-e1'
-    e2_dcm_path = '../dicoms/h07-unittest/dess-e2'
+    def test_dcm_nifti_load(self):
+        """Verify that volumes loaded from nifti or dicom are identical"""
+        for dp_ind, dp in enumerate(ututils.SCAN_DIRPATHS):
+            curr_scan = ututils.SCANS[dp_ind]
+            curr_scan_info = ututils.SCANS_INFO[curr_scan]
 
-    # Nifti save path
-    e1_nifti_save_path = '../dicoms/h07-unittest/dess-e1-niftiwriter.nii.gz'
-    e2_nifti_save_path = '../dicoms/h07-unittest/dess-e2-niftiwriter.nii.gz'
+            nifti_filepaths = ututils.get_read_paths(dp, ImageDataFormat.nifti)
+            dicom_filepaths = ututils.get_read_paths(dp, ImageDataFormat.dicom)
+
+            for i in range(len(nifti_filepaths)):
+                nfp = nifti_filepaths[i]
+                dfp = dicom_filepaths[i]
+
+                nifti_vol = self.nr.load(nfp)
+                dicom_vol = self.dr.load(dfp)[0]
+                dicom_vol.reformat(nifti_vol.orientation)
+
+                #assert nifti_vol.is_same_dimensions(dicom_vol)
+                assert (nifti_vol.volume == dicom_vol.volume).all()
 
     def test_dcm_to_nifti(self):
-        # Load itksnap ground truth
-        e1_itksnap = self.nr.load(self.e1_nifti_itksnap_path)
-        e2_itksnap = self.nr.load(self.e2_nifti_itksnap_path)
+        for dp_ind, dp in enumerate(ututils.SCAN_DIRPATHS):
+            curr_scan = ututils.SCANS[dp_ind]
+            curr_scan_info = ututils.SCANS_INFO[curr_scan]
 
-        # DicomReader to read multiple echo volumes from DESS sequence
-        vols = self.dr.load(self.total_dcm_path)
-        e1_dcm = vols[0]
-        e2_dcm = vols[1]
+            dicom_path = ututils.get_dicoms_path(dp)
+            nifti_read_paths = ututils.get_read_paths(dp, ImageDataFormat.nifti)
+            nifti_write_path = ututils.get_write_path(dp, ImageDataFormat.nifti)
 
-        # Get dicom and itksnap in same orientation
-        o = e1_dcm.orientation
-        assert o == e2_dcm.orientation, "orientations of multiple dicom volumes loaded from single folder should be identical"
+            # Load ground truth (nifti format)
+            gt_nifti_vols = []
+            for rfp in nifti_read_paths:
+                gt_nifti_vols.append(self.nr.load(rfp))
 
-        e1_itksnap.reformat(o)
-        e2_itksnap.reformat(o)
+            # DicomReader to read multiple echo volumes from scan sequence
+            dicom_loaded_vols = self.dr.load(dicom_path)
 
-        assert (e1_dcm.volume == e1_itksnap.volume).all(), "e1 volumes (dcm, itksnap) should be identical"
-        assert (e2_dcm.volume == e2_itksnap.volume).all(), "e2 volumes (dcm, itksnap) should be identical"
+            # Get dicom and itksnap in same orientation
+            o = dicom_loaded_vols[0].orientation
+            for v in dicom_loaded_vols[1:]:
+                assert o == v.orientation, "orientations of multiple dicom volumes loaded from single folder should be identical"
 
-        # Use NiftiWriter to save volumes (read in as dicoms)
-        self.nw.save(e1_dcm, self.e1_nifti_save_path)
-        self.nw.save(e2_dcm, self.e2_nifti_save_path)
+            for v in gt_nifti_vols:
+                v.reformat(o)
 
-        # check if saved versions of volumes load correctly
-        e1_nifti = self.nr.load(self.e1_nifti_save_path)
-        e2_nifti = self.nr.load(self.e2_nifti_save_path)
+            for i in range(len(dicom_loaded_vols)):
+                dcm_vol = dicom_loaded_vols[i]
+                nifti_vol = gt_nifti_vols[i]
+                echo_num = i + 1
 
-        assert e1_nifti.is_same_dimensions(e1_itksnap)
-        assert e2_nifti.is_same_dimensions(e2_itksnap)
+                assert (dcm_vol.volume == nifti_vol.volume).all(), "e%d volumes (dcm, nifti-ground truth) should be identical" % echo_num
 
-        assert (e1_dcm.volume == e1_itksnap.volume).all()
-        assert (e2_dcm.volume == e2_itksnap.volume).all()
+            # Use NiftiWriter to save volumes (read in as dicoms)
+            for i in range(len(dicom_loaded_vols)):
+                dcm_vol = dicom_loaded_vols[i]
+                echo_num = i + 1
+
+                nifti_write_filepath = os.path.join(nifti_write_path, 'e%d.nii.gz' % echo_num)
+                self.nw.save(dcm_vol, nifti_write_filepath)
+
+                # check if saved versions of volumes load correctly
+                e_loaded = self.nr.load(nifti_write_filepath)
+                e_dcm = dcm_vol
+                e_gt_nifti = gt_nifti_vols[i]
+
+                #assert e_loaded.is_same_dimensions(e_gt_nifti), "Mismatched dimensions: %s echo-%d" % (curr_scan, i+1)
+
+                assert (e_dcm.volume == e_gt_nifti.volume).all()
+                assert (e_loaded.volume == e_gt_nifti.volume).all()
 
 
 if __name__ == '__main__':
