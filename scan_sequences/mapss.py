@@ -41,7 +41,8 @@ class MAPSS(NonTargetSequence):
         self.echo_times = [float(x.headers[0].EchoTime) for x in self.volumes]
 
     def interregister(self, target_path, mask_path=None,
-                      parameter_files=[fc.MAPSS_ELASTIX_RIGID_INTERREGISTER_PARAMS_FILE, fc.MAPSS_ELASTIX_AFFINE_INTERREGISTER_PARAMS_FILE]):
+                      parameter_files=[fc.MAPSS_ELASTIX_RIGID_INTERREGISTER_PARAMS_FILE,
+                                       fc.MAPSS_ELASTIX_AFFINE_INTERREGISTER_PARAMS_FILE]):
         num_volumes = len(self.volumes)
 
         # write all files in nifti format to temp folder for registration
