@@ -15,6 +15,7 @@ from models.get_model import get_model
 from models.model import SegModel
 from msk import knee
 from scan_sequences.cube_quant import CubeQuant
+from scan_sequences.mapss import Mapss
 from scan_sequences.qdess import QDess
 from tissues.tissue import Tissue
 from utils.quant_vals import QuantitativeValues as QV
@@ -38,7 +39,7 @@ SEGMENTATION_BATCH_SIZE_KEY = 'batch_size'
 
 TISSUES_KEY = 'tissues'
 
-SUPPORTED_SCAN_TYPES = [QDess, CubeQuant]
+SUPPORTED_SCAN_TYPES = [QDess, CubeQuant, Mapss]
 BASIC_TYPES = [bool, str, float, int, list, tuple]
 
 
@@ -47,6 +48,7 @@ def get_nargs_for_basic_type(base_type):
         return 1
     elif base_type in [list, tuple]:
         return '+'
+
 
 def add_tissues(parser):
     for tissue in knee.SUPPORTED_TISSUES:
@@ -161,6 +163,7 @@ def add_base_argument(parser: argparse.ArgumentParser, param_name, param_type, p
                         help=param_help,
                         required=not has_default)
 
+
 def parse_basic_type(val, param_type):
     if type(val) is param_type:
         return val
@@ -174,6 +177,7 @@ def parse_basic_type(val, param_type):
         return val[0]
 
     raise ValueError('Error parsing basic type - reached code that is unexpected')
+
 
 def add_scans(dosma_subparser):
     for scan in SUPPORTED_SCAN_TYPES:
@@ -213,7 +217,7 @@ def add_scans(dosma_subparser):
                 if param_type is inspect._empty:
                     raise ValueError(
                         'scan %s, action %s, param %s does not have an annotation. Use pytying in the method declaration' % (
-                        scan.NAME, func_name, param_name))
+                            scan.NAME, func_name, param_name))
 
                 # see if the type is a custom type, if not handle it as a basic type
                 is_custom_arg = add_custom_argument(action_parser, param_type)
@@ -249,6 +253,10 @@ def handle_scan(vargin):
 
     # search for name in the cmd_line actions
     action = p_action
+
+    if action is None:
+        scan.save_data(vargin[SAVE_KEY], data_format=vargin[DATA_FORMAT_KEY])
+        return
 
     func_signature = inspect.signature(action)
     parameters = func_signature.parameters
