@@ -21,7 +21,9 @@
 #          (c) Stanford University, 2018
 
 
-WEIGHTS_DIRECTORY="/home/marco.b215/msk_pipeline_data/weights"
+WEIGHTS_DIRECTORY=`pwd`/"../weights"
+TISSUES='--fc'
+
 if [ -z "$WEIGHTS_DIRECTORY" ]; then
     echo "Please define WEIGHTS_DIRECTORY in script. Use the absolute path"
     exit 125
@@ -43,7 +45,7 @@ echo "dicom path: $DICOM_PATH"
 echo "patient id: $PID"
 
 # get list of dicoms in this folder
-dicom_list_str=$(find $DICOM_PATH -type f -name "*.dcm" | sort)
+dicom_list_str=$(find $DICOM_PATH -type f -name "*.dcm" -maxdepth 1 | sort)
 dicom_array=()
 for filepath in $dicom_list_str
 do
@@ -102,12 +104,14 @@ echo "Save path: $DATA_DIR"
 
 DATA_DIR_LEFT="$DATA_DIR/LEFT"
 
-python -m pipeline -d $LEFT_DIR -s $DATA_DIR_LEFT qdess -t2 -fc segment -rms --weights_dir $WEIGHTS_DIRECTORY
-python -m pipeline -l $DATA_DIR_LEFT knee -pid $PID
+python -m dosma --d $LEFT_DIR --s $DATA_DIR_LEFT qdess $TISSUES segment --rms --weights_dir $WEIGHTS_DIRECTORY
+python -m dosma --l $DATA_DIR_LEFT qdess $TISSUES t2
+python -m dosma --l $DATA_DIR_LEFT knee --pid $PID $TISSUES
 
 
 DATA_DIR_RIGHT="$DATA_DIR/RIGHT"
 
-python -m pipeline -d $RIGHT_DIR -s $DATA_DIR_RIGHT qdess -t2 -fc segment -rms --weights_dir $WEIGHTS_DIRECTORY
-python -m pipeline -l $DATA_DIR_RIGHT knee -ml -pid $PID
+python -m dosma --d $RIGHT_DIR --s $DATA_DIR_RIGHT qdess $TISSUES segment --rms --weights_dir $WEIGHTS_DIRECTORY
+python -m dosma --l $DATA_DIR_RIGHT qdess $TISSUES t2
+python -m dosma --l $DATA_DIR_RIGHT knee --ml --pid $PID $TISSUES
 

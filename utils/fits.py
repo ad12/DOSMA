@@ -60,16 +60,10 @@ class MonoExponentialFit(Fit):
         if self.mask:
             assert subvolumes[0].is_same_dimensions(self.mask), "Mask dimension mismatch"
             msk = self.mask.volume
-
-            # test line
-            msk = np.zeros(msk.shape)
-
             msk = msk.reshape(1, -1)
 
         original_shape = subvolumes[0].volume.shape
-        pixel_spacing = self.subvolumes[0].pixel_spacing
-        orientation = self.subvolumes[0].orientation
-        scanner_origin = self.subvolumes[0].scanner_origin
+        affine = np.array(self.subvolumes[0].affine)
 
         for i in range(len(self.ts)):
             sv = subvolumes[i].volume
@@ -98,14 +92,8 @@ class MonoExponentialFit(Fit):
 
         tc_map = np.around(tc_map, self.decimal_precision)
 
-        time_constant_volume = MedicalVolume(tc_map,
-                                             pixel_spacing=pixel_spacing,
-                                             orientation=orientation,
-                                             scanner_origin=scanner_origin)
-        rsquared_volume = MedicalVolume(r_squared,
-                                        pixel_spacing=pixel_spacing,
-                                        orientation=orientation,
-                                        scanner_origin=scanner_origin)
+        time_constant_volume = MedicalVolume(tc_map, affine=affine)
+        rsquared_volume = MedicalVolume(r_squared, affine=affine)
 
         return time_constant_volume, rsquared_volume
 

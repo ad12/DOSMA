@@ -16,9 +16,10 @@ from natsort import natsorted
 from data_io import orientation as stdo
 from data_io.format_io import DataReader, DataWriter, ImageDataFormat
 from data_io.med_volume import MedicalVolume
+from defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 from utils import io_utils
 
-__DICOM_EXTENSIONS__ = ('.dcm')
+__DICOM_EXTENSIONS__ = ('.dcm',)
 TOTAL_NUM_ECHOS_KEY = (0x19, 0x107e)
 
 
@@ -74,13 +75,31 @@ def LPSplus_to_RASplus(headers):
     :return: a tuple of orientation and scanner origin
     """
     im_dir = headers[0].ImageOrientationPatient
+    in_plane_pixel_spacing = headers[0].PixelSpacing
+
     orientation = np.zeros([3, 3])
-    i_vec, j_vec = im_dir[3:], im_dir[:3]  # unique to pydicom, please revise if using different library to load dicoms
-    k_vec = np.asarray(headers[-1].ImagePositionPatient) - np.asarray(headers[0].ImagePositionPatient)
-    #k_vec = k_vec * np.dot(headers[0].ImagePositionPatient, np.cross(i_vec, j_vec))
-    k_vec = k_vec * np.cross(i_vec, j_vec)
-    orientation[:3, :3] = np.stack([i_vec, j_vec, k_vec], axis=1)
-    scanner_origin = headers[0].ImagePositionPatient
+
+    # determine vector for in-plane pixel directions (i, j)
+    i_vec, j_vec = np.asarray(im_dir[:3]).astype(np.float64), np.asarray(im_dir[3:]).astype(
+        np.float64)  # unique to pydicom, please revise if using different library to load dicoms
+    i_vec, j_vec = np.round(i_vec, AFFINE_DECIMAL_PRECISION), np.round(j_vec, AFFINE_DECIMAL_PRECISION)
+    i_vec = i_vec * in_plane_pixel_spacing[0]
+    j_vec = j_vec * in_plane_pixel_spacing[1]
+
+    # determine vector for through-plane pixel direction (k)
+    # 1. Normalize k_vector by magnitude
+    # 2. Multiply by magnitude given by SpacingBetweenSlices field
+    # These actions are done to avoid rounding errors that might result from float subtraction
+    k_vec = np.asarray(headers[1].ImagePositionPatient).astype(np.float64) - np.asarray(
+        headers[0].ImagePositionPatient).astype(np.float64)
+    k_vec = np.round(k_vec, AFFINE_DECIMAL_PRECISION)
+    # k_vec_magnitude = np.sqrt(np.sum(k_vec**2))
+    # assert k_vec_magnitude == headers[0].SpacingBetweenSlices
+    # k_vec = k_vec / k_vec_magnitude * headers[0].SpacingBetweenSlices
+
+    orientation[:3, :3] = np.stack([j_vec, i_vec, k_vec], axis=1)
+    scanner_origin = np.array(headers[0].ImagePositionPatient).astype(np.float64)
+    scanner_origin = np.round(scanner_origin, SCANNER_ORIGIN_DECIMAL_PRECISION)
 
     affine = np.zeros([4, 4])
     affine[:3, :3] = orientation
@@ -89,10 +108,8 @@ def LPSplus_to_RASplus(headers):
     affine[3, 3] = 1
 
     affine[affine == 0] = 0
-    nib_axcodes = nib.aff2axcodes(affine)
-    std_orientation = stdo.__orientation_nib_to_standard__(nib_axcodes)
 
-    return std_orientation, affine[:3, 3]
+    return affine
 
 
 class DicomReader(DataReader):
@@ -124,11 +141,12 @@ class DicomReader(DataReader):
         if not os.path.isdir(dicom_dirpath):
             raise NotADirectoryError("Directory %s does not exist" % dicom_dirpath)
 
+        possible_files = os.listdir(dicom_dirpath)
+
         lstFilesDCM = []
-        for dirName, subdirList, fileList in os.walk(dicom_dirpath):
-            for filename in fileList:
-                if contains_dicom_extension(filename):
-                    lstFilesDCM.append(os.path.join(dirName, filename))
+        for f in possible_files:
+            if contains_dicom_extension(f):
+                lstFilesDCM.append(os.path.join(dicom_dirpath, f))
 
         lstFilesDCM = natsorted(lstFilesDCM)
         if len(lstFilesDCM) == 0:
@@ -137,11 +155,6 @@ class DicomReader(DataReader):
         # Get reference file
         ref_dicom = pydicom.read_file(lstFilesDCM[0])
         max_num_echos = ref_dicom[TOTAL_NUM_ECHOS_KEY].value
-
-        # Load spacing values (in mm)
-        pixelSpacing = (float(ref_dicom.PixelSpacing[0]),
-                        float(ref_dicom.PixelSpacing[1]),
-                        float(ref_dicom.SpacingBetweenSlices))
 
         dicom_data = []
         for i in range(max_num_echos):
@@ -161,12 +174,10 @@ class DicomReader(DataReader):
                 continue
             arr = np.stack(dd['arr'], axis=-1)
 
-            rasplus_orientation, rasplus_origin = LPSplus_to_RASplus(headers)
+            affine = LPSplus_to_RASplus(headers)
 
             vol = MedicalVolume(arr,
-                                pixel_spacing=pixelSpacing,
-                                orientation=rasplus_orientation,
-                                scanner_origin=rasplus_origin,
+                                affine,
                                 headers=headers)
             vols.append(vol)
 
@@ -219,10 +230,11 @@ class DicomWriter(DataWriter):
         if headers is None:
             raise ValueError('MedicalVolume headers must be initialized to save as a dicom')
 
-        orientation, scanner_origin = LPSplus_to_RASplus(headers)
+        affine = LPSplus_to_RASplus(headers)
+        orientation = stdo.__orientation_nib_to_standard__(nib.aff2axcodes(affine))
 
         # Currently do not support mismatch in scanner_origin
-        if tuple(scanner_origin) != im.scanner_origin:
+        if tuple(affine[:3, 3]) != im.scanner_origin:
             raise ValueError(
                 'Scanner origin mismatch. Currently we do not handle mismatch in scanner origin (i.e. cannot flip across axis)')
 
@@ -251,11 +263,12 @@ class DicomWriter(DataWriter):
 
 
 if __name__ == '__main__':
-    dicom_filepath = '../dicoms/healthy07/007'
-    save_path = '../dicoms/healthy07/dcm-nifti.nii.gz'
+    dicom_filepath = '../dicoms/mapss_eg/'
+    save_path = '../dicoms/mapss_eg/multi-echo-write/'
     r = DicomReader()
     A = r.load(dicom_filepath)
     from data_io.nifti_io import NiftiWriter
 
-    r = NiftiWriter()
-    r.save(A[0], save_path)
+    w = NiftiWriter()
+    for i in range(len(A)):
+        w.save(A[i], os.path.join(save_path, '%d.nii.gz' % i))
