@@ -15,7 +15,7 @@ from msk import knee
 from scan_sequences.cones import Cones
 from scan_sequences.cube_quant import CubeQuant
 from scan_sequences.qdess import QDess
-from scan_sequences.mapss import MAPSS
+from scan_sequences.mapss import Mapss
 from utils.quant_vals import QuantitativeValues as QV
 
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
@@ -216,8 +216,8 @@ def handle_cones(vargin):
 
 def handle_mapss(vargin):
     print('\nAnalyzing mapss...')
-    scan = MAPSS(dicom_path=vargin[DICOM_KEY],
-                     load_path=vargin[LOAD_KEY])
+    scan = Mapss(dicom_path=vargin[DICOM_KEY],
+                 load_path=vargin[LOAD_KEY])
 
     scan.tissues = vargin['tissues']
 

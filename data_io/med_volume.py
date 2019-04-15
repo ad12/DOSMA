@@ -14,6 +14,7 @@ from data_io.orientation import get_transpose_inds, get_flip_inds
 from defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
 from copy import deepcopy
 
+
 class MedicalVolume():
     """Wrapper for 3D volumes """
 
