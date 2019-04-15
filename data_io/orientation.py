@@ -18,6 +18,21 @@ All directions point to the increasing direction - i.e. from -x to x
 - "PA": posterior to anterior; "AP": anterior to posterior
 - "IS": inferior to superior; "SI": superior to inferior
 
+Affine Matrix format:
+---------------------
+The affine matrix (A) is formatted in nibabel.affine matrix format following the standard orientation format above
+The affine matrix converts pixel coordinates (i, j, k) into world (NIfTI) coordinates (x, y, z)
+
+[x, y, z, 1]' = A * [i, j, k, 1]'
+
+e.g.:
+
+| x |       [  0.        ,   0.        ,   1.5       , -61.66970062]     | i |
+| y |   =   [ -0.3125    ,   0.        ,   0.        ,  50.85160065]  *  | j |
+| z |       [  0.        ,  -0.3125    ,   0.        ,  88.58760071]     | k |
+| 1 |       [  0.        ,   0.        ,   0.        ,   1.        ]     | 1 |
+
+
 @author: Arjun Desai
         (C) Stanford University, 2019
 """

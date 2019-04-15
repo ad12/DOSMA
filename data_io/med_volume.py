@@ -5,28 +5,25 @@ MedicalVolume: Wrapper for 3D volumes
         (C) Stanford University, 2019
 """
 
-import nibabel.orientations as nibo
+import nibabel as nib
 import numpy as np
 
+from data_io import orientation as stdo
 from data_io.format_io import ImageDataFormat
-from data_io.orientation import get_transpose_inds, get_flip_inds, __orientation_standard_to_nib__
-
+from data_io.orientation import get_transpose_inds, get_flip_inds
+from defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
+from copy import deepcopy
 
 class MedicalVolume():
     """Wrapper for 3D volumes """
 
-    def __init__(self, volume: np.ndarray, pixel_spacing: tuple, orientation: tuple, scanner_origin: tuple,
-                 headers=None):
+    def __init__(self, volume: np.ndarray, affine: np.ndarray, headers=None):
         """
         :param volume: a 3D numpy array
-        :param pixel_spacing: pixel/voxel spacing for volumes
-        :param orientation: tuple of standardized orientation in RAS+ format
-        :param scanner_origin: origin in scanner coordinate system
+        :param affine: a 4x4 numpy array resembling affine matrix transform in RAS+ coordinates
         """
         self._volume = volume
-        self.pixel_spacing = tuple(pixel_spacing)
-        self.orientation = tuple(orientation)
-        self.scanner_origin = tuple(scanner_origin)
+        self._affine = np.array(affine)
         self._headers = headers
 
     def save_volume(self, filepath, data_format: ImageDataFormat = ImageDataFormat.nifti):
@@ -44,33 +41,70 @@ class MedicalVolume():
         """
         Reorients self to a specified orientation
         :param new_orientation: a tuple specifying orientation
+
+        Reorientation method:
+        ---------------------
+        - Axis transpose and flipping are linear operations and therefore can be treated independently
+        - working example: ('AP', 'SI', 'LR') --> ('RL', 'PA', 'SI')
+        1. Transpose volume and RAS orientation to appropriate column in matrix
+            eg. ('AP', 'SI', 'LR') --> ('LR', 'AP', 'SI') - transpose_inds=[2, 0, 1]
+        2. Flip volume across corresponding axes
+            eg. ('LR', 'AP', 'SI') --> ('RL', 'PA', 'SI') - flip axes 0,1
+
+        Reorientation method implementation:
+        ------------------------------------
+        1. Transpose: Switching (transposing) axes in volume is the same as switching columns in affine matrix
+        2. Flipping: Negate each column corresponding to pixel axis to flip (i, j, k) and reestablish origins based on
+                     flipped axes
         """
         # Check if new_orientation is the same as current orientation
         assert type(new_orientation) is tuple, "Orientation must be a tuple"
         if new_orientation == self.orientation:
             return
 
-        transpose_inds = get_transpose_inds(self.orientation, new_orientation)
+        temp_orientation = self.orientation
+        temp_affine = np.array(self._affine)
+
+        transpose_inds = get_transpose_inds(temp_orientation, new_orientation)
 
         volume = np.transpose(self.volume, transpose_inds)
-        pixel_spacing = tuple([self.pixel_spacing[i] for i in transpose_inds])
-        orientation = tuple([self.orientation[i] for i in transpose_inds])
+        for i in range(len(transpose_inds)):
+            temp_affine[..., i] = self._affine[..., transpose_inds[i]]
 
-        flip_axs_inds = get_flip_inds(orientation, new_orientation)
+        temp_orientation = tuple([self.orientation[i] for i in transpose_inds])
+
+        flip_axs_inds = list(get_flip_inds(temp_orientation, new_orientation))
+
         volume = np.flip(volume, axis=flip_axs_inds)
-        scanner_origin = list(self.scanner_origin)
-        nib_coords = nibo.axcodes2ornt(__orientation_standard_to_nib__(orientation))
 
-        for i in range(len(scanner_origin)):
-            if i in flip_axs_inds:
-                r_ind = int(nib_coords[i, 0])
-                alpha_val = int(nib_coords[i, 1])
-                scanner_origin[r_ind] = alpha_val * pixel_spacing[i] * (volume.shape[i] - 1) + scanner_origin[r_ind]
+        a_vecs = temp_affine[:3, :3]
+        a_origin = temp_affine[:3, 3]
 
+        # phi is a vector of 1s and -1s, where 1 indicates no flip, and -1 indicates flip
+        # phi is used to determine which columns in affine matrix to flip
+        phi = np.ones([1, len(a_origin)]).flatten()
+        phi[flip_axs_inds] *= -1
+
+        b_vecs = np.array(a_vecs)
+        for i in range(len(phi)):
+            b_vecs[:, i] *= phi[i]
+
+        # get number of pixels to shift by on each axis (should be 0 when not flipping - i.e. phi<0 mask)
+        vol_shape_vec = ((np.asarray(volume.shape) - 1) * (phi < 0).astype(np.float32)).transpose()
+        b_origin = np.round(a_origin.flatten() - np.matmul(b_vecs, vol_shape_vec).flatten(),
+                            SCANNER_ORIGIN_DECIMAL_PRECISION)
+
+        temp_affine = np.array(self.affine)
+        temp_affine[:3, :3] = b_vecs
+        temp_affine[:3, 3] = b_origin
+        temp_affine[temp_affine == 0] = 0  # get rid of negative 0s
+
+        self._affine = temp_affine
+
+        assert self.orientation == new_orientation, "Orientation mismatch: Expected: %s. Got %s" % (
+        str(self.orientation),
+        str(new_orientation))
         self._volume = volume
-        self.pixel_spacing = tuple(pixel_spacing)
-        self.orientation = tuple(new_orientation)
-        self.scanner_origin = tuple(scanner_origin)
 
     def is_identical(self, mv):
         """
@@ -134,3 +168,36 @@ class MedicalVolume():
     @property
     def headers(self):
         return self._headers
+
+    @property
+    def pixel_spacing(self):
+        """
+        Get pixel spacing in order of current orientation
+        :return a tuple
+        """
+        vecs = self._affine[:3, :3]
+        ps = tuple(np.sqrt(np.sum(vecs ** 2, axis=0)))
+
+        assert len(ps) == 3, "pixel spacing must have length of 3"
+        return ps
+
+    @property
+    def orientation(self):
+        """
+        Get the closest orientation in standard orientation coordinates
+        :return: a tuple of standard orientation coordinates (see orientation.py for more information on format)
+        """
+        nib_orientation = nib.aff2axcodes(self._affine)
+        return stdo.__orientation_nib_to_standard__(nib_orientation)
+
+    @property
+    def scanner_origin(self):
+        """
+        Get the scanner origin in global RAS+ x,y,z coordinates
+        :return:
+        """
+        return tuple(self._affine[:3, 3])
+
+    @property
+    def affine(self):
+        return self._affine
