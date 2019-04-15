@@ -15,6 +15,12 @@ SCANS_INFO = {'mapss': {'expected_num_echos': 7},
 SCAN_DIRPATHS = [os.path.join(UNITTEST_DATA_PATH, x) for x in SCANS]
 
 
+def get_scan_dirpath(scan: str):
+    for ind, x in enumerate(SCANS):
+        if scan == x:
+            return SCAN_DIRPATHS[ind]
+
+
 def get_dicoms_path(fp):
     return os.path.join(fp, 'dicoms')
 
@@ -31,3 +37,7 @@ def get_read_paths(fp, data_format: ImageDataFormat):
     files_or_dirs = natsort.natsorted(fd)
 
     return [os.path.join(base_name, x) for x in files_or_dirs]
+
+
+def get_data_path(fp):
+    return os.path.join(fp, 'data')

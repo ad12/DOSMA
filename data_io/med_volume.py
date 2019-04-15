@@ -12,7 +12,7 @@ from data_io import orientation as stdo
 from data_io.format_io import ImageDataFormat
 from data_io.orientation import get_transpose_inds, get_flip_inds
 from defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
-
+from copy import deepcopy
 
 class MedicalVolume():
     """Wrapper for 3D volumes """
@@ -23,7 +23,7 @@ class MedicalVolume():
         :param affine: a 4x4 numpy array resembling affine matrix transform in RAS+ coordinates
         """
         self._volume = volume
-        self._affine = affine
+        self._affine = np.array(affine)
         self._headers = headers
 
     def save_volume(self, filepath, data_format: ImageDataFormat = ImageDataFormat.nifti):
