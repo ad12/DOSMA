@@ -5,13 +5,13 @@ MedicalVolume: Wrapper for 3D volumes
         (C) Stanford University, 2019
 """
 
-import nibabel.orientations as nibo
+import nibabel as nib
 import numpy as np
 
-from data_io.format_io import ImageDataFormat
-from data_io.orientation import get_transpose_inds, get_flip_inds, __orientation_standard_to_nib__
-import nibabel as nib
 from data_io import orientation as stdo
+from data_io.format_io import ImageDataFormat
+from data_io.orientation import get_transpose_inds, get_flip_inds
+from defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
 
 
 class MedicalVolume():
@@ -26,7 +26,7 @@ class MedicalVolume():
         self._affine = affine
         self._headers = headers
 
-    def save_volume(self, filepath, data_format: ImageDataFormat=ImageDataFormat.nifti):
+    def save_volume(self, filepath, data_format: ImageDataFormat = ImageDataFormat.nifti):
         """
         Write volumes to specified image data format
         :param filepath: filepath to save data
@@ -91,7 +91,8 @@ class MedicalVolume():
 
         # get number of pixels to shift by on each axis (should be 0 when not flipping - i.e. phi<0 mask)
         vol_shape_vec = ((np.asarray(volume.shape) - 1) * (phi < 0).astype(np.float32)).transpose()
-        b_origin = a_origin.flatten()- np.matmul(b_vecs, vol_shape_vec).flatten()
+        b_origin = np.round(a_origin.flatten() - np.matmul(b_vecs, vol_shape_vec).flatten(),
+                            SCANNER_ORIGIN_DECIMAL_PRECISION)
 
         temp_affine = np.array(self.affine)
         temp_affine[:3, :3] = b_vecs
@@ -100,8 +101,9 @@ class MedicalVolume():
 
         self._affine = temp_affine
 
-        assert self.orientation == new_orientation, "Orientation mismatch: Expected: %s. Got %s" % (str(self.orientation),
-                                                                                                    str(new_orientation))
+        assert self.orientation == new_orientation, "Orientation mismatch: Expected: %s. Got %s" % (
+        str(self.orientation),
+        str(new_orientation))
         self._volume = volume
 
     def is_identical(self, mv):
@@ -174,7 +176,7 @@ class MedicalVolume():
         :return a tuple
         """
         vecs = self._affine[:3, :3]
-        ps = tuple(np.sqrt(np.sum(vecs**2, axis=0)))
+        ps = tuple(np.sqrt(np.sum(vecs ** 2, axis=0)))
 
         assert len(ps) == 3, "pixel spacing must have length of 3"
         return ps
@@ -199,4 +201,3 @@ class MedicalVolume():
     @property
     def affine(self):
         return self._affine
-

@@ -16,6 +16,7 @@ from natsort import natsorted
 from data_io import orientation as stdo
 from data_io.format_io import DataReader, DataWriter, ImageDataFormat
 from data_io.med_volume import MedicalVolume
+from defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 from utils import io_utils
 
 __DICOM_EXTENSIONS__ = ('.dcm',)
@@ -79,7 +80,9 @@ def LPSplus_to_RASplus(headers):
     orientation = np.zeros([3, 3])
 
     # determine vector for in-plane pixel directions (i, j)
-    i_vec, j_vec = np.asarray(im_dir[:3]), np.asarray(im_dir[3:])  # unique to pydicom, please revise if using different library to load dicoms
+    i_vec, j_vec = np.asarray(im_dir[:3]).astype(np.float64), np.asarray(im_dir[3:]).astype(
+        np.float64)  # unique to pydicom, please revise if using different library to load dicoms
+    i_vec, j_vec = np.round(i_vec, AFFINE_DECIMAL_PRECISION), np.round(j_vec, AFFINE_DECIMAL_PRECISION)
     i_vec = i_vec * in_plane_pixel_spacing[0]
     j_vec = j_vec * in_plane_pixel_spacing[1]
 
@@ -87,13 +90,16 @@ def LPSplus_to_RASplus(headers):
     # 1. Normalize k_vector by magnitude
     # 2. Multiply by magnitude given by SpacingBetweenSlices field
     # These actions are done to avoid rounding errors that might result from float subtraction
-    k_vec = np.asarray(headers[1].ImagePositionPatient) - np.asarray(headers[0].ImagePositionPatient)
-    k_vec_magnitude = np.sqrt(np.sum(k_vec**2))
-    assert k_vec_magnitude == headers[0].SpacingBetweenSlices
-    #k_vec = k_vec / k_vec_magnitude * headers[0].SpacingBetweenSlices
+    k_vec = np.asarray(headers[1].ImagePositionPatient).astype(np.float64) - np.asarray(
+        headers[0].ImagePositionPatient).astype(np.float64)
+    k_vec = np.round(k_vec, AFFINE_DECIMAL_PRECISION)
+    # k_vec_magnitude = np.sqrt(np.sum(k_vec**2))
+    # assert k_vec_magnitude == headers[0].SpacingBetweenSlices
+    # k_vec = k_vec / k_vec_magnitude * headers[0].SpacingBetweenSlices
 
     orientation[:3, :3] = np.stack([j_vec, i_vec, k_vec], axis=1)
-    scanner_origin = headers[0].ImagePositionPatient
+    scanner_origin = np.array(headers[0].ImagePositionPatient).astype(np.float64)
+    scanner_origin = np.round(scanner_origin, SCANNER_ORIGIN_DECIMAL_PRECISION)
 
     affine = np.zeros([4, 4])
     affine[:3, :3] = orientation

@@ -8,12 +8,11 @@ File detailing modules for NIfTI format IO
 import os
 
 import nibabel as nib
-import nibabel.orientations as nibo
 import numpy as np
 
 from data_io.format_io import DataReader, DataWriter, ImageDataFormat
 from data_io.med_volume import MedicalVolume
-from data_io.orientation import __orientation_nib_to_standard__, __orientation_standard_to_nib__
+from defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 from utils import io_utils
 
 __NIFTI_EXTENSIONS__ = ('.nii', '.nii.gz')
@@ -35,32 +34,22 @@ class NiftiReader(DataReader):
     """
     data_format_code = ImageDataFormat.nifti
 
-    def __normalize_affine(self, affine, precision=4):
+    def __normalize_affine(self, affine):
         # determine vector for through-plane pixel direction (k)
         # 1. Normalize k_vector by magnitude
         # 2. Multiply by magnitude given by SpacingBetweenSlices field
         # These actions are done to avoid rounding errors that might result from float subtraction
 
         aff = np.array(affine)
-        i_vec = np.array(aff[:3, 0])
-        j_vec = np.array(aff[:3, 1])
-        k_vec = np.array(aff[:3, 2])
+        i_vec = np.round(np.array(aff[:3, 0]), AFFINE_DECIMAL_PRECISION)
+        j_vec = np.round(np.array(aff[:3, 1]), AFFINE_DECIMAL_PRECISION)
+        k_vec = np.round(np.array(aff[:3, 2]), AFFINE_DECIMAL_PRECISION)
 
-        vecs = [i_vec, j_vec, k_vec]
-        vecs_normalized = []
-        for v in vecs:
-            vec_magnitude = np.sqrt(np.sum(v ** 2))
-            vec_mag_rounded = np.round(vec_magnitude, precision)
-            vec = v / vec_magnitude * vec_mag_rounded
-            assert np.sqrt(np.sum(vec**2)) == vec_mag_rounded, "got %0.20f, expected %0.20f" % (np.sqrt(np.sum(vec**2)), vec_mag_rounded)
+        aff[:3, 0] = i_vec
+        aff[:3, 1] = j_vec
+        aff[:3, 2] = k_vec
 
-            vecs_normalized.append(vec)
-
-        aff[:3, 0] = vecs_normalized[0]
-        aff[:3, 1] = vecs_normalized[1]
-        aff[:3, 2] = vecs_normalized[2]
-
-        #aff[:3, 3] = np.round(aff[:3, 3], precision)
+        aff[:3, 3] = np.round(aff[:3, 3], SCANNER_ORIGIN_DECIMAL_PRECISION)
 
         return aff
 
@@ -84,7 +73,7 @@ class NiftiReader(DataReader):
 
         nib_img = nib.load(filepath)
         nib_img_affine = nib_img.affine
-        #nib_img_affine = self.__normalize_affine(nib_img_affine)
+        nib_img_affine = self.__normalize_affine(nib_img_affine)
 
         np_img = nib_img.get_fdata()
 
@@ -120,6 +109,7 @@ class NiftiWriter(DataWriter):
 
 if __name__ == '__main__':
     import scipy.io as sio
+
     load_filepath = '../dicoms/mapss_eg/multi-echo/gt-%d.nii.gz'
     save_path = '../dicoms/mapss_eg/matfiles-nii'
     nr = NiftiReader()
