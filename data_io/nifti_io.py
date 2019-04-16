@@ -15,7 +15,11 @@ from data_io.med_volume import MedicalVolume
 from defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 from utils import io_utils
 
-__NIFTI_EXTENSIONS__ = ('.nii', '.nii.gz')
+
+__all__ = ['NIFTI_EXTENSIONS', 'NiftiReader', 'NiftiWriter', 'contains_nifti_extension']
+
+
+NIFTI_EXTENSIONS = ('.nii', '.nii.gz')
 
 
 def contains_nifti_extension(a_str: str):
@@ -24,7 +28,7 @@ def contains_nifti_extension(a_str: str):
     :param a_str: a string
     :return: a boolean
     """
-    bool_list = [a_str.endswith(ext) for ext in __NIFTI_EXTENSIONS__]
+    bool_list = [a_str.endswith(ext) for ext in NIFTI_EXTENSIONS]
     return bool(sum(bool_list))
 
 

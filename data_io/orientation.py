@@ -37,6 +37,10 @@ e.g.:
         (C) Stanford University, 2019
 """
 
+
+__all__ = ['get_transpose_inds', 'get_flip_inds', 'orientation_nib_to_standard', 'orientation_standard_to_nib',
+           'SAGITTAL']
+
 # Default Orientations
 SAGITTAL = ('SI', 'AP', 'LR')
 
@@ -118,12 +122,12 @@ def get_flip_inds(curr_orientation: tuple, new_orientation: tuple):
 
 
 # Nibabel to standard orientation conversion utils
-nib_to_standard_orientation_map = {'R': 'LR', 'L': 'RL',
+__nib_to_standard_orientation_map__ = {'R': 'LR', 'L': 'RL',
                                    'A': 'PA', 'P': 'AP',
                                    'S': 'IS', 'I': 'SI'}
 
 
-def __orientation_nib_to_standard__(nib_orientation):
+def orientation_nib_to_standard(nib_orientation):
     """
     Convert Nibabel orientation to the standard orientation format
     :param nib_orientation: a RAS+ tuple orientation used by Nibabel
@@ -131,11 +135,11 @@ def __orientation_nib_to_standard__(nib_orientation):
     """
     orientation = []
     for symb in nib_orientation:
-        orientation.append(nib_to_standard_orientation_map[symb])
+        orientation.append(__nib_to_standard_orientation_map__[symb])
     return tuple(orientation)
 
 
-def __orientation_standard_to_nib__(orientation):
+def orientation_standard_to_nib(orientation):
     """
     Convert standard orientation format to Nibabel orientation
     :param orientation: a tuple corresponding to the standard orientation format

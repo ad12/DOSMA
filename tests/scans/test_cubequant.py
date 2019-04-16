@@ -7,6 +7,7 @@ from scan_sequences.cube_quant import CubeQuant
 from tissues.femoral_cartilage import FemoralCartilage
 from utils import io_utils, dicom_utils
 
+
 CUBEQUANT_DICOM_PATH = '../dicoms/healthy07/008'
 CUBEQUANT_INTERREGISTERED_PATH = '../dicoms/healthy07/data/cube_quant_data/interregistered'
 

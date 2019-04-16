@@ -1,6 +1,7 @@
 import os, sys
 import natsort
 import re
+import unittest
 
 sys.path.append('../')
 from data_io.format_io import ImageDataFormat
@@ -41,3 +42,19 @@ def get_read_paths(fp, data_format: ImageDataFormat):
 
 def get_data_path(fp):
     return os.path.join(fp, 'data')
+
+def get_expected_data_path(fp):
+    return os.path.join(fp, 'expected')
+
+
+class ScanTest(unittest.TestCase):
+    from scan_sequences.scans import ScanSequence
+    SCAN_TYPE = ScanSequence  # override in subclasses
+
+    def setUp(self):
+        print("Testing: ", self._testMethodName)
+
+    @classmethod
+    def setUpClass(cls):
+        cls.dicom_dirpath = get_dicoms_path(os.path.join(UNITTEST_DATA_PATH, cls.SCAN_TYPE.NAME))
+        cls.data_dirpath = get_data_path(os.path.join(UNITTEST_DATA_PATH, cls.SCAN_TYPE.NAME))

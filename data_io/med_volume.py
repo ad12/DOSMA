@@ -10,9 +10,11 @@ import numpy as np
 
 from data_io import orientation as stdo
 from data_io.format_io import ImageDataFormat
-from data_io.orientation import get_transpose_inds, get_flip_inds
 from defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
-from copy import deepcopy
+
+
+__all__ = ['MedicalVolume']
+
 
 class MedicalVolume():
     """Wrapper for 3D volumes """
@@ -65,7 +67,7 @@ class MedicalVolume():
         temp_orientation = self.orientation
         temp_affine = np.array(self._affine)
 
-        transpose_inds = get_transpose_inds(temp_orientation, new_orientation)
+        transpose_inds = stdo.get_transpose_inds(temp_orientation, new_orientation)
 
         volume = np.transpose(self.volume, transpose_inds)
         for i in range(len(transpose_inds)):
@@ -73,7 +75,7 @@ class MedicalVolume():
 
         temp_orientation = tuple([self.orientation[i] for i in transpose_inds])
 
-        flip_axs_inds = list(get_flip_inds(temp_orientation, new_orientation))
+        flip_axs_inds = list(stdo.get_flip_inds(temp_orientation, new_orientation))
 
         volume = np.flip(volume, axis=flip_axs_inds)
 
@@ -188,7 +190,7 @@ class MedicalVolume():
         :return: a tuple of standard orientation coordinates (see orientation.py for more information on format)
         """
         nib_orientation = nib.aff2axcodes(self._affine)
-        return stdo.__orientation_nib_to_standard__(nib_orientation)
+        return stdo.orientation_nib_to_standard(nib_orientation)
 
     @property
     def scanner_origin(self):

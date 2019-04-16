@@ -19,7 +19,11 @@ from data_io.med_volume import MedicalVolume
 from defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 from utils import io_utils
 
-__DICOM_EXTENSIONS__ = ('.dcm',)
+
+__all__ = ['DICOM_EXTENSIONS', 'contains_dicom_extension', 'LPSplus_to_RASplus', 'DicomReader', 'DicomWriter']
+
+
+DICOM_EXTENSIONS = ('.dcm',)
 TOTAL_NUM_ECHOS_KEY = (0x19, 0x107e)
 
 
@@ -29,7 +33,7 @@ def contains_dicom_extension(a_str: str):
     :param a_str: a string
     :return: a boolean
     """
-    bool_list = [a_str.endswith(ext) for ext in __DICOM_EXTENSIONS__]
+    bool_list = [a_str.endswith(ext) for ext in DICOM_EXTENSIONS]
     return bool(sum(bool_list))
 
 
@@ -231,7 +235,7 @@ class DicomWriter(DataWriter):
             raise ValueError('MedicalVolume headers must be initialized to save as a dicom')
 
         affine = LPSplus_to_RASplus(headers)
-        orientation = stdo.__orientation_nib_to_standard__(nib.aff2axcodes(affine))
+        orientation = stdo.orientation_nib_to_standard(nib.aff2axcodes(affine))
 
         # Currently do not support mismatch in scanner_origin
         if tuple(affine[:3, 3]) != im.scanner_origin:
