@@ -106,8 +106,10 @@ class Mapss(TargetSequence):
 
             warped_file = tmp.outputs.warped_file
             intrareg_vol = nr.load(warped_file)
+
+            # copy affine from original volume, because nifti changes loading accuracy
             intrareg_vol = MedicalVolume(volume=intrareg_vol.volume,
-                                         affine=intrareg_vol.affine,
+                                         affine=volumes[echo_index].affine,
                                          headers=deepcopy(volumes[echo_index].headers))
 
             intraregistered_volumes.append(intrareg_vol)
