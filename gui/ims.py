@@ -248,6 +248,8 @@ class DosmaFrame(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
+        self.file_dialog_reader = FileDialogReader()
+
         self.manager = dict()
         self.gui_manager = dict()
         self.balloon = Pmw.Balloon()
@@ -256,7 +258,6 @@ class DosmaFrame(tk.Frame):
 
         self.__base_gui()
         self.preferences = PreferencesManager()
-        self.file_dialog_reader = FileDialogReader()
         self.scan_reader = ScanReader(self)
 
         button1 = ttk.Button(self, text="Home",
@@ -366,9 +367,9 @@ class DosmaFrame(tk.Frame):
 
         hb = tk.Frame(self)
 
-        filedialog = FileDialogReader(self.manager[self.__SAVE_PATH_KEY])
+        #filedialog = FileDialogReader(self.manager[self.__SAVE_PATH_KEY])
         b = tk.Button(hb, text=self.__SAVE_PATH_KEY,
-                      command=lambda fd=filedialog: self.manager[self.__SAVE_PATH_KEY].set(fd.get_save_dirpath()))
+                      command=lambda fd=self.file_dialog_reader: self.manager[self.__SAVE_PATH_KEY].set(fd.get_save_dirpath()))
         b.pack(side='left', anchor='nw', pady=10)
 
         l = tk.Label(hb, textvariable=self.manager[self.__SAVE_PATH_KEY])
