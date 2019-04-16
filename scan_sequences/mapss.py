@@ -204,7 +204,7 @@ class Mapss(TargetSequence):
         generate_t1_rho_map_action = ActionWrapper(name=cls.generate_t2_map.__name__,
                                        aliases=['t1_rho'],
                                        help='generate T1-rho map using mono-exponential fitting')
-        generate_t2_map_action = ActionWrapper(name=cls.generate_t2_map.__name__,
+        generate_t2_map_action = ActionWrapper(name=cls.generate_t1_rho_map.__name__,
                                                aliases=['t2'],
                                                help='generate T2 map using mono-exponential fitting')
 
