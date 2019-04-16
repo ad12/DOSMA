@@ -38,9 +38,6 @@ class QDess(TargetSequence):
     def __init__(self, dicom_path, load_path=None):
         super().__init__(dicom_path=dicom_path, load_path=load_path)
 
-        if not self.__validate_scan__():
-            raise ValueError('dicoms in \'%s\' are not acquired from DESS sequence' % self.dicom_path)
-
     def __validate_scan__(self) -> bool:
         """Validate that the dicoms are of qDESS sequence
         Scans should have 2 echos and dicom metadata for GL_AREA and TG
@@ -69,13 +66,19 @@ class QDess(TargetSequence):
 
         return mask
 
-    def generate_t2_map(self, tissue: Tissue, suppress_fat: bool=False):
+    def generate_t2_map(self, tissue: Tissue, suppress_fat: bool=False,
+                        gl_area: float=None, tg: float=None):
         """ Generate 3D t2 map
         :param tissue: A Tissue instance
         :param suppress_fat: Suppress fat region in t2 computation (i.e. reduce noise)
+        :param gl_area: GL Area - required if not provided in the dicom
+        :param tg: tg value - required if not provided in the dicom
         :return MedicalVolume with 3D map of t2 values
                 all invalid pixels are denoted by the value 0
         """
+
+        if not self.__validate_scan__() and (not gl_area or not tg):
+            raise ValueError('dicoms in \'%s\' do not contain GL_Area and Tg tags. Please input manually' % self.dicom_path)
 
         if self.volumes is None or self.ref_dicom is None:
             raise ValueError('volumes and ref_dicom fields must be initialized')
@@ -92,13 +95,13 @@ class QDess(TargetSequence):
         # All timing in seconds
         TR = float(ref_dicom.RepetitionTime) * 1e-3
         TE = float(ref_dicom.EchoTime) * 1e-3
-        Tg = float(ref_dicom[self.__TG_TAG__].value) * 1e-6
+        Tg = tg*1e-6 if tg else float(ref_dicom[self.__TG_TAG__].value) * 1e-6
         T1 = float(tissue.T1_EXPECTED) * 1e-3
 
         # Flip Angle (degree -> radians)
         alpha = math.radians(float(ref_dicom.FlipAngle))
 
-        GlArea = float(ref_dicom[self.__GL_AREA_TAG__].value)
+        GlArea = gl_area if gl_area else float(ref_dicom[self.__GL_AREA_TAG__].value)
 
         Gl = GlArea / (Tg * 1e6) * 100
         gamma = 4258 * 2 * math.pi  # Gamma, Rad / (G * s).
@@ -202,7 +205,9 @@ class QDess(TargetSequence):
                                        alternative_param_names={'use_rms': ['rms']})
         generate_t2_map_action = ActionWrapper(name=cls.generate_t2_map.__name__,
                                                aliases=['t2'],
-                                               param_help={'suppress_fat': 'suppress computation on low SNR fat regions'},
+                                               param_help={'suppress_fat': 'suppress computation on low SNR fat regions',
+                                                           'gl_area': 'gl_area',
+                                                           'tg': 'tg'},
                                                help='generate T2 map')
 
         return [(cls.segment, segment_action), (cls.generate_t2_map, generate_t2_map_action)]
