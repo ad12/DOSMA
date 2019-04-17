@@ -63,7 +63,7 @@ class MonoExponentialFit(Fit):
             assert subvolumes[0].is_same_dimensions(sv), "Dimension mismatch"
 
         if self.mask:
-            assert subvolumes[0].is_same_dimensions(self.mask), "Mask dimension mismatch"
+            #assert subvolumes[0].is_same_dimensions(self.mask), "Mask dimension mismatch"
             msk = self.mask.volume
             msk = msk.reshape(1, -1)
 
