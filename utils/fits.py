@@ -37,8 +37,13 @@ class MonoExponentialFit(Fit):
             assert type(sv) is MedicalVolume
 
         self.subvolumes = subvolumes
-
         self.mask = mask
+
+        orientation = self.subvolumes[0].orientation
+        for sv in self.subvolumes[1:]:
+            sv.reformat(orientation)
+
+        self.mask.reformat(orientation)
 
         assert len(bounds) == 2, "Bounds should provide upper lower bound in format (lb, ub)"
         self.bounds = bounds
