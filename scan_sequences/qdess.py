@@ -178,9 +178,6 @@ class QDess(TargetSequence):
         echo1 = np.asarray(self.volumes[0].volume, dtype=np.float64)
         echo2 = np.asarray(self.volumes[1].volume, dtype=np.float64)
 
-        assert (echo1 >= 0).all()
-        assert (echo2 >= 0).all()
-
         assert (~np.iscomplex(echo1)).all() and (~np.iscomplex(echo2)).all()
 
         sq_sum = echo1 ** 2 + echo2 ** 2

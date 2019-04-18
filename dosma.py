@@ -165,15 +165,13 @@ def parse_basic_type(val, param_type):
     if type(val) is param_type:
         return val
 
-    assert type(val) is list
     if param_type in [list, tuple]:
         return param_type(val)
 
     nargs = get_nargs_for_basic_type(param_type)
-    if nargs == 1:
+    if type(val) is list and nargs == 1:
         return val[0]
-
-    raise ValueError('Error parsing basic type - reached code that is unexpected')
+    return param_type(val)
 
 def add_scans(dosma_subparser):
     for scan in SUPPORTED_SCAN_TYPES:
