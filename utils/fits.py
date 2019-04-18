@@ -43,7 +43,8 @@ class MonoExponentialFit(Fit):
         for sv in self.subvolumes[1:]:
             sv.reformat(orientation)
 
-        self.mask.reformat(orientation)
+        if self.mask:
+            self.mask.reformat(orientation)
 
         assert len(bounds) == 2, "Bounds should provide upper lower bound in format (lb, ub)"
         self.bounds = bounds
@@ -63,7 +64,7 @@ class MonoExponentialFit(Fit):
             assert subvolumes[0].is_same_dimensions(sv), "Dimension mismatch"
 
         if self.mask:
-            #assert subvolumes[0].is_same_dimensions(self.mask), "Mask dimension mismatch"
+            assert subvolumes[0].is_same_dimensions(self.mask), "Mask dimension mismatch"
             msk = self.mask.volume
             msk = msk.reshape(1, -1)
 
