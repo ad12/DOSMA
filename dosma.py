@@ -353,7 +353,10 @@ def parse_args():
 
     args.func(vargin)
 
+    time_elapsed = (time.time() - start_time)
     print('Time Elapsed: %0.2f seconds' % (time.time() - start_time))
+
+    return time_elapsed
 
 
 if __name__ == '__main__':
