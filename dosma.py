@@ -171,7 +171,7 @@ def parse_basic_type(val, param_type):
     nargs = get_nargs_for_basic_type(param_type)
     if type(val) is list and nargs == 1:
         return val[0]
-    return param_type(val)
+    return param_type(val) if val else val
 
 def add_scans(dosma_subparser):
     for scan in SUPPORTED_SCAN_TYPES:
@@ -277,7 +277,7 @@ def handle_scan(vargin):
     return scan
 
 
-def parse_args():
+def parse_args(f_input=None):
     """Parse arguments given through command line (argv)
 
     :raises ValueError if dicom path is not provided
@@ -319,7 +319,11 @@ def parse_args():
     knee.knee_parser(subparsers)
 
     start_time = time.time()
-    args = parser.parse_args()
+    if f_input:
+        args = parser.parse_args(f_input)
+    else:
+        args = parser.parse_args()
+
     vargin = vars(args)
 
     if vargin[DEBUG_KEY]:
