@@ -69,12 +69,13 @@ def parse_tissues(vargin):
         print('No tissues specified, computing for all supported tissues...')
         tissues = []
         for tissue in knee.SUPPORTED_TISSUES:
-            if tissue not in tissues:
+            t = tissue()
+            if t not in tissues:
                 load_path = vargin[LOAD_KEY]
                 if load_path:
-                    tissue.load_data(load_path)
+                    t.load_data(load_path)
 
-                tissues.append(tissue)
+                tissues.append(t)
 
     analysis_str = 'Tissue(s): '
     for tissue in tissues:
