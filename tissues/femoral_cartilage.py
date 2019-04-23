@@ -17,6 +17,8 @@ from utils import io_utils, img_utils
 from utils.geometry_utils import circle_fit, cart2pol
 from utils.quant_vals import QuantitativeValues
 
+from data_io.fig_format import savefig
+
 # milliseconds
 BOUNDS = {QuantitativeValues.T2: 60.0,
           QuantitativeValues.T1_RHO: 100.0,
@@ -386,7 +388,7 @@ class FemoralCartilage(Tissue):
                 clb = plt.colorbar()
                 clb.ax.set_title('(ms)')
 
-                plt.savefig(filepath, dpi=defaults.DEFAULT_DPI)
+                savefig(filepath, dpi=defaults.DEFAULT_DPI)
 
                 # Save data
                 raw_data_filepath = os.path.join(q_name_dirpath, 'raw_data', q_map_data['raw_data_filename'])
