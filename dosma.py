@@ -58,10 +58,10 @@ def parse_tissues(vargin):
     tissues = []
     for tissue in knee.SUPPORTED_TISSUES:
         t = tissue()
-        if tissue.STR_ID in vargin.keys() and vargin[tissue.STR_ID] and t.STR_ID not in [x.STR_ID for x in tissues]:
+        if t.STR_ID in vargin.keys() and vargin[t.STR_ID] and t.STR_ID not in [x.STR_ID for x in tissues]:
             load_path = vargin[LOAD_KEY]
             if load_path:
-                tissue.load_data(load_path)
+                t.load_data(load_path)
 
             tissues.append(t)
 
