@@ -49,3 +49,5 @@ DEFAULT_TEXT_SPACING = DEFAULT_FONT_SIZE * 0.01
 import matplotlib.pyplot as plt
 
 plt.rcParams.update({'font.size': DEFAULT_FONT_SIZE})
+
+DEFAULT_FIG_FORMAT = 'png'
