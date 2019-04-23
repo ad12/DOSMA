@@ -18,6 +18,8 @@ from scan_sequences.cube_quant import CubeQuant
 from scan_sequences.qdess import QDess
 from tissues.tissue import Tissue
 from utils.quant_vals import QuantitativeValues as QV
+from data_io.fig_format import SUPPORTED_VISUALIZATION_FORMATS
+
 
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
@@ -27,6 +29,7 @@ DICOM_KEY = 'dicom'
 SAVE_KEY = 'save'
 LOAD_KEY = 'load'
 DATA_FORMAT_KEY = 'format'
+VISUALIZATION_FORMAT_KEY = 'vis_format'
 GPU_KEY = 'gpu'
 
 SCAN_KEY = 'scan'
@@ -309,6 +312,13 @@ def parse_args(f_input=None):
                         choices=supported_format_names,
                         help='data format to store information in %s. Default: %s' % (str(supported_format_names),
                                                                                       defaults.DEFAULT_OUTPUT_IMAGE_DATA_FORMAT.name))
+    parser.add_argument('--vf', '--%s' % VISUALIZATION_FORMAT_KEY, metavar='V', type=str,
+                        dest=VISUALIZATION_FORMAT_KEY,
+                        default=defaults.DEFAULT_FIG_FORMAT,
+                        nargs='?',
+                        choices=SUPPORTED_VISUALIZATION_FORMATS,
+                        help='visualization format %s. Default: %s' % (str(tuple(SUPPORTED_VISUALIZATION_FORMATS)),
+                                                                       defaults.DEFAULT_FIG_FORMAT))
 
     parser.add_argument('--%s' % GPU_KEY, metavar='G', type=str, default=None, nargs='?',
                         dest=GPU_KEY,
@@ -356,6 +366,7 @@ def parse_args(f_input=None):
     tissues = parse_tissues(vargin)
     vargin['tissues'] = tissues
     vargin[DATA_FORMAT_KEY] = ImageDataFormat[vargin[DATA_FORMAT_KEY]]
+    defaults.DEFAULT_FIG_FORMAT = vargin[VISUALIZATION_FORMAT_KEY]
 
     args.func(vargin)
 

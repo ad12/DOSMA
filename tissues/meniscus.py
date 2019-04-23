@@ -12,6 +12,8 @@ from data_io.med_volume import MedicalVolume
 from tissues.tissue import Tissue
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues
+from data_io.fig_format import savefig
+
 
 # milliseconds
 BOUNDS = {QuantitativeValues.T2: 60.0,
@@ -219,7 +221,7 @@ class Meniscus(Tissue):
                 clb.ax.set_title('(ms)')
                 plt.axis('tight')
 
-                plt.savefig(filepath, dpi=defaults.DEFAULT_DPI)
+                savefig(filepath, dpi=defaults.DEFAULT_DPI)
 
                 # Save data
                 raw_data_filepath = os.path.join(q_name_dirpath, 'raw_data', q_map_data['raw_data_filename'])
