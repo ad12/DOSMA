@@ -10,6 +10,7 @@ from data_io.format_io import SUPPORTED_FORMATS, ImageDataFormat
 from data_io.fig_format import SUPPORTED_VISUALIZATION_FORMATS
 
 import defaults
+import Pmw
 
 LARGE_FONT = ("Verdana", 18)
 
@@ -26,6 +27,8 @@ class Singleton(type):
 class PreferencesManager(metaclass=Singleton):
     def __init__(self):
         self.frame = None
+        self.balloon = None
+
         self.gui_manager = dict()
         self.gui_elements = dict()
 
@@ -86,6 +89,8 @@ class PreferencesManager(metaclass=Singleton):
         return self.gui_manager['visualization_format'].get()
 
     def __display_gui(self):
+        self.balloon = Pmw.Balloon()
+
         l = tk.Label(self.frame, text='Preferences', font=LARGE_FONT)
         l.pack()
 
@@ -95,6 +100,7 @@ class PreferencesManager(metaclass=Singleton):
             f = tk.Frame(self.frame)
             gpu_checkboxes = []
             gpu_label = tk.Label(f, text='GPU:')
+            self.balloon.bind(gpu_label, 'Select gpus to use for analysis')
             gpu_label.pack()
             for x_id, bool_var in self.gui_manager['gpu']:
                 c = tk.Checkbutton(f, text=x_id, variable=bool_var)
@@ -105,6 +111,7 @@ class PreferencesManager(metaclass=Singleton):
         # show data format options
         f = tk.Frame(self.frame)
         data_format_label = tk.Label(f, text='Data Format:\t')
+        self.balloon.bind(data_format_label, 'Select output image data format')
         data_format_label.pack(side='left')
         data_format_var = self.gui_manager['data_format']
         count = 0
@@ -117,6 +124,7 @@ class PreferencesManager(metaclass=Singleton):
         # show visualization format options
         f = tk.Frame(self.frame)
         visualization_format_label = tk.Label(f, text='Visualization Format:\t')
+        self.balloon.bind(visualization_format_label, 'Select figure visualization format')
         visualization_format_label.pack(side='left')
         visualization_format_var = self.gui_manager['visualization_format']
         visualization_format_combobox = Combobox(f,
