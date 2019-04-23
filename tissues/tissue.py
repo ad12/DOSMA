@@ -172,9 +172,9 @@ class Tissue(ABC):
         return self.__mask__
 
     def add_quantitative_value(self, qv_new):
-        for qv in self.quantitative_values:
-            if qv_new.NAME == qv.NAME:
-                raise ValueError('This quantitative value already exists. '
-                                 'Only one type of quantitative value can be added per tissue')
+        # for qv in self.quantitative_values:
+        #     if qv_new.NAME == qv.NAME:
+        #         raise ValueError('This quantitative value already exists. '
+        #                          'Only one type of quantitative value can be added per tissue')
 
         self.quantitative_values.append(qv_new)

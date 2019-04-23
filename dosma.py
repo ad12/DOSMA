@@ -57,24 +57,26 @@ def add_tissues(parser):
 def parse_tissues(vargin):
     tissues = []
     for tissue in knee.SUPPORTED_TISSUES:
-        if tissue.STR_ID in vargin.keys() and vargin[tissue.STR_ID] and tissue not in tissues:
+        t = tissue()
+        if t.STR_ID in vargin.keys() and vargin[t.STR_ID] and t.STR_ID not in [x.STR_ID for x in tissues]:
             load_path = vargin[LOAD_KEY]
             if load_path:
-                tissue.load_data(load_path)
+                t.load_data(load_path)
 
-            tissues.append(tissue)
+            tissues.append(t)
 
     # if no tissues are specified, do computation for all supported tissues
     if len(tissues) == 0:
         print('No tissues specified, computing for all supported tissues...')
         tissues = []
         for tissue in knee.SUPPORTED_TISSUES:
-            if tissue not in tissues:
+            t = tissue()
+            if t.STR_ID not in [x.STR_ID for x in tissues]:
                 load_path = vargin[LOAD_KEY]
                 if load_path:
-                    tissue.load_data(load_path)
+                    t.load_data(load_path)
 
-                tissues.append(tissue)
+                tissues.append(t)
 
     analysis_str = 'Tissue(s): '
     for tissue in tissues:
@@ -165,15 +167,13 @@ def parse_basic_type(val, param_type):
     if type(val) is param_type:
         return val
 
-    assert type(val) is list
     if param_type in [list, tuple]:
         return param_type(val)
 
     nargs = get_nargs_for_basic_type(param_type)
-    if nargs == 1:
+    if type(val) is list and nargs == 1:
         return val[0]
-
-    raise ValueError('Error parsing basic type - reached code that is unexpected')
+    return param_type(val) if val else val
 
 def add_scans(dosma_subparser):
     for scan in SUPPORTED_SCAN_TYPES:
@@ -279,7 +279,7 @@ def handle_scan(vargin):
     return scan
 
 
-def parse_args():
+def parse_args(f_input=None):
     """Parse arguments given through command line (argv)
 
     :raises ValueError if dicom path is not provided
@@ -321,7 +321,11 @@ def parse_args():
     knee.knee_parser(subparsers)
 
     start_time = time.time()
-    args = parser.parse_args()
+    if f_input:
+        args = parser.parse_args(f_input)
+    else:
+        args = parser.parse_args()
+
     vargin = vars(args)
 
     if vargin[DEBUG_KEY]:
@@ -355,7 +359,10 @@ def parse_args():
 
     args.func(vargin)
 
+    time_elapsed = (time.time() - start_time)
     print('Time Elapsed: %0.2f seconds' % (time.time() - start_time))
+
+    return time_elapsed
 
 
 if __name__ == '__main__':

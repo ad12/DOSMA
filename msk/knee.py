@@ -20,7 +20,7 @@ SAVE_KEY = 'save'
 PID_KEY = 'pid'
 DATA_FORMAT_KEY = 'format'
 
-SUPPORTED_TISSUES = [FemoralCartilage(), Meniscus(), TibialCartilage()]
+SUPPORTED_TISSUES = [FemoralCartilage, Meniscus, TibialCartilage]
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
 
@@ -63,7 +63,9 @@ def handle_knee(vargin):
 
     if tissues is None or len(tissues) == 0:
         print('Computing for all supported knee tissues...')
-        tissues = SUPPORTED_TISSUES
+        tissues = []
+        for t in SUPPORTED_TISSUES:
+            tissues.append(t())
 
     # Get all supported quantitative values
     qvs = []
