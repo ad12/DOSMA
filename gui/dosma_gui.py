@@ -83,7 +83,10 @@ class ScanReader():
             param_var = gutils.convert_base_type_to_gui(param_name, param_type, param_default, hbox,
                                                         balloon=self.balloon,
                                                         param_help=action_wrapper.get_param_help(param_name))
-            self.params[param_name] = (param_var, param_type is not bool)
+
+            # map parameter name --> variable, is_required
+            is_required = param_type is not bool and param_default == inspect._empty
+            self.params[param_name] = (param_var, is_required)
 
     def get_cmd_line_str(self):
         if not self.action_var:
