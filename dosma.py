@@ -357,7 +357,7 @@ def parse_args(f_input=None):
 
     save_path = vargin[SAVE_KEY]
     if not save_path:
-        save_path = load_path if load_path else dicom_path
+        save_path = load_path if load_path else '%s/data' % dicom_path
         vargin[SAVE_KEY] = save_path
 
     if not os.path.isdir(save_path):

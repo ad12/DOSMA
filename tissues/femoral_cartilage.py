@@ -255,9 +255,6 @@ class FemoralCartilage(Tissue):
 
         super().__calc_quant_vals__(quant_map, map_type)
 
-        if self.__mask__ is None:
-            raise ValueError('Please initialize mask')
-
         # assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
 
         # We have to call this every time we load a new quantitative map
