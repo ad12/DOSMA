@@ -8,7 +8,7 @@ This is the first file that is imported from this software - all initialization 
 
 
 # Default rounding for I/O (dicom, nifti, etc) - DO NOT CHANGE
-AFFINE_DECIMAL_PRECISION = 5
+AFFINE_DECIMAL_PRECISION = 4
 SCANNER_ORIGIN_DECIMAL_PRECISION = 4
 
 

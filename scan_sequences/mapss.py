@@ -1,24 +1,23 @@
 import os
+from copy import deepcopy
+from typing import List
 
-from natsort import natsorted
 from nipype.interfaces.elastix import Registration
 
 import file_constants as fc
 from data_io import format_io_utils as fio_utils
 from data_io.format_io import ImageDataFormat
-from data_io.nifti_io import NiftiReader, NiftiWriter
+from data_io.med_volume import MedicalVolume
+from data_io.nifti_io import NiftiReader
 from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
+from models.model import SegModel
 from scan_sequences.scans import TargetSequence
+from tissues.tissue import Tissue
 from utils import io_utils
 from utils import quant_vals as qv
-from utils.fits import MonoExponentialFit
-from tissues.tissue import Tissue
 from utils.cmd_line_utils import ActionWrapper
-from typing import List
-from data_io.med_volume import MedicalVolume
-from models.model import SegModel
-from copy import deepcopy
-
+from utils.fits import MonoExponentialFit
+import numpy as np
 
 __EXPECTED_NUM_ECHO_TIMES__ = 7
 __R_SQUARED_THRESHOLD__ = 0.9
@@ -57,7 +56,7 @@ class Mapss(TargetSequence):
         raise NotImplementedError('This method is currently not implemented. '
                                   'Automatic segmentation model is currently being trained')
 
-    def  __intraregister__(self, volumes: List[MedicalVolume]):
+    def __intraregister__(self, volumes: List[MedicalVolume]):
         """
         Intraregister different subvolumes to ensure they are in the same space during computation
 
@@ -117,7 +116,7 @@ class Mapss(TargetSequence):
         self.raw_volumes = deepcopy(volumes)
         self.volumes = intraregistered_volumes
 
-    def generate_t1_rho_map(self, tissue: Tissue=None):
+    def generate_t1_rho_map(self, tissue: Tissue=None, mask_path: str=None):
         """Generate 3D T1-rho map and r2 fit map using monoexponential fit across subvolumes acquired at different
                 echo times
         :param tissue: A Tissue instance
@@ -128,11 +127,11 @@ class Mapss(TargetSequence):
         tc0 = __INITIAL_T1_RHO_VAL__
         decimal_precision = __DECIMAL_PRECISION__
 
-        qv_map = self.__fitting_helper(echo_inds, tissue, bounds, tc0, decimal_precision)
+        qv_map = self.__fitting_helper(qv.T1Rho, echo_inds, tissue, bounds, tc0, decimal_precision, mask_path)
 
         return qv_map
 
-    def generate_t2_map(self, tissue: Tissue=None):
+    def generate_t2_map(self, tissue: Tissue = None, mask_path: str=None):
         """ Generate 3D T2 map
         :param tissue: a Tissue instance
         :return a T2 instance
@@ -142,11 +141,11 @@ class Mapss(TargetSequence):
         tc0 = __INITIAL_T2_VAL__
         decimal_precision = __DECIMAL_PRECISION__
 
-        qv_map = self.__fitting_helper(echo_inds, tissue, bounds, tc0, decimal_precision)
+        qv_map = self.__fitting_helper(qv.T2, echo_inds, tissue, bounds, tc0, decimal_precision, mask_path)
 
         return qv_map
 
-    def __fitting_helper(self, echo_inds, tissue, bounds, tc0, decimal_precision):
+    def __fitting_helper(self, qv_type, echo_inds, tissue, bounds, tc0, decimal_precision, mask_path):
         echo_info = [(self.echo_times[i], self.volumes[i]) for i in echo_inds]
 
         # sort by echo time
@@ -157,6 +156,11 @@ class Mapss(TargetSequence):
 
         # only calculate for focused region if a mask is available, this speeds up computation
         mask = tissue.get_mask()
+        if not mask and mask_path:
+            mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
+            if tuple(np.unique(mask.volume)) != (0, 1):
+                raise ValueError('mask_filepath must reference binary segmentation volume')
+
         mef = MonoExponentialFit(xs, ys,
                                  mask=mask,
                                  bounds=bounds,
@@ -164,7 +168,7 @@ class Mapss(TargetSequence):
                                  decimal_precision=decimal_precision)
         qv_map, r2 = mef.fit()
 
-        quant_val_map = qv.T1Rho(qv_map)
+        quant_val_map = qv_type(qv_map)
         quant_val_map.add_additional_volume('r2', r2)
 
         tissue.add_quantitative_value(quant_val_map)
@@ -204,10 +208,14 @@ class Mapss(TargetSequence):
         """Provide command line information (such as name, help strings, etc) as list of dictionary"""
 
         generate_t1_rho_map_action = ActionWrapper(name=cls.generate_t1_rho_map.__name__,
-                                       aliases=['t1_rho'],
-                                       help='generate T1-rho map using mono-exponential fitting')
+                                                   aliases=['t1_rho'],
+                                                   param_help={'mask_path': 'path to nifti mask'},
+                                                   alternative_param_names={'mask_path': ['mask', 'mp']},
+                                                   help='generate T1-rho map using mono-exponential fitting')
         generate_t2_map_action = ActionWrapper(name=cls.generate_t2_map.__name__,
                                                aliases=['t2'],
+                                               param_help={'mask_path': 'path to nifti mask'},
+                                               alternative_param_names={'mask_path': ['mask', 'mp']},
                                                help='generate T2 map using mono-exponential fitting')
 
         return [(cls.generate_t1_rho_map, generate_t1_rho_map_action),
