@@ -209,12 +209,12 @@ class Mapss(TargetSequence):
 
         generate_t1_rho_map_action = ActionWrapper(name=cls.generate_t1_rho_map.__name__,
                                                    aliases=['t1_rho'],
-                                                   param_help={'mask_path': 'path to nifti mask'},
+                                                   param_help={'mask_path': 'mask filepath (.nii.gz) to reduce computational time for fitting'},
                                                    alternative_param_names={'mask_path': ['mask', 'mp']},
                                                    help='generate T1-rho map using mono-exponential fitting')
         generate_t2_map_action = ActionWrapper(name=cls.generate_t2_map.__name__,
                                                aliases=['t2'],
-                                               param_help={'mask_path': 'path to nifti mask'},
+                                               param_help={'mask_path': 'mask filepath (.nii.gz) to reduce computational time for fitting'},
                                                alternative_param_names={'mask_path': ['mask', 'mp']},
                                                help='generate T2 map using mono-exponential fitting')
 
