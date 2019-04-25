@@ -102,3 +102,7 @@ class CubeQuantTest(unittest.TestCase):
             arr, _ = io_utils.load_nifti(filepath)
 
             assert np.sum(arr < 0) == 0, "Failed %03d: no values should be negative" % sl
+
+
+if __name__ == '__main__':
+    unittest.main()

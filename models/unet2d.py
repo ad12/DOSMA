@@ -11,10 +11,11 @@ from keras.layers import BatchNormalization as BN
 from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, Concatenate
 from keras.models import Model
 
-from data_io.med_volume import MedicalVolume
+from data_io import MedicalVolume
 from data_io.orientation import SAGITTAL
-from models.model import SegModel
-from utils import dicom_utils
+from models.model import SegModel, whiten_volume
+
+__all__ = ['Unet2D']
 
 
 class Unet2D(SegModel):
@@ -137,4 +138,4 @@ class Unet2D(SegModel):
         return vol_copy
 
     def __preprocess_volume__(self, volume: np.ndarray):
-        return dicom_utils.whiten_volume(volume)
+        return whiten_volume(volume)

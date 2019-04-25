@@ -1,12 +1,12 @@
 import os
 
+import numpy as np
 from natsort import natsorted
 from nipype.interfaces.elastix import Registration
 
 import file_constants as fc
+from data_io import ImageDataFormat, NiftiReader
 from data_io import format_io_utils as fio_utils
-from data_io.format_io import ImageDataFormat
-from data_io.nifti_io import NiftiReader
 from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 from scan_sequences.scans import NonTargetSequence
 from tissues.tissue import Tissue
@@ -14,8 +14,8 @@ from utils import io_utils
 from utils import quant_vals as qv
 from utils.cmd_line_utils import ActionWrapper
 from utils.fits import MonoExponentialFit
-import numpy as np
 
+__all__ = ['CubeQuant']
 
 __EXPECTED_NUM_SPIN_LOCK_TIMES__ = 4
 __R_SQUARED_THRESHOLD__ = 0.9
@@ -190,7 +190,7 @@ class CubeQuant(NonTargetSequence):
 
         for spin_lock_time_index in self.subvolumes.keys():
             nii_filepath = os.path.join(interregistered_dirpath, '%03d.nii.gz' % spin_lock_time_index)
-            filepath = fio_utils.convert_format_filename(nii_filepath, data_format)
+            filepath = fio_utils.convert_image_data_format(nii_filepath, data_format)
 
             self.subvolumes[spin_lock_time_index].save_volume(filepath)
 

@@ -20,21 +20,10 @@ from defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 from utils import io_utils
 
 
-__all__ = ['DICOM_EXTENSIONS', 'contains_dicom_extension', 'LPSplus_to_RASplus', 'DicomReader', 'DicomWriter']
+__all__ = ['DicomReader', 'DicomWriter']
 
 
-DICOM_EXTENSIONS = ('.dcm',)
 TOTAL_NUM_ECHOS_KEY = (0x19, 0x107e)
-
-
-def contains_dicom_extension(a_str: str):
-    """
-    Check if a string ends with one of the accepted dicom extensions
-    :param a_str: a string
-    :return: a boolean
-    """
-    bool_list = [a_str.endswith(ext) for ext in DICOM_EXTENSIONS]
-    return bool(sum(bool_list))
 
 
 def __update_np_dtype__(np_array, bit_depth):
@@ -149,7 +138,7 @@ class DicomReader(DataReader):
 
         lstFilesDCM = []
         for f in possible_files:
-            if contains_dicom_extension(f):
+            if self.data_format_code.is_filetype(f):
                 lstFilesDCM.append(os.path.join(dicom_dirpath, f))
 
         lstFilesDCM = natsorted(lstFilesDCM)
@@ -157,7 +146,7 @@ class DicomReader(DataReader):
             raise FileNotFoundError("No files found in directory %s" % dicom_dirpath)
 
         # Get reference file
-        ref_dicom = pydicom.read_file(lstFilesDCM[0])
+        # ref_dicom = pydicom.read_file(lstFilesDCM[0])
 
         dicom_data = {}
 

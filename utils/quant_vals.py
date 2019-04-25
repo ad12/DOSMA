@@ -7,6 +7,8 @@ from data_io.format_io import ImageDataFormat
 from data_io.med_volume import MedicalVolume
 from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 
+__all__ = ['QuantitativeValues', 'QuantitativeValue', 'T1Rho', 'T2', 'T2Star']
+
 
 class QuantitativeValues(Enum):
     """Enum of quantitative values that can be analyzed"""
@@ -125,8 +127,3 @@ class T2Star(QuantitativeValue):
 
     def get_enum(self):
         return QuantitativeValues.T2_STAR
-
-
-if __name__ == '__main__':
-    print(type(QuantitativeValues.T1_RHO.name))
-    print(QuantitativeValues.T1_RHO.value == 1)

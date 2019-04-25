@@ -121,7 +121,7 @@ class ScanSequence(ABC):
         """Get filename for storing serialized data
         :return: a string
         """
-        return '%s.%s' % (self.NAME, io_utils.DATA_EXT)
+        return '%s.data' % self.NAME
 
     def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
         """Save data in base_save_dirpath

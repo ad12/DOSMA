@@ -7,6 +7,8 @@ from scipy import optimize as sop
 import defaults
 from data_io.med_volume import MedicalVolume
 
+__all__ = ['Fit', 'MonoExponentialFit']
+
 
 class Fit(ABC):
     """Abstract class for fitting functionality"""
@@ -76,7 +78,7 @@ class MonoExponentialFit(Fit):
 
         svs = np.concatenate(svs)
 
-        vals, r_squared = fit_monoexp_tc(self.ts, svs, self.tc0)
+        vals, r_squared = __fit_monoexp_tc__(self.ts, svs, self.tc0)
 
         map_unfiltered = vals.reshape(original_shape)
         r_squared = r_squared.reshape(original_shape)
@@ -109,7 +111,7 @@ def __fit_mono_exp__(x, y, p0=None):
     x = np.asarray(x)
     y = np.asarray(y)
 
-    popt, _ = sop.curve_fit(func, x, y, p0=p0, maxfev=100)
+    popt, _ = sop.curve_fit(func, x, y, p0=p0, maxfev=100, ftol=1e-5)
 
     residuals = y - func(x, popt[0], popt[1])
     ss_res = np.sum(residuals ** 2)
@@ -120,7 +122,7 @@ def __fit_mono_exp__(x, y, p0=None):
     return popt, r_squared
 
 
-def fit_monoexp_tc(x, ys, tc0):
+def __fit_monoexp_tc__(x, ys, tc0):
     p0 = (1.0, -1 / tc0)
     time_constants = np.zeros([1, ys.shape[-1]])
     r_squared = np.zeros([1, ys.shape[-1]])

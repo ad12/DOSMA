@@ -3,9 +3,8 @@ import os, sys
 import re
 import random
 
-sys.path.append('../')
 from data_io.format_io import ImageDataFormat
-from unit_tests import unittest_utils as ututils
+from . import util as ututils
 
 
 class TestNiftiIO(unittest.TestCase):

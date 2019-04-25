@@ -3,7 +3,7 @@ import numpy as np
 import sys
 
 sys.path.append('../')
-from unit_tests import unittest_utils as ututils
+from . import util as ututils
 from data_io.format_io import ImageDataFormat
 
 

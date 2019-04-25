@@ -6,12 +6,13 @@ from tensorflow.python.client import device_lib
 from dosma import GPU_KEY, DATA_FORMAT_KEY, VISUALIZATION_FORMAT_KEY
 
 CUDA_DEVICES_STR = "CUDA_VISIBLE_DEVICES"
-from data_io.format_io import SUPPORTED_FORMATS, ImageDataFormat
+from data_io.format_io import ImageDataFormat
 from data_io.fig_format import SUPPORTED_VISUALIZATION_FORMATS
 
 import defaults
 import Pmw
 
+SUPPORTED_IMAGE_DATA_FORMATS = [x for x in ImageDataFormat]
 LARGE_FONT = ("Verdana", 18)
 
 
@@ -82,7 +83,7 @@ class PreferencesManager(metaclass=Singleton):
 
     @property
     def data_format(self) -> ImageDataFormat:
-        return SUPPORTED_FORMATS[self.gui_manager['data_format'].get()]
+        return SUPPORTED_IMAGE_DATA_FORMATS[self.gui_manager['data_format'].get()]
 
     @property
     def visualization_format(self) -> str:
@@ -115,7 +116,7 @@ class PreferencesManager(metaclass=Singleton):
         data_format_label.pack(side='left')
         data_format_var = self.gui_manager['data_format']
         count = 0
-        for im_format in SUPPORTED_FORMATS:
+        for im_format in SUPPORTED_IMAGE_DATA_FORMATS:
             rb = tk.Radiobutton(f, text=im_format.name, variable=data_format_var, value=count)
             rb.pack(side='left')
             count += 1

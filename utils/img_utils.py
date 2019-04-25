@@ -8,6 +8,8 @@ from matplotlib.lines import Line2D
 import defaults
 from data_io.fig_format import savefig
 
+__all__ = ['downsample_slice', 'write_regions']
+
 
 def downsample_slice(img_array, ds_factor, is_mask=False):
     '''

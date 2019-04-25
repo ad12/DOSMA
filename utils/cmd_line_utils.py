@@ -1,3 +1,6 @@
+__all__ = ['ActionWrapper']
+
+
 class ActionWrapper():
     """Wrapper for actions (methods) that can be executed via command-line"""
 
@@ -52,8 +55,3 @@ class ActionWrapper():
     @property
     def help(self):
         return self._help
-
-
-if __name__ == '__main__':
-    a = ActionWrapper(name='segment', param_help={'hezbula': 'hexb'}, alternative_param_names={'hezbula': ['hexb']})
-    print(a)
