@@ -158,21 +158,24 @@ class DicomReader(DataReader):
 
         # Get reference file
         ref_dicom = pydicom.read_file(lstFilesDCM[0])
-        max_num_echos = ref_dicom[TOTAL_NUM_ECHOS_KEY].value
 
-        dicom_data = []
-        for i in range(max_num_echos):
-            dicom_data.append({'headers': [], 'arr': []})
+        dicom_data = {}
 
         for dicom_filename in lstFilesDCM:
             # read the file
             ds = pydicom.read_file(dicom_filename, force=True)
             echo_number = ds.EchoNumbers
-            dicom_data[echo_number - 1]['headers'].append(ds)
-            dicom_data[echo_number - 1]['arr'].append(ds.pixel_array)
+            echo_ind = echo_number - 1
+
+            if echo_ind not in dicom_data.keys():
+                dicom_data[echo_ind] = {'headers': [], 'arr': []}
+
+            dicom_data[echo_ind]['headers'].append(ds)
+            dicom_data[echo_ind]['arr'].append(ds.pixel_array)
 
         vols = []
-        for dd in dicom_data:
+        for k in sorted(list(dicom_data.keys())):
+            dd = dicom_data[k]
             headers = dd['headers']
             if len(headers) == 0:
                 continue

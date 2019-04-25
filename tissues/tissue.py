@@ -70,6 +70,9 @@ class Tissue(ABC):
         assert type(quant_map) is MedicalVolume
         assert type(map_type) is QuantitativeValues
 
+        if self.__mask__ is None:
+            raise ValueError('Please initialize mask for %s' % self.FULL_NAME)
+
         pass
 
     def __store_quant_vals__(self, quant_map, quant_df, map_type):
@@ -172,9 +175,10 @@ class Tissue(ABC):
         return self.__mask__
 
     def add_quantitative_value(self, qv_new):
-        for qv in self.quantitative_values:
-            if qv_new.NAME == qv.NAME:
-                raise ValueError('This quantitative value already exists. '
-                                 'Only one type of quantitative value can be added per tissue')
+        # for qv in self.quantitative_values:
+        #     if qv_new.NAME == qv.NAME:
+        #         raise ValueError('This quantitative value already exists. '
+        #                          'Only one type of quantitative value can be added per tissue.\n'
+        #                          'Manually delete %s folder' % qv_new.NAME)
 
         self.quantitative_values.append(qv_new)

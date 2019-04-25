@@ -43,6 +43,8 @@ __all__ = ['get_transpose_inds', 'get_flip_inds', 'orientation_nib_to_standard',
 
 # Default Orientations
 SAGITTAL = ('SI', 'AP', 'LR')
+CORONAL = ('SI', 'LR', 'AP')
+AXIAL = ('AP', 'LR', 'SI')
 
 __EXPECTED_ORIENTATION_TUPLE_LEN__ = 3
 __SUPPORTED_ORIENTATIONS__ = ['LR', 'RL', 'PA', 'AP', 'IS', 'SI']
