@@ -74,6 +74,7 @@ class Tissue(ABC):
         if self.__mask__ is None:
             raise ValueError('Please initialize mask for %s' % self.FULL_NAME)
 
+        quant_map.reformat(self.__mask__.orientation)
         pass
 
     def __store_quant_vals__(self, quant_map, quant_df, map_type):

@@ -68,6 +68,10 @@ class ScanSequence(ABC):
         if is_dicom_available:
             self.__load_dicom__()
 
+        if not self.__validate_scan__():
+            raise ValueError('dicoms in \'%s\' do not correspond to %s sequence' % (self.dicom_path,
+                                                                                    self.NAME))
+
     @abstractmethod
     def __validate_scan__(self) -> bool:
         """Validate this scan (usually done by checking dicom header tags, if available)

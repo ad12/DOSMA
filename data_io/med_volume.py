@@ -16,6 +16,7 @@ from defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
 __all__ = ['MedicalVolume']
 
 
+
 class MedicalVolume():
     """Wrapper for 3D volumes """
 
@@ -123,7 +124,14 @@ class MedicalVolume():
 
         return self.is_same_dimensions(mv) and (mv.volume == self.volume).all()
 
-    def is_same_dimensions(self, mv):
+    def __allclose_spacing(self, mv, precision=None):
+        if precision:
+            tol = 10 ** (-precision)
+            return np.allclose(mv.affine[:3, :3], self.affine[:3, :3], atol=tol) and np.allclose(mv.scanner_origin, self.scanner_origin, rtol=tol)
+        else:
+            return (mv.affine == self.affine).all()
+
+    def is_same_dimensions(self, mv, precision=None):
         """
         Check if two volumes have the same dimensions
         Two volumes have the same dimensions if they have the same pixel_spacing, orientation, and scanner_origin
@@ -133,7 +141,10 @@ class MedicalVolume():
         if type(mv) != type(self):
             raise TypeError('type(mv) must be %s' % str(type(self)))
 
-        return mv.pixel_spacing == self.pixel_spacing and mv.orientation == self.orientation and mv.scanner_origin == self.scanner_origin and mv.volume.shape == self.volume.shape
+        if precision:
+            return self.__allclose_spacing(mv, precision) and mv.orientation == self.orientation and mv.volume.shape == self.volume.shape
+        else:
+            return self.__allclose_spacing(mv, precision) and mv.orientation == self.orientation and mv.volume.shape == self.volume.shape
 
     def match_orientation(self, mv):
         """
