@@ -24,6 +24,9 @@ class MedicalVolume():
         :param volume: a 3D numpy array
         :param affine: a 4x4 numpy array resembling affine matrix transform in RAS+ coordinates
         """
+        if headers and len(headers) != volume.shape[-1]:
+            raise ValueError('Header mismatch. %d headers, but %d slices' % (len(headers), volume.shape[-1]))
+
         self._volume = volume
         self._affine = np.array(affine)
         self._headers = headers
