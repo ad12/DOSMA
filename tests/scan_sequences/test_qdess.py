@@ -2,22 +2,19 @@ import os
 import unittest
 
 import numpy as np
+import numpy.testing as npt
 import scipy.io as sio
 
 from models.util import get_model
 from scan_sequences.qdess import QDess
 from tissues.femoral_cartilage import FemoralCartilage
-from tests import util as tutil
-import numpy.testing as npt
-
+from .. import util
 
 SEGMENTATION_WEIGHTS_FOLDER = os.path.join(os.path.dirname(__file__), '../../weights')
 SEGMENTATION_MODEL = 'unet2d'
 
-DECIMAL_PRECISION = 1  # (+/- 0.1ms)
 
-
-class QDessTest(tutil.ScanTest):
+class QDessTest(util.ScanTest):
     SCAN_TYPE = QDess
 
     def test_segmentation(self):
@@ -38,7 +35,8 @@ class QDessTest(tutil.ScanTest):
         tissue = FemoralCartilage()
         scan.generate_t2_map(tissue)
 
-        mat_filepath = os.path.join(tutil.get_expected_data_path(os.path.dirname(self.dicom_dirpath)), tissue.STR_ID, 't2.mat')
+        mat_filepath = os.path.join(util.get_expected_data_path(os.path.dirname(self.dicom_dirpath)), tissue.STR_ID,
+                                    't2.mat')
         mat_t2_map = sio.loadmat(mat_filepath)
         mat_t2_map = mat_t2_map['t2map']
 
@@ -50,7 +48,7 @@ class QDessTest(tutil.ScanTest):
         mat_t2_map = np.nan_to_num(mat_t2_map)
         py_t2_map = np.nan_to_num(py_t2_map)
 
-        npt.assert_almost_equal(mat_t2_map, py_t2_map, decimal=DECIMAL_PRECISION)
+        npt.assert_almost_equal(mat_t2_map, py_t2_map, decimal=util.DECIMAL_PRECISION)
 
 
 if __name__ == '__main__':

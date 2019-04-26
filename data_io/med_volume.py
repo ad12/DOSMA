@@ -12,9 +12,7 @@ from data_io import orientation as stdo
 from data_io.format_io import ImageDataFormat
 from defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
 
-
 __all__ = ['MedicalVolume']
-
 
 
 class MedicalVolume():
@@ -108,8 +106,8 @@ class MedicalVolume():
         self._affine = temp_affine
 
         assert self.orientation == new_orientation, "Orientation mismatch: Expected: %s. Got %s" % (
-        str(self.orientation),
-        str(new_orientation))
+            str(self.orientation),
+            str(new_orientation))
         self._volume = volume
 
     def is_identical(self, mv):
@@ -127,7 +125,9 @@ class MedicalVolume():
     def __allclose_spacing(self, mv, precision=None):
         if precision:
             tol = 10 ** (-precision)
-            return np.allclose(mv.affine[:3, :3], self.affine[:3, :3], atol=tol) and np.allclose(mv.scanner_origin, self.scanner_origin, rtol=tol)
+            return np.allclose(mv.affine[:3, :3], self.affine[:3, :3], atol=tol) and np.allclose(mv.scanner_origin,
+                                                                                                 self.scanner_origin,
+                                                                                                 rtol=tol)
         else:
             return (mv.affine == self.affine).all()
 
@@ -142,9 +142,11 @@ class MedicalVolume():
             raise TypeError('type(mv) must be %s' % str(type(self)))
 
         if precision:
-            return self.__allclose_spacing(mv, precision) and mv.orientation == self.orientation and mv.volume.shape == self.volume.shape
+            return self.__allclose_spacing(mv,
+                                           precision) and mv.orientation == self.orientation and mv.volume.shape == self.volume.shape
         else:
-            return self.__allclose_spacing(mv, precision) and mv.orientation == self.orientation and mv.volume.shape == self.volume.shape
+            return self.__allclose_spacing(mv,
+                                           precision) and mv.orientation == self.orientation and mv.volume.shape == self.volume.shape
 
     def match_orientation(self, mv):
         """

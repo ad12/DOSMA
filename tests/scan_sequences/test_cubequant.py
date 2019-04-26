@@ -1,14 +1,10 @@
 import os
 import unittest
 
-import numpy as np
-
 from data_io import ImageDataFormat, NiftiReader
 from scan_sequences import CubeQuant, QDess
 from tissues.femoral_cartilage import FemoralCartilage
 from .. import util
-
-DECIMAL_PRECISION = 1  # (+/- 0.1ms)
 
 # target mask path used to register Cubequant volume to qDESS volume
 TARGET_MASK_PATH = os.path.join(util.get_scan_dirpath(CubeQuant.NAME), 'misc/fc.nii.gz')
@@ -49,7 +45,7 @@ class CubeQuantTest(util.ScanTest):
         assert map2 is not None, "map should not be None"
 
         # map1 and map2 should be identical
-        assert(map1.volumetric_map.is_identical(map2.volumetric_map))
+        assert (map1.volumetric_map.is_identical(map2.volumetric_map))
 
 
 if __name__ == '__main__':

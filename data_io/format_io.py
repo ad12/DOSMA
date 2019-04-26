@@ -4,9 +4,9 @@ File detailing abstract classes for reading/writing data of different formats
 @author: Arjun Desai
         (C) Stanford University, 2019
 """
-from abc import ABC, abstractmethod
-import os
 import enum
+import os
+from abc import ABC, abstractmethod
 
 __all__ = ['ImageDataFormat', 'DataReader', 'DataWriter']
 

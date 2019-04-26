@@ -1,6 +1,5 @@
-from data_io import orientation
 from data_io import dicom_io, fig_format, format_io, format_io_utils, med_volume, nifti_io, orientation
-
+from data_io import orientation
 from data_io.dicom_io import *  # noqa
 from data_io.fig_format import *  # noqa
 from data_io.format_io import *  # noqa
@@ -15,4 +14,3 @@ __all__.extend(format_io.__all__)
 __all__.extend(format_io_utils.__all__)
 __all__.extend(med_volume.__all__)
 __all__.extend(nifti_io.__all__)
-

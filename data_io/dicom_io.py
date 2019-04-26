@@ -19,9 +19,7 @@ from data_io.med_volume import MedicalVolume
 from defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 from utils import io_utils
 
-
 __all__ = ['DicomReader', 'DicomWriter']
-
 
 TOTAL_NUM_ECHOS_KEY = (0x19, 0x107e)
 

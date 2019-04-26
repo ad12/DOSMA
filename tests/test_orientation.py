@@ -1,6 +1,7 @@
-import unittest
-import numpy as np
 import sys
+import unittest
+
+import numpy as np
 
 sys.path.append('../')
 from . import util as ututils
@@ -54,7 +55,8 @@ class TestOrientation(unittest.TestCase):
             e1 = self.nr.load(fp)
             o = e1.orientation
             orientations = [(o[0][::-1], o[1], o[2]), (o[0], o[1][::-1], o[2]), (o[0], o[1][::-1], o[2]),
-                            (o[0][::-1], o[1][::-1], o[2]), (o[0][::-1], o[1], o[2][::-1]), (o[0], o[1][::-1], o[2][::-1]),
+                            (o[0][::-1], o[1][::-1], o[2]), (o[0][::-1], o[1], o[2][::-1]),
+                            (o[0], o[1][::-1], o[2][::-1]),
                             (o[0][::-1], o[1][::-1], o[2][::-1])]
 
             self.check_orientations(e1, orientations)
