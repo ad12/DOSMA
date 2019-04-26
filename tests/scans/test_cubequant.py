@@ -5,49 +5,12 @@ import numpy as np
 
 from scan_sequences.cube_quant import CubeQuant
 from tissues.femoral_cartilage import FemoralCartilage
-from utils import io_utils, dicom_utils
-
-
-CUBEQUANT_DICOM_PATH = '../dicoms/healthy07/008'
-CUBEQUANT_INTERREGISTERED_PATH = '../dicoms/healthy07/data/cube_quant_data/interregistered'
-
-CUBEQUANT_T1_RHO_MAP_PATH = ''
+from ..util import ScanTest
 
 DECIMAL_PRECISION = 1  # (+/- 0.1ms)
 
 
-class CubeQuantTest(unittest.TestCase):
-
-    def setUp(self):
-        print("Testing: ", self._testMethodName)
-
-    def get_vargin(self):
-        vargin = dict()
-        vargin[pipeline.TISSUES_KEY] = [FemoralCartilage()]
-        vargin[pipeline.DICOM_KEY] = CUBEQUANT_DICOM_PATH
-        vargin[pipeline.SAVE_KEY] = SAVE_PATH
-        vargin[pipeline.EXT_KEY] = 'dcm'
-        vargin[pipeline.T1_RHO_Key] = False
-        vargin[pipeline.INTERREGISTERED_FILES_DIR_KEY] = None
-        vargin[pipeline.ACTION_KEY] = None
-        vargin[pipeline.TARGET_SCAN_KEY] = None
-        vargin[pipeline.TARGET_MASK_KEY] = None
-        vargin[pipeline.LOAD_KEY] = None
-
-        return vargin
-
-    def base_interregister(self, mask_path=None):
-        # Interregister cubequant files
-        cq = CubeQuant()
-        vargin = self.get_vargin()
-        vargin[pipeline.ACTION_KEY] = 'interregister'
-        vargin[pipeline.TARGET_SCAN_KEY] = os.path.join(SAVE_PATH, 'dess_data', 'dess-interregister.nii.gz')
-        vargin[pipeline.TARGET_MASK_KEY] = mask_path
-
-        scan = pipeline.handle_cubequant(vargin)
-        pipeline.save_info(vargin[pipeline.SAVE_KEY], scan)
-
-        return scan
+class CubeQuantTest(ScanTest):
 
     def test_interregister_no_mask(self):
         self.base_interregister()
