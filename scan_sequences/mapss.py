@@ -119,7 +119,10 @@ class Mapss(TargetSequence):
     def generate_t1_rho_map(self, tissue: Tissue=None, mask_path: str=None):
         """Generate 3D T1-rho map and r2 fit map using monoexponential fit across subvolumes acquired at different
                 echo times
-        :param tissue: A Tissue instance
+
+        :param tissue: Tissue to fit data for - if provided and tissue contains mask, mask is used
+        :param mask_path: path to arbitrary mask in NIfTI format - ignored if tissue argument has mask
+
         :return: a T1Rho instance
         """
         echo_inds = range(4)
@@ -132,8 +135,12 @@ class Mapss(TargetSequence):
         return qv_map
 
     def generate_t2_map(self, tissue: Tissue = None, mask_path: str=None):
-        """ Generate 3D T2 map
-        :param tissue: a Tissue instance
+        """ Generate 3D T2 map and r2 fit map using monoexponential fit across subvolumes acquired at different
+                echo times
+
+        :param tissue: Tissue to fit data for - if provided and tissue contains mask, mask is used
+        :param mask_path: path to arbitrary mask in NIfTI format - ignored if tissue argument has mask
+
         :return a T2 instance
         """
         echo_inds = [0, 4, 5, 6]
@@ -209,12 +216,12 @@ class Mapss(TargetSequence):
 
         generate_t1_rho_map_action = ActionWrapper(name=cls.generate_t1_rho_map.__name__,
                                                    aliases=['t1_rho'],
-                                                   param_help={'mask_path': 'mask filepath (.nii.gz) to reduce computational time for fitting'},
+                                                   param_help={'mask_path': 'mask filepath (.nii.gz) to reduce computational time for fitting. Not required if loading data (ie. `--l` flag) for tissue with mask.'},
                                                    alternative_param_names={'mask_path': ['mask', 'mp']},
                                                    help='generate T1-rho map using mono-exponential fitting')
         generate_t2_map_action = ActionWrapper(name=cls.generate_t2_map.__name__,
                                                aliases=['t2'],
-                                               param_help={'mask_path': 'mask filepath (.nii.gz) to reduce computational time for fitting'},
+                                               param_help={'mask_path': 'mask filepath (.nii.gz) to reduce computational time for fitting. Not required if loading data (ie. `--l` flag) for tissue with mask.'},
                                                alternative_param_names={'mask_path': ['mask', 'mp']},
                                                help='generate T2 map using mono-exponential fitting')
 
