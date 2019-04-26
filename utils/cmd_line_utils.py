@@ -43,7 +43,7 @@ class ActionWrapper():
         return self._alternative_param_names[param]
 
     def get_param_help(self, param: str):
-        if param not in self._param_help:
+        if not self._param_help or param not in self._param_help:
             return ''
 
         return self._param_help[param]

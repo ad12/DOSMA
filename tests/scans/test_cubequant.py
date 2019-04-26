@@ -3,68 +3,53 @@ import unittest
 
 import numpy as np
 
-from scan_sequences.cube_quant import CubeQuant
+from data_io import ImageDataFormat, NiftiReader
+from scan_sequences import CubeQuant, QDess
 from tissues.femoral_cartilage import FemoralCartilage
-from ..util import ScanTest
+from .. import util
 
 DECIMAL_PRECISION = 1  # (+/- 0.1ms)
 
+# target mask path used to register Cubequant volume to qDESS volume
+TARGET_MASK_PATH = os.path.join(util.get_scan_dirpath(CubeQuant.NAME), 'misc/fc.nii.gz')
 
-class CubeQuantTest(ScanTest):
+
+class CubeQuantTest(util.ScanTest):
+    SCAN_TYPE = CubeQuant
 
     def test_interregister_no_mask(self):
-        self.base_interregister()
+        """Register Cubequant scan to qDESS scan without a target mask"""
+        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
+
+        # Register to first echo of QDess without a mask
+        qdess_echo1_path = util.get_read_paths(util.get_scan_dirpath(QDess.NAME), ImageDataFormat.nifti)[0]
+        scan.interregister(target_path=qdess_echo1_path)
 
     def test_interregister_mask(self):
-        # Interregister cubequant files using mask
-        # assume dess segmentation exists
-        self.base_interregister('./dicoms/healthy07/data/fc.nii.gz')
+        """Register Cubequant scan to qDESS scan with a target mask (mask for femoral cartilage)"""
+        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
 
-    def test_load_interregister(self):
-        # make sure subvolumes are the same
-        base_scan = self.base_interregister()
-
-        vargin = self.get_vargin()
-        vargin[pipeline.INTERREGISTERED_FILES_DIR_KEY] = CUBEQUANT_INTERREGISTERED_PATH
-        load_scan = pipeline.handle_cubequant(vargin)
-
-        # subvolume lengths must be the same
-        assert len(base_scan.subvolumes) == len(load_scan.subvolumes), \
-            'Length mismatch - %d subvolumes (base), %d subvolumes (load)' % (len(base_scan.subvolumes),
-                                                                              len(load_scan.subvolumes))
-        assert len(load_scan.subvolumes) == 4
-
-        for key in base_scan.subvolumes.keys():
-            base_subvolume = base_scan.subvolumes[key]
-            load_subvolume = load_scan.subvolumes[key]
-            assert np.array_equal(base_subvolume, load_subvolume), "Failed key: %s" % str(key)
+        qdess_echo1_path = util.get_read_paths(util.get_scan_dirpath(QDess.NAME), ImageDataFormat.nifti)[0]
+        scan.interregister(target_path=qdess_echo1_path, target_mask_path=TARGET_MASK_PATH)
 
     def test_t1_rho_map(self):
-        vargin = self.get_vargin()
-        vargin[pipeline.INTERREGISTERED_FILES_DIR_KEY] = CUBEQUANT_INTERREGISTERED_PATH
-        vargin[pipeline.T1_RHO_Key] = True
-        vargin[pipeline.LOAD_KEY] = SAVE_PATH
+        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
+        qdess_echo1_path = util.get_read_paths(util.get_scan_dirpath(QDess.NAME), ImageDataFormat.nifti)[0]
+        scan.interregister(target_path=qdess_echo1_path, target_mask_path=TARGET_MASK_PATH)
 
-        scan = pipeline.handle_cubequant(vargin)
-        pipeline.save_info(vargin[pipeline.SAVE_KEY], scan)
+        # run analysis with femoral cartilage, without mask
+        tissue = FemoralCartilage()
+        map1 = scan.generate_t1_rho_map(tissue, TARGET_MASK_PATH)
+        assert map1 is not None, "map should not be None"
 
-        assert scan.t1rho_map is not None
+        # add mask to femoral cartilage and run
+        nr = NiftiReader()
+        tissue.set_mask(nr.load(TARGET_MASK_PATH))
+        map2 = scan.generate_t1_rho_map(tissue)
+        assert map2 is not None, "map should not be None"
 
-    def test_dicom_negative(self):
-        """Load dicoms and see if any negative values exist"""
-        arr, _, _ = dicom_utils.load_dicom(CUBEQUANT_DICOM_PATH, 'dcm')
-
-        assert np.sum(arr < 0) == 0, "No dicom values should be negative"
-
-    def test_baseline_raw_negative(self):
-        base_filepath = './dicoms/healthy07/cubequant_elastix_baseline/raw/%03d.nii.gz'
-        spin_lock_times = [1, 10, 30, 60]
-
-        for sl in spin_lock_times:
-            filepath = base_filepath % sl
-            arr, _ = io_utils.load_nifti(filepath)
-
-            assert np.sum(arr < 0) == 0, "Failed %03d: no values should be negative" % sl
+        # map1 and map2 should be identical
+        assert(map1.volumetric_map.is_identical(map2.volumetric_map))
 
 
 if __name__ == '__main__':

@@ -88,7 +88,7 @@ class CubeQuant(NonTargetSequence):
 
         self.subvolumes = subvolumes
 
-    def generate_t1_rho_map(self, tissue: Tissue):
+    def generate_t1_rho_map(self, tissue: Tissue, mask_path: str = None):
         """Generate 3D T1-rho map and r2 fit map using monoexponential fit across subvolumes acquired at different
                 echo times
         :param tissue: A Tissue instance
@@ -99,8 +99,10 @@ class CubeQuant(NonTargetSequence):
 
         # only calculate for focused region if a mask is available, this speeds up computation
         mask = tissue.get_mask()
-        if not mask or np.sum(mask.volume) == 0:
-            raise ValueError('%s does not have mask' % tissue.FULL_NAME)
+        if (not mask or np.sum(mask.volume) == 0) and mask_path:
+            mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
+            if tuple(np.unique(mask.volume)) != (0, 1):
+                raise ValueError('mask_filepath must reference binary segmentation volume')
 
         sorted_keys = natsorted(list(self.subvolumes.keys()))
         for spin_lock_time_index in sorted_keys:
