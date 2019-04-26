@@ -277,6 +277,7 @@ class DosmaFrame(tk.Frame):
                 raise ValueError('Save path not defined')
 
             action_str = self.scan_reader.get_cmd_line_str().strip()
+
             if not action_str:
                 raise ValueError('No action selected')
 
@@ -301,7 +302,7 @@ class DosmaFrame(tk.Frame):
                                                     tissue_str,
                                                     action_str)
 
-            # print(str_f)
+            print('CMD LINE INPUT: %s' % str_f)
 
             parse_args(str_f.split())
         except Exception as e:

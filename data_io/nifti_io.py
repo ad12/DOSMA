@@ -105,14 +105,3 @@ class NiftiWriter(DataWriter):
         nib_img = nib.Nifti1Image(np_im, nib_affine)
 
         nib.save(nib_img, filepath)
-
-
-if __name__ == '__main__':
-    import scipy.io as sio
-
-    load_filepath = '../dicoms/mapss_eg/multi-echo/gt-%d.nii.gz'
-    save_path = '../dicoms/mapss_eg/matfiles-nii'
-    nr = NiftiReader()
-    for i in range(7):
-        med_vol = nr.load(load_filepath % i)
-        sio.savemat(os.path.join(save_path, '%d.mat' % i), {'data': med_vol.volume})

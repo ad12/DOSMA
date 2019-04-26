@@ -51,7 +51,7 @@ class QuantitativeValue(ABC):
                 raise TypeError('All members of `qvs` must be instances of QuantitativeValue')
             qv.save_data(dirpath)
 
-    def __init__(self, volumetric_map=None):
+    def __init__(self, volumetric_map: MedicalVolume=None):
         # Main 3D quantitative value map (MedicalVolume)
         if volumetric_map is not None and not isinstance(volumetric_map, MedicalVolume):
             raise TypeError('`volumetric_map` must be of type MedicalVolume')
