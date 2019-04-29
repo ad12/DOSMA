@@ -1,10 +1,14 @@
 import os
 import re
 import unittest
+from abc import abstractmethod
 
 import natsort
 
 from data_io.format_io import ImageDataFormat
+from dosma import SUPPORTED_SCAN_TYPES, parse_args
+from utils import io_utils
+import shutil
 
 UNITTEST_DATA_PATH = os.path.join(os.path.dirname(__file__), '../unittest-data/')
 UNITTEST_SCANDATA_PATH = os.path.join(UNITTEST_DATA_PATH, 'scans')
@@ -57,6 +61,9 @@ class ScanTest(unittest.TestCase):
     from scan_sequences.scans import ScanSequence
     SCAN_TYPE = ScanSequence  # override in subclasses
 
+    dicom_dirpath = None
+    data_dirpath = None
+
     def setUp(self):
         print("Testing: ", self._testMethodName)
 
@@ -64,3 +71,21 @@ class ScanTest(unittest.TestCase):
     def setUpClass(cls):
         cls.dicom_dirpath = get_dicoms_path(os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME))
         cls.data_dirpath = get_data_path(os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME))
+        io_utils.check_dir(cls.data_dirpath)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.data_dirpath)
+
+    def test_has_cmd_line_actions_attr(self):
+        """If scan can be accessed via the command line, verify that the scan has a `cmd_line_actions` method"""
+        # if the scan is not supported via the command line, then ignore this test
+        if self.SCAN_TYPE not in SUPPORTED_SCAN_TYPES:
+            return
+
+        assert hasattr(self.SCAN_TYPE, 'cmd_line_actions'), "All scans supported by command line must have `cmd_line_actions` method"
+        assert hasattr(type(self), 'test_cmd_line'), "All scan supported in command line must have test methods `test_cmd_line`"
+
+    def __cmd_line_helper__(self, cmdline_str: str):
+        cmdline_input = cmdline_str.strip().split()
+        parse_args(cmdline_input)

@@ -51,3 +51,13 @@ class MapssTest(util.ScanTest):
             # map1 and map2 should be identical
             assert map1.volumetric_map.is_identical(map2.volumetric_map), "%s: map1 and map2 should be identical" % str(
                 action)
+
+    def test_cmd_line(self):
+        # Generate segmentation mask for femoral cartilage, tibial cartilage, and meniscus via command line
+        cmdline_str = '--d %s --s %s mapss --fc t1_rho --mask %s' % (self.dicom_dirpath, self.data_dirpath,
+                                                                     MANUAL_SEGMENTATION_MASK_PATH)
+        self.__cmd_line_helper__(cmdline_str)
+
+        # Generate T1rho map for femoral cartilage, tibial cartilage, and meniscus via command line
+        cmdline_str = '--l %s mapss --fc t2' % self.data_dirpath
+        self.__cmd_line_helper__(cmdline_str)

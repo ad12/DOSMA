@@ -72,7 +72,7 @@ class QDess(TargetSequence):
         :param tissue: A Tissue instance
         :param suppress_fat: Suppress fat region in t2 computation (i.e. reduce noise)
         :param gl_area: GL Area - required if not provided in the dicom
-        :param tg: tg value - required if not provided in the dicom
+        :param tg: tg value (in microseconds) - required if not provided in the dicom
         :return MedicalVolume with 3D map of t2 values
                 all invalid pixels are denoted by the value 0
         """
@@ -121,6 +121,7 @@ class QDess(TargetSequence):
         ratio = mask * echo_2 / echo_1
         ratio = np.nan_to_num(ratio)
 
+        # have to divide division into steps to avoid overflow error
         t2map = (-2000 * (TR - TE) / (np.log(abs(ratio) / k) + c1))
 
         t2map = np.nan_to_num(t2map)
