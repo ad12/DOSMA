@@ -8,17 +8,17 @@ import pandas as pd
 import scipy.ndimage as sni
 
 import defaults
-from data_io.med_volume import MedicalVolume
+from data_io import savefig, MedicalVolume
 from tissues.tissue import Tissue
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues
-from data_io.fig_format import savefig
-
 
 # milliseconds
 BOUNDS = {QuantitativeValues.T2: 60.0,
           QuantitativeValues.T1_RHO: 100.0,
           QuantitativeValues.T2_STAR: 50.0}
+
+__all__ = ['Meniscus']
 
 
 class Meniscus(Tissue):

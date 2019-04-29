@@ -9,15 +9,12 @@ import pandas as pd
 import scipy.ndimage as sni
 
 import defaults
-from data_io.format_io import ImageDataFormat
-from data_io.med_volume import MedicalVolume
+from data_io import ImageDataFormat, MedicalVolume, savefig
 from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 from tissues.tissue import Tissue
 from utils import io_utils, img_utils
 from utils.geometry_utils import circle_fit, cart2pol
 from utils.quant_vals import QuantitativeValues
-
-from data_io.fig_format import savefig
 
 # milliseconds
 BOUNDS = {QuantitativeValues.T2: 60.0,
@@ -31,6 +28,8 @@ DTHETA = 360 / NB_BINS  # theta intervals for bins (in degrees)
 # Theta range: [-270, 90)
 THETA_MIN = -270
 THETA_MAX = 90
+
+__all__ = ['FemoralCartilage']
 
 
 class FemoralCartilage(Tissue):

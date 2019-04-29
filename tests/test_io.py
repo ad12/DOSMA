@@ -1,11 +1,10 @@
-import unittest
-import os, sys
-import re
+import os
 import random
+import re
+import unittest
 
-sys.path.append('../')
 from data_io.format_io import ImageDataFormat
-from unit_tests import unittest_utils as ututils
+from . import util as ututils
 
 
 class TestNiftiIO(unittest.TestCase):
@@ -136,13 +135,14 @@ class TestDicomIO(unittest.TestCase):
                 # e1-split (e1): echo1 loaded from the manually separated dicoms into respective echo folders
                 # e1-total (e1_t): echo1 loaded from the total (unseparated) dicoms
                 echo_volume = echo_volume[0]
-                e_t = volumes[echo_number-1]
+                e_t = volumes[echo_number - 1]
 
                 assert echo_volume.is_identical(e_t), "e%d-split and e%d-total should be identical" % (echo_number,
                                                                                                        echo_number)
 
                 # headers should also be identical
-                assert len(echo_volume.headers) == len(e_t.headers), "number of headers should be identical in echo %d" % echo_number
+                assert len(echo_volume.headers) == len(
+                    e_t.headers), "number of headers should be identical in echo %d" % echo_number
 
                 for i in range(len(echo_volume.headers)):
                     h1 = echo_volume.headers[i]
@@ -157,13 +157,13 @@ class TestDicomIO(unittest.TestCase):
 
             dicom_path = ututils.get_dicoms_path(dp)
             write_path = ututils.get_write_path(dp, self.data_format)
-            read_filepaths= ututils.get_read_paths(dp, self.data_format)
+            read_filepaths = ututils.get_read_paths(dp, self.data_format)
 
             # Read in dicom information, write out to different folder (as multiple echos if possible)
             # Compare to baseline echos separated manually
             volumes = self.dr.load(dicom_path)
             for ind, vol in enumerate(volumes):
-                write_fp = os.path.join(write_path, 'e%d' % (ind+1))
+                write_fp = os.path.join(write_path, 'e%d' % (ind + 1))
                 self.dw.save(vol, write_fp)
 
             for ind, rfp in enumerate(read_filepaths):
@@ -172,13 +172,14 @@ class TestDicomIO(unittest.TestCase):
                 assert echo_volume_loaded.is_identical(e_t), "Loaded e1 and original e1 should be identical"
 
                 # headers should also be identical
-                assert len(echo_volume_loaded.headers) == len(e_t.headers), "number of headers should be identical in echo%d" % (ind+1)
+                assert len(echo_volume_loaded.headers) == len(
+                    e_t.headers), "number of headers should be identical in echo%d" % (ind + 1)
 
                 for i in range(len(echo_volume_loaded.headers)):
                     h1 = echo_volume_loaded.headers[i]
                     h2 = e_t.headers[i]
 
-                    assert self.are_equivalent_headers(h1, h2), "headers for echoes %d must be equivalent" % (ind+1)
+                    assert self.are_equivalent_headers(h1, h2), "headers for echoes %d must be equivalent" % (ind + 1)
 
     def test_dicom_writer_orientation(self):
         # Read in dicom information, reorient image, write out to different folder, compare with multi-echo dicoms
@@ -192,7 +193,8 @@ class TestDicomIO(unittest.TestCase):
             volumes = self.dr.load(dicom_path)
 
             # Reorient images
-            o = volumes[0].orientation  # echo 1 and echo 2 have the same orientation, because loaded from the total dicom path
+            o = volumes[
+                0].orientation  # echo 1 and echo 2 have the same orientation, because loaded from the total dicom path
 
             # generate random permutations of orientations
             orientations = []
@@ -203,7 +205,7 @@ class TestDicomIO(unittest.TestCase):
                 orientations.append(o_new)
 
                 volumes[i].reformat(o_new)
-                self.dw.save(volumes[i], os.path.join(write_path, 'e%d' % (i+1)))
+                self.dw.save(volumes[i], os.path.join(write_path, 'e%d' % (i + 1)))
 
                 # orientations should be preserved after saving
                 assert volumes[i].orientation == o_new, "Orientation of echo1 should not change after saving"
@@ -220,17 +222,19 @@ class TestDicomIO(unittest.TestCase):
                 vol.reformat(o)
 
             # Load echos from write (save) path
-            load_echos_paths = [os.path.join(write_path, 'e%d' % (i+1)) for i in range(len(volumes))]
+            load_echos_paths = [os.path.join(write_path, 'e%d' % (i + 1)) for i in range(len(volumes))]
 
             for ind, rfp in enumerate(load_echos_paths):
                 e_loaded = self.dr.load(rfp)[0]
                 e_vol = volumes[ind]
                 echo_num = ind + 1
 
-                assert e_loaded.is_identical(e_vol), "Loaded e%d and original e%d should be identical" % (echo_num, echo_num)
+                assert e_loaded.is_identical(e_vol), "Loaded e%d and original e%d should be identical" % (
+                    echo_num, echo_num)
 
                 # headers should also be identical
-                assert len(e_loaded.headers) == len(e_vol.headers), "number of headers should be identical in echo%d" % echo_num
+                assert len(e_loaded.headers) == len(
+                    e_vol.headers), "number of headers should be identical in echo%d" % echo_num
 
                 for i in range(len(e_loaded.headers)):
                     h1 = e_loaded.headers[i]
@@ -271,7 +275,7 @@ class TestInterIO(unittest.TestCase):
                 dicom_vol = self.dr.load(dfp)[0]
                 dicom_vol.reformat(nifti_vol.orientation)
 
-                #assert nifti_vol.is_same_dimensions(dicom_vol)
+                # assert nifti_vol.is_same_dimensions(dicom_vol)
                 assert (nifti_vol.volume == dicom_vol.volume).all()
 
     def test_dcm_to_nifti(self):
@@ -304,7 +308,8 @@ class TestInterIO(unittest.TestCase):
                 nifti_vol = gt_nifti_vols[i]
                 echo_num = i + 1
 
-                assert (dcm_vol.volume == nifti_vol.volume).all(), "e%d volumes (dcm, nifti-ground truth) should be identical" % echo_num
+                assert (
+                        dcm_vol.volume == nifti_vol.volume).all(), "e%d volumes (dcm, nifti-ground truth) should be identical" % echo_num
 
             # Use NiftiWriter to save volumes (read in as dicoms)
             for i in range(len(dicom_loaded_vols)):
@@ -319,7 +324,7 @@ class TestInterIO(unittest.TestCase):
                 e_dcm = dcm_vol
                 e_gt_nifti = gt_nifti_vols[i]
 
-                #assert e_loaded.is_same_dimensions(e_gt_nifti), "Mismatched dimensions: %s echo-%d" % (curr_scan, i+1)
+                # assert e_loaded.is_same_dimensions(e_gt_nifti), "Mismatched dimensions: %s echo-%d" % (curr_scan, i+1)
 
                 assert (e_dcm.volume == e_gt_nifti.volume).all()
                 assert (e_loaded.volume == e_gt_nifti.volume).all()

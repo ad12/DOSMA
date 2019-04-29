@@ -5,16 +5,16 @@ from copy import deepcopy
 import numpy as np
 from pydicom.tag import Tag
 
+from data_io import ImageDataFormat, MedicalVolume, NiftiReader
 from data_io import format_io_utils as fio_utils
-from data_io.format_io import ImageDataFormat
-from data_io.med_volume import MedicalVolume
-from data_io.nifti_io import NiftiReader
 from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 from models.model import SegModel
 from scan_sequences.scans import TargetSequence
 from tissues.tissue import Tissue
 from utils.cmd_line_utils import ActionWrapper
 from utils.quant_vals import T2
+
+__all__ = ['QDess']
 
 
 class QDess(TargetSequence):
@@ -66,19 +66,20 @@ class QDess(TargetSequence):
 
         return mask
 
-    def generate_t2_map(self, tissue: Tissue, suppress_fat: bool=False,
-                        gl_area: float=None, tg: float=None):
+    def generate_t2_map(self, tissue: Tissue, suppress_fat: bool = False,
+                        gl_area: float = None, tg: float = None):
         """ Generate 3D t2 map
         :param tissue: A Tissue instance
         :param suppress_fat: Suppress fat region in t2 computation (i.e. reduce noise)
         :param gl_area: GL Area - required if not provided in the dicom
-        :param tg: tg value - required if not provided in the dicom
+        :param tg: tg value (in microseconds) - required if not provided in the dicom
         :return MedicalVolume with 3D map of t2 values
                 all invalid pixels are denoted by the value 0
         """
 
         if not self.__validate_scan__() and (not gl_area or not tg):
-            raise ValueError('dicoms in \'%s\' do not contain GL_Area and Tg tags. Please input manually' % self.dicom_path)
+            raise ValueError(
+                'dicoms in \'%s\' do not contain GL_Area and Tg tags. Please input manually' % self.dicom_path)
 
         if self.volumes is None or self.ref_dicom is None:
             raise ValueError('volumes and ref_dicom fields must be initialized')
@@ -95,7 +96,7 @@ class QDess(TargetSequence):
         # All timing in seconds
         TR = float(ref_dicom.RepetitionTime) * 1e-3
         TE = float(ref_dicom.EchoTime) * 1e-3
-        Tg = tg*1e-6 if tg else float(ref_dicom[self.__TG_TAG__].value) * 1e-6
+        Tg = tg * 1e-6 if tg else float(ref_dicom[self.__TG_TAG__].value) * 1e-6
         T1 = float(tissue.T1_EXPECTED) * 1e-3
 
         # Flip Angle (degree -> radians)
@@ -120,6 +121,7 @@ class QDess(TargetSequence):
         ratio = mask * echo_2 / echo_1
         ratio = np.nan_to_num(ratio)
 
+        # have to divide division into steps to avoid overflow error
         t2map = (-2000 * (TR - TE) / (np.log(abs(ratio) / k) + c1))
 
         t2map = np.nan_to_num(t2map)
@@ -133,7 +135,7 @@ class QDess(TargetSequence):
         t2map = np.around(t2map, self.__T2_DECIMAL_PRECISION__)
 
         if suppress_fat:
-            t2map = t2map * (echo_1 > 0.15*np.max(echo_1))
+            t2map = t2map * (echo_1 > 0.15 * np.max(echo_1))
 
         t2_map_wrapped = MedicalVolume(t2map,
                                        affine=subvolumes[0].affine,
@@ -151,7 +153,7 @@ class QDess(TargetSequence):
         # write echos
         for i in range(len(self.volumes)):
             nii_registration_filepath = os.path.join(base_save_dirpath, 'echo%d.nii.gz' % (i + 1))
-            filepath = fio_utils.convert_format_filename(nii_registration_filepath, data_format)
+            filepath = fio_utils.convert_image_data_format(nii_registration_filepath, data_format)
             self.volumes[i].save_volume(filepath, data_format=data_format)
 
     def load_data(self, base_load_dirpath):
@@ -202,9 +204,10 @@ class QDess(TargetSequence):
                                        alternative_param_names={'use_rms': ['rms']})
         generate_t2_map_action = ActionWrapper(name=cls.generate_t2_map.__name__,
                                                aliases=['t2'],
-                                               param_help={'suppress_fat': 'suppress computation on low SNR fat regions',
-                                                           'gl_area': 'gl_area',
-                                                           'tg': 'tg'},
+                                               param_help={
+                                                   'suppress_fat': 'suppress computation on low SNR fat regions',
+                                                   'gl_area': 'gl_area',
+                                                   'tg': 'tg'},
                                                help='generate T2 map')
 
         return [(cls.segment, segment_action), (cls.generate_t2_map, generate_t2_map_action)]
