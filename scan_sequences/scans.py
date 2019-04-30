@@ -90,7 +90,7 @@ class ScanSequence(ABC):
 
         dr = DicomReader()
 
-        self.volumes = dr.load(dicom_path)
+        self.volumes = dr.load(dicom_path, ignore_ext=True)
         self.ref_dicom = self.volumes[0].headers[0]
 
         self.__set_series_number__(self.ref_dicom.SeriesNumber)
