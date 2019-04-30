@@ -124,7 +124,7 @@ class DicomReader(DataReader):
     """
     data_format_code = ImageDataFormat.dicom
 
-    def load(self, dicom_dirpath):
+    def load(self, dicom_dirpath, ignore_ext=False):
         """Load dicoms into numpy array
 
         Required:
@@ -145,7 +145,7 @@ class DicomReader(DataReader):
 
         lstFilesDCM = []
         for f in possible_files:
-            if contains_dicom_extension(f):
+            if ignore_ext or (not ignore_ext and contains_dicom_extension(f)):
                 lstFilesDCM.append(os.path.join(dicom_dirpath, f))
 
         lstFilesDCM = natsorted(lstFilesDCM)
