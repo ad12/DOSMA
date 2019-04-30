@@ -356,6 +356,8 @@ def parse_args(f_input=None):
 
     if gpu is not None:
         os.environ['CUDA_VISIBLE_DEVICES'] = gpu
+    if not gpu:
+        os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
     dicom_path = vargin[DICOM_KEY]
     load_path = vargin[LOAD_KEY]
