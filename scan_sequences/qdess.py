@@ -44,10 +44,11 @@ class QDess(TargetSequence):
         :return: a boolean
         """
         ref_dicom = self.ref_dicom
-        contains_expected_dicom_metadata = self.__GL_AREA_TAG__ in ref_dicom and self.__TG_TAG__ in ref_dicom
+        #contains_expected_dicom_metadata = self.__GL_AREA_TAG__ in ref_dicom and self.__TG_TAG__ in ref_dicom
         has_expected_num_echos = len(self.volumes) == self.__NUM_ECHOS__
 
-        return contains_expected_dicom_metadata & has_expected_num_echos
+        #return contains_expected_dicom_metadata & has_expected_num_echos
+        return has_expected_num_echos
 
     def segment(self, model: SegModel, tissue: Tissue, use_rms: bool = False):
         # Use first echo for segmentation
