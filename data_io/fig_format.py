@@ -1,23 +1,29 @@
-from enum import Enum
 import os
+from enum import Enum
+from typing import Union
+
+import matplotlib.pyplot as plt
+
+import defaults
+
+__all__ = ['ImageVisFigureFormat', 'SUPPORTED_VISUALIZATION_FORMATS', 'savefig']
 
 
 class ImageVisFigureFormat(Enum):
     """
     Enum describing format to save visualization images (i.e. figures)
     """
-    png=1
-    eps=2
-    pdf=3
-    jpeg=4
-    pgf=5
-    ps=6
-    raw=7
-    rgba=8
-    svg=9
-    svgz=10
-    tiff=11
-
+    png = 1
+    eps = 2
+    pdf = 3
+    jpeg = 4
+    pgf = 5
+    ps = 6
+    raw = 7
+    rgba = 8
+    svg = 9
+    svgz = 10
+    tiff = 11
 
     def get_filepath(self, filepath):
         filename, ext = os.path.splitext(filepath)
@@ -27,11 +33,7 @@ class ImageVisFigureFormat(Enum):
 SUPPORTED_VISUALIZATION_FORMATS = [x.name for x in ImageVisFigureFormat]
 
 
-import defaults
-import matplotlib.pyplot as plt
-
-
-def savefig(filepath, fig_format=None, **kwargs):
+def savefig(filepath, fig_format: Union[ImageVisFigureFormat, str] = None, **kwargs):
     """
     Wrapper method for saving figures created using matplotlib
     :param filepath: the filepath to save image to
@@ -54,7 +56,8 @@ def savefig(filepath, fig_format=None, **kwargs):
                     break
 
     if type(fig_format) is not ImageVisFigureFormat:
-        raise TypeError('fig_format should be of type [ImageVisFigureFormat, str, int]. %s did not match' % orig_fig_format)
+        raise TypeError(
+            'fig_format should be of type [ImageVisFigureFormat, str, int]. %s did not match' % orig_fig_format)
 
     filepath = fig_format.get_filepath(filepath)
 

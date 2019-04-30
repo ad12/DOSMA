@@ -15,17 +15,7 @@ from data_io.med_volume import MedicalVolume
 from defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 from utils import io_utils
 
-__NIFTI_EXTENSIONS__ = ('.nii', '.nii.gz')
-
-
-def contains_nifti_extension(a_str: str):
-    """
-    Check if a string ends with one of the accepted nifti extensions
-    :param a_str: a string
-    :return: a boolean
-    """
-    bool_list = [a_str.endswith(ext) for ext in __NIFTI_EXTENSIONS__]
-    return bool(sum(bool_list))
+__all__ = ['NiftiReader', 'NiftiWriter']
 
 
 class NiftiReader(DataReader):
@@ -68,7 +58,7 @@ class NiftiReader(DataReader):
         if not os.path.isfile(filepath):
             raise FileNotFoundError('%s not found' % filepath)
 
-        if not contains_nifti_extension(filepath):
+        if not self.data_format_code.is_filetype(filepath):
             raise ValueError('%s must be a file with extension `.nii` or `.nii.gz`' % filepath)
 
         nib_img = nib.load(filepath)
@@ -94,7 +84,7 @@ class NiftiWriter(DataWriter):
 
         :raises ValueError if filepath does not contain supported NIfTI extension
         """
-        if not contains_nifti_extension(filepath):
+        if not self.data_format_code.is_filetype(filepath):
             raise ValueError('%s must be a file with extension `.nii` or `.nii.gz`' % filepath)
 
         # Create dir if does not exist
@@ -105,14 +95,3 @@ class NiftiWriter(DataWriter):
         nib_img = nib.Nifti1Image(np_im, nib_affine)
 
         nib.save(nib_img, filepath)
-
-
-if __name__ == '__main__':
-    import scipy.io as sio
-
-    load_filepath = '../dicoms/mapss_eg/multi-echo/gt-%d.nii.gz'
-    save_path = '../dicoms/mapss_eg/matfiles-nii'
-    nr = NiftiReader()
-    for i in range(7):
-        med_vol = nr.load(load_filepath % i)
-        sio.savemat(os.path.join(save_path, '%d.mat' % i), {'data': med_vol.volume})

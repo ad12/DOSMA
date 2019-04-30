@@ -4,8 +4,7 @@ import pickle
 import h5py
 import pandas as pd
 
-DATA_EXT = 'data'
-INFO_EXT = 'info'
+__all__ = ['check_dir', 'save_pik', 'load_pik', 'save_h5', 'load_h5', 'save_tables']
 
 
 def check_dir(dir_path):

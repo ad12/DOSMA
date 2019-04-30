@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 
 import defaults
 from data_io.med_volume import MedicalVolume
+import numpy as np
 
 
 class SegModel(ABC):
@@ -50,3 +51,19 @@ class SegModel(ABC):
 
         """
         pass
+
+# ============================ Preprocessing utils ============================
+__VOLUME_DIMENSIONS__ = 3
+__EPSILON__ = 1e-8
+
+
+def whiten_volume(x):
+    """Whiten volumes by mean and std of all pixels
+    :param x: 3D numpy array (MRI volumes)
+    :rtype: whitened 3D numpy array
+    """
+    if len(x.shape) != __VOLUME_DIMENSIONS__:
+        raise ValueError("Dimension Error: input has %d dimensions. Expected %d" % (x.ndims, __VOLUME_DIMENSIONS__))
+
+    # Add epsilon to avoid dividing by 0
+    return (x - np.mean(x)) / (np.std(x) + __EPSILON__)

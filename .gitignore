@@ -7,8 +7,9 @@
 # weights files
 **/weights
 
-#dicoms
+# data
 **/dicoms
+**/unittest-data
 
 # test data files
 **/temp

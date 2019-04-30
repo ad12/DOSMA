@@ -10,9 +10,10 @@ import numpy as np
 
 from data_io import orientation as stdo
 from data_io.format_io import ImageDataFormat
-from data_io.orientation import get_transpose_inds, get_flip_inds
 from defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
-from copy import deepcopy
+
+__all__ = ['MedicalVolume']
+
 
 class MedicalVolume():
     """Wrapper for 3D volumes """
@@ -22,6 +23,9 @@ class MedicalVolume():
         :param volume: a 3D numpy array
         :param affine: a 4x4 numpy array resembling affine matrix transform in RAS+ coordinates
         """
+        if headers and len(headers) != volume.shape[-1]:
+            raise ValueError('Header mismatch. %d headers, but %d slices' % (len(headers), volume.shape[-1]))
+
         self._volume = volume
         self._affine = np.array(affine)
         self._headers = headers
@@ -65,7 +69,7 @@ class MedicalVolume():
         temp_orientation = self.orientation
         temp_affine = np.array(self._affine)
 
-        transpose_inds = get_transpose_inds(temp_orientation, new_orientation)
+        transpose_inds = stdo.get_transpose_inds(temp_orientation, new_orientation)
 
         volume = np.transpose(self.volume, transpose_inds)
         for i in range(len(transpose_inds)):
@@ -73,7 +77,7 @@ class MedicalVolume():
 
         temp_orientation = tuple([self.orientation[i] for i in transpose_inds])
 
-        flip_axs_inds = list(get_flip_inds(temp_orientation, new_orientation))
+        flip_axs_inds = list(stdo.get_flip_inds(temp_orientation, new_orientation))
 
         volume = np.flip(volume, axis=flip_axs_inds)
 
@@ -102,8 +106,8 @@ class MedicalVolume():
         self._affine = temp_affine
 
         assert self.orientation == new_orientation, "Orientation mismatch: Expected: %s. Got %s" % (
-        str(self.orientation),
-        str(new_orientation))
+            str(self.orientation),
+            str(new_orientation))
         self._volume = volume
 
     def is_identical(self, mv):
@@ -118,7 +122,16 @@ class MedicalVolume():
 
         return self.is_same_dimensions(mv) and (mv.volume == self.volume).all()
 
-    def is_same_dimensions(self, mv):
+    def __allclose_spacing(self, mv, precision=None):
+        if precision:
+            tol = 10 ** (-precision)
+            return np.allclose(mv.affine[:3, :3], self.affine[:3, :3], atol=tol) and np.allclose(mv.scanner_origin,
+                                                                                                 self.scanner_origin,
+                                                                                                 rtol=tol)
+        else:
+            return (mv.affine == self.affine).all()
+
+    def is_same_dimensions(self, mv, precision=None):
         """
         Check if two volumes have the same dimensions
         Two volumes have the same dimensions if they have the same pixel_spacing, orientation, and scanner_origin
@@ -128,7 +141,12 @@ class MedicalVolume():
         if type(mv) != type(self):
             raise TypeError('type(mv) must be %s' % str(type(self)))
 
-        return mv.pixel_spacing == self.pixel_spacing and mv.orientation == self.orientation and mv.scanner_origin == self.scanner_origin and mv.volume.shape == self.volume.shape
+        if precision:
+            return self.__allclose_spacing(mv,
+                                           precision) and mv.orientation == self.orientation and mv.volume.shape == self.volume.shape
+        else:
+            return self.__allclose_spacing(mv,
+                                           precision) and mv.orientation == self.orientation and mv.volume.shape == self.volume.shape
 
     def match_orientation(self, mv):
         """
@@ -188,7 +206,7 @@ class MedicalVolume():
         :return: a tuple of standard orientation coordinates (see orientation.py for more information on format)
         """
         nib_orientation = nib.aff2axcodes(self._affine)
-        return stdo.__orientation_nib_to_standard__(nib_orientation)
+        return stdo.orientation_nib_to_standard(nib_orientation)
 
     @property
     def scanner_origin(self):

@@ -19,18 +19,9 @@ from data_io.med_volume import MedicalVolume
 from defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 from utils import io_utils
 
-__DICOM_EXTENSIONS__ = ('.dcm',)
+__all__ = ['DicomReader', 'DicomWriter']
+
 TOTAL_NUM_ECHOS_KEY = (0x19, 0x107e)
-
-
-def contains_dicom_extension(a_str: str):
-    """
-    Check if a string ends with one of the accepted dicom extensions
-    :param a_str: a string
-    :return: a boolean
-    """
-    bool_list = [a_str.endswith(ext) for ext in __DICOM_EXTENSIONS__]
-    return bool(sum(bool_list))
 
 
 def __update_np_dtype__(np_array, bit_depth):
@@ -145,7 +136,8 @@ class DicomReader(DataReader):
 
         lstFilesDCM = []
         for f in possible_files:
-            if ignore_ext or (not ignore_ext and contains_dicom_extension(f)):
+            # if ignore extension, don't look for .dcm extension
+            if ignore_ext or (not ignore_ext and self.data_format_code.is_filetype(f)):
                 lstFilesDCM.append(os.path.join(dicom_dirpath, f))
 
         lstFilesDCM = natsorted(lstFilesDCM)
@@ -153,7 +145,7 @@ class DicomReader(DataReader):
             raise FileNotFoundError("No files found in directory %s" % dicom_dirpath)
 
         # Get reference file
-        ref_dicom = pydicom.read_file(lstFilesDCM[0])
+        # ref_dicom = pydicom.read_file(lstFilesDCM[0])
 
         dicom_data = {}
 
@@ -234,7 +226,7 @@ class DicomWriter(DataWriter):
             raise ValueError('MedicalVolume headers must be initialized to save as a dicom')
 
         affine = LPSplus_to_RASplus(headers)
-        orientation = stdo.__orientation_nib_to_standard__(nib.aff2axcodes(affine))
+        orientation = stdo.orientation_nib_to_standard(nib.aff2axcodes(affine))
 
         # Currently do not support mismatch in scanner_origin
         if tuple(affine[:3, 3]) != im.scanner_origin:

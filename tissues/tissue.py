@@ -1,15 +1,16 @@
 import os
 from abc import ABC, abstractmethod
 
+from data_io import ImageDataFormat, MedicalVolume
 from data_io import format_io_utils as fio_utils
-from data_io.format_io import ImageDataFormat
-from data_io.med_volume import MedicalVolume
 from data_io.orientation import SAGITTAL
 from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues, QuantitativeValue
 
 WEIGHTS_FILE_EXT = 'h5'
+
+__all__ = ['Tissue']
 
 
 class Tissue(ABC):
@@ -73,6 +74,7 @@ class Tissue(ABC):
         if self.__mask__ is None:
             raise ValueError('Please initialize mask for %s' % self.FULL_NAME)
 
+        quant_map.reformat(self.__mask__.orientation)
         pass
 
     def __store_quant_vals__(self, quant_map, quant_df, map_type):
@@ -117,7 +119,7 @@ class Tissue(ABC):
 
         if self.__mask__ is not None:
             mask_filepath = os.path.join(save_dirpath, '%s.nii.gz' % self.STR_ID)
-            mask_filepath = fio_utils.convert_format_filename(mask_filepath, data_format)
+            mask_filepath = fio_utils.convert_image_data_format(mask_filepath, data_format)
             self.__mask__.save_volume(mask_filepath, data_format=data_format)
 
         for qv in self.quantitative_values:

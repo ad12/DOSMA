@@ -68,6 +68,10 @@ class ScanSequence(ABC):
         if is_dicom_available:
             self.__load_dicom__()
 
+        if not self.__validate_scan__():
+            raise ValueError('dicoms in \'%s\' do not correspond to %s sequence' % (self.dicom_path,
+                                                                                    self.NAME))
+
     @abstractmethod
     def __validate_scan__(self) -> bool:
         """Validate this scan (usually done by checking dicom header tags, if available)
@@ -121,7 +125,7 @@ class ScanSequence(ABC):
         """Get filename for storing serialized data
         :return: a string
         """
-        return '%s.%s' % (self.NAME, io_utils.DATA_EXT)
+        return '%s.data' % self.NAME
 
     def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
         """Save data in base_save_dirpath

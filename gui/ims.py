@@ -130,7 +130,6 @@ class AnalysisFrame(tk.Frame):
             if not tissue_str:
                 raise ValueError('No tissues selected')
 
-
             qv_str = ''
             for c, qv in enumerate(self.manager[self.__QUANTITATIVE_VALUES_KEY]):
                 if qv.get():
@@ -148,10 +147,10 @@ class AnalysisFrame(tk.Frame):
 
             # analysis string
             str_f = '--l %s %s knee %s --pid %s %s %s' % (load_path,
-                                                       preferences_str,
-                                                       tissue_str,
-                                                       pid,
-                                                       '--ml' if medial_to_lateral else '',
+                                                          preferences_str,
+                                                          tissue_str,
+                                                          pid,
+                                                          '--ml' if medial_to_lateral else '',
                                                           qv_str)
             str_f = str_f.strip()
             parse_args(str_f.split())
@@ -161,7 +160,8 @@ class AnalysisFrame(tk.Frame):
     def __init_manager(self):
         self.manager[self.__LOAD_PATH_KEY] = tk.StringVar()
         self.manager[self.__TISSUES_KEY] = [tk.BooleanVar() for i in range(len(knee.SUPPORTED_TISSUES))]
-        self.manager[self.__QUANTITATIVE_VALUES_KEY] = [tk.BooleanVar() for i in range(len(SUPPORTED_QUANTITATIVE_VALUES))]
+        self.manager[self.__QUANTITATIVE_VALUES_KEY] = [tk.BooleanVar() for i in
+                                                        range(len(SUPPORTED_QUANTITATIVE_VALUES))]
 
         self.manager[self.__PID_KEY] = tk.StringVar()
         self.manager[self.__MEDIAL_TO_LATERAL_ORIENTATION_KEY] = tk.BooleanVar()
@@ -277,6 +277,7 @@ class DosmaFrame(tk.Frame):
                 raise ValueError('Save path not defined')
 
             action_str = self.scan_reader.get_cmd_line_str().strip()
+
             if not action_str:
                 raise ValueError('No action selected')
 
@@ -301,7 +302,7 @@ class DosmaFrame(tk.Frame):
                                                     tissue_str,
                                                     action_str)
 
-            # print(str_f)
+            print('CMD LINE INPUT: %s' % str_f)
 
             parse_args(str_f.split())
         except Exception as e:
@@ -367,9 +368,10 @@ class DosmaFrame(tk.Frame):
 
         hb = tk.Frame(self)
 
-        #filedialog = FileDialogReader(self.manager[self.__SAVE_PATH_KEY])
+        # filedialog = FileDialogReader(self.manager[self.__SAVE_PATH_KEY])
         b = tk.Button(hb, text=self.__SAVE_PATH_KEY,
-                      command=lambda fd=self.file_dialog_reader: self.manager[self.__SAVE_PATH_KEY].set(fd.get_save_dirpath()))
+                      command=lambda fd=self.file_dialog_reader: self.manager[self.__SAVE_PATH_KEY].set(
+                          fd.get_save_dirpath()))
         b.pack(side='left', anchor='nw', pady=10)
 
         l = tk.Label(hb, textvariable=self.manager[self.__SAVE_PATH_KEY])
