@@ -1,14 +1,14 @@
 import itertools
 
-import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 import defaults
+from data_io.fig_format import savefig
+
+__all__ = ['downsample_slice', 'write_regions']
 
 
 def downsample_slice(img_array, ds_factor, is_mask=False):
@@ -120,4 +120,4 @@ def write_regions(filepath, arr, plt_dict=None):
                      fancybox=True, shadow=True, ncol=3)
     plt.imshow(arr_rgb)
 
-    plt.savefig(filepath, dpi=defaults.DEFAULT_DPI, bbox_extra_artists=(lgd,), bbox_inches='tight')
+    savefig(filepath, dpi=defaults.DEFAULT_DPI, bbox_extra_artists=(lgd,), bbox_inches='tight')

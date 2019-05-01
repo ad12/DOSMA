@@ -1,19 +1,24 @@
-from tissues.tissue import Tissue
-import scipy.ndimage as sni
-import numpy as np
-from med_objects.med_volume import MedicalVolume
-import pandas as pd
-import matplotlib.pyplot as plt
-from utils.quant_vals import QuantitativeValues
-from utils import io_utils
-import warnings
-import defaults
 import os
+import warnings
+from copy import deepcopy
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scipy.ndimage as sni
+
+import defaults
+from data_io import savefig, MedicalVolume
+from tissues.tissue import Tissue
+from utils import io_utils
+from utils.quant_vals import QuantitativeValues
 
 # milliseconds
 BOUNDS = {QuantitativeValues.T2: 60.0,
           QuantitativeValues.T1_RHO: 100.0,
           QuantitativeValues.T2_STAR: 50.0}
+
+__all__ = ['TibialCartilage']
 
 
 class TibialCartilage(Tissue):
@@ -70,7 +75,7 @@ class TibialCartilage(Tissue):
         return total, superior, inferior
 
     def split_regions(self, base_map):
-        center_of_mass = sni.measurements.center_of_mass(base_map) # zero indexed
+        center_of_mass = sni.measurements.center_of_mass(base_map)  # zero indexed
 
         com_sup_inf = int(np.ceil(center_of_mass[0]))
         com_ant_post = int(np.ceil(center_of_mass[1]))
@@ -123,7 +128,8 @@ class TibialCartilage(Tissue):
 
             for coronal in [self.MEDIAL_KEY, self.LATERAL_KEY]:
                 for sagittal in [self.ANTERIOR_KEY, self.POSTERIOR_KEY]:
-                    curr_region_mask = quant_map_volume * (coronal_region_mask == coronal) * (sagittal_region_mask == sagittal) * axial_map
+                    curr_region_mask = quant_map_volume * (coronal_region_mask == coronal) * (
+                            sagittal_region_mask == sagittal) * axial_map
                     curr_region_mask[curr_region_mask == 0] = np.nan
                     # discard all values that are 0
                     c_mean = np.nanmean(curr_region_mask)
@@ -151,8 +157,8 @@ class TibialCartilage(Tissue):
 
         self.__store_quant_vals__(maps, df, map_type)
 
-    def set_mask(self, mask):
-        mask_copy = MedicalVolume(mask.volume, mask.pixel_spacing)
+    def set_mask(self, mask: MedicalVolume):
+        mask_copy = deepcopy(mask)
 
         super().set_mask(mask_copy)
 
@@ -160,14 +166,13 @@ class TibialCartilage(Tissue):
 
     def __save_quant_data__(self, dirpath):
         """Save quantitative data and 2D visualizations of tibial cartilage
+        Check which quantitative values (T2, T1rho, etc) are defined for meniscus and analyze these
+        1. Save 2D total, superficial, and deep visualization maps
+        2. Save {'medial', 'lateral'}, {'anterior', 'posterior'}, {'superior', 'inferior', 'total'} data to excel
+               file
 
-               Check which quantitative values (T2, T1rho, etc) are defined for tibial cartilage and analyze these
-               1. Save 2D total, superficial, and deep visualization maps
-               2. Save {'medial', 'lateral'}, {'anterior', 'posterior'}, {'superior', 'inferior', 'total'} data to excel
-                       file
-
-               :param dirpath: base filepath to save data
-               """
+        :param dirpath: base filepath to save data
+        """
         q_names = []
         dfs = []
 
@@ -214,7 +219,7 @@ class TibialCartilage(Tissue):
                 clb.ax.set_title('(ms)')
                 plt.axis('tight')
 
-                plt.savefig(filepath, dpi=defaults.DEFAULT_DPI)
+                savefig(filepath, dpi=defaults.DEFAULT_DPI)
 
                 # Save data
                 raw_data_filepath = os.path.join(q_name_dirpath, 'raw_data', q_map_data['raw_data_filename'])

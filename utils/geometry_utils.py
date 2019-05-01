@@ -1,6 +1,8 @@
 import numpy as np
 from scipy import optimize
 
+__all__ = ['circle_fit', 'cart2pol']
+
 
 def circle_fit(x, y):
     ###
@@ -47,4 +49,7 @@ def cart2pol(x, y):
     rho = np.sqrt(x ** 2 + y ** 2)
     phi = np.arctan2(y, x)
 
-    return (rho, phi)
+    phi = phi * (180 / np.pi)  # degrees
+    phi[phi == 180] = -180
+
+    return rho, phi

@@ -4,6 +4,27 @@ This pipeline is an open-source pipeline for MRI image segmentation, registratio
 
 The current code uses the [command line interface](https://www.computerhope.com/jargon/c/commandi.htm) for use. Pull requests for a GUI to command-line translation are welcome.
 
+## How to Cite
+```
+@misc{arjun_d_desai_2019_2559549,
+  author       = {Arjun D. Desai and
+                  Marco Barbieri and
+                  Valentina Mazzoli and
+                  Elka Rubin and
+                  Marianne S. Black and
+                  Lauren E. Watkins and
+                  Garry E. Gold and
+                  Brian A. Hargreaves and
+                  Akshay S. Chaudhari},
+  title        = {ad12/DOSMA: v0.0.9: DOSMA (prerelease)},
+  month        = feb,
+  year         = 2019,
+  doi          = {10.5281/zenodo.2559549},
+  url          = {https://doi.org/10.5281/zenodo.2559549}
+}
+```
+Additional citation details can be found [here](https://zenodo.org/record/2559549#.XFyRrs9KjyJ).
+
 ## Overview
 This repo is to serve as an open-source location for developers to add MRI processing techniques. This includes, but is not limited to:
 - image processing tasks (denoising, super-resolution, segmentation, etc)
@@ -12,8 +33,8 @@ This repo is to serve as an open-source location for developers to add MRI proce
 
 We hope that this open-source pipeline will be useful for quick anatomy/pathology analysis from MRI and will serve as a hub for adding support for analyzing different anatomies and scan sequences.
 
-## Supported Features
-Currently, this pipeline supports analysis of the femoral cartilage in the knee using cubequant, cones, and [DESS](https://onlinelibrary.wiley.com/doi/pdf/10.1002/mrm.26577) scanning protocols. Details are provided below.
+## Supported Commands
+Currently, this pipeline supports analysis of the femoral cartilage in the knee using [DESS](https://onlinelibrary.wiley.com/doi/pdf/10.1002/mrm.26577) and cubequant scanning protocols. Basic cones protocol is provided, but still under construction. Details are provided below.
 
 ### Scans
 The following scan sequences are supported. All sequences with multiple echos, spin_lock_times, etc. should have metadata in the dicom header specifying this information.
@@ -21,15 +42,15 @@ The following scan sequences are supported. All sequences with multiple echos, s
 #### Double echo steady state (DESS)
 
 ##### Data format
-All data should be provided in the dicom format. Currently only sagittal orientation dicoms are supported.
+All data should be provided in the dicom format.
 
 Dicom files should be named in the format *001.dcm: echo1*, *002.dcm: echo2*, *003.dcm: echo1*, etc.
 
-##### Quantitative Values
+##### Actions
+*Segmentation*: Automated segmentation using pretrained convolutional neural network (CNN)
+
 *T<sub>2</sub>*: Calculate T<sub>2</sub> map using dual echos
 
-##### Actions
-*Segmentation*
 
 ### Anatomy
 Analysis for the following anatomical regions are supported
@@ -41,12 +62,12 @@ Analysis for the following anatomical regions are supported
 Download this repo to your disk. Note that the path to this repo should not have any spaces. In general, this pipeline does not handle folder paths that have spaces in between folder names.
 
 ### Virtual Environment
-We recommend using the (Anaconda)[https://www.anaconda.com/download] virtual environment to run python.
+We recommend using the [Anaconda](https://www.anaconda.com/download) virtual environment to run python.
 
 An `environment.yml` file is provided in this repo containing all libraries used.
 
 ### Weights
-For pretrained weights for MSK knee segmentation, request access using this [Google form](https://goo.gl/forms/JlxgS3aoUeeUUlVh2). Note that these weights are optimized to run on single-echo RMS DESS sequence as used in the [OA initiative](https://oai.epi-ucsf.org/datarelease/).
+For pretrained weights for MSK knee segmentation, request access using this [Google form](https://goo.gl/forms/JlxgS3aoUeeUUlVh2). Note that these weights are optimized to run on single-echo RMS DESS sequence as used in the [OsteoArthritis Initiative (OAI)](https://oai.epi-ucsf.org/datarelease/).
 
 Save these weights in an accessible location. **Do not rename these files**.
 
@@ -55,27 +76,31 @@ To run the program from a shell, run `python -m opt/path/pipeline` with the flag
 
 ### Base information
 ```
-usage: pipeline [-h] [--debug] [-d [D]] [-l [L]] [-s [S]] [-e [E]] [--gpu [G]]
-                {dess,cubequant,cq,cones,knee} ...
+usage: DOSMA [-h] [--debug] [--d [D]] [--l [L]] [--s [S]] [--df [F]]
+             [--gpu [G]]
+             {qdess,cubequant,knee} ...
 
-Tool for segmenting MRI knee volumes
+A deep-learning powered open source MRI analysis pipeline
 
 positional arguments:
-  {dess,cubequant,cq,cones,knee}
+  {qdess,cubequant,knee}
                         sub-command help
-    dess                analyze DESS sequence
-    cubequant (cq)      analyze cubequant sequence
-    cones               analyze cones sequence
-    knee                calculate/analyze quantitative data for MSK knee
+    qdess               analyze qdess sequence
+    cubequant           analyze cubequant sequence
+    knee                calculate/analyze quantitative data for knee
 
 optional arguments:
   -h, --help            show this help message and exit
-  --debug               debug
-  -d [D], --dicom [D]   path to directory storing dicom files
-  -l [L], --load [L]    path to data directory to load from
-  -s [S], --save [S]    path to directory to save mask. Default: L/D
-  -e [E], --ext [E]     extension of dicom files. Default 'dcm'
-  --gpu [G]             gpu id
+  --debug               use debug mode
+  --d [D], --dicom [D]  path to directory storing dicom files
+  --l [L], --load [L]   path to data directory to load from
+  --s [S], --save [S]   path to data directory to save to. Default: L/D
+  --df [F], --format [F]
+                        data format to store information in ['nifti',
+                        'dicom']. Default: nifti
+  --gpu [G]             gpu id. Default: None
+
+Either `--d` or `---l` must be specified. If both are given, `-d` will be used
 ```
 
 ### DESS
@@ -90,73 +115,83 @@ Figure 1: Supported DESS protocol as referenced [here]((https://onlinelibrary.wi
 
 
 ```
-usage: pipeline dess [-h] [-t2] [-fc] {segment} ...
-
-positional arguments:
-  {segment}   sub-command help
+usage: DOSMA qdess [-h] [--fc] [--men] [--tc] {segment,generate_t2_map,t2} ...
 
 optional arguments:
-  -h, --help  show this help message and exit
-  -t2         compute T2 map
-  -fc         analyze femoral cartilage
+  -h, --help            show this help message and exit
+  --fc                  analyze femoral cartilage
+  --men                 analyze meniscus
+  --tc                  analyze tibial cartilage
+
+subcommands:
+  qdess subcommands
+
+  {segment,generate_t2_map,t2}
+    segment             generate automatic segmentation
+    generate_t2_map (t2)
+                        generate T2 map
 ```
 
 #### Segmentation
 ```
-usage: pipeline dess segment [-h] [--model [{unet2d}]]
-                             [--weights_dir WEIGHTS_DIR] [--batch_size [B]]
-                             [-rms]
+usage: DOSMA qdess segment [-h] --weights_dir WEIGHTS_DIR [--model [{unet2d}]]
+                           [--batch_size [B]] [--rms]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --model [{unet2d}]    Model to use for segmentation. Choices: {unet2d}
   --weights_dir WEIGHTS_DIR
                         path to directory with weights
+  --model [{unet2d}]    Model to use for segmentation. Choices: {unet2d}
   --batch_size [B]      batch size for inference. Default: 16
-  -rms                  use root mean square (rms) of two echos for
-                        segmentation
+  --rms, --use_rms      use root mean square (rms) of two echos for
+                        segmentation. Default: False
+```
+
+#### T2 Estimation
+```
+usage: DOSMA qdess generate_t2_map [-h] [--suppress_fat]
+
+optional arguments:
+  -h, --help      show this help message and exit
+  --suppress_fat  suppress computation on low SNR fat regions. Default: False
 ```
 
 ### Cubequant
 The cubequant protocol used here is detailed below:
 
 ```
-usage: pipeline cubequant [-h] [-t1_rho] [-fc] {interregister} ...
-
-positional arguments:
-  {interregister}  sub-command help
+usage: DOSMA cubequant [-h] [--fc] [--men] [--tc]
+                       {interregister,generate_t1_rho_map,t1_rho} ...
 
 optional arguments:
-  -h, --help       show this help message and exit
-  -t1_rho          do t1-rho analysis
-  -fc              analyze femoral cartilage
+  -h, --help            show this help message and exit
+  --fc                  analyze femoral cartilage
+  --men                 analyze meniscus
+  --tc                  analyze tibial cartilage
+
+subcommands:
+  cubequant subcommands
+
+  {interregister,generate_t1_rho_map,t1_rho}
+    interregister       register to another scan
+    generate_t1_rho_map (t1_rho)
+                        generate T1-rho map
 ```
 
 #### Interregister
 Register cubequant scan to a target scan
 
 ```
-usage: pipeline cubequant interregister [-h] [-ts TS] [-tm [TM]]
+usage: DOSMA cubequant interregister [-h] --tp TARGET_PATH
+                                     [--tm [TARGET_MASK_PATH]]
 
 optional arguments:
-  -h, --help  show this help message and exit
-  -ts TS      path to target image. Type: nifti (.nii.gz)
-  -tm [TM]    path to target mask. Type: nifti (.nii.gz)
-```
-
-### Cones
-The cones protocol used here is detailed below:
-
-```
-usage: pipeline cones [-h] [-t2_star] [-fc] {interregister} ...
-
-positional arguments:
-  {interregister}  sub-command help
-
-optional arguments:
-  -h, --help       show this help message and exit
-  -t2_star         do t2* analysis
-  -fc              analyze femoral cartilage
+  -h, --help            show this help message and exit
+  --tp TARGET_PATH, --target TARGET_PATH, --target_path TARGET_PATH
+                        path to target image in nifti format (.nii.gz)
+  --tm [TARGET_MASK_PATH], --target_mask [TARGET_MASK_PATH], --target_mask_path [TARGET_MASK_PATH]
+                        path to target mask in nifti format (.nii.gz).
+                        Default: None
 ```
 
 #### Interregister
@@ -171,22 +206,47 @@ optional arguments:
 
 ### MSK Knee
 ```
-usage: pipeline knee [-h] [-ml] [-pid [PID]] [-fc] [-t2] [-t1_rho] [-t2_star]
+usage: DOSMA knee [-h] [--ml] [--pid [PID]] [--fc] [--men] [--tc] [--t2]
+                  [--t1_rho] [--t2_star]
 
 optional arguments:
-  -h, --help  show this help message and exit
-  -ml         defines slices in sagittal direction going from medial ->
-              lateral
-  -pid [PID]  specify pid
-  -fc         analyze femoral cartilage
-  -t2         quantify t2
-  -t1_rho     quantify t1_rho
-  -t2_star    quantify t2_star
+  -h, --help   show this help message and exit
+  --ml         defines slices in sagittal direction going from medial ->
+               lateral
+  --pid [PID]  specify pid
+  --fc         analyze femoral cartilage
+  --men        analyze meniscus
+  --tc         analyze tibial cartilage
+  --t2         quantify t2
+  --t1_rho     quantify t1_rho
+  --t2_star    quantify t2_star
 ```
 
-If no quantitative value flag (`-t2`, `-t1_rho`, `-t2_star`) is specified, all quantitative values will be calculated by default.
+If no quantitative value flag (e.g. `--t2`, `--t1_rho`, `--t2_star`) is specified, all quantitative values will be calculated by default.
 
-If no tissue flag (`-fc`) is specified, all tissues will be calculated by default.
+If no tissue flag (e.g. `--fc`) is specified, all tissues will be calculated by default.
+
+## Additional features
+### Input/Output (I/O)
+Currently, image data I/O is supported in two common formats: Dicom and NIfTI.
+
+By default, the output format is NIfTI. Advantages and disadvantages of this format are listed below:
+
+:white_check_mark: Store 3D volume, rather than slice by slice
+
+:white_check_mark: Less computational overhead
+
+:x: No header information
+
+We recommend using input as Dicom images, which is likely what is produced from any acquisition system, and output as NIfTI volumes.
+
+The default output file format can be changed in the [`defaults.py`](./defaults.py) file by updating the `DEFAULT_OUTPUT_IMAGE_DATA_FORMAT` field. Additionally, to use certain formats in specific cases, use the `--format` flag detailed in [Base Information](### Base information).
+
+### Multiple Orientations
+We support volumes acquired in the sagittal, axial, and coronal planes and support reformatting to the expected plane during computation.
+
+Our machine learning methods are trained using sagittally acquired images, so performance may vary for images acquired in different planes (caused by differences in in-plane resolution, FOV, etc.).
+
 
 ## Machine Learning Disclaimer
 All weights/parameters trained for any task are likely to be most closely correlated to data used for training. If scans from a particular sequence were used for training, the performance of those weights are likely optimized for that specific scan type. As a result, they may not perform as well on segmenting images acquired using different scan types.
@@ -216,56 +276,30 @@ research_data
 
 All use cases assume that the [current working directory](https://www.computerhope.com/jargon/c/currentd.htm) is this repo. If the working directory is different, make sure to specify the path to ```pipeline.py``` when running the script. For example, ```python -m ~/MyRepo/pipeline.py``` if the repo is located in the user directory.
 
-### DESS
-*Analyze patient01's knee T<sub>2</sub> properties using DESS sequence*
+### qDESS
+*Analyze patient01's femoral cartilage T<sub>2</sub> properties using qDESS sequence*
 
-#### Step 1
-*Calculate 3D T<sub>2</sub> map*
-```
-python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess -t2
-```
+```bash
+# 1. Calculate 3D T2 map
+python -m pipeline --d research_data/patient01/dess --s research_data/patient01/data --fc qdess t2
 
-#### Step 2
-*Segment femoral cartilage using root mean square (RMS) of two echo dess echos*
+# 2. Segment femoral cartilage using root mean square (RMS) of two echo qDESS echos
+python -m pipeline --d research_data/patient01/dess --s research_data/patient01/data qdess --fc segment --rms --weights_dir unet_weights
 
-```
-python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess segment -rms --weights_dir unet_weights
-```
-
-Note steps 1 and 2 can be combined as the following:
-```
-python -m pipeline -d research_data/patient01/dess -s research_data/patient01/data dess -t2 segment -rms --weights_dir unet_weights
-```
-
-#### Step 3
-*Calculate/visualize T<sub>2</sub> for knee tissues per region*
-
-```
-python -m pipeline -l research_data/patient01/data -s research_data/patient01/data knee -t2
+# 3. Calculate/visualize T2 for knee tissues per region*
+python -m pipeline --l research_data/patient01/data --s research_data/patient01/data knee --fc --t2
 ```
 
 ### Cubequant
 *Analyze patient 01 knee T<sub>1</sub>-rho properties using Cubequant sequence*
 
-#### Step 1
-*Register cubequant volume to first echo of DESS sequence*
-```
-python -m pipeline -d research_data/patient01/cubequant -s research_data/patient01/data cq interregister -ts research_data/patient01/data/dess/echo1.nii.gz -tm research_data/patient01/data/fc/fc.nii.gz
-```
+```bash
+# 1. Register cubequant volume to first echo of qDESS sequence
+python -m pipeline --d research_data/patient01/cubequant --s research_data/patient01/data cubequant --fc interregister --ts research_data/patient01/data/dess/echo1.nii.gz --tm research_data/patient01/data/fc/fc.nii.gz
 
-#### Step 2
-*Calculate 3D T<sub>1</sub>-rho map of interregistered sequence*
-```
-python -m pipeline -l research_data/patient01/data cq -t1_rho
-```
+# 2. Calculate 3D T1-rho map of interregistered sequence
+python -m pipeline --l research_data/patient01/data cubequant --fc t1_rho
 
-Note steps 1 and 2 can be combined as the following:
-```
-python -m pipeline -d research_data/patient01/cubequant -s research_data/patient01/data cq -t1_rho interregister -ts research_data/patient01/data/dess/echo1.nii.gz -tm research_data/patient01/data/fc/fc.nii.gz
-```
-
-#### Step 3
-*Calculate/visualize T<sub>2</sub> for knee tissues per region*
-```
-python -m pipeline -l research_data/patient01/data -s research_data/patient01/data knee -t1_rho
+# 3. Calculate/visualize T1-rho for knee tissues per region
+python -m pipeline --l research_data/patient01/data --s research_data/patient01/data knee --fc --t1_rho
 ```

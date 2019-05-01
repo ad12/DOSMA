@@ -18,6 +18,12 @@ ELASTIX_AFFINE_INTERREGISTER_PARAMS_FILE = os.path.join(__PATH_TO_ELASTIX_FOLDER
 ELASTIX_RIGID_INTERREGISTER_PARAMS_FILE = os.path.join(__PATH_TO_ELASTIX_FOLDER__,
                                                        'parameters-rigid-interregister.txt')
 
+MAPSS_ELASTIX_AFFINE_INTERREGISTER_PARAMS_FILE = os.path.join(__PATH_TO_ELASTIX_FOLDER__,
+                                                        'parameters-affine-interregister.txt')
+MAPSS_ELASTIX_RIGID_INTERREGISTER_PARAMS_FILE = os.path.join(__PATH_TO_ELASTIX_FOLDER__,
+                                                       'parameters-rigid-interregister.txt')
+
+
 # Temporary file path
 TEMP_FOLDER_PATH = os.path.join(__DIR__, 'temp')
 

@@ -1,4 +1,14 @@
+"""
+Functions for loading Keras models
+
+@author: Arjun Desai
+        (C) Stanford University, 2019
+"""
+import numpy as np
+
 from models.unet2d import Unet2D
+
+__all__ = ['get_model', 'SUPPORTED_MODELS']
 
 # Network architectures currently supported
 SUPPORTED_MODELS = ['unet2d']

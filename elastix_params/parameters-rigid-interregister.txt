@@ -18,7 +18,7 @@
 (Interpolator "BSplineInterpolator")
 (ResampleInterpolator "FinalBSplineInterpolator")
 (Metric "AdvancedMattesMutualInformation")
-(BSplineInterpolationOrder 1)
+(BSplineInterpolationOrder 3)
 (Resampler "DefaultResampler")
 (Optimizer "AdaptiveStochasticGradientDescent")
 (Transform "EulerTransform")
@@ -33,7 +33,7 @@
 // * Optimizer settings
 // *********************
 (NumberOfResolutions 3)
-(MaximumNumberOfIterations 1000)
+(MaximumNumberOfIterations 400)
 (ASGDParameterEstimationMethod "Original")
 (AutomaticParameterEstimation "true")
 (AutomaticTransformInitialization "true")
@@ -58,7 +58,7 @@
 (ImageSampler "RandomCoordinate")
 (CheckNumberOfSamples "true")
 (NewSamplesEveryIteration "true")
-(FinalBSplineInterpolationOrder 3)
+(FinalBSplineInterpolationOrder 0)
 
 // *********************
 // * Output settings

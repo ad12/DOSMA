@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# msk-qdess
+#
+# @brief: Run DESS analysis for femoral cartilage on patient folder specified as an argument
+#           1. Do automatic segmentation
+#           2. Calculate T2 map
+#           3. Analyze all supp
+#
+# @usage (from terminal/command line):
+#   ./msk-qdess PATH_TO_PATIENT_FOLDER qDESS_DICOM_FOLDER_NAME
+#   eg: "./msk-qdess subject_scans/patient01 001"
+#
+# @initialization protocol:
+#   1. run "chmod +x msk-qdess" from the command line
+#   2. Update `WEIGHTS_DIRECTORY` field below
+#
+# @author: Arjun Desai, Stanford University
+#          (c) Stanford University, 2018
+
+WEIGHTS_DIRECTORY=""
+if [ -z "$WEIGHTS_DIRECTORY" ]; then
+    echo "Please define WEIGHTS_DIRECTORY in script. Use the absolute path"
+    exit 125
+fi
+
+if [ $# -eq 1 ]
+then
+SERIES="qdess"
+else
+SERIES=$2
+fi
+
+# find relevant dicom files
+
+FILES=$(find $1 -type d -name $SERIES)
+
+cd ..
+
+for i in $FILES; do
+    DIRNAME=$(dirname $i)
+    DIRNAME="$DIRNAME/data"
+    python -m dosma --d $i --s $DIRNAME qdess --fc segment --rms --weights_dir $WEIGHTS_DIRECTORY
+    python -m dosma --l $DIRNAME qdess --fc t2
+    python -m dosma --l $DIRNAME knee --fc --t2
+done

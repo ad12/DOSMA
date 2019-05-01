@@ -5,7 +5,9 @@ import numpy as np
 from scipy import optimize as sop
 
 import defaults
-from med_objects.med_volume import MedicalVolume
+from data_io.med_volume import MedicalVolume
+
+__all__ = ['Fit', 'MonoExponentialFit']
 
 
 class Fit(ABC):
@@ -19,7 +21,7 @@ class Fit(ABC):
 class MonoExponentialFit(Fit):
     """Fit data using monoexponential fit of model A*exp(b*t)"""
 
-    def __init__(self, ts, subvolumes, mask=None, bounds=(0, 100.0), tc0=30.0, decimal_precision=1):
+    def __init__(self, ts, subvolumes, mask: MedicalVolume = None, bounds=(0, 100.0), tc0=30.0, decimal_precision=1):
         """
         :param ts: 1D list or numpy array of times corresponding to different subvolumes
         :param subvolumes: list of MedicalVolumes
@@ -37,12 +39,16 @@ class MonoExponentialFit(Fit):
             assert type(sv) is MedicalVolume
 
         self.subvolumes = subvolumes
-
-        if mask is not None:
-            assert (type(mask) is MedicalVolume)
         self.mask = mask
 
-        assert (type(bounds) is tuple and len(bounds) == 2)
+        orientation = self.subvolumes[0].orientation
+        for sv in self.subvolumes[1:]:
+            sv.reformat(orientation)
+
+        if self.mask:
+            self.mask.reformat(orientation)
+
+        assert len(bounds) == 2, "Bounds should provide upper lower bound in format (lb, ub)"
         self.bounds = bounds
 
         self.tc0 = tc0
@@ -52,22 +58,23 @@ class MonoExponentialFit(Fit):
         """Fit data used to initialize object
         :return: tuple of MedicalVolumes of time-constant estimate, r2 vals
         """
-        original_shape = None
         svs = []
         msk = None
+
+        subvolumes = self.subvolumes
+        for sv in subvolumes[1:]:
+            assert subvolumes[0].is_same_dimensions(sv), "Dimension mismatch within subvolumes"
+
         if self.mask:
+            assert subvolumes[0].is_same_dimensions(self.mask, defaults.AFFINE_DECIMAL_PRECISION), "Mask dimension mismatch"
             msk = self.mask.volume
             msk = msk.reshape(1, -1)
 
-        pixel_spacing = self.subvolumes[0].pixel_spacing
+        original_shape = subvolumes[0].volume.shape
+        affine = np.array(self.subvolumes[0].affine)
 
         for i in range(len(self.ts)):
-            sv = self.subvolumes[i].volume
-
-            if original_shape is None:
-                original_shape = sv.shape
-            else:
-                assert (sv.shape == original_shape)
+            sv = subvolumes[i].volume
 
             svr = sv.reshape((1, -1))
             if msk is not None:
@@ -77,14 +84,15 @@ class MonoExponentialFit(Fit):
 
         svs = np.concatenate(svs)
 
-        vals, r_squared = fit_monoexp_tc(self.ts, svs, self.tc0)
+        vals, r_squared = __fit_monoexp_tc__(self.ts, svs, self.tc0)
 
         map_unfiltered = vals.reshape(original_shape)
         r_squared = r_squared.reshape(original_shape)
 
-        tc_map = map_unfiltered * (r_squared > defaults.DEFAULT_R2_THRESHOLD)
+        # All accepted values must meet an Rsquared threshold of DEFAULT_R2_THRESHOLD
+        tc_map = map_unfiltered * (r_squared >= defaults.DEFAULT_R2_THRESHOLD)
 
-        # Filter calculated T1-rho values that are below 0ms and over 100ms
+        # Filter calculated values that are below limit bounds
         tc_map[tc_map <= self.bounds[0]] = np.nan
         tc_map = np.nan_to_num(tc_map)
         tc_map[tc_map > self.bounds[1]] = np.nan
@@ -92,7 +100,10 @@ class MonoExponentialFit(Fit):
 
         tc_map = np.around(tc_map, self.decimal_precision)
 
-        return MedicalVolume(tc_map, pixel_spacing), MedicalVolume(r_squared, pixel_spacing)
+        time_constant_volume = MedicalVolume(tc_map, affine=affine)
+        rsquared_volume = MedicalVolume(r_squared, affine=affine)
+
+        return time_constant_volume, rsquared_volume
 
 
 __EPSILON__ = 1e-8
@@ -106,7 +117,7 @@ def __fit_mono_exp__(x, y, p0=None):
     x = np.asarray(x)
     y = np.asarray(y)
 
-    popt, _ = sop.curve_fit(func, x, y, p0=p0, maxfev=1000)
+    popt, _ = sop.curve_fit(func, x, y, p0=p0, maxfev=100, ftol=1e-5)
 
     residuals = y - func(x, popt[0], popt[1])
     ss_res = np.sum(residuals ** 2)
@@ -117,7 +128,7 @@ def __fit_mono_exp__(x, y, p0=None):
     return popt, r_squared
 
 
-def fit_monoexp_tc(x, ys, tc0):
+def __fit_monoexp_tc__(x, ys, tc0):
     p0 = (1.0, -1 / tc0)
     time_constants = np.zeros([1, ys.shape[-1]])
     r_squared = np.zeros([1, ys.shape[-1]])
@@ -127,7 +138,7 @@ def fit_monoexp_tc(x, ys, tc0):
         y = ys[..., i]
         if (y < 0).any() and not warned_negative:
             warned_negative = True
-            warnings.warn("Negative values found. Failure in monoexponential fit will result in t1_rho=np.nan")
+            warnings.warn("Negative values found. Failure in monoexponential fit will result in np.nan")
 
         # Skip any negative values or all values that are 0s
         if (y < 0).any() or (y == 0).all():

@@ -1,15 +1,21 @@
 import os
 from abc import ABC, abstractmethod
 
-from med_objects.med_volume import MedicalVolume
+from data_io import ImageDataFormat, MedicalVolume
+from data_io import format_io_utils as fio_utils
+from data_io.orientation import SAGITTAL
+from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues, QuantitativeValue
 
 WEIGHTS_FILE_EXT = 'h5'
 
+__all__ = ['Tissue']
+
 
 class Tissue(ABC):
-    """Handles analysis for all tissues
+    """
+    Handles analysis for all tissues
     Technically this includes non-tissue anatomy, like bone
     """
     ID = -1  # should be unique to all tissues, and should not change - replace with a unique identifier
@@ -18,9 +24,6 @@ class Tissue(ABC):
 
     # Expected quantitative param values
     T1_EXPECTED = None
-
-    # quantitative value list
-    quantitative_values = []
 
     def __init__(self, weights_dir=None, medial_to_lateral=None):
         """
@@ -35,6 +38,9 @@ class Tissue(ABC):
             self.weights_filepath = self.find_weights(weights_dir)
 
         self.medial_to_lateral = medial_to_lateral
+
+        # quantitative value list
+        self.quantitative_values = []
 
     @abstractmethod
     def split_regions(self, base_map):
@@ -67,6 +73,10 @@ class Tissue(ABC):
         assert type(quant_map) is MedicalVolume
         assert type(map_type) is QuantitativeValues
 
+        if self.__mask__ is None:
+            raise ValueError('Please initialize mask for %s' % self.FULL_NAME)
+
+        quant_map.reformat(self.__mask__.orientation)
         pass
 
     def __store_quant_vals__(self, quant_map, quant_df, map_type):
@@ -96,7 +106,7 @@ class Tissue(ABC):
 
         return weights_file
 
-    def save_data(self, save_dirpath):
+    def save_data(self, save_dirpath, data_format: ImageDataFormat = DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
         """Save data for tissue
 
         Saves mask and quantitative values associated with this tissue
@@ -105,20 +115,27 @@ class Tissue(ABC):
                                             e.g. femoral_cartilage.py
 
         :param save_dirpath: base path to save data
+        :param data_format: an ImageDataFormat enum specifying which format to save data in
         """
         save_dirpath = self.__save_dirpath__(save_dirpath)
 
         if self.__mask__ is not None:
             mask_filepath = os.path.join(save_dirpath, '%s.nii.gz' % self.STR_ID)
-            self.__mask__.save_volume(mask_filepath)
+            mask_filepath = fio_utils.convert_image_data_format(mask_filepath, data_format)
+            self.__mask__.save_volume(mask_filepath, data_format=data_format)
 
         for qv in self.quantitative_values:
-            qv.save_data(save_dirpath)
+            qv.save_data(save_dirpath, data_format)
 
         self.__save_quant_data__(save_dirpath)
 
     @abstractmethod
     def __save_quant_data__(self, dirpath):
+        """
+        Save quantitative data generated for this tissue
+        :param dirpath: Path to directory where to save quantitative information
+        :return:
+        """
         pass
 
     def load_data(self, load_dirpath):
@@ -133,8 +150,12 @@ class Tissue(ABC):
         mask_filepath = os.path.join(load_dirpath, '%s.nii.gz' % self.STR_ID)
 
         # try to load mask, if file exists
-        if os.path.isfile(mask_filepath):
-            self.set_mask(io_utils.load_nifti(mask_filepath))
+        try:
+            msk = fio_utils.generic_load(mask_filepath, expected_num_volumes=1)
+            self.set_mask(msk)
+        except FileNotFoundError:
+            # do nothing
+            pass
 
         self.quantitative_values = QuantitativeValue.load_qvs(load_dirpath)
 
@@ -150,6 +171,7 @@ class Tissue(ABC):
         :param mask: a MedicalVolume
         """
         assert type(mask) is MedicalVolume, "mask for tissue must be of type MedicalVolume"
+        mask.reformat(SAGITTAL)
         self.__mask__ = mask
 
     def get_mask(self):
@@ -157,9 +179,10 @@ class Tissue(ABC):
         return self.__mask__
 
     def add_quantitative_value(self, qv_new):
-        for qv in self.quantitative_values:
-            if qv_new.NAME == qv.NAME:
-                raise ValueError('This quantitative value already exists. '
-                                 'Only one type of quantitative value can be added per tissue')
+        # for qv in self.quantitative_values:
+        #     if qv_new.NAME == qv.NAME:
+        #         raise ValueError('This quantitative value already exists. '
+        #                          'Only one type of quantitative value can be added per tissue.\n'
+        #                          'Manually delete %s folder' % qv_new.NAME)
 
         self.quantitative_values.append(qv_new)

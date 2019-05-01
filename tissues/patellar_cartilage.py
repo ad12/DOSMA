@@ -15,6 +15,7 @@ BOUNDS = {QuantitativeValues.T2: 60.0,
           QuantitativeValues.T1_RHO: 100.0,
           QuantitativeValues.T2_STAR: 50.0}
 
+__all__ = ['PatellarCartilage']
 
 class PatellarCartilage(Tissue):
     """Handles analysis for patellar cartilage"""

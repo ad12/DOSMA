@@ -7,8 +7,9 @@
 # weights files
 **/weights
 
-#dicoms
+# data
 **/dicoms
+**/unittest-data
 
 # test data files
 **/temp
@@ -21,3 +22,17 @@ debug_runs.py
 
 # ignore ismrm
 **/ismrm_2019_scripts
+
+# ignore runtime generated package scripts
+**/._*
+
+# pyscripts
+**/py_scripts
+
+# playgrounds
+/gui/gui_playground.py
+
+# build files
+**/build
+**/dist
+*.spec

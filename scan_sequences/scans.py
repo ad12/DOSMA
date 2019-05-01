@@ -1,7 +1,16 @@
+"""
+Abstract classes defining implementation of scan
+All scan types/protocols should inherit from these abstract classes
+
+@author: Arjun Desai
+        (C) Stanford University, 2019
+"""
+
 import os
 import re
+import warnings
 from abc import ABC, abstractmethod
-from time import gmtime, strftime
+from time import localtime, strftime
 
 import numpy as np
 import scipy.ndimage as sni
@@ -10,15 +19,21 @@ from nipype.interfaces.elastix import Registration, ApplyWarp
 
 import defaults
 import file_constants as fc
-from med_objects.med_volume import MedicalVolume
-from utils import dicom_utils
+from data_io import format_io_utils as fio_utils
+from data_io.dicom_io import DicomReader
+from data_io.format_io import ImageDataFormat
+from data_io.med_volume import MedicalVolume
+from data_io.nifti_io import NiftiReader
+from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
+from models.model import SegModel
+from tissues.tissue import Tissue
 from utils import io_utils
 
 
 class ScanSequence(ABC):
     NAME = ''
 
-    def __init__(self, dicom_path=None, dicom_ext=None, load_path=None):
+    def __init__(self, dicom_path: str = None, load_path: str = None):
         """
         :param dicom_path: a path to the folder containing all dicoms for this scan
         :param dicom_ext: extension of these dicom files
@@ -28,39 +43,73 @@ class ScanSequence(ABC):
         If both are specified, the dicom_path is used, and all information in load_path is ignored
         """
         self.temp_path = os.path.join(fc.TEMP_FOLDER_PATH, '%s', '%s') % (self.NAME,
-                                                                          strftime("%Y-%m-%d-%H-%M-%S", gmtime()))
+                                                                          strftime("%Y-%m-%d-%H-%M-%S", localtime()))
         self.tissues = []
         self.dicom_path = os.path.abspath(dicom_path) if dicom_path is not None else None
-        self.dicom_ext = dicom_ext
 
-        self.volume = None
+        self.volumes = None
         self.ref_dicom = None
+        self.series_number = None
 
-        if load_path:
+        # check if dicom path exists
+        if (dicom_path is not None) and (not os.path.isdir(dicom_path)):
+            if load_path is not None:
+                warnings.warn('Dicom_path %s not found. Will load data from %s' % (dicom_path, load_path))
+            else:
+                raise NotADirectoryError('%s is not a directory' % dicom_path)
+
+        # Only use dicoms if the path exists and path contains files ending in dicom_ext
+        is_dicom_available = (dicom_path is not None) and (os.path.isdir(dicom_path))
+
+        # Only load data if dicom path is not given or doesn't exist, else assume user wants to rewrite information
+        if load_path and not is_dicom_available:
             self.load_data(load_path)
 
-        if dicom_path is not None:
+        if is_dicom_available:
             self.__load_dicom__()
+
+        if not self.__validate_scan__():
+            raise ValueError('dicoms in \'%s\' do not correspond to %s sequence' % (self.dicom_path,
+                                                                                    self.NAME))
+
+    @abstractmethod
+    def __validate_scan__(self) -> bool:
+        """Validate this scan (usually done by checking dicom header tags, if available)
+        :return a boolean
+        """
+        pass
 
     def __load_dicom__(self):
         """
         Store the dicoms to MedicalVolume and store a list of the dicom headers
         """
         dicom_path = self.dicom_path
-        dicom_ext = self.dicom_ext
 
-        self.volume, self.refs_dicom = dicom_utils.load_dicom(dicom_path, dicom_ext)
+        if dicom_path is None or not os.path.isdir(dicom_path):
+            raise NotADirectoryError('%s not found' % dicom_path)
 
-        self.ref_dicom = self.refs_dicom[0]
+        dr = DicomReader()
+
+        self.volumes = dr.load(dicom_path)
+        self.ref_dicom = self.volumes[0].headers[0]
+
+        self.__set_series_number__(self.ref_dicom.SeriesNumber)
+
+    def __set_series_number__(self, sn: int):
+        if self.series_number is not None:
+            assert self.series_number == sn, "Series numbers must be identical if loading the same scan"
+            return
+        else:
+            self.series_number = sn
 
     def get_dimensions(self):
         """
-        Get shape of volume
+        Get shape of volumes
         :return: tuple of ints
         """
-        return self.volume.volume.shape
+        return self.volumes[0].volume.shape
 
-    def __add_tissue__(self, new_tissue):
+    def __add_tissue__(self, new_tissue: Tissue):
         """Add a tissue to the list of tissues associated with this scan
         :param new_tissue: a Tissue instance
         :raise ValueError: tissue type already exists in list
@@ -76,9 +125,9 @@ class ScanSequence(ABC):
         """Get filename for storing serialized data
         :return: a string
         """
-        return '%s.%s' % (self.NAME, io_utils.DATA_EXT)
+        return '%s.data' % self.NAME
 
-    def save_data(self, base_save_dirpath):
+    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
         """Save data in base_save_dirpath
         Serializes variables specified in by self.__serializable_variables__()
 
@@ -92,6 +141,7 @@ class ScanSequence(ABC):
             Call this function (super().save_data(base_save_dirpath)) before adding code to override this method
 
         :param base_save_dirpath: base directory to store data
+        :param data_format: image data format (nifti, dicom, etc) that scan data should be stored as
         """
 
         # write other data as ref
@@ -104,7 +154,7 @@ class ScanSequence(ABC):
 
         io_utils.save_pik(filepath, metadata)
 
-    def load_data(self, base_load_dirpath):
+    def load_data(self, base_load_dirpath: str):
         """Load data in base_load_dirpath
 
         Save location:
@@ -130,24 +180,31 @@ class ScanSequence(ABC):
 
         metadata = io_utils.load_pik(filepath)
         for key in metadata.keys():
-            self.__setattr__(key, metadata[key])
+            if hasattr(self, key):
+                self.__setattr__(key, metadata[key])
 
-        self.__load_dicom__()
+        try:
+            self.__load_dicom__()
+        except:
+            print('Dicom directory %s not found. Will try to load from %s' % (self.dicom_path, base_load_dirpath))
 
-    def __save_dir__(self, dirpath, create_dir=True):
+    def __save_dir__(self, dirpath: str, create_dir: bool = True):
         """Returns directory specific to this scan
 
         :param dirpath: base directory path to locate data directory for this scan
         :param create_dir: create the data directory
-        :return: data directory for this scan type
+        :return: data directory for this scan
         """
-        name_len = len(self.NAME) + 2  # buffer
+        # folder_id = '%s-%03d' % (self.NAME, self.series_number)
+        folder_id = self.NAME
+
+        name_len = len(folder_id) + 2  # buffer
         if self.NAME in dirpath[-name_len:]:
-            scan_dirpath = os.path.join(dirpath, '%s_data' % self.NAME)
+            scan_dirpath = os.path.join(dirpath, folder_id)
         else:
             scan_dirpath = dirpath
 
-        scan_dirpath = os.path.join(scan_dirpath, '%s_data' % self.NAME)
+        scan_dirpath = os.path.join(scan_dirpath, folder_id)
 
         if create_dir:
             scan_dirpath = io_utils.check_dir(scan_dirpath)
@@ -155,29 +212,19 @@ class ScanSequence(ABC):
         return scan_dirpath
 
     def __serializable_variables__(self):
-        return ['volume', 'dicom_path', 'dicom_ext']
+        return ['dicom_path', 'series_number']
 
 
 class TargetSequence(ScanSequence):
-    """Defines scans that have high enough resolution+SNR to be used as targets segmentation"""
-
-    def preprocess_volume(self, volume):
-        """
-        Preprocess segmentation volume
-
-        Default: whitening the volume (X - mean(X)) / std(X)
-
-        :param volume: 3D segmentation volume (numpy array)
-        :return: 3D preprocessed numpy array
-        """
-        return dicom_utils.whiten_volume(volume)
+    """Defines scans that have high enough resolution & SNR to be used as targets for segmentation"""
 
     @abstractmethod
-    def segment(self, model, tissue):
+    def segment(self, model: SegModel, tissue: Tissue) -> MedicalVolume:
         """
         Segment based on model
         :param model: a SegModel instance
-        :return: a 3D numpy binary array of segmentation
+        :param tissue: A Tissue instance
+        :return: a MedicalVolume instance
         """
         pass
 
@@ -188,9 +235,9 @@ class NonTargetSequence(ScanSequence):
     """
 
     @abstractmethod
-    def interregister(self, target_path, mask_path=None):
+    def interregister(self, target_path: str, mask_path: str = None):
         """
-        Register this scan to the target scan - save as parameter in scan (volume, subvolumes, etc)
+        Register this scan to the target scan - save as parameter in scan (volumes, subvolumes, etc)
 
         If there are many subvolumes to interregister with the base scan, typically the following actions are used to
             reduce error accumulation with multiple registrations
@@ -206,10 +253,10 @@ class NonTargetSequence(ScanSequence):
         """
         pass
 
-    def __split_volumes__(self, expected_num_subvolumes):
+    def __split_volumes__(self, expected_num_subvolumes: int):
         """
-        Split the volume into multiple subvolumes based on the echo time
-        Each subvolume represents a single volume of slices acquired with the same TR and TE times
+        Split the volumes into multiple subvolumes based on the echo time
+        Each subvolume represents a single volumes of slices acquired with the same TR and TE times
 
         For example, Cubequant uses 4 spin lock times -- this will produce 4 subvolumes
 
@@ -219,58 +266,34 @@ class NonTargetSequence(ScanSequence):
                     e.g. {0: MedicalVolume A, 1:MedicalVolume B}, [10, 50]
                             10 (at index 0 in the --> key 0 --> MedicalVolume A
                             50 --> key 1 --> MedicalVolume B
-
-        :raise ValueError:
-                    1. If subvolume sizes are not equal - aka len(ref_dicoms) % num_echos != 0
-                    2. If # slices in subvolume != len(ref_dicoms) % num_echos
         """
-        refs_dicom = self.refs_dicom
-        volume = self.volume
+        volumes = self.volumes
 
+        assert len(volumes) == expected_num_subvolumes, "Expected %d subvolumes but got %d" % (expected_num_subvolumes,
+                                                                                               len(volumes))
+        num_echo_times = len(volumes)
         echo_times = []
-        # get echo_time time for each refs_dicom
-        for i in range(len(refs_dicom)):
-            echo_time = float(refs_dicom[i].EchoTime)
-            echo_times.append(echo_time)
 
-        # rank echo times from 0 --> num_echos-1
-        ordered_echo_times = natsorted(list(set(echo_times)))
-        num_echo_times = len(ordered_echo_times)
+        for i in range(num_echo_times):
+            echo_time = float(volumes[i].headers[0].EchoTime)
+            echo_times.append((i, echo_time))
 
-        assert num_echo_times == expected_num_subvolumes
+        # Sort list of tuples (ind, echo_time) by echo_time
+        ordered_echo_times = sorted(echo_times, key=lambda x: x[1])
 
         ordered_subvolumes_dict = dict()
 
         for i in range(num_echo_times):
-            echo_time = ordered_echo_times[i]
-            inds = np.where(np.asarray(echo_times) == echo_time)
-            inds = inds[0]
-
-            ordered_subvolumes_dict[i] = inds
+            volume_ind, echo_time = ordered_echo_times[i]
+            ordered_subvolumes_dict[i] = volumes[volume_ind]
 
         subvolumes_dict = ordered_subvolumes_dict
 
-        # number of spin lock times should go evenly into subvolume
-        if (len(refs_dicom) % num_echo_times) != 0:
-            raise ValueError('Uneven number of dicom files - %d dicoms, %d spin lock times/echos' % (
-                len(refs_dicom), num_echo_times))
-
-        num_slices_per_subvolume = len(refs_dicom) / num_echo_times
-
-        for key in subvolumes_dict.keys():
-            if len(subvolumes_dict[key]) != num_slices_per_subvolume:
-                raise ValueError('subvolume \'%s\' (echo_time %s) has %d slices. Expected %d slices' % (
-                    key, echo_times[key - 1], len(subvolumes_dict[key]), num_slices_per_subvolume))
-
-        for key in subvolumes_dict.keys():
-            sv = subvolumes_dict[key]
-            sv = MedicalVolume(volume.volume[..., sv], volume.pixel_spacing)
-
-            subvolumes_dict[key] = sv
+        echo_times = [x for _, x in echo_times]
 
         return subvolumes_dict, echo_times
 
-    def __load_interregistered_files__(self, interregistered_dirpath):
+    def __load_interregistered_files__(self, interregistered_dirpath: str):
         """Load the nifti files of the interregistered subvolumes
         These subvolumes have already been registered to some base scan using the interregister function
 
@@ -294,6 +317,7 @@ class NonTargetSequence(ScanSequence):
 
         indices = []
         subvolumes = []
+        nifti_reader = NiftiReader()
         for subfile in subfiles:
             subfile_nums = re.findall(r"[-+]?\d*\.\d+|\d+", subfile)
             if len(subfile_nums) == 0:
@@ -303,7 +327,7 @@ class NonTargetSequence(ScanSequence):
             indices.append(subfile_num)
 
             filepath = os.path.join(interregistered_dirpath, subfile)
-            subvolume = io_utils.load_nifti(filepath)
+            subvolume = nifti_reader.load(filepath)
 
             subvolumes.append(subvolume)
 
@@ -318,8 +342,9 @@ class NonTargetSequence(ScanSequence):
 
         return subvolumes_dict
 
-    def __dilate_mask__(self, mask_path, temp_path, dil_rate=defaults.DEFAULT_MASK_DIL_RATE,
-                        dil_threshold=defaults.DEFAULT_MASK_DIL_THRESHOLD):
+    def __dilate_mask__(self, mask_path: str, temp_path: str,
+                        dil_rate: float = defaults.DEFAULT_MASK_DIL_RATE,
+                        dil_threshold: float = defaults.DEFAULT_MASK_DIL_THRESHOLD):
         """Dilate mask using gaussian blur and write to disk to use with elastix
 
         :param mask_path: path to mask to use to use as focus points for registration, mask must be binary
@@ -340,7 +365,7 @@ class NonTargetSequence(ScanSequence):
         if dil_threshold < 0 or dil_threshold > 1:
             raise ValueError('dil_threshold must be in range [0, 1]')
 
-        mask = io_utils.load_nifti(mask_path)
+        mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
 
         dilated_mask = sni.gaussian_filter(np.asarray(mask.volume, dtype=np.float32),
                                            sigma=dil_rate) > dil_threshold
@@ -348,13 +373,15 @@ class NonTargetSequence(ScanSequence):
                                 dtype=np.int8)
         fixed_mask_filepath = os.path.join(io_utils.check_dir(temp_path), 'dilated-mask.nii.gz')
 
-        dilated_mask_volume = MedicalVolume(fixed_mask, mask.pixel_spacing)
+        dilated_mask_volume = MedicalVolume(fixed_mask,
+                                            affine=mask.affine)
         dilated_mask_volume.save_volume(fixed_mask_filepath)
 
         return fixed_mask_filepath
 
-    def __interregister_base_file__(self, base_image_info, target_path, temp_path, mask_path=None,
-                                    parameter_files=[fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE]):
+    def __interregister_base_file__(self, base_image_info: tuple, target_path: str, temp_path: str,
+                                    mask_path: str = None,
+                                    parameter_files=(fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE)):
         """Interregister the base moving image to the target image
 
         :param base_image_info: tuple of filepath, echo index (eg. 'scans/000.nii.gz, 0)
@@ -372,13 +399,16 @@ class NonTargetSequence(ScanSequence):
         transformation_files = []
 
         use_mask_arr = [False, True]
+        reg_output = None
+        moving_image = base_image_path
 
         for i in range(len(parameter_files)):
             use_mask = use_mask_arr[i]
             pfile = parameter_files[i]
+
             reg = Registration()
             reg.inputs.fixed_image = target_path
-            reg.inputs.moving_image = base_image_path
+            reg.inputs.moving_image = moving_image
             reg.inputs.output_path = io_utils.check_dir(os.path.join(temp_path,
                                                                      '%03d_param%i' % (base_time_id, i)))
             reg.inputs.parameters = pfile
@@ -388,8 +418,14 @@ class NonTargetSequence(ScanSequence):
                 reg.inputs.fixed_mask = fixed_mask_filepath
 
             reg.terminal_output = fc.NIPYPE_LOGGING
+
             reg_output = reg.run()
             reg_output = reg_output.outputs
+            assert reg_output is not None
+
+            # update moving image to output
+            moving_image = reg_output.warped_file
+
             transformation_files.append(reg_output.transform[0])
 
         return reg_output.warped_file, transformation_files
@@ -406,15 +442,15 @@ class NonTargetSequence(ScanSequence):
         warped_file = ''
         for f in transformation_files:
             reg = ApplyWarp()
-            reg.inputs.moving_image = filename
+            reg.inputs.moving_image = filename if len(warped_file) == 0 else warped_file
 
             reg.inputs.transform_file = f
             reg.inputs.output_path = io_utils.check_dir(os.path.join(temp_path,
                                                                      '%03d' % image_id))
             reg.terminal_output = fc.NIPYPE_LOGGING
             reg_output = reg.run()
-            warped_file = reg_output.outputs.warped_file
 
-        assert warped_file != ''
+            warped_file = reg_output.outputs.warped_file
+            assert warped_file != ''
 
         return warped_file
