@@ -192,7 +192,7 @@ class Mapss(TargetSequence):
         # write echos
         for i in range(len(self.volumes)):
             nii_registration_filepath = os.path.join(base_save_dirpath, 'echo%d.nii.gz' % (i + 1))
-            filepath = fio_utils.convert_format_filename(nii_registration_filepath, data_format)
+            filepath = fio_utils.convert_image_data_format(nii_registration_filepath, data_format)
             self.volumes[i].save_volume(filepath, data_format=data_format)
 
     def load_data(self, base_load_dirpath):

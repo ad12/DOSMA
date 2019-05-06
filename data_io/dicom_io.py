@@ -18,6 +18,7 @@ from data_io.format_io import DataReader, DataWriter, ImageDataFormat
 from data_io.med_volume import MedicalVolume
 from defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 from utils import io_utils
+from typing import Union
 
 __all__ = ['DicomReader', 'DicomWriter']
 
@@ -115,7 +116,7 @@ class DicomReader(DataReader):
     """
     data_format_code = ImageDataFormat.dicom
 
-    def load(self, dicom_dirpath, ignore_ext=False):
+    def load(self, dicom_dirpath, groupby='EchoNumbers', ignore_ext=False):
         """Load dicoms into numpy array
 
         Required:
@@ -144,22 +145,26 @@ class DicomReader(DataReader):
         if len(lstFilesDCM) == 0:
             raise FileNotFoundError("No files found in directory %s" % dicom_dirpath)
 
-        # Get reference file
-        # ref_dicom = pydicom.read_file(lstFilesDCM[0])
+        # Check if dicom file has the groupby element specified
+        temp_dicom = pydicom.read_file(lstFilesDCM[0], force=True)
+        import pdb; pdb.set_trace()
+        if not temp_dicom.get(groupby):
+            raise ValueError('Tag %s does not exist in dicom' % groupby)
 
         dicom_data = {}
 
         for dicom_filename in lstFilesDCM:
             # read the file
             ds = pydicom.read_file(dicom_filename, force=True)
-            echo_number = ds.EchoNumbers
-            echo_ind = echo_number - 1
+            val_groupby = ds.get(groupby)
+            if type(val_groupby) is pydicom.DataElement:
+                val_groupby = val_groupby.value
 
-            if echo_ind not in dicom_data.keys():
-                dicom_data[echo_ind] = {'headers': [], 'arr': []}
+            if val_groupby not in dicom_data.keys():
+                dicom_data[val_groupby] = {'headers': [], 'arr': []}
 
-            dicom_data[echo_ind]['headers'].append(ds)
-            dicom_data[echo_ind]['arr'].append(ds.pixel_array)
+            dicom_data[val_groupby]['headers'].append(ds)
+            dicom_data[val_groupby]['arr'].append(ds.pixel_array)
 
         vols = []
         for k in sorted(list(dicom_data.keys())):
