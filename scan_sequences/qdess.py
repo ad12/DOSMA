@@ -214,8 +214,3 @@ class QDess(TargetSequence):
                                                help='generate T2 map')
 
         return [(cls.segment, segment_action), (cls.generate_t2_map, generate_t2_map_action)]
-
-if __name__ == '__main__':
-    a = QDess(dicom_path='/Users/arjundesai/Documents/stanford/research/msk_pipeline_raw/dicoms/healthy07/007',
-              split_by=None)
-    print(len(a.volumes))
