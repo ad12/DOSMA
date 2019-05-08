@@ -121,7 +121,8 @@ class DicomReader(DataReader):
 
         Required:
         :param dicom_dirpath: string path to directory where dicoms are stored
-
+        :param groupby: Group dicoms by tag. Default: 'EchoNumbers'
+        :param ignore_ext: Ignore '.dcm' extension when loading files
         :return list of MedicalVolumes
 
         :raises NotADirectoryError if dicom pat does not exist or is not a directory
@@ -138,7 +139,9 @@ class DicomReader(DataReader):
         lstFilesDCM = []
         for f in possible_files:
             # if ignore extension, don't look for .dcm extension
-            if ignore_ext or (not ignore_ext and self.data_format_code.is_filetype(f)):
+            match_ext = ignore_ext or (not ignore_ext and self.data_format_code.is_filetype(f))
+            is_file = os.path.isfile(os.path.join(dicom_dirpath, f))
+            if is_file and match_ext:
                 lstFilesDCM.append(os.path.join(dicom_dirpath, f))
 
         lstFilesDCM = natsorted(lstFilesDCM)
@@ -147,7 +150,6 @@ class DicomReader(DataReader):
 
         # Check if dicom file has the groupby element specified
         temp_dicom = pydicom.read_file(lstFilesDCM[0], force=True)
-        import pdb; pdb.set_trace()
         if not temp_dicom.get(groupby):
             raise ValueError('Tag %s does not exist in dicom' % groupby)
 
