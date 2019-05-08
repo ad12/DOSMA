@@ -141,7 +141,8 @@ class DicomReader(DataReader):
             # if ignore extension, don't look for .dcm extension
             match_ext = ignore_ext or (not ignore_ext and self.data_format_code.is_filetype(f))
             is_file = os.path.isfile(os.path.join(dicom_dirpath, f))
-            if is_file and match_ext:
+            is_hidden_file = f.startswith('.')
+            if is_file and match_ext and not is_hidden_file:
                 lstFilesDCM.append(os.path.join(dicom_dirpath, f))
 
         lstFilesDCM = natsorted(lstFilesDCM)
@@ -150,6 +151,7 @@ class DicomReader(DataReader):
 
         # Check if dicom file has the groupby element specified
         temp_dicom = pydicom.read_file(lstFilesDCM[0], force=True)
+
         if not temp_dicom.get(groupby):
             raise ValueError('Tag %s does not exist in dicom' % groupby)
 

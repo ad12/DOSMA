@@ -39,13 +39,17 @@ class ScanSequence(ABC):
         :param dicom_ext: extension of these dicom files
         :param load_path: base path were data is stored
 
-        :keyword split_by: split dicoms by tag. Default depends on scan sequence - typically EchoNumber
+        :keyword split_by: split dicoms by tag. Default depends on scan sequence - typically EchoNumber.
+                            dicom_path must be specified
+        :keyword ignore_ext: ignore extension when reading/loading dicom files. dicom_path must be specified
 
         In practice, only either dicom_path or load_path should be specified
         If both are specified, the dicom_path is used, and all information in load_path is ignored
         """
         self.split_by = None
-        kwargs_str = ['split_by']
+        self.ignore_ext = False
+
+        kwargs_str = ['split_by', 'ignore_ext']
         for k in kwargs_str:
             if k in kwargs:
                 self.__setattr__(k, kwargs.get(k))
@@ -101,7 +105,7 @@ class ScanSequence(ABC):
         dr = DicomReader()
 
         if split_by:
-            self.volumes = dr.load(dicom_path, groupby=split_by, ignore_ext=True)
+            self.volumes = dr.load(dicom_path, groupby=split_by, ignore_ext=self.ignore_ext)
         else:
             self.volumes = dr.load(dicom_path, ignore_ext=True)
 
@@ -226,7 +230,7 @@ class ScanSequence(ABC):
         return scan_dirpath
 
     def __serializable_variables__(self):
-        return ['dicom_path', 'series_number', 'split_by']
+        return ['dicom_path', 'series_number']
 
 
 class TargetSequence(ScanSequence):

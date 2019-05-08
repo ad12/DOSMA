@@ -29,11 +29,11 @@ __T1_RHO_DECIMAL_PRECISION__ = 3
 class CubeQuant(NonTargetSequence):
     NAME = 'cubequant'
 
-    def __init__(self, dicom_path=None, load_path=None):
+    def __init__(self, dicom_path=None, load_path=None, **kwargs):
         self.subvolumes = None
         self.spin_lock_times = None
         self.intraregistered_data = None
-        super().__init__(dicom_path=dicom_path, load_path=load_path)
+        super().__init__(dicom_path=dicom_path, load_path=load_path, kwargs=kwargs)
 
         if dicom_path is not None:
             self.subvolumes, self.spin_lock_times = self.__split_volumes__(__EXPECTED_NUM_SPIN_LOCK_TIMES__)
@@ -92,6 +92,8 @@ class CubeQuant(NonTargetSequence):
         """Generate 3D T1-rho map and r2 fit map using monoexponential fit across subvolumes acquired at different
                 echo times
         :param tissue: A Tissue instance
+        :param mask_path: path to mask of ROI to analyze
+
         :return: a T1Rho instance
         """
         spin_lock_times = []

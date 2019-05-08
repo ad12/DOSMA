@@ -35,8 +35,8 @@ class QDess(TargetSequence):
     __T2_UPPER_BOUND__ = 100
     __T2_DECIMAL_PRECISION__ = 1  # 0.1 ms
 
-    def __init__(self, dicom_path, load_path=None):
-        super().__init__(dicom_path=dicom_path, load_path=load_path)
+    def __init__(self, dicom_path, load_path=None, **kwargs):
+        super().__init__(dicom_path=dicom_path, load_path=load_path, kwargs=kwargs)
 
     def __validate_scan__(self) -> bool:
         """Validate that the dicoms are of qDESS sequence
@@ -162,12 +162,14 @@ class QDess(TargetSequence):
 
         base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
 
-        self.volumes = []
-        # Load subvolumes from nifti file
-        for i in range(self.__NUM_ECHOS__):
-            nii_registration_filepath = os.path.join(base_load_dirpath, 'echo%d.nii.gz' % (i + 1))
-            subvolume = NiftiReader().load(nii_registration_filepath)
-            self.volumes.append(subvolume)
+        # if reading dicoms from dicom path failed
+        if not self.volumes:
+            self.volumes = []
+            # Load subvolumes from nifti file
+            for i in range(self.__NUM_ECHOS__):
+                nii_registration_filepath = os.path.join(base_load_dirpath, 'echo%d.nii.gz' % (i + 1))
+                subvolume = fio_utils.generic_load(nii_registration_filepath, expected_num_volumes=1)
+                self.volumes.append(subvolume)
 
     def calc_rms(self):
         """Calculate RMS of 2 echos
