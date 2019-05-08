@@ -32,6 +32,7 @@ from utils import io_utils
 
 class ScanSequence(ABC):
     NAME = ''
+    __DEFAULT_SPLIT_BY = 'EchoNumbers'
 
     def __init__(self, dicom_path: str = None, load_path: str = None, **kwargs):
         """
@@ -46,7 +47,7 @@ class ScanSequence(ABC):
         In practice, only either dicom_path or load_path should be specified
         If both are specified, the dicom_path is used, and all information in load_path is ignored
         """
-        self.split_by = None
+        self.split_by = self.__DEFAULT_SPLIT_BY
         self.ignore_ext = False
 
         kwargs_str = ['split_by', 'ignore_ext']
@@ -104,10 +105,7 @@ class ScanSequence(ABC):
 
         dr = DicomReader()
 
-        if split_by:
-            self.volumes = dr.load(dicom_path, groupby=split_by, ignore_ext=self.ignore_ext)
-        else:
-            self.volumes = dr.load(dicom_path, ignore_ext=True)
+        self.volumes = dr.load(dicom_path, groupby=split_by, ignore_ext=self.ignore_ext)
 
         self.ref_dicom = self.volumes[0].headers[0]
 
@@ -230,7 +228,7 @@ class ScanSequence(ABC):
         return scan_dirpath
 
     def __serializable_variables__(self):
-        return ['dicom_path', 'series_number']
+        return ['dicom_path', 'series_number', 'split_by', 'ignore_ext']
 
 
 class TargetSequence(ScanSequence):
