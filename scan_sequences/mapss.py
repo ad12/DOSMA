@@ -38,11 +38,11 @@ __all__ = ['Mapss']
 class Mapss(TargetSequence):
     NAME = 'mapss'
 
-    def __init__(self, dicom_path=None, load_path=None):
+    def __init__(self, dicom_path=None, load_path=None, **kwargs):
         self.echo_times = None
         self.raw_volumes = None
 
-        super().__init__(dicom_path=dicom_path, load_path=load_path)
+        super().__init__(dicom_path=dicom_path, load_path=load_path, **kwargs)
 
         if dicom_path is not None:
             self.__intraregister__(self.volumes)

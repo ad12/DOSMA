@@ -36,7 +36,7 @@ class QDess(TargetSequence):
     __T2_DECIMAL_PRECISION__ = 1  # 0.1 ms
 
     def __init__(self, dicom_path, load_path=None, **kwargs):
-        super().__init__(dicom_path=dicom_path, load_path=load_path, kwargs=kwargs)
+        super().__init__(dicom_path=dicom_path, load_path=load_path, **kwargs)
 
     def __validate_scan__(self) -> bool:
         """Validate that the dicoms are of qDESS sequence
@@ -214,3 +214,8 @@ class QDess(TargetSequence):
                                                help='generate T2 map')
 
         return [(cls.segment, segment_action), (cls.generate_t2_map, generate_t2_map_action)]
+
+if __name__ == '__main__':
+    a = QDess(dicom_path='/Users/arjundesai/Documents/stanford/research/msk_pipeline_raw/dicoms/healthy07/007',
+              split_by=None)
+    print(len(a.volumes))

@@ -134,6 +134,9 @@ class DicomReader(DataReader):
         if not os.path.isdir(dicom_dirpath):
             raise NotADirectoryError("Directory %s does not exist" % dicom_dirpath)
 
+        if not groupby:
+            raise ValueError('`group_by` must be specified, even if there are not multiple volumes encoded in dicoms')
+
         possible_files = os.listdir(dicom_dirpath)
 
         lstFilesDCM = []

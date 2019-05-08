@@ -33,7 +33,7 @@ class CubeQuant(NonTargetSequence):
         self.subvolumes = None
         self.spin_lock_times = None
         self.intraregistered_data = None
-        super().__init__(dicom_path=dicom_path, load_path=load_path, kwargs=kwargs)
+        super().__init__(dicom_path=dicom_path, load_path=load_path, **kwargs)
 
         if dicom_path is not None:
             self.subvolumes, self.spin_lock_times = self.__split_volumes__(__EXPECTED_NUM_SPIN_LOCK_TIMES__)
