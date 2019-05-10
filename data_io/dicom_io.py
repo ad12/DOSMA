@@ -16,20 +16,13 @@ from natsort import natsorted
 from data_io import orientation as stdo
 from data_io.format_io import DataReader, DataWriter, ImageDataFormat
 from data_io.med_volume import MedicalVolume
+from defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 from utils import io_utils
+from typing import Union
 
-__DICOM_EXTENSIONS__ = ('.dcm')
+__all__ = ['DicomReader', 'DicomWriter']
+
 TOTAL_NUM_ECHOS_KEY = (0x19, 0x107e)
-
-
-def contains_dicom_extension(a_str: str):
-    """
-    Check if a string ends with one of the accepted dicom extensions
-    :param a_str: a string
-    :return: a boolean
-    """
-    bool_list = [a_str.endswith(ext) for ext in __DICOM_EXTENSIONS__]
-    return bool(sum(bool_list))
 
 
 def __update_np_dtype__(np_array, bit_depth):
@@ -74,13 +67,31 @@ def LPSplus_to_RASplus(headers):
     :return: a tuple of orientation and scanner origin
     """
     im_dir = headers[0].ImageOrientationPatient
+    in_plane_pixel_spacing = headers[0].PixelSpacing
+
     orientation = np.zeros([3, 3])
-    i_vec, j_vec = im_dir[3:], im_dir[:3]  # unique to pydicom, please revise if using different library to load dicoms
-    k_vec = np.asarray(headers[-1].ImagePositionPatient) - np.asarray(headers[0].ImagePositionPatient)
-    #k_vec = k_vec * np.dot(headers[0].ImagePositionPatient, np.cross(i_vec, j_vec))
-    k_vec = k_vec * np.cross(i_vec, j_vec)
-    orientation[:3, :3] = np.stack([i_vec, j_vec, k_vec], axis=1)
-    scanner_origin = headers[0].ImagePositionPatient
+
+    # determine vector for in-plane pixel directions (i, j)
+    i_vec, j_vec = np.asarray(im_dir[:3]).astype(np.float64), np.asarray(im_dir[3:]).astype(
+        np.float64)  # unique to pydicom, please revise if using different library to load dicoms
+    i_vec, j_vec = np.round(i_vec, AFFINE_DECIMAL_PRECISION), np.round(j_vec, AFFINE_DECIMAL_PRECISION)
+    i_vec = i_vec * in_plane_pixel_spacing[0]
+    j_vec = j_vec * in_plane_pixel_spacing[1]
+
+    # determine vector for through-plane pixel direction (k)
+    # 1. Normalize k_vector by magnitude
+    # 2. Multiply by magnitude given by SpacingBetweenSlices field
+    # These actions are done to avoid rounding errors that might result from float subtraction
+    k_vec = np.asarray(headers[1].ImagePositionPatient).astype(np.float64) - np.asarray(
+        headers[0].ImagePositionPatient).astype(np.float64)
+    k_vec = np.round(k_vec, AFFINE_DECIMAL_PRECISION)
+    # k_vec_magnitude = np.sqrt(np.sum(k_vec**2))
+    # assert k_vec_magnitude == headers[0].SpacingBetweenSlices
+    # k_vec = k_vec / k_vec_magnitude * headers[0].SpacingBetweenSlices
+
+    orientation[:3, :3] = np.stack([j_vec, i_vec, k_vec], axis=1)
+    scanner_origin = np.array(headers[0].ImagePositionPatient).astype(np.float64)
+    scanner_origin = np.round(scanner_origin, SCANNER_ORIGIN_DECIMAL_PRECISION)
 
     affine = np.zeros([4, 4])
     affine[:3, :3] = orientation
@@ -89,10 +100,8 @@ def LPSplus_to_RASplus(headers):
     affine[3, 3] = 1
 
     affine[affine == 0] = 0
-    nib_axcodes = nib.aff2axcodes(affine)
-    std_orientation = stdo.__orientation_nib_to_standard__(nib_axcodes)
 
-    return std_orientation, affine[:3, 3]
+    return affine
 
 
 class DicomReader(DataReader):
@@ -107,12 +116,13 @@ class DicomReader(DataReader):
     """
     data_format_code = ImageDataFormat.dicom
 
-    def load(self, dicom_dirpath):
+    def load(self, dicom_dirpath, groupby='EchoNumbers', ignore_ext=False):
         """Load dicoms into numpy array
 
         Required:
         :param dicom_dirpath: string path to directory where dicoms are stored
-
+        :param groupby: Group dicoms by tag. Default: 'EchoNumbers'
+        :param ignore_ext: Ignore '.dcm' extension when loading files
         :return list of MedicalVolumes
 
         :raises NotADirectoryError if dicom pat does not exist or is not a directory
@@ -124,49 +134,57 @@ class DicomReader(DataReader):
         if not os.path.isdir(dicom_dirpath):
             raise NotADirectoryError("Directory %s does not exist" % dicom_dirpath)
 
+        if not groupby:
+            raise ValueError('`group_by` must be specified, even if there are not multiple volumes encoded in dicoms')
+
+        possible_files = os.listdir(dicom_dirpath)
+
         lstFilesDCM = []
-        for dirName, subdirList, fileList in os.walk(dicom_dirpath):
-            for filename in fileList:
-                if contains_dicom_extension(filename):
-                    lstFilesDCM.append(os.path.join(dirName, filename))
+        for f in possible_files:
+            # if ignore extension, don't look for .dcm extension
+            match_ext = ignore_ext or (not ignore_ext and self.data_format_code.is_filetype(f))
+            is_file = os.path.isfile(os.path.join(dicom_dirpath, f))
+            is_hidden_file = f.startswith('.')
+            if is_file and match_ext and not is_hidden_file:
+                lstFilesDCM.append(os.path.join(dicom_dirpath, f))
 
         lstFilesDCM = natsorted(lstFilesDCM)
         if len(lstFilesDCM) == 0:
             raise FileNotFoundError("No files found in directory %s" % dicom_dirpath)
 
-        # Get reference file
-        ref_dicom = pydicom.read_file(lstFilesDCM[0])
-        max_num_echos = ref_dicom[TOTAL_NUM_ECHOS_KEY].value
+        # Check if dicom file has the groupby element specified
+        temp_dicom = pydicom.read_file(lstFilesDCM[0], force=True)
 
-        # Load spacing values (in mm)
-        pixelSpacing = (float(ref_dicom.PixelSpacing[0]),
-                        float(ref_dicom.PixelSpacing[1]),
-                        float(ref_dicom.SpacingBetweenSlices))
+        if not temp_dicom.get(groupby):
+            raise ValueError('Tag %s does not exist in dicom' % groupby)
 
-        dicom_data = []
-        for i in range(max_num_echos):
-            dicom_data.append({'headers': [], 'arr': []})
+        dicom_data = {}
 
         for dicom_filename in lstFilesDCM:
             # read the file
             ds = pydicom.read_file(dicom_filename, force=True)
-            echo_number = ds.EchoNumbers
-            dicom_data[echo_number - 1]['headers'].append(ds)
-            dicom_data[echo_number - 1]['arr'].append(ds.pixel_array)
+            val_groupby = ds.get(groupby)
+            if type(val_groupby) is pydicom.DataElement:
+                val_groupby = val_groupby.value
+
+            if val_groupby not in dicom_data.keys():
+                dicom_data[val_groupby] = {'headers': [], 'arr': []}
+
+            dicom_data[val_groupby]['headers'].append(ds)
+            dicom_data[val_groupby]['arr'].append(ds.pixel_array)
 
         vols = []
-        for dd in dicom_data:
+        for k in sorted(list(dicom_data.keys())):
+            dd = dicom_data[k]
             headers = dd['headers']
             if len(headers) == 0:
                 continue
             arr = np.stack(dd['arr'], axis=-1)
 
-            rasplus_orientation, rasplus_origin = LPSplus_to_RASplus(headers)
+            affine = LPSplus_to_RASplus(headers)
 
             vol = MedicalVolume(arr,
-                                pixel_spacing=pixelSpacing,
-                                orientation=rasplus_orientation,
-                                scanner_origin=rasplus_origin,
+                                affine,
                                 headers=headers)
             vols.append(vol)
 
@@ -219,10 +237,11 @@ class DicomWriter(DataWriter):
         if headers is None:
             raise ValueError('MedicalVolume headers must be initialized to save as a dicom')
 
-        orientation, scanner_origin = LPSplus_to_RASplus(headers)
+        affine = LPSplus_to_RASplus(headers)
+        orientation = stdo.orientation_nib_to_standard(nib.aff2axcodes(affine))
 
         # Currently do not support mismatch in scanner_origin
-        if tuple(scanner_origin) != im.scanner_origin:
+        if tuple(affine[:3, 3]) != im.scanner_origin:
             raise ValueError(
                 'Scanner origin mismatch. Currently we do not handle mismatch in scanner origin (i.e. cannot flip across axis)')
 
@@ -251,11 +270,12 @@ class DicomWriter(DataWriter):
 
 
 if __name__ == '__main__':
-    dicom_filepath = '../dicoms/healthy07/007'
-    save_path = '../dicoms/healthy07/dcm-nifti.nii.gz'
+    dicom_filepath = '../dicoms/mapss_eg/'
+    save_path = '../dicoms/mapss_eg/multi-echo-write/'
     r = DicomReader()
     A = r.load(dicom_filepath)
     from data_io.nifti_io import NiftiWriter
 
-    r = NiftiWriter()
-    r.save(A[0], save_path)
+    w = NiftiWriter()
+    for i in range(len(A)):
+        w.save(A[i], os.path.join(save_path, '%d.nii.gz' % i))

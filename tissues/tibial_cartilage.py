@@ -8,7 +8,7 @@ import pandas as pd
 import scipy.ndimage as sni
 
 import defaults
-from data_io.med_volume import MedicalVolume
+from data_io import savefig, MedicalVolume
 from tissues.tissue import Tissue
 from utils import io_utils
 from utils.quant_vals import QuantitativeValues
@@ -17,6 +17,8 @@ from utils.quant_vals import QuantitativeValues
 BOUNDS = {QuantitativeValues.T2: 60.0,
           QuantitativeValues.T1_RHO: 100.0,
           QuantitativeValues.T2_STAR: 50.0}
+
+__all__ = ['TibialCartilage']
 
 
 class TibialCartilage(Tissue):
@@ -220,7 +222,7 @@ class TibialCartilage(Tissue):
                 clb.ax.set_title('(ms)')
                 plt.axis('tight')
 
-                plt.savefig(filepath, dpi=defaults.DEFAULT_DPI)
+                savefig(filepath, dpi=defaults.DEFAULT_DPI)
 
                 # Save data
                 raw_data_filepath = os.path.join(q_name_dirpath, 'raw_data', q_map_data['raw_data_filename'])

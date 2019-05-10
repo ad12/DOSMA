@@ -9,8 +9,7 @@ import pandas as pd
 import scipy.ndimage as sni
 
 import defaults
-from data_io.format_io import ImageDataFormat
-from data_io.med_volume import MedicalVolume
+from data_io import ImageDataFormat, MedicalVolume, savefig
 from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 from tissues.tissue import Tissue
 from utils import io_utils, img_utils
@@ -29,6 +28,8 @@ DTHETA = 360 / NB_BINS  # theta intervals for bins (in degrees)
 # Theta range: [-270, 90)
 THETA_MIN = -270
 THETA_MAX = 90
+
+__all__ = ['FemoralCartilage']
 
 
 class FemoralCartilage(Tissue):
@@ -253,9 +254,6 @@ class FemoralCartilage(Tissue):
 
         super().__calc_quant_vals__(quant_map, map_type)
 
-        if self.__mask__ is None:
-            raise ValueError('Please initialize mask')
-
         # assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
 
         # We have to call this every time we load a new quantitative map
@@ -386,7 +384,7 @@ class FemoralCartilage(Tissue):
                 clb = plt.colorbar()
                 clb.ax.set_title('(ms)')
 
-                plt.savefig(filepath, dpi=defaults.DEFAULT_DPI)
+                savefig(filepath, dpi=defaults.DEFAULT_DPI)
 
                 # Save data
                 raw_data_filepath = os.path.join(q_name_dirpath, 'raw_data', q_map_data['raw_data_filename'])

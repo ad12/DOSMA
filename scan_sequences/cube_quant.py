@@ -1,12 +1,12 @@
 import os
 
+import numpy as np
 from natsort import natsorted
 from nipype.interfaces.elastix import Registration
 
 import file_constants as fc
+from data_io import ImageDataFormat, NiftiReader
 from data_io import format_io_utils as fio_utils
-from data_io.format_io import ImageDataFormat
-from data_io.nifti_io import NiftiReader
 from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 from scan_sequences.scans import NonTargetSequence
 from tissues.tissue import Tissue
@@ -14,8 +14,8 @@ from utils import io_utils
 from utils import quant_vals as qv
 from utils.cmd_line_utils import ActionWrapper
 from utils.fits import MonoExponentialFit
-import numpy as np
 
+__all__ = ['CubeQuant']
 
 __EXPECTED_NUM_SPIN_LOCK_TIMES__ = 4
 __R_SQUARED_THRESHOLD__ = 0.9
@@ -29,11 +29,11 @@ __T1_RHO_DECIMAL_PRECISION__ = 3
 class CubeQuant(NonTargetSequence):
     NAME = 'cubequant'
 
-    def __init__(self, dicom_path=None, load_path=None):
+    def __init__(self, dicom_path=None, load_path=None, **kwargs):
         self.subvolumes = None
         self.spin_lock_times = None
         self.intraregistered_data = None
-        super().__init__(dicom_path=dicom_path, load_path=load_path)
+        super().__init__(dicom_path=dicom_path, load_path=load_path, **kwargs)
 
         if dicom_path is not None:
             self.subvolumes, self.spin_lock_times = self.__split_volumes__(__EXPECTED_NUM_SPIN_LOCK_TIMES__)
@@ -88,10 +88,12 @@ class CubeQuant(NonTargetSequence):
 
         self.subvolumes = subvolumes
 
-    def generate_t1_rho_map(self, tissue: Tissue):
+    def generate_t1_rho_map(self, tissue: Tissue, mask_path: str = None):
         """Generate 3D T1-rho map and r2 fit map using monoexponential fit across subvolumes acquired at different
                 echo times
         :param tissue: A Tissue instance
+        :param mask_path: path to mask of ROI to analyze
+
         :return: a T1Rho instance
         """
         spin_lock_times = []
@@ -99,8 +101,10 @@ class CubeQuant(NonTargetSequence):
 
         # only calculate for focused region if a mask is available, this speeds up computation
         mask = tissue.get_mask()
-        if not mask or np.sum(mask.volume) == 0:
-            raise ValueError('%s does not have mask' % tissue.FULL_NAME)
+        if (not mask or np.sum(mask.volume) == 0) and mask_path:
+            mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
+            if tuple(np.unique(mask.volume)) != (0, 1):
+                raise ValueError('mask_filepath must reference binary segmentation volume')
 
         sorted_keys = natsorted(list(self.subvolumes.keys()))
         for spin_lock_time_index in sorted_keys:
@@ -190,7 +194,7 @@ class CubeQuant(NonTargetSequence):
 
         for spin_lock_time_index in self.subvolumes.keys():
             nii_filepath = os.path.join(interregistered_dirpath, '%03d.nii.gz' % spin_lock_time_index)
-            filepath = fio_utils.convert_format_filename(nii_filepath, data_format)
+            filepath = fio_utils.convert_image_data_format(nii_filepath, data_format)
 
             self.subvolumes[spin_lock_time_index].save_volume(filepath)
 

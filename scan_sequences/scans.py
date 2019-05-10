@@ -32,16 +32,29 @@ from utils import io_utils
 
 class ScanSequence(ABC):
     NAME = ''
+    __DEFAULT_SPLIT_BY__ = 'EchoNumbers'
 
-    def __init__(self, dicom_path: str = None, load_path: str = None):
+    def __init__(self, dicom_path: str = None, load_path: str = None, **kwargs):
         """
         :param dicom_path: a path to the folder containing all dicoms for this scan
         :param dicom_ext: extension of these dicom files
         :param load_path: base path were data is stored
 
+        :keyword split_by: split dicoms by tag. Default depends on scan sequence - typically EchoNumber.
+                            dicom_path must be specified
+        :keyword ignore_ext: ignore extension when reading/loading dicom files. dicom_path must be specified
+
         In practice, only either dicom_path or load_path should be specified
         If both are specified, the dicom_path is used, and all information in load_path is ignored
         """
+        self.split_by = self.__DEFAULT_SPLIT_BY__
+        self.ignore_ext = False
+
+        kwargs_str = ['split_by', 'ignore_ext']
+        for k in kwargs_str:
+            if k in kwargs:
+                self.__setattr__(k, kwargs.get(k))
+
         self.temp_path = os.path.join(fc.TEMP_FOLDER_PATH, '%s', '%s') % (self.NAME,
                                                                           strftime("%Y-%m-%d-%H-%M-%S", localtime()))
         self.tissues = []
@@ -68,6 +81,10 @@ class ScanSequence(ABC):
         if is_dicom_available:
             self.__load_dicom__()
 
+        if not self.__validate_scan__():
+            raise ValueError('dicoms in \'%s\' do not correspond to %s sequence' % (self.dicom_path,
+                                                                                    self.NAME))
+
     @abstractmethod
     def __validate_scan__(self) -> bool:
         """Validate this scan (usually done by checking dicom header tags, if available)
@@ -79,6 +96,8 @@ class ScanSequence(ABC):
         """
         Store the dicoms to MedicalVolume and store a list of the dicom headers
         """
+        split_by = self.split_by
+
         dicom_path = self.dicom_path
 
         if dicom_path is None or not os.path.isdir(dicom_path):
@@ -86,7 +105,8 @@ class ScanSequence(ABC):
 
         dr = DicomReader()
 
-        self.volumes = dr.load(dicom_path)
+        self.volumes = dr.load(dicom_path, groupby=split_by, ignore_ext=self.ignore_ext)
+
         self.ref_dicom = self.volumes[0].headers[0]
 
         self.__set_series_number__(self.ref_dicom.SeriesNumber)
@@ -121,7 +141,7 @@ class ScanSequence(ABC):
         """Get filename for storing serialized data
         :return: a string
         """
-        return '%s.%s' % (self.NAME, io_utils.DATA_EXT)
+        return '%s.data' % self.NAME
 
     def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
         """Save data in base_save_dirpath
@@ -208,7 +228,7 @@ class ScanSequence(ABC):
         return scan_dirpath
 
     def __serializable_variables__(self):
-        return ['dicom_path', 'series_number']
+        return ['dicom_path', 'series_number', 'split_by', 'ignore_ext']
 
 
 class TargetSequence(ScanSequence):
@@ -370,9 +390,7 @@ class NonTargetSequence(ScanSequence):
         fixed_mask_filepath = os.path.join(io_utils.check_dir(temp_path), 'dilated-mask.nii.gz')
 
         dilated_mask_volume = MedicalVolume(fixed_mask,
-                                            pixel_spacing=mask.pixel_spacing,
-                                            orientation=mask.orientation,
-                                            scanner_origin=mask.scanner_origin)
+                                            affine=mask.affine)
         dilated_mask_volume.save_volume(fixed_mask_filepath)
 
         return fixed_mask_filepath

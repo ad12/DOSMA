@@ -18,12 +18,32 @@ All directions point to the increasing direction - i.e. from -x to x
 - "PA": posterior to anterior; "AP": anterior to posterior
 - "IS": inferior to superior; "SI": superior to inferior
 
+Affine Matrix format:
+---------------------
+The affine matrix (A) is formatted in nibabel.affine matrix format following the standard orientation format above
+The affine matrix converts pixel coordinates (i, j, k) into world (NIfTI) coordinates (x, y, z)
+
+[x, y, z, 1]' = A * [i, j, k, 1]'
+
+e.g.:
+
+| x |       [  0.        ,   0.        ,   1.5       , -61.66970062]     | i |
+| y |   =   [ -0.3125    ,   0.        ,   0.        ,  50.85160065]  *  | j |
+| z |       [  0.        ,  -0.3125    ,   0.        ,  88.58760071]     | k |
+| 1 |       [  0.        ,   0.        ,   0.        ,   1.        ]     | 1 |
+
+
 @author: Arjun Desai
         (C) Stanford University, 2019
 """
 
+__all__ = ['get_transpose_inds', 'get_flip_inds', 'orientation_nib_to_standard', 'orientation_standard_to_nib',
+           'SAGITTAL', 'CORONAL', 'AXIAL']
+
 # Default Orientations
 SAGITTAL = ('SI', 'AP', 'LR')
+CORONAL = ('SI', 'LR', 'AP')
+AXIAL = ('AP', 'LR', 'SI')
 
 __EXPECTED_ORIENTATION_TUPLE_LEN__ = 3
 __SUPPORTED_ORIENTATIONS__ = ['LR', 'RL', 'PA', 'AP', 'IS', 'SI']
@@ -35,6 +55,7 @@ __ORIENTATIONS_TO_AXIS_ID__ = {'LR': 0, 'RL': 0,
 def __check_orientation__(orientation: tuple):
     """
     Check if orientation tuple defines a valid orientation
+
     :param orientation: a tuple defining image orientation using standard orientation format
 
     :raises ValueError if orientation tuple is invalid
@@ -57,8 +78,10 @@ def get_transpose_inds(curr_orientation: tuple, new_orientation: tuple):
     """
     Get indices for transposing orientation axes to format volume in different plane
     i.e. sagittal <--> axial, sagittal <--> coronal, coronal <--> axial
+
     :param curr_orientation: a tuple defining image orientation using standard orientation format
     :param new_orientation: a tuple defining image orientation using standard orientation format
+
     :return: a tuple of ints
     """
     __check_orientation__(curr_orientation)
@@ -78,6 +101,7 @@ def get_transpose_inds(curr_orientation: tuple, new_orientation: tuple):
 def get_flip_inds(curr_orientation: tuple, new_orientation: tuple):
     """
     Get indices for flipping orientation around axis - i.e. x --> -x, y --> -y, z --> -z
+
     :param curr_orientation: a tuple defining image orientation using standard orientation format
     :param new_orientation: a tuple defining image orientation using standard orientation format
 
@@ -103,27 +127,31 @@ def get_flip_inds(curr_orientation: tuple, new_orientation: tuple):
 
 
 # Nibabel to standard orientation conversion utils
-nib_to_standard_orientation_map = {'R': 'LR', 'L': 'RL',
-                                   'A': 'PA', 'P': 'AP',
-                                   'S': 'IS', 'I': 'SI'}
+__nib_to_standard_orientation_map__ = {'R': 'LR', 'L': 'RL',
+                                       'A': 'PA', 'P': 'AP',
+                                       'S': 'IS', 'I': 'SI'}
 
 
-def __orientation_nib_to_standard__(nib_orientation):
+def orientation_nib_to_standard(nib_orientation):
     """
     Convert Nibabel orientation to the standard orientation format
+
     :param nib_orientation: a RAS+ tuple orientation used by Nibabel
+
     :return: a tuple corresponding to the standard orientation format
     """
     orientation = []
     for symb in nib_orientation:
-        orientation.append(nib_to_standard_orientation_map[symb])
+        orientation.append(__nib_to_standard_orientation_map__[symb])
     return tuple(orientation)
 
 
-def __orientation_standard_to_nib__(orientation):
+def orientation_standard_to_nib(orientation):
     """
     Convert standard orientation format to Nibabel orientation
+
     :param orientation: a tuple corresponding to the standard orientation format
+
     :return: a RAS+ tuple orientation used by Nibabel
     """
     nib_orientation = []
