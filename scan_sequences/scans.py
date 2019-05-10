@@ -32,7 +32,7 @@ from utils import io_utils
 
 class ScanSequence(ABC):
     NAME = ''
-    __DEFAULT_SPLIT_BY = 'EchoNumbers'
+    __DEFAULT_SPLIT_BY__ = 'EchoNumbers'
 
     def __init__(self, dicom_path: str = None, load_path: str = None, **kwargs):
         """
@@ -47,7 +47,7 @@ class ScanSequence(ABC):
         In practice, only either dicom_path or load_path should be specified
         If both are specified, the dicom_path is used, and all information in load_path is ignored
         """
-        self.split_by = self.__DEFAULT_SPLIT_BY
+        self.split_by = self.__DEFAULT_SPLIT_BY__
         self.ignore_ext = False
 
         kwargs_str = ['split_by', 'ignore_ext']
