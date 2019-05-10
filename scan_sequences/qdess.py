@@ -8,7 +8,7 @@ from pydicom.tag import Tag
 from data_io import ImageDataFormat, MedicalVolume, NiftiReader
 from data_io import format_io_utils as fio_utils
 from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
-from models.model import SegModel
+from models.seg_model import SegModel
 from scan_sequences.scans import TargetSequence
 from tissues.tissue import Tissue
 from utils.cmd_line_utils import ActionWrapper

@@ -25,7 +25,7 @@ from data_io.format_io import ImageDataFormat
 from data_io.med_volume import MedicalVolume
 from data_io.nifti_io import NiftiReader
 from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
-from models.model import SegModel
+from models.seg_model import SegModel
 from tissues.tissue import Tissue
 from utils import io_utils
 

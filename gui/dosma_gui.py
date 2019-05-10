@@ -6,7 +6,7 @@ import Pmw
 
 from dosma import SEGMENTATION_WEIGHTS_DIR_KEY
 from gui.gui_utils import gui_utils as gutils
-from models.model import SegModel
+from models.seg_model import SegModel
 from tissues.tissue import Tissue
 
 

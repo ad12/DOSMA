@@ -13,7 +13,7 @@ from keras.models import Model
 
 from data_io import MedicalVolume
 from data_io.orientation import SAGITTAL
-from models.model import SegModel, whiten_volume
+from models.seg_model import SegModel, whiten_volume
 
 __all__ = ['Unet2D']
 

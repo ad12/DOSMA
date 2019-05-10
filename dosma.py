@@ -12,7 +12,7 @@ import file_constants as fc
 from data_io.format_io import ImageDataFormat
 from models.util import SUPPORTED_MODELS
 from models.util import get_model
-from models.model import SegModel
+from models.seg_model import SegModel
 from msk import knee
 from scan_sequences.cube_quant import CubeQuant
 from scan_sequences.mapss import Mapss
