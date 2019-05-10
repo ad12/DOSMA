@@ -8,9 +8,9 @@ Please read this guide carefully to avoid unnecessary coding overhead and to dep
 <!--ts-->
    * [Getting Started](#getting-started)
    * [Scan Sequences](#scan-sequences)
-      * [Separating Sequence Volumes](#separating-sequence-volumess)
+      * [Separating Sequences Into Volumes](#separating-sequences-into-volumes)
       * [Fitting Quantitative Values](#fitting-quantitative-values)
-      * [Scan Template](#template)
+      * [Scan Template](#scan-template)
 <!--te-->
 
 ## Getting Started
@@ -33,7 +33,7 @@ Thank you for adding analysis support for new scan sequences! Please follow the 
 2. Create a new file in the `scan_sequences` folder with your sequence name (use [snake_casing](https://en.wikipedia.org/wiki/Snake_case))
 3. Create a class in the file that inherits from `ScanSequence`, `TargetSequence`, or `NonTargetSequence`.
 
-#### Separating sequence volumes
+#### Separating Sequences Into Volumes
 In many quantitative sequences, multiple echos are acquired for each slice to perform some form of voxel-wise quantitative fitting/extrapolation. We define a **volume** as a 3D matrix with values from a single echo. Therefore, a *qDESS* sequence, which has two echos, has volumes.
 
 Each scan sequence implementation has a instance variable called `volumes`, in which the total pool of DICOM files are intelligently split into their respective volumes. For *qDESS*, the volumes instance variable would be a list with `len(volumes) = 2`. Sequences encoding for one echo will have the `volumes` field be a list with `len(volumes) = 1`.
