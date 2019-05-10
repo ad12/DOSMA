@@ -59,5 +59,5 @@ class MapssTest(util.ScanTest):
         self.__cmd_line_helper__(cmdline_str)
 
         # Generate T1rho map for femoral cartilage, tibial cartilage, and meniscus via command line
-        cmdline_str = '--l %s mapss --fc t2' % self.data_dirpath
+        cmdline_str = '--l %s mapss --fc t2 --mask %s' % (self.data_dirpath, MANUAL_SEGMENTATION_MASK_PATH)
         self.__cmd_line_helper__(cmdline_str)
