@@ -15,26 +15,25 @@ import numpy as np
 
 
 class SegModel(ABC):
-    """
-    Abstract wrapper for Keras model used for semantic segmentation
-    """
+    ALIASES = ['']  # each segmentation model must have an alias
+
     batch_size = defaults.DEFAULT_BATCH_SIZE
 
     def __init__(self, input_shape, weights_path):
         """
-        :param input_shape: tuple or list of tuples for initializing input(s) into Keras model
+        :param input_shape: tuple or list of tuples for initializing input(s) into model in format (height, width, channels)
         :param weights_path: filepath to weights used to initialize Keras model
         """
-        self.keras_model = self.__load_keras_model__(input_shape)
-        self.keras_model.load_weights(weights_path, by_name=True)
+        self.seg_model = self.build_model(input_shape, weights_path)
 
     @abstractmethod
-    def __load_keras_model__(self, input_shape):
-        """Generate a Keras model
+    def build_model(self, input_shape, weights_path):
+        """
+        Builds a segmentation model architecture and loads weights
 
-        :param input_shape: tuple or list of tuples for initializing input(s) into Keras model
-
-        :rtype: a Keras model
+        :param input_shape: Input shape of volume
+        :param weights_path:
+        :return: a segmentation model that can be used for segmenting tissues (a Keras/TF/PyTorch model)
         """
         pass
 
@@ -44,13 +43,53 @@ class SegModel(ABC):
 
         :param volume: A Medical Volume (height, width, slices)
 
-        :rtype: A Medical volume with volume as binarized (0,1) uint8 3D numpy array of shape volumes.shape
+        :return: A Medical volume or list of Medical Volumes with volume as binarized (0,1) uint8 3D numpy array of shape volumes.shape
 
         :raise ValueError if volumes is not 3D numpy array
         :raise ValueError if tissue is not a string or not in list permitted tissues
 
         """
         pass
+
+    def __preprocess_volume__(self, volume: np.ndarray):
+        """
+        Preprocess volume prior to putting as input into segmentation network
+        :param volume: a numpy array
+        :return: a preprocessed numpy array
+        """
+        return volume
+
+    def __postprocess_volume__(self, volume: np.ndarray):
+        """
+        Post-process logits (probabilities) or binarized mask
+        :param volume: a numpy array
+        :return: a postprocessed numpy array
+        """
+        return volume
+
+
+class KerasSegModel(SegModel):
+    """
+    Abstract wrapper for Keras model used for semantic segmentation
+    """
+
+    def build_model(self, input_shape, weights_path):
+        keras_model = self.__load_keras_model__(input_shape)
+        keras_model.load_weights(weights_path)
+
+        return keras_model
+
+    @abstractmethod
+    def __load_keras_model__(self, input_shape):
+        """
+        Build Keras architecture
+
+        :param input_shape: tuple or list of tuples for initializing input(s) into Keras model
+
+        :return: a Keras model
+        """
+        pass
+
 
 # ============================ Preprocessing utils ============================
 __VOLUME_DIMENSIONS__ = 3
