@@ -12,7 +12,7 @@ import file_constants as fc
 from data_io.format_io import ImageDataFormat
 from models.util import SUPPORTED_MODELS
 from models.util import get_model
-from models.model import SegModel
+from models.seg_model import SegModel
 from msk import knee
 from scan_sequences.cube_quant import CubeQuant
 from scan_sequences.mapss import Mapss
@@ -99,8 +99,8 @@ def add_segmentation_subparser(parser):
     parser.add_argument('--%s' % SEGMENTATION_WEIGHTS_DIR_KEY, type=str, nargs=1,
                         required=True,
                         help='path to directory with weights')
-    parser.add_argument('--%s' % SEGMENTATION_MODEL_KEY, choices=SUPPORTED_MODELS, nargs='?', default='unet2d',
-                        help='Model to use for segmentation. Choices: {%s}' % 'unet2d')
+    parser.add_argument('--%s' % SEGMENTATION_MODEL_KEY, choices=SUPPORTED_MODELS, nargs='?', default=SUPPORTED_MODELS[0],
+                        help='Model to use for segmentation. Choices: %s' % SUPPORTED_MODELS)
     parser.add_argument('--%s' % SEGMENTATION_BATCH_SIZE_KEY, metavar='B', type=int,
                         default=defaults.DEFAULT_BATCH_SIZE, nargs='?',
                         help='batch size for inference. Default: %d' % defaults.DEFAULT_BATCH_SIZE)

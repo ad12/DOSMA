@@ -4,9 +4,10 @@ from tkinter import IntVar
 
 import Pmw
 
-from dosma import SEGMENTATION_WEIGHTS_DIR_KEY
+from dosma import SEGMENTATION_WEIGHTS_DIR_KEY, SEGMENTATION_MODEL_KEY
 from gui.gui_utils import gui_utils as gutils
-from models.model import SegModel
+from models.seg_model import SegModel
+from models import SUPPORTED_MODELS
 from tissues.tissue import Tissue
 
 
@@ -107,6 +108,14 @@ class ScanReader():
 
 
 def add_segmentation_gui_parser(params, hbox, balloon):
+    # add model
+    param_name, param_type, param_default = SEGMENTATION_MODEL_KEY, str, None
+    param_var = gutils.convert_base_type_to_gui(param_name, param_type, param_default, hbox,
+                                                balloon=balloon, param_help='segmentation models',
+                                                options=SUPPORTED_MODELS)
+    params[param_name] = (param_var, param_type is not bool)
+
+    # add weights directory
     param_name, param_type, param_default = SEGMENTATION_WEIGHTS_DIR_KEY, str, None
     param_var = gutils.convert_base_type_to_gui(param_name, param_type, param_default, hbox,
                                                 balloon=balloon, param_help='path to weights directory')

@@ -116,7 +116,10 @@ def convert_base_type_to_gui(param_name, param_type, param_default, root, **kwar
     elif param_type is bool:
         hbox = format_bool_gui(root, param_name, type_var)
     elif param_type is str:
-        hbox = format_str_gui(root, param_name, type_var)
+        if 'options' in kwargs:
+            hbox = format_list_gui(root, param_name, type_var, **kwargs)
+        else:
+            hbox = format_str_gui(root, param_name, type_var)
 
     if balloon and param_help:
         balloon.bind(hbox, param_help)
@@ -170,6 +173,21 @@ def format_bool_gui(root, label, type_var, **kwargs):
     l.pack(side='left', anchor='nw', padx=5)
 
     t = tk.Checkbutton(hbox, variable=type_var)
+    t.pack(side='left', anchor='nw', padx=5)
+
+    return hbox
+
+
+def format_list_gui(root, label, type_var, **kwargs):
+    options = kwargs.get('options')
+
+    hbox = tk.Frame(root)
+    hbox.pack(side='top', anchor='nw')
+
+    l = tk.Label(hbox, text='%s: ' % label)
+    l.pack(side='left', anchor='nw', padx=5)
+
+    t = tk.OptionMenu(hbox, type_var, *options)
     t.pack(side='left', anchor='nw', padx=5)
 
     return hbox

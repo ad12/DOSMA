@@ -6,12 +6,15 @@ Functions for loading Keras models
 """
 import numpy as np
 
-from models.unet2d import Unet2D
+from models.oaiunet2d import OAIUnet2D
 
 __all__ = ['get_model', 'SUPPORTED_MODELS']
 
 # Network architectures currently supported
-SUPPORTED_MODELS = ['unet2d']
+__SUPPORTED_MODELS__ = [OAIUnet2D]
+
+# Initialize supported models for the command line
+SUPPORTED_MODELS = [x.ALIASES[0] for x in __SUPPORTED_MODELS__]
 
 
 def get_model(model_str, input_shape, weights_path):
@@ -21,7 +24,8 @@ def get_model(model_str, input_shape, weights_path):
     :param weights_path: filepath to weights used to initialize Keras model
     :return: a Keras model
     """
-    if model_str == 'unet2d':
-        return Unet2D(input_shape, weights_path)
+    for m in __SUPPORTED_MODELS__:
+        if model_str in m.ALIASES:
+            return m(input_shape, weights_path)
 
-    raise ValueError('%s model type not supported' % model_str)
+    raise LookupError('%s model type not supported' % model_str)

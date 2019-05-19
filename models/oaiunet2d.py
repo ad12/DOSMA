@@ -13,12 +13,18 @@ from keras.models import Model
 
 from data_io import MedicalVolume
 from data_io.orientation import SAGITTAL
-from models.model import SegModel, whiten_volume
+from models.seg_model import KerasSegModel, whiten_volume
 
-__all__ = ['Unet2D']
+__all__ = ['OAIUnet2D']
 
 
-class Unet2D(SegModel):
+class OAIUnet2D(KerasSegModel):
+    """
+    Model trained in Chaudhari et al. IWOAI 2018
+    Original Github: https://github.com/akshaysc/msk_segmentation
+    """
+    ALIASES = ['oai-unet2d', 'oai_unet2d']
+
     sigmoid_threshold = 0.5
 
     def __load_keras_model__(self, input_shape):
@@ -120,7 +126,7 @@ class Unet2D(SegModel):
         # reshape volumes to be (slice, x, y, 1)
         v = np.transpose(vol, (2, 0, 1))
         v = np.expand_dims(v, axis=-1)
-        model = self.keras_model
+        model = self.seg_model
 
         mask = model.predict(v, batch_size=self.batch_size)
         mask = (mask > self.sigmoid_threshold).astype(np.uint8)
