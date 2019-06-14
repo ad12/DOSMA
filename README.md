@@ -281,7 +281,7 @@ All use cases assume that the [current working directory](https://www.computerho
 
 ```bash
 # 1. Calculate 3D T2 map
-python -m dosma --d research_data/patient01/dess --s research_data/patient01/data --fc qdess t2
+python -m dosma --d research_data/patient01/dess --s research_data/patient01/data qdess --fc t2
 
 # 2. Segment femoral cartilage using root mean square (RMS) of two echo qDESS echos
 python -m dosma --d research_data/patient01/dess --s research_data/patient01/data qdess --fc segment --rms --weights_dir unet_weights
