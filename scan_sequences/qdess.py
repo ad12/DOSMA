@@ -8,7 +8,7 @@ from pydicom.tag import Tag
 from data_io import ImageDataFormat, MedicalVolume, NiftiReader
 from data_io import format_io_utils as fio_utils
 from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
-from models.model import SegModel
+from models.seg_model import SegModel
 from scan_sequences.scans import TargetSequence
 from tissues.tissue import Tissue
 from utils.cmd_line_utils import ActionWrapper
@@ -35,8 +35,8 @@ class QDess(TargetSequence):
     __T2_UPPER_BOUND__ = 100
     __T2_DECIMAL_PRECISION__ = 1  # 0.1 ms
 
-    def __init__(self, dicom_path, load_path=None):
-        super().__init__(dicom_path=dicom_path, load_path=load_path)
+    def __init__(self, dicom_path, load_path=None, **kwargs):
+        super().__init__(dicom_path=dicom_path, load_path=load_path, **kwargs)
 
     def __validate_scan__(self) -> bool:
         """Validate that the dicoms are of qDESS sequence
@@ -44,10 +44,11 @@ class QDess(TargetSequence):
         :return: a boolean
         """
         ref_dicom = self.ref_dicom
-        contains_expected_dicom_metadata = self.__GL_AREA_TAG__ in ref_dicom and self.__TG_TAG__ in ref_dicom
+        #contains_expected_dicom_metadata = self.__GL_AREA_TAG__ in ref_dicom and self.__TG_TAG__ in ref_dicom
         has_expected_num_echos = len(self.volumes) == self.__NUM_ECHOS__
 
-        return contains_expected_dicom_metadata & has_expected_num_echos
+        #return contains_expected_dicom_metadata & has_expected_num_echos
+        return has_expected_num_echos
 
     def segment(self, model: SegModel, tissue: Tissue, use_rms: bool = False):
         # Use first echo for segmentation
@@ -161,12 +162,14 @@ class QDess(TargetSequence):
 
         base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
 
-        self.volumes = []
-        # Load subvolumes from nifti file
-        for i in range(self.__NUM_ECHOS__):
-            nii_registration_filepath = os.path.join(base_load_dirpath, 'echo%d.nii.gz' % (i + 1))
-            subvolume = NiftiReader().load(nii_registration_filepath)
-            self.volumes.append(subvolume)
+        # if reading dicoms from dicom path failed
+        if not self.volumes:
+            self.volumes = []
+            # Load subvolumes from nifti file
+            for i in range(self.__NUM_ECHOS__):
+                nii_registration_filepath = os.path.join(base_load_dirpath, 'echo%d.nii.gz' % (i + 1))
+                subvolume = fio_utils.generic_load(nii_registration_filepath, expected_num_volumes=1)
+                self.volumes.append(subvolume)
 
     def calc_rms(self):
         """Calculate RMS of 2 echos

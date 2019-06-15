@@ -11,7 +11,7 @@ from data_io.format_io import ImageDataFormat
 from data_io.med_volume import MedicalVolume
 from data_io.nifti_io import NiftiReader
 from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
-from models.model import SegModel
+from models.seg_model import SegModel
 from scan_sequences.scans import TargetSequence
 from tissues.tissue import Tissue
 from utils import io_utils
@@ -38,11 +38,11 @@ __all__ = ['Mapss']
 class Mapss(TargetSequence):
     NAME = 'mapss'
 
-    def __init__(self, dicom_path=None, load_path=None):
+    def __init__(self, dicom_path=None, load_path=None, **kwargs):
         self.echo_times = None
         self.raw_volumes = None
 
-        super().__init__(dicom_path=dicom_path, load_path=load_path)
+        super().__init__(dicom_path=dicom_path, load_path=load_path, **kwargs)
 
         if dicom_path is not None:
             self.__intraregister__(self.volumes)
@@ -192,7 +192,7 @@ class Mapss(TargetSequence):
         # write echos
         for i in range(len(self.volumes)):
             nii_registration_filepath = os.path.join(base_save_dirpath, 'echo%d.nii.gz' % (i + 1))
-            filepath = fio_utils.convert_format_filename(nii_registration_filepath, data_format)
+            filepath = fio_utils.convert_image_data_format(nii_registration_filepath, data_format)
             self.volumes[i].save_volume(filepath, data_format=data_format)
 
     def load_data(self, base_load_dirpath):

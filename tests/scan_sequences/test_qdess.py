@@ -1,17 +1,13 @@
 import os
 import unittest
 
-import numpy as np
-import numpy.testing as npt
-import scipy.io as sio
-
 from models.util import get_model
 from scan_sequences.qdess import QDess
 from tissues.femoral_cartilage import FemoralCartilage
 from .. import util
 
 SEGMENTATION_WEIGHTS_FOLDER = os.path.join(os.path.dirname(__file__), '../../weights')
-SEGMENTATION_MODEL = 'unet2d'
+SEGMENTATION_MODEL = 'oai_unet2d'
 
 
 class QDessTest(util.ScanTest):
@@ -52,7 +48,7 @@ class QDessTest(util.ScanTest):
 
     def test_cmd_line(self):
         # Generate segmentation mask for femoral cartilage via command line
-        cmdline_str = '--d %s --s %s qdess --fc segment --weights_dir %s --model unet2d --use_rms' % (self.dicom_dirpath, self.data_dirpath, SEGMENTATION_WEIGHTS_FOLDER)
+        cmdline_str = '--d %s --s %s qdess --fc segment --weights_dir %s --model oai_unet2d --use_rms' % (self.dicom_dirpath, self.data_dirpath, SEGMENTATION_WEIGHTS_FOLDER)
         self.__cmd_line_helper__(cmdline_str)
 
         # Generate T2 map for femoral cartilage, tibial cartilage, and meniscus via command line

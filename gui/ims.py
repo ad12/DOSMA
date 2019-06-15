@@ -245,6 +245,8 @@ class DosmaFrame(tk.Frame):
     __DATA_KEY = 'data'  # Track option menu for dicom/load path
     __DATA_PATH_KEY = 'datapath'  # Track filepath associated with option menu
 
+    __IGNORE_EXTENSION_KEY = 'Ignore extension'
+
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
@@ -296,11 +298,14 @@ class DosmaFrame(tk.Frame):
             if not tissue_str:
                 raise ValueError('No tissues selected')
 
-            str_f = '--%s %s --s %s %s %s %s %s' % (source, self.manager[self.__DATA_PATH_KEY].get(), save_path,
-                                                    preferences_str,
-                                                    self.manager[self.__SCAN_KEY].get(),
-                                                    tissue_str,
-                                                    action_str)
+            ignore_ext = self.manager[self.__IGNORE_EXTENSION_KEY].get()
+
+            str_f = '--%s %s --s %s %s %s %s %s %s' % (source, self.manager[self.__DATA_PATH_KEY].get(), save_path,
+                                                       preferences_str,
+                                                       '--ignore_ext' if ignore_ext else '',
+                                                       self.manager[self.__SCAN_KEY].get(),
+                                                       tissue_str,
+                                                       action_str)
 
             print('CMD LINE INPUT: %s' % str_f)
 
@@ -316,6 +321,7 @@ class DosmaFrame(tk.Frame):
 
         self.manager[self.__SCAN_KEY].trace_add('write', self.__on_scan_change)
         self.manager[self.__SAVE_PATH_KEY] = tk.StringVar()
+        self.manager[self.__IGNORE_EXTENSION_KEY] = tk.BooleanVar()
 
     def __on_scan_change(self, *args):
         scan_id = self.manager[self.__SCAN_KEY].get()
@@ -379,6 +385,14 @@ class DosmaFrame(tk.Frame):
 
         hb.pack(side='top', anchor='nw')
 
+        hb = tk.Frame(self)
+
+        b = tk.Checkbutton(hb, text=self.__IGNORE_EXTENSION_KEY, variable=self.manager[self.__IGNORE_EXTENSION_KEY])
+        b.pack(side='left', anchor='nw', pady=10)
+        self.balloon.bind(b, "Ignore '.dcm' extension when loading dicoms")
+
+        hb.pack(side='top', anchor='nw')
+
     def __display_tissues(self):
         hb = tk.Frame(self)
         l = tk.Label(hb, text='Tissues:')
@@ -394,8 +408,6 @@ class DosmaFrame(tk.Frame):
             f.pack(side='left', anchor='nw')
 
         self.balloon.bind(l, 'Tissues to analyze')
-
-        self.balloon.bind(l, 'Select if Dicoms proceed in medial->lateral direction')
 
     def __base_gui(self):
         self.__display_data_loader()

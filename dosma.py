@@ -12,7 +12,7 @@ import file_constants as fc
 from data_io.format_io import ImageDataFormat
 from models.util import SUPPORTED_MODELS
 from models.util import get_model
-from models.model import SegModel
+from models.seg_model import SegModel
 from msk import knee
 from scan_sequences.cube_quant import CubeQuant
 from scan_sequences.mapss import Mapss
@@ -20,7 +20,7 @@ from scan_sequences.qdess import QDess
 from tissues.tissue import Tissue
 from utils.quant_vals import QuantitativeValues as QV
 from data_io.fig_format import SUPPORTED_VISUALIZATION_FORMATS
-
+import ast
 
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
@@ -29,6 +29,9 @@ DEBUG_KEY = 'debug'
 DICOM_KEY = 'dicom'
 SAVE_KEY = 'save'
 LOAD_KEY = 'load'
+IGNORE_EXT_KEY = 'ignore_ext'
+SPLIT_BY_KEY = 'split_by'
+
 DATA_FORMAT_KEY = 'format'
 VISUALIZATION_FORMAT_KEY = 'vis_format'
 GPU_KEY = 'gpu'
@@ -96,8 +99,8 @@ def add_segmentation_subparser(parser):
     parser.add_argument('--%s' % SEGMENTATION_WEIGHTS_DIR_KEY, type=str, nargs=1,
                         required=True,
                         help='path to directory with weights')
-    parser.add_argument('--%s' % SEGMENTATION_MODEL_KEY, choices=SUPPORTED_MODELS, nargs='?', default='unet2d',
-                        help='Model to use for segmentation. Choices: {%s}' % 'unet2d')
+    parser.add_argument('--%s' % SEGMENTATION_MODEL_KEY, choices=SUPPORTED_MODELS, nargs='?', default=SUPPORTED_MODELS[0],
+                        help='Model to use for segmentation. Choices: %s' % SUPPORTED_MODELS)
     parser.add_argument('--%s' % SEGMENTATION_BATCH_SIZE_KEY, metavar='B', type=int,
                         default=defaults.DEFAULT_BATCH_SIZE, nargs='?',
                         help='batch size for inference. Default: %d' % defaults.DEFAULT_BATCH_SIZE)
@@ -244,7 +247,10 @@ def handle_scan(vargin):
             scan = p_scan
             break
 
-    scan = scan(dicom_path=vargin[DICOM_KEY], load_path=vargin[LOAD_KEY])
+    scan = scan(dicom_path=vargin[DICOM_KEY], load_path=vargin[LOAD_KEY],
+                ignore_ext=vargin[IGNORE_EXT_KEY],
+                split_by=vargin[SPLIT_BY_KEY] if vargin[SPLIT_BY_KEY] else scan.__DEFAULT_SPLIT_BY__)
+
     tissues = vargin['tissues']
     scan_action = vargin[SCAN_ACTION_KEY]
 
@@ -289,6 +295,15 @@ def handle_scan(vargin):
 
     return scan
 
+def parse_dicom_tag_splitby(vargin_str):
+    if not vargin_str:
+        return vargin_str
+
+    try:
+        parsed_str = ast.literal_eval(vargin_str)
+        return parsed_str
+    except:
+        return vargin_str
 
 def parse_args(f_input=None):
     """Parse arguments given through command line (argv)
@@ -312,6 +327,12 @@ def parse_args(f_input=None):
     parser.add_argument('--s', '--%s' % SAVE_KEY, metavar='S', type=str, default=None, nargs='?',
                         dest=SAVE_KEY,
                         help='path to data directory to save to. Default: L/D')
+    parser.add_argument('--%s' % IGNORE_EXT_KEY, action='store_true', default=False,
+                        dest=IGNORE_EXT_KEY,
+                        help='ignore .dcm extension when loading dicoms. Default: False')
+    parser.add_argument('--%s' % SPLIT_BY_KEY, metavar='G', type=str, default=None, nargs='?',
+                        dest=SPLIT_BY_KEY,
+                        help='override dicom tag to split volumes by (eg. `EchoNumbers`)')
 
     supported_format_names = [data_format.name for data_format in ImageDataFormat]
     parser.add_argument('--df', '--%s' % DATA_FORMAT_KEY, metavar='F', type=str,
@@ -356,6 +377,8 @@ def parse_args(f_input=None):
 
     if gpu is not None:
         os.environ['CUDA_VISIBLE_DEVICES'] = gpu
+    if not gpu:
+        os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
     dicom_path = vargin[DICOM_KEY]
     load_path = vargin[LOAD_KEY]
@@ -375,6 +398,8 @@ def parse_args(f_input=None):
     vargin['tissues'] = tissues
     vargin[DATA_FORMAT_KEY] = ImageDataFormat[vargin[DATA_FORMAT_KEY]]
     defaults.DEFAULT_FIG_FORMAT = vargin[VISUALIZATION_FORMAT_KEY]
+
+    vargin[SPLIT_BY_KEY] = parse_dicom_tag_splitby(vargin[SPLIT_BY_KEY])
 
     args.func(vargin)
 
