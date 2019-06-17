@@ -7,9 +7,8 @@ Command line interface declaration for knee-related analyses
 
 import uuid
 
-from tissues import FemoralCartilage, TibialCartilage, Meniscus, Pa
+from tissues import FemoralCartilage, TibialCartilage, Meniscus, PatellarCartilage
 from utils.quant_vals import QuantitativeValues as QV
-from tissues.patellar_cartilage import PatellarCartilage
 
 KNEE_KEY = 'knee'
 MEDIAL_TO_LATERAL_KEY = 'ml'

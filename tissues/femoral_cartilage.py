@@ -33,7 +33,7 @@ __all__ = ['FemoralCartilage']
 
 
 class FemoralCartilage(Tissue):
-    """Handles analysis for femoral cartilage"""
+    """Handles analysis and visualization for femoral cartilage"""
     ID = 1
     STR_ID = 'fc'
     FULL_NAME = 'femoral cartilage'

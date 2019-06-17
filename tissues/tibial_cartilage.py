@@ -22,7 +22,7 @@ __all__ = ['TibialCartilage']
 
 
 class TibialCartilage(Tissue):
-    """Handles analysis for tibial cartilage"""
+    """Handles analysis and visualization for tibial cartilage"""
     ID = 2
     STR_ID = 'tc'
     FULL_NAME = 'tibial cartilage'

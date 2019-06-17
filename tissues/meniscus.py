@@ -22,7 +22,7 @@ __all__ = ['Meniscus']
 
 
 class Meniscus(Tissue):
-    """Handles analysis for meniscus"""
+    """Handles analysis and visualization for meniscus"""
     ID = 2
     STR_ID = 'men'
     FULL_NAME = 'meniscus'
