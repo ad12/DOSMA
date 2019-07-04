@@ -22,7 +22,7 @@ __all__ = ['Meniscus']
 
 
 class Meniscus(Tissue):
-    """Handles analysis for meniscus"""
+    """Handles analysis and visualization for meniscus"""
     ID = 2
     STR_ID = 'men'
     FULL_NAME = 'meniscus'
@@ -50,10 +50,9 @@ class Meniscus(Tissue):
         :param weights_dir: Directory to weights files
         :param medial_to_lateral: True or False, if false, then lateral to medial
         """
-        super().__init__(weights_dir=weights_dir)
+        super().__init__(weights_dir=weights_dir, medial_to_lateral=medial_to_lateral)
 
         self.regions_mask = None
-        self.medial_to_lateral = medial_to_lateral
 
     def unroll_axial(self, quant_map):
         mask = self.__mask__.volume

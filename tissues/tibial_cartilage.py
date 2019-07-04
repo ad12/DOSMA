@@ -22,7 +22,7 @@ __all__ = ['TibialCartilage']
 
 
 class TibialCartilage(Tissue):
-    """Handles analysis for meniscus"""
+    """Handles analysis and visualization for tibial cartilage"""
     ID = 2
     STR_ID = 'tc'
     FULL_NAME = 'tibial cartilage'
@@ -32,9 +32,8 @@ class TibialCartilage(Tissue):
 
     # Coronal Keys
     ANTERIOR_KEY = 0
-    CENTRAL_KEY = 1
     POSTERIOR_KEY = 1
-    CORONAL_KEYS = [ANTERIOR_KEY, CENTRAL_KEY, POSTERIOR_KEY]
+    CORONAL_KEYS = [ANTERIOR_KEY, POSTERIOR_KEY]
 
     # Saggital Keys
     MEDIAL_KEY = 0
@@ -51,10 +50,9 @@ class TibialCartilage(Tissue):
         :param weights_dir: Directory to weights files
         :param medial_to_lateral: True or False, if false, then lateral to medial
         """
-        super().__init__(weights_dir=weights_dir)
+        super().__init__(weights_dir=weights_dir, medial_to_lateral=medial_to_lateral)
 
         self.regions_mask = None
-        self.medial_to_lateral = medial_to_lateral
 
     def unroll_axial(self, quant_map):
         mask = self.__mask__.volume
@@ -167,8 +165,7 @@ class TibialCartilage(Tissue):
         self.split_regions(self.__mask__.volume)
 
     def __save_quant_data__(self, dirpath):
-        """Save quantitative data and 2D visualizations of meniscus
-
+        """Save quantitative data and 2D visualizations of tibial cartilage
         Check which quantitative values (T2, T1rho, etc) are defined for meniscus and analyze these
         1. Save 2D total, superficial, and deep visualization maps
         2. Save {'medial', 'lateral'}, {'anterior', 'posterior'}, {'superior', 'inferior', 'total'} data to excel
