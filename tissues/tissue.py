@@ -1,5 +1,6 @@
 import os
 from abc import ABC, abstractmethod
+import numpy as np
 
 from data_io import ImageDataFormat, MedicalVolume
 from data_io import format_io_utils as fio_utils
@@ -166,6 +167,7 @@ class Tissue(ABC):
         """
         return io_utils.check_dir(os.path.join(dirpath, '%s' % self.STR_ID))
 
+    # TODO (arjundd): Refactor get/set methods of mask to property
     def set_mask(self, mask):
         """Set mask for tissue
         :param mask: a MedicalVolume
@@ -186,3 +188,22 @@ class Tissue(ABC):
         #                          'Manually delete %s folder' % qv_new.NAME)
 
         self.quantitative_values.append(qv_new)
+
+    def __get_axis_bounds__(self, im: np.ndarray, ignore_nan=True, leave_buffer=False):
+        im_temp = im
+        axs = []
+        if ignore_nan:
+            im_temp = np.nan_to_num(im)
+
+        non_zero_elems = np.nonzero(im_temp)
+
+        for i in range(len(non_zero_elems)):
+            v_min = np.min(non_zero_elems[i])
+            v_max = np.max(non_zero_elems[i])
+            if leave_buffer:
+                v_min -= 5
+                v_max += 5
+
+            axs.append((v_min, v_max))
+
+        return axs
