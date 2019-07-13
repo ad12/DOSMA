@@ -1,0 +1,20 @@
+# Preferences for DOSMA
+
+# visualization preferences
+visualization:
+  matplotlib:
+    rcParams:
+      savefig.dpi: 200
+      font.size: 16
+      text_spacing: 1.5
+      savefig.format: 'png'
+
+# medical volume/data preferences
+data:
+  affine_decimal_precision: 4
+  scanner_origin_decimal_precision: 4
+  format: 'nifti'
+
+# segmentation preferences
+segmentation:
+  batch_size: 16
