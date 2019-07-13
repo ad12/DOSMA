@@ -6,6 +6,7 @@ from scipy import optimize as sop
 
 import defaults
 from data_io.med_volume import MedicalVolume
+from defaults import preferences
 
 __all__ = ['Fit', 'MonoExponentialFit']
 
@@ -90,7 +91,7 @@ class MonoExponentialFit(Fit):
         r_squared = r_squared.reshape(original_shape)
 
         # All accepted values must meet an Rsquared threshold of DEFAULT_R2_THRESHOLD
-        tc_map = map_unfiltered * (r_squared >= defaults.DEFAULT_R2_THRESHOLD)
+        tc_map = map_unfiltered * (r_squared >= preferences.fitting_r2_threshold)
 
         # Filter calculated values that are below limit bounds
         tc_map[tc_map <= self.bounds[0]] = np.nan

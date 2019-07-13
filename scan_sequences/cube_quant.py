@@ -7,7 +7,7 @@ from nipype.interfaces.elastix import Registration
 import file_constants as fc
 from data_io import ImageDataFormat, NiftiReader
 from data_io import format_io_utils as fio_utils
-from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
+from defaults import preferences
 from scan_sequences.scans import NonTargetSequence
 from tissues.tissue import Tissue
 from utils import io_utils
@@ -185,7 +185,7 @@ class CubeQuant(NonTargetSequence):
         return {'BASE': (ordered_spin_lock_time_indices[0], spin_lock_nii_files[0]),
                 'FILES': intraregistered_files}
 
-    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
+    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format):
         super().save_data(base_save_dirpath, data_format=data_format)
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
 

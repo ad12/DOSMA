@@ -3,24 +3,23 @@ Main file for scan pipeline - handle argparse
 """
 
 import argparse
+import ast
 import inspect
 import os
 import time
 
-import defaults
 import file_constants as fc
 from data_io.format_io import ImageDataFormat
+from defaults import preferences
+from models.seg_model import SegModel
 from models.util import SUPPORTED_MODELS
 from models.util import get_model
-from models.seg_model import SegModel
 from msk import knee
 from scan_sequences.cube_quant import CubeQuant
 from scan_sequences.mapss import Mapss
 from scan_sequences.qdess import QDess
 from tissues.tissue import Tissue
 from utils.quant_vals import QuantitativeValues as QV
-from data_io.fig_format import SUPPORTED_VISUALIZATION_FORMATS
-import ast
 
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
@@ -33,7 +32,6 @@ IGNORE_EXT_KEY = 'ignore_ext'
 SPLIT_BY_KEY = 'split_by'
 
 DATA_FORMAT_KEY = 'format'
-VISUALIZATION_FORMAT_KEY = 'vis_format'
 GPU_KEY = 'gpu'
 
 SCAN_KEY = 'scan'
@@ -102,8 +100,8 @@ def add_segmentation_subparser(parser):
     parser.add_argument('--%s' % SEGMENTATION_MODEL_KEY, choices=SUPPORTED_MODELS, nargs='?', default=SUPPORTED_MODELS[0],
                         help='Model to use for segmentation. Choices: %s' % SUPPORTED_MODELS)
     parser.add_argument('--%s' % SEGMENTATION_BATCH_SIZE_KEY, metavar='B', type=int,
-                        default=defaults.DEFAULT_BATCH_SIZE, nargs='?',
-                        help='batch size for inference. Default: %d' % defaults.DEFAULT_BATCH_SIZE)
+                        default=preferences.segmentation_batch_size, nargs='?',
+                        help='batch size for inference. Default: %d' % preferences.segmentation_batch_size)
 
     return parser
 
@@ -337,17 +335,10 @@ def parse_args(f_input=None):
     supported_format_names = [data_format.name for data_format in ImageDataFormat]
     parser.add_argument('--df', '--%s' % DATA_FORMAT_KEY, metavar='F', type=str,
                         dest=DATA_FORMAT_KEY,
-                        default=defaults.DEFAULT_OUTPUT_IMAGE_DATA_FORMAT.name, nargs='?',
+                        default=preferences.image_data_format.name, nargs='?',
                         choices=supported_format_names,
                         help='data format to store information in %s. Default: %s' % (str(supported_format_names),
-                                                                                      defaults.DEFAULT_OUTPUT_IMAGE_DATA_FORMAT.name))
-    parser.add_argument('--vf', '--%s' % VISUALIZATION_FORMAT_KEY, metavar='V', type=str,
-                        dest=VISUALIZATION_FORMAT_KEY,
-                        default=defaults.DEFAULT_FIG_FORMAT,
-                        nargs='?',
-                        choices=SUPPORTED_VISUALIZATION_FORMATS,
-                        help='visualization format %s. Default: %s' % (str(tuple(SUPPORTED_VISUALIZATION_FORMATS)),
-                                                                       defaults.DEFAULT_FIG_FORMAT))
+                                                                                      preferences.image_data_format.name))
 
     parser.add_argument('--%s' % GPU_KEY, metavar='G', type=str, default=None, nargs='?',
                         dest=GPU_KEY,
@@ -397,7 +388,6 @@ def parse_args(f_input=None):
     tissues = parse_tissues(vargin)
     vargin['tissues'] = tissues
     vargin[DATA_FORMAT_KEY] = ImageDataFormat[vargin[DATA_FORMAT_KEY]]
-    defaults.DEFAULT_FIG_FORMAT = vargin[VISUALIZATION_FORMAT_KEY]
 
     vargin[SPLIT_BY_KEY] = parse_dicom_tag_splitby(vargin[SPLIT_BY_KEY])
 

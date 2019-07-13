@@ -9,15 +9,16 @@ SegModel: Abstract wrapper for Keras model used for semantic segmentation
 
 from abc import ABC, abstractmethod
 
-import defaults
-from data_io.med_volume import MedicalVolume
 import numpy as np
+
+from data_io.med_volume import MedicalVolume
+from defaults import preferences
 
 
 class SegModel(ABC):
     ALIASES = ['']  # each segmentation model must have an alias
 
-    batch_size = defaults.DEFAULT_BATCH_SIZE
+    batch_size = preferences.segmentation_batch_size
 
     def __init__(self, input_shape, weights_path):
         """

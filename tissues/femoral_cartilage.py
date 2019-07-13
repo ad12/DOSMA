@@ -8,9 +8,8 @@ import numpy as np
 import pandas as pd
 import scipy.ndimage as sni
 
-import defaults
-from data_io import ImageDataFormat, MedicalVolume, savefig
-from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
+from data_io import ImageDataFormat, MedicalVolume
+from defaults import preferences
 from tissues.tissue import Tissue
 from utils import io_utils, img_utils
 from utils.geometry_utils import circle_fit, cart2pol
@@ -361,22 +360,18 @@ class FemoralCartilage(Tissue):
                 plt.clf()
 
                 upper_bound = BOUNDS[quant_val]
-                is_picture_written = False
 
-                if defaults.VISUALIZATION_HARD_BOUNDS:
+                if preferences.visualization_use_vmax:
+                    # Hard bounds - clipping
                     plt.imshow(data_map, cmap='jet', vmin=0.0, vmax=BOUNDS[quant_val])
-                    is_picture_written = True
-
-                if defaults.VISUALIZATION_SOFT_BOUNDS and not is_picture_written:
+                else:
+                    # Try to use a soft bounds
                     if np.sum(data_map <= upper_bound) == 0:
                         plt.imshow(data_map, cmap='jet', vmin=0.0, vmax=BOUNDS[quant_val])
-                        is_picture_written = True
                     else:
                         warnings.warn('%s: Pixel value exceeded upper bound (%0.1f). Using normalized scale.'
                                       % (quant_val.name, upper_bound))
-
-                if not is_picture_written:
-                    plt.imshow(data_map, cmap='jet')
+                        plt.imshow(data_map, cmap='jet')
 
                 plt.xlabel(xlabel)
                 plt.ylabel(ylabel)
@@ -384,7 +379,7 @@ class FemoralCartilage(Tissue):
                 clb = plt.colorbar()
                 clb.ax.set_title('(ms)')
 
-                savefig(filepath, dpi=defaults.DEFAULT_DPI)
+                plt.savefig(filepath)
 
                 # Save data
                 raw_data_filepath = os.path.join(q_name_dirpath, 'raw_data', q_map_data['raw_data_filename'])
@@ -393,7 +388,7 @@ class FemoralCartilage(Tissue):
         if len(dfs) > 0:
             io_utils.save_tables(os.path.join(dirpath, 'data.xlsx'), dfs, q_names)
 
-    def save_data(self, save_dirpath, data_format: ImageDataFormat = DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
+    def save_data(self, save_dirpath, data_format: ImageDataFormat = preferences.image_data_format):
         super().save_data(save_dirpath, data_format=data_format)
 
         save_dirpath = self.__save_dirpath__(save_dirpath)

@@ -18,7 +18,6 @@ from data_io.format_io import DataReader, DataWriter, ImageDataFormat
 from data_io.med_volume import MedicalVolume
 from defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 from utils import io_utils
-from typing import Union
 
 __all__ = ['DicomReader', 'DicomWriter']
 

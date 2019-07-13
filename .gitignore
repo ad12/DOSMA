@@ -39,3 +39,6 @@ debug_runs.py
 
 # ignore preferences file
 **/preferences.*
+
+# ignore all resources
+**/resources
