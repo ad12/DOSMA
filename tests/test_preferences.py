@@ -6,6 +6,7 @@ import os
 import unittest
 from shutil import copyfile
 
+import collections
 import nested_lookup
 
 from defaults import _Preferences
@@ -89,3 +90,38 @@ class TestPreferences(unittest.TestCase):
 
         assert a.config == b.config, "Configs must be the same dictionary."
         assert a.get('testing1/foo') == b.get('testing1/foo')
+
+
+class TestPreferencesSchema(unittest.TestCase):
+    def test_cmd_line_schema(self):
+        """Test that the command line schema for preferences is valid.
+
+        Checks:
+            - No overlapping aliases
+            - Fields ['aliases', 'type', 'nargs', 'help'] present
+            - All aliases are list and begin with '--'
+        """
+        a = PreferencesMock()
+        config_dict = a.cmd_line_flags()
+
+        # Check to see not duplicates in aliases
+        aliases = []
+        for k in config_dict.keys():
+            aliases.extend(config_dict[k]['aliases'])
+
+        alias_duplicates = [item for item, count in collections.Counter(aliases).items() if count > 1]
+        assert len(alias_duplicates) == 0, 'Duplicate aliases: %s' % alias_duplicates
+
+        for k in config_dict.keys():
+            arg = config_dict[k]
+            # Check to see each field has at least 4 primary keys
+            for field in ['aliases', 'type', 'nargs', 'help']:
+                assert field in arg.keys(), '`%s` missing from %s' % (field, k)
+
+            # Check type(aliases) is list
+            assert type(arg['aliases']) is list, 'Aliases must be list - k' % k
+
+            # Check to see each field has at least 4 primary keys
+            for alias in arg['aliases']:
+                assert alias.startswith('--'), 'Alias \'%s\' in %s must start with \'--\'' % (alias, k)
+

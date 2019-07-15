@@ -147,12 +147,12 @@ class TibialCartilage(Tissue):
         df = pd.DataFrame(pd_list, columns=pd_header)
         qv_name = map_type.name
         maps = [{'title': '%s superior' % qv_name, 'data': superior, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)',
-                 'filename': '%s_superior.png' % qv_name, 'raw_data_filename': '%s_superior.data' % qv_name},
+                 'filename': '%s_superior' % qv_name, 'raw_data_filename': '%s_superior.data' % qv_name},
                 {'title': '%s inferior' % qv_name, 'data': inferior, 'xlabel': 'Slice',
-                 'ylabel': 'Angle (binned)', 'filename': '%s_inferior.png' % qv_name,
+                 'ylabel': 'Angle (binned)', 'filename': '%s_inferior' % qv_name,
                  'raw_data_filename': '%s_inferior.data' % qv_name},
                 {'title': '%s total' % qv_name, 'data': total, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)',
-                 'filename': '%s_total.png' % qv_name,
+                 'filename': '%s_total' % qv_name,
                  'raw_data_filename': '%s_total.data' % qv_name}]
 
         self.__store_quant_vals__(maps, df, map_type)

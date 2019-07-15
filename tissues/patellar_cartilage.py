@@ -148,11 +148,11 @@ class PatellarCartilage(Tissue):
         df = pd.DataFrame(pd_list, columns=pd_header)
         qv_name = map_type.name
         maps = [{'title': '%s superficial' % qv_name, 'data': superficial, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)',
-                 'filename': '%s_superficial.png' % qv_name, 'raw_data_filename': '%s_superficial.data' % qv_name},
+                 'filename': '%s_superficial' % qv_name, 'raw_data_filename': '%s_superficial.data' % qv_name},
                 {'title': '%s deep' % qv_name, 'data': deep, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)',
-                 'filename': '%s_deep.png' % qv_name, 'raw_data_filename': '%s_deep.data' % qv_name},
+                 'filename': '%s_deep' % qv_name, 'raw_data_filename': '%s_deep.data' % qv_name},
                 {'title': '%s total' % qv_name, 'data': total, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)',
-                 'filename': '%s_total.png' % qv_name, 'raw_data_filename': '%s_total.data' % qv_name}]
+                 'filename': '%s_total' % qv_name, 'raw_data_filename': '%s_total.data' % qv_name}]
 
         self.__store_quant_vals__(maps, df, map_type)
 

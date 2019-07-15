@@ -3,13 +3,13 @@ from tkinter.ttk import Combobox
 
 from tensorflow.python.client import device_lib
 
-from dosma import GPU_KEY, DATA_FORMAT_KEY, VISUALIZATION_FORMAT_KEY
+from dosma import GPU_KEY, DATA_FORMAT_KEY
 
 CUDA_DEVICES_STR = "CUDA_VISIBLE_DEVICES"
 from data_io.format_io import ImageDataFormat
 from data_io.fig_format import SUPPORTED_VISUALIZATION_FORMATS
 
-import defaults
+from defaults import preferences
 import Pmw
 
 SUPPORTED_IMAGE_DATA_FORMATS = [x for x in ImageDataFormat]
@@ -54,7 +54,7 @@ class PreferencesManager(metaclass=Singleton):
 
     def __init_visualization_format(self):
         str_var = tk.StringVar()
-        str_var.set(defaults.DEFAULT_FIG_FORMAT)
+        str_var.set(preferences.get('savefig.format'))
         self.gui_manager['visualization_format'] = str_var
 
     @property
@@ -147,11 +147,9 @@ class PreferencesManager(metaclass=Singleton):
     def get_cmd_line_str(self):
         gpus = self.gpus
         data_format = self.data_format.name
-        visualization_format = self.visualization_format
         cmd_line_str = ''
         if gpus:
             cmd_line_str += '--%s %s ' % (GPU_KEY, gpus)
         cmd_line_str += '--%s %s ' % (DATA_FORMAT_KEY, data_format)
-        cmd_line_str += '--%s %s ' % (VISUALIZATION_FORMAT_KEY, visualization_format)
 
         return cmd_line_str.strip()

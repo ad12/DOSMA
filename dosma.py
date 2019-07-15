@@ -31,7 +31,6 @@ LOAD_KEY = 'load'
 IGNORE_EXT_KEY = 'ignore_ext'
 SPLIT_BY_KEY = 'split_by'
 
-DATA_FORMAT_KEY = 'format'
 GPU_KEY = 'gpu'
 
 SCAN_KEY = 'scan'
@@ -262,7 +261,7 @@ def handle_scan(vargin):
     action = p_action
 
     if action is None:
-        scan.save_data(vargin[SAVE_KEY], data_format=vargin[DATA_FORMAT_KEY])
+        scan.save_data(vargin[SAVE_KEY], data_format=preferences.image_data_format)
         return
 
     func_signature = inspect.signature(action)
@@ -287,9 +286,9 @@ def handle_scan(vargin):
 
         scan.__getattribute__(action.__name__)(**param_dict)
 
-    scan.save_data(vargin[SAVE_KEY], data_format=vargin[DATA_FORMAT_KEY])
+    scan.save_data(vargin[SAVE_KEY], data_format=preferences.image_data_format)
     for tissue in tissues:
-        tissue.save_data(vargin[SAVE_KEY], data_format=vargin[DATA_FORMAT_KEY])
+        tissue.save_data(vargin[SAVE_KEY], data_format=preferences.image_data_format)
 
     return scan
 
@@ -332,17 +331,17 @@ def parse_args(f_input=None):
                         dest=SPLIT_BY_KEY,
                         help='override dicom tag to split volumes by (eg. `EchoNumbers`)')
 
-    supported_format_names = [data_format.name for data_format in ImageDataFormat]
-    parser.add_argument('--df', '--%s' % DATA_FORMAT_KEY, metavar='F', type=str,
-                        dest=DATA_FORMAT_KEY,
-                        default=preferences.image_data_format.name, nargs='?',
-                        choices=supported_format_names,
-                        help='data format to store information in %s. Default: %s' % (str(supported_format_names),
-                                                                                      preferences.image_data_format.name))
-
     parser.add_argument('--%s' % GPU_KEY, metavar='G', type=str, default=None, nargs='?',
                         dest=GPU_KEY,
                         help='gpu id. Default: None')
+
+    # Add preferences
+    preferences_flags = preferences.cmd_line_flags()
+    for flag in preferences_flags.keys():
+        argparse_kwargs = preferences_flags[flag]
+        argparse_kwargs['dest'] = flag
+        aliases = argparse_kwargs.pop('aliases', None)
+        parser.add_argument(aliases[0], **argparse_kwargs)
 
     subparsers = parser.add_subparsers(help='sub-command help', dest=SCAN_KEY)
     add_scans(subparsers)
@@ -371,6 +370,10 @@ def parse_args(f_input=None):
     if not gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
+    # parse and update preferences
+    for flag in preferences_flags.keys():
+        preferences.set(flag, vargin[flag])
+
     dicom_path = vargin[DICOM_KEY]
     load_path = vargin[LOAD_KEY]
 
@@ -387,7 +390,6 @@ def parse_args(f_input=None):
 
     tissues = parse_tissues(vargin)
     vargin['tissues'] = tissues
-    vargin[DATA_FORMAT_KEY] = ImageDataFormat[vargin[DATA_FORMAT_KEY]]
 
     vargin[SPLIT_BY_KEY] = parse_dicom_tag_splitby(vargin[SPLIT_BY_KEY])
 

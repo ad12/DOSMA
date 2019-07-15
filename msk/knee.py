@@ -9,6 +9,7 @@ import uuid
 
 from tissues import FemoralCartilage, TibialCartilage, Meniscus, PatellarCartilage
 from utils.quant_vals import QuantitativeValues as QV
+from defaults import preferences
 
 KNEE_KEY = 'knee'
 MEDIAL_TO_LATERAL_KEY = 'ml'
@@ -16,7 +17,6 @@ TISSUES_KEY = 'tissues'
 LOAD_KEY = 'load'
 SAVE_KEY = 'save'
 PID_KEY = 'pid'
-DATA_FORMAT_KEY = 'format'
 
 SUPPORTED_TISSUES = [FemoralCartilage, Meniscus, TibialCartilage, PatellarCartilage]
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
@@ -91,6 +91,6 @@ def handle_knee(vargin):
             tissue.calc_quant_vals()
 
     for tissue in tissues:
-        tissue.save_data(vargin[SAVE_KEY], data_format=vargin[DATA_FORMAT_KEY])
+        tissue.save_data(vargin[SAVE_KEY], data_format=preferences.image_data_format)
 
     return tissues

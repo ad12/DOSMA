@@ -307,12 +307,12 @@ class FemoralCartilage(Tissue):
         df = pd.DataFrame(pd_list, columns=pd_header)
         qv_name = map_type.name
         maps = [{'title': '%s deep' % qv_name, 'data': deep, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)',
-                 'filename': '%s_deep.png' % qv_name, 'raw_data_filename': '%s_deep.data' % qv_name},
+                 'filename': '%s_deep' % qv_name, 'raw_data_filename': '%s_deep.data' % qv_name},
                 {'title': '%s superficial' % qv_name, 'data': superficial, 'xlabel': 'Slice',
-                 'ylabel': 'Angle (binned)', 'filename': '%s_superficial.png' % qv_name,
+                 'ylabel': 'Angle (binned)', 'filename': '%s_superficial' % qv_name,
                  'raw_data_filename': '%s_superficial.data' % qv_name},
                 {'title': '%s total' % qv_name, 'data': total, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)',
-                 'filename': '%s_total.png' % qv_name,
+                 'filename': '%s_total' % qv_name,
                  'raw_data_filename': '%s_total.data' % qv_name}]
 
         self.__store_quant_vals__(maps, df, map_type)
@@ -405,7 +405,7 @@ class FemoralCartilage(Tissue):
         labels = ['medial posterior', 'medial central', 'medial anterior',
                   'lateral posterior', 'lateral central', 'lateral anterior']
         plt_dict = {'labels': labels, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)', 'title': 'Unrolled Regions'}
-        img_utils.write_regions(os.path.join(save_dirpath, 'region_map.png'), joined_mask, plt_dict=plt_dict)
+        img_utils.write_regions(os.path.join(save_dirpath, 'region_map'), joined_mask, plt_dict=plt_dict)
 
     def __binarize_region_mask__(self, region_mask, roi):
         return np.asarray(np.bitwise_and(region_mask, roi) == roi, dtype=np.bool)

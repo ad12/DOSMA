@@ -7,11 +7,24 @@ import os
 
 import nested_lookup
 import yaml
-
-from data_io.format_io import ImageDataFormat
+import matplotlib
 
 # Parse preferences file
 __preferences_filepath__ = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources/preferences.yml')
+_preferences_cmd_line_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                              'resources/preferences_cmd_line_schema.yml')
+
+
+# Default rounding for I/O (dicom, nifti, etc) - DO NOT CHANGE
+AFFINE_DECIMAL_PRECISION = 4
+SCANNER_ORIGIN_DECIMAL_PRECISION = 4
+
+DEFAULT_FONT_SIZE = 16
+DEFAULT_TEXT_SPACING = DEFAULT_FONT_SIZE * 0.01
+
+DEFAULT_FIG_FORMAT = 'png'
+
+from data_io.format_io import ImageDataFormat
 
 
 class _Preferences():
@@ -25,6 +38,7 @@ class _Preferences():
     """
     _preferences_filepath = __preferences_filepath__
     __config = {}
+    __key_list = []
 
     def __init__(self):
         # Load config and set information if config has not been initialized
@@ -33,6 +47,23 @@ class _Preferences():
                 self.__config = yaml.load(f)
             matplotlib.use(self.__config['visualization']['matplotlib']['rcParams']['backend'])
             matplotlib.rcParams.update(self.__config['visualization']['matplotlib']['rcParams'])
+
+            # Store all preference keys.
+            self.__key_list = self._unroll_keys(self.config, '')
+
+    def _unroll_keys(self, subdict: dict, prefix: str) -> list:
+        """Recursive method to unroll keys."""
+        pref_keys = []
+        keys = subdict.keys()
+        for k in keys:
+            prefix_or_key = '%s/%s' % (prefix, k)
+            val = subdict[k]
+            if type(val) is dict:
+                pref_keys.extend(self._unroll_keys(val, prefix_or_key))
+            else:
+                pref_keys.append(prefix_or_key)
+
+        return pref_keys
 
     @staticmethod
     def _get_prefixes(prefix: str = ''):
@@ -57,17 +88,19 @@ class _Preferences():
 
         :return: the preference.
         """
-        return self.__get(key, prefix)[0]
+        return self.__get(self.__config, key, prefix)[0]
 
-    def __get(self, key, prefix=''):
+    def __get(self, b_dict: dict, key: str, prefix: str=''):
         """Get preference.
+        :param b_dict: Dictionary to search.
+        :type b_dict: dict
         :param key: Preference to peek. Can be full path preference.
         :type key: str
         :param prefix: prefix defining which sub-config to search (e.g. 'visualization/rcParams), defaults to ''
         :type prefix: str, optional
 
         :return: the preference value, the subdictionary to search
-        :rtype tuple of lenght 2
+        :rtype tuple of length 2
         """
         p_keys = self._get_prefixes(key)
         key = p_keys[-1]
@@ -76,14 +109,14 @@ class _Preferences():
         prefixes = list(self._get_prefixes(prefix))
         prefixes.extend(k_prefixes)
 
-        subdict = self.__config
+        subdict = b_dict
         for p in prefixes:
             subdict = subdict[p]
 
         num_keys = nested_lookup.get_occurrence_of_key(subdict, key)
 
         if num_keys == 0:
-            raise KeyError('Key not found in prefix \'%s\'' % key)
+            raise KeyError('Key not \'%s \' found in prefix \'%s\'' % (key, prefix))
         if num_keys > 1:
             raise KeyError('Multiple keys \'%s \'found in prefix \'%s\'. Provide a more specific prefix.' % (key,
                                                                                                              prefix))
@@ -101,7 +134,7 @@ class _Preferences():
 
         :return: the preference.
         """
-        val, subdict = self.__get(key, prefix)
+        val, subdict = self.__get(self.__config, key, prefix)
 
         # type of new value has to be the same type as old value
         if type(value) != type(val):
@@ -124,21 +157,21 @@ class _Preferences():
         """Get preferences configuration."""
         return self.__config
 
-    # Make certain properties easily accessible through this class
+    # Make certain properties easily accessible through this class.
     @property
-    def segmentation_batch_size(self):
+    def segmentation_batch_size(self) -> int:
         return self.get('/segmentation/batch.size')
 
     @property
-    def visualization_use_vmax(self):
+    def visualization_use_vmax(self) -> bool:
         return self.get('/visualization/use.vmax')
 
     @property
-    def mask_dilation_rate(self):
+    def mask_dilation_rate(self) -> float:
         return self.get('/registration/mask/dilation.rate')
 
     @property
-    def mask_dilation_threshold(self):
+    def mask_dilation_threshold(self) -> float:
         return self.get('/registration/mask/dilation.threshold')
 
     @property
@@ -149,18 +182,34 @@ class _Preferences():
     def image_data_format(self):
         return ImageDataFormat[self.get('/data/format')]
 
+    def cmd_line_flags(self) -> dict:
+        """Provide command line flags for changing preferences via command line.
+        Not all preferences are listed here. Only those that should easily be set.
+        All default values will be based on the current state of preferences, not the static state specified in yaml
+        file.
+
+        :return Preference keys with corresponding argparse kwarg dict
+        :rtype: A dict of dicts.
+        """
+        with open(_preferences_cmd_line_filepath) as f:
+            cmd_line_config = yaml.load(f)
+
+        cmd_line_dict = {}
+        for k in self.__key_list:
+            try:
+                argparse_kwargs, _ = self.__get(cmd_line_config, k)
+            except KeyError:
+                continue
+
+            argparse_kwargs['default'] = self.get(k)
+            argparse_kwargs['type'] = eval(argparse_kwargs['type'])
+            cmd_line_dict[k] = argparse_kwargs
+
+        return cmd_line_dict
+
+    def __str__(self):
+        return str(self.__config)
+
 
 preferences = _Preferences()
 
-# Default rounding for I/O (dicom, nifti, etc) - DO NOT CHANGE
-AFFINE_DECIMAL_PRECISION = 4
-SCANNER_ORIGIN_DECIMAL_PRECISION = 4
-
-DEFAULT_FONT_SIZE = 16
-DEFAULT_TEXT_SPACING = DEFAULT_FONT_SIZE * 0.01
-
-import matplotlib.pyplot as plt
-
-plt.rcParams.update({'font.size': DEFAULT_FONT_SIZE})
-
-DEFAULT_FIG_FORMAT = 'png'
