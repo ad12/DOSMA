@@ -3,11 +3,10 @@ from tkinter.ttk import Combobox
 
 from tensorflow.python.client import device_lib
 
-from dosma import GPU_KEY, DATA_FORMAT_KEY
+from dosma import GPU_KEY
 
 CUDA_DEVICES_STR = "CUDA_VISIBLE_DEVICES"
-from data_io.format_io import ImageDataFormat
-from data_io.fig_format import SUPPORTED_VISUALIZATION_FORMATS
+from data_io.format_io import ImageDataFormat, SUPPORTED_VISUALIZATION_FORMATS
 
 from defaults import preferences
 import Pmw
@@ -15,7 +14,7 @@ import Pmw
 SUPPORTED_IMAGE_DATA_FORMATS = [x for x in ImageDataFormat]
 LARGE_FONT = ("Verdana", 18)
 
-
+# TODO: Refactor to read from the preferences command line schema
 class Singleton(type):
     _instances = {}
 
@@ -139,6 +138,11 @@ class PreferencesManager(metaclass=Singleton):
         for f in hboxes:
             f.pack(side='top', anchor='w', pady=10)
 
+        # Save button to save preferences
+
+    def __save_preferences(self):
+        preferences.save()
+
     def show_window(self, parent):
         window = tk.Toplevel(parent)
         self.frame = window
@@ -146,10 +150,8 @@ class PreferencesManager(metaclass=Singleton):
 
     def get_cmd_line_str(self):
         gpus = self.gpus
-        data_format = self.data_format.name
         cmd_line_str = ''
         if gpus:
             cmd_line_str += '--%s %s ' % (GPU_KEY, gpus)
-        cmd_line_str += '--%s %s ' % (DATA_FORMAT_KEY, data_format)
 
         return cmd_line_str.strip()

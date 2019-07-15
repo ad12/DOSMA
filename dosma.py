@@ -9,7 +9,6 @@ import os
 import time
 
 import file_constants as fc
-from data_io.format_io import ImageDataFormat
 from defaults import preferences
 from models.seg_model import SegModel
 from models.util import SUPPORTED_MODELS
@@ -341,7 +340,8 @@ def parse_args(f_input=None):
         argparse_kwargs = preferences_flags[flag]
         argparse_kwargs['dest'] = flag
         aliases = argparse_kwargs.pop('aliases', None)
-        parser.add_argument(aliases[0], **argparse_kwargs)
+        name = argparse_kwargs.pop('name', None)
+        parser.add_argument(*aliases, **argparse_kwargs)
 
     subparsers = parser.add_subparsers(help='sub-command help', dest=SCAN_KEY)
     add_scans(subparsers)

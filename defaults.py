@@ -5,9 +5,9 @@ This is the first file that is imported from this software - all initialization 
 """
 import os
 
+import matplotlib
 import nested_lookup
 import yaml
-import matplotlib
 
 # Parse preferences file
 __preferences_filepath__ = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources/preferences.yml')

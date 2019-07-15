@@ -2,11 +2,11 @@
 Files tested: defaults.py
 """
 
+import collections
 import os
 import unittest
 from shutil import copyfile
 
-import collections
 import nested_lookup
 
 from defaults import _Preferences
@@ -115,7 +115,7 @@ class TestPreferencesSchema(unittest.TestCase):
         for k in config_dict.keys():
             arg = config_dict[k]
             # Check to see each field has at least 4 primary keys
-            for field in ['aliases', 'type', 'nargs', 'help']:
+            for field in ['name', 'aliases', 'type', 'nargs', 'help']:
                 assert field in arg.keys(), '`%s` missing from %s' % (field, k)
 
             # Check type(aliases) is list

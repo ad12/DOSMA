@@ -8,7 +8,9 @@ import enum
 import os
 from abc import ABC, abstractmethod
 
-__all__ = ['ImageDataFormat', 'DataReader', 'DataWriter']
+__all__ = ['ImageDataFormat', 'DataReader', 'DataWriter', 'SUPPORTED_VISUALIZATION_FORMATS']
+
+SUPPORTED_VISUALIZATION_FORMATS = ('png', 'eps', 'pdf', 'jpeg', 'pgf', 'ps', 'raw', 'rgba', 'svg', 'svgz', 'tiff')
 
 
 class ImageDataFormat(enum.Enum):
