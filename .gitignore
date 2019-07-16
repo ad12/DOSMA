@@ -15,7 +15,6 @@
 **/temp
 **/ex_patient
 
-
 # ignore local files
 libANNlib.dylib
 debug_runs.py
