@@ -7,13 +7,18 @@ import os
 
 import matplotlib
 import nested_lookup
+import shutil
 import yaml
 
 # Parse preferences file
-__preferences_filepath__ = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources/preferences.yml')
-_preferences_cmd_line_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                              'resources/preferences_cmd_line_schema.yml')
+_file_dirpath = os.path.dirname(os.path.abspath(__file__))
+_internal_preferences_template_filepath = os.path.join(_file_dirpath, 'resources/templates/.preferences.yml')
+_preferences_cmd_line_filepath = os.path.join(_file_dirpath, 'resources/templates/.preferences_cmd_line_schema.yml')
 
+__preferences_filepath__ = os.path.join(_file_dirpath, 'resources/preferences.yml')
+
+if not os.path.isfile(__preferences_filepath__):
+    shutil.copyfile(_internal_preferences_template_filepath, __preferences_filepath__)
 
 # Default rounding for I/O (dicom, nifti, etc) - DO NOT CHANGE
 AFFINE_DECIMAL_PRECISION = 4
@@ -138,7 +143,10 @@ class _Preferences():
 
         # type of new value has to be the same type as old value
         if type(value) != type(val):
-            raise TypeError('Value of type %s, expected type %s' % (type(value), type(val)))
+            try:
+                value = type(val)(value)
+            except (ValueError, TypeError) as e:
+                raise TypeError('could not convert %s to %s: %s' % (type(value), type(val), value))
 
         p_keys = self._get_prefixes(key)
         key = p_keys[-1]
