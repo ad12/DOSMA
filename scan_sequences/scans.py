@@ -17,14 +17,13 @@ import scipy.ndimage as sni
 from natsort import natsorted
 from nipype.interfaces.elastix import Registration, ApplyWarp
 
-import defaults
 import file_constants as fc
 from data_io import format_io_utils as fio_utils
 from data_io.dicom_io import DicomReader
 from data_io.format_io import ImageDataFormat
 from data_io.med_volume import MedicalVolume
 from data_io.nifti_io import NiftiReader
-from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
+from defaults import preferences
 from models.seg_model import SegModel
 from tissues.tissue import Tissue
 from utils import io_utils
@@ -143,7 +142,7 @@ class ScanSequence(ABC):
         """
         return '%s.data' % self.NAME
 
-    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
+    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format):
         """Save data in base_save_dirpath
         Serializes variables specified in by self.__serializable_variables__()
 
@@ -359,8 +358,8 @@ class NonTargetSequence(ScanSequence):
         return subvolumes_dict
 
     def __dilate_mask__(self, mask_path: str, temp_path: str,
-                        dil_rate: float = defaults.DEFAULT_MASK_DIL_RATE,
-                        dil_threshold: float = defaults.DEFAULT_MASK_DIL_THRESHOLD):
+                        dil_rate: float = preferences.mask_dilation_rate,
+                        dil_threshold: float = preferences.mask_dilation_threshold):
         """Dilate mask using gaussian blur and write to disk to use with elastix
 
         :param mask_path: path to mask to use to use as focus points for registration, mask must be binary

@@ -7,7 +7,7 @@ from tissues.femoral_cartilage import FemoralCartilage
 from .. import util
 
 SEGMENTATION_WEIGHTS_FOLDER = os.path.join(os.path.dirname(__file__), '../../weights')
-SEGMENTATION_MODEL = 'unet2d'
+SEGMENTATION_MODEL = 'oai-unet2d'
 
 # Path to manual segmentation mask
 MANUAL_SEGMENTATION_MASK_PATH = os.path.join(util.get_scan_dirpath(Mapss.NAME), 'misc/fc_manual.nii.gz')

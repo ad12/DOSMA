@@ -4,7 +4,6 @@ Functions for loading Keras models
 @author: Arjun Desai
         (C) Stanford University, 2019
 """
-import numpy as np
 
 from models.oaiunet2d import OAIUnet2D
 

@@ -1,14 +1,13 @@
 import os
 import re
+import shutil
 import unittest
-from abc import abstractmethod
 
 import natsort
 
 from data_io.format_io import ImageDataFormat
 from dosma import SUPPORTED_SCAN_TYPES, parse_args
 from utils import io_utils
-import shutil
 
 UNITTEST_DATA_PATH = os.path.join(os.path.dirname(__file__), '../unittest-data/')
 UNITTEST_SCANDATA_PATH = os.path.join(UNITTEST_DATA_PATH, 'scans')

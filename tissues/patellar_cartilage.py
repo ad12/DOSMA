@@ -1,18 +1,17 @@
-from tissues.tissue import Tissue
-import scipy.ndimage as sni
-import numpy as np
-from data_io.med_volume import MedicalVolume
-import pandas as pd
-import matplotlib.pyplot as plt
-from utils.quant_vals import QuantitativeValues
-from utils import io_utils
-import warnings
-import defaults
 import os
+import warnings
 from copy import deepcopy
-from data_io import ImageDataFormat
-from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scipy.ndimage as sni
+
+import defaults
+from defaults import preferences
+from tissues.tissue import Tissue
+from utils import io_utils
+from utils.quant_vals import QuantitativeValues
 
 # milliseconds
 BOUNDS = {QuantitativeValues.T2: 60.0,
@@ -149,11 +148,11 @@ class PatellarCartilage(Tissue):
         df = pd.DataFrame(pd_list, columns=pd_header)
         qv_name = map_type.name
         maps = [{'title': '%s superficial' % qv_name, 'data': superficial, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)',
-                 'filename': '%s_superficial.png' % qv_name, 'raw_data_filename': '%s_superficial.data' % qv_name},
+                 'filename': '%s_superficial' % qv_name, 'raw_data_filename': '%s_superficial.data' % qv_name},
                 {'title': '%s deep' % qv_name, 'data': deep, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)',
-                 'filename': '%s_deep.png' % qv_name, 'raw_data_filename': '%s_deep.data' % qv_name},
+                 'filename': '%s_deep' % qv_name, 'raw_data_filename': '%s_deep.data' % qv_name},
                 {'title': '%s total' % qv_name, 'data': total, 'xlabel': 'Slice', 'ylabel': 'Angle (binned)',
-                 'filename': '%s_total.png' % qv_name, 'raw_data_filename': '%s_total.data' % qv_name}]
+                 'filename': '%s_total' % qv_name, 'raw_data_filename': '%s_total.data' % qv_name}]
 
         self.__store_quant_vals__(maps, df, map_type)
 
@@ -197,22 +196,17 @@ class PatellarCartilage(Tissue):
                 plt.clf()
 
                 upper_bound = BOUNDS[quant_val]
-                is_picture_written = False
-
-                if defaults.VISUALIZATION_HARD_BOUNDS:
+                if preferences.visualization_use_vmax:
+                    # Hard bounds - clipping
                     plt.imshow(data_map, cmap='jet', vmin=0.0, vmax=BOUNDS[quant_val])
-                    is_picture_written = True
-
-                if defaults.VISUALIZATION_SOFT_BOUNDS and not is_picture_written:
+                else:
+                    # Try to use a soft bounds
                     if np.sum(data_map <= upper_bound) == 0:
                         plt.imshow(data_map, cmap='jet', vmin=0.0, vmax=BOUNDS[quant_val])
-                        is_picture_written = True
                     else:
                         warnings.warn('%s: Pixel value exceeded upper bound (%0.1f). Using normalized scale.'
                                       % (quant_val.name, upper_bound))
-
-                if not is_picture_written:
-                    plt.imshow(data_map, cmap='jet')
+                        plt.imshow(data_map, cmap='jet')
 
                 plt.xlabel(xlabel)
                 plt.ylabel(ylabel)

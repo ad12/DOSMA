@@ -48,7 +48,7 @@ class QDessTest(util.ScanTest):
 
     def test_cmd_line(self):
         # Generate segmentation mask for femoral cartilage via command line
-        cmdline_str = '--d %s --s %s qdess --fc segment --weights_dir %s --model oai_unet2d --use_rms' % (self.dicom_dirpath, self.data_dirpath, SEGMENTATION_WEIGHTS_FOLDER)
+        cmdline_str = '--d %s --s %s qdess --fc segment --weights_dir %s --model oai-unet2d --use_rms' % (self.dicom_dirpath, self.data_dirpath, SEGMENTATION_WEIGHTS_FOLDER)
         self.__cmd_line_helper__(cmdline_str)
 
         # Generate T2 map for femoral cartilage, tibial cartilage, and meniscus via command line

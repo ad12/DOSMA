@@ -15,7 +15,6 @@
 **/temp
 **/ex_patient
 
-
 # ignore local files
 libANNlib.dylib
 debug_runs.py
@@ -36,3 +35,9 @@ debug_runs.py
 **/build
 **/dist
 *.spec
+
+# ignore preferences file
+**/preferences.*
+
+# ignore all resources
+**/resources

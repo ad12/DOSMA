@@ -6,7 +6,6 @@ import seaborn as sns
 from matplotlib.lines import Line2D
 
 import defaults
-from data_io.fig_format import savefig
 
 __all__ = ['downsample_slice', 'write_regions']
 
@@ -120,4 +119,4 @@ def write_regions(filepath, arr, plt_dict=None):
                      fancybox=True, shadow=True, ncol=3)
     plt.imshow(arr_rgb)
 
-    savefig(filepath, dpi=defaults.DEFAULT_DPI, bbox_extra_artists=(lgd,), bbox_inches='tight')
+    plt.savefig(filepath, bbox_extra_artists=(lgd,), bbox_inches='tight')

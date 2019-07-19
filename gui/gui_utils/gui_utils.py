@@ -80,7 +80,7 @@ class Filepath(str):
     pass
 
 
-TYPE_CAST = {bool: tk.BooleanVar, str: tk.StringVar}
+TYPE_CAST = {bool: tk.BooleanVar, str: tk.StringVar, int: tk.IntVar, float: tk.DoubleVar}
 
 
 def contains_filepath_keywords(param_name: str):

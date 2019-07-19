@@ -10,7 +10,7 @@ from data_io import format_io_utils as fio_utils
 from data_io.format_io import ImageDataFormat
 from data_io.med_volume import MedicalVolume
 from data_io.nifti_io import NiftiReader
-from defaults import DEFAULT_OUTPUT_IMAGE_DATA_FORMAT
+from defaults import preferences
 from models.seg_model import SegModel
 from scan_sequences.scans import TargetSequence
 from tissues.tissue import Tissue
@@ -184,7 +184,7 @@ class Mapss(TargetSequence):
 
         return quant_val_map
 
-    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = DEFAULT_OUTPUT_IMAGE_DATA_FORMAT):
+    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format):
         super().save_data(base_save_dirpath, data_format=data_format)
 
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
