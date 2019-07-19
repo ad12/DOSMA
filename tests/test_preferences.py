@@ -15,7 +15,7 @@ from defaults import _Preferences
 _test_preferences_sample_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                                  'resources/preferences.yml')
 _test_preferences_duplicate_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                                    'resources/.preferences.yml')
+                                                    'resources/.test.preferences.yml')
 copyfile(_test_preferences_sample_filepath, _test_preferences_duplicate_filepath)
 
 
