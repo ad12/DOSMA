@@ -3,10 +3,11 @@
 # Create virtual environment named (dosma_env) using conda
 #
 # @usage (from terminal/command line):
-# ./initialize-dosma
+# ./setup
 #
 # @initialization protocol:
-#   1. Run "chmod +x create-env" from command-line (Linux) or Terminal (MacOS)
+#   1. Navigate to DOSMA
+#   1. Run "chmod +x setup" from command-line (Linux) or Terminal (MacOS)
 #
 # @author: Arjun Desai, Stanford University
 #          (c) Stanford University, 2018
@@ -15,6 +16,7 @@
 # Check if conda exists
 ANACONDA_KEYWORD="anaconda"
 MINICONDA_KEYWORD="miniconda"
+GOOGLE_FORM="https://forms.gle/sprthTC2swyt8dDb6"
 
 hasAnaconda=0
 
@@ -29,7 +31,7 @@ then
     echo "Miniconda found in path"
 fi
 
-if [ $hasAnaconda -eq 0 ]; then
+if [[ $hasAnaconda -eq 0 ]]; then
     echo "Anaconda/Miniconda not installed - install from https://www.anaconda.com/distribution/"
     exit 125
 fi
@@ -43,9 +45,24 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
         # Mac OSX
         env_file=`pwd`/envs/dosma_env.yml
 else
-    echo "only Linux and MacOS are supported"
+    echo "Only Linux and MacOS are supported"
     exit 125
 fi
 
-# create dosma_env
-conda env create -f $env_file
+# Create Anaconda environment (dosma_env)
+if [[ -z `conda env list | grep dosma_env` ]]; then
+    conda env create -f $env_file
+else
+    echo "Environment 'dosma_env' found. Run 'conda activate dosma_env' to get started."
+fi
+
+# Launch google form
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+        xdg-open $GOOGLE_FORM
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # Mac OSX
+        open $GOOGLE_FORM
+else
+    echo "Only Linux and MacOS are supported"
+    exit 125
+fi
