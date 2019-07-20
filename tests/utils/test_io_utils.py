@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from utils import io_utils
+from dosma.utils import io_utils
 from .. import util
 
 IO_UTILS_DATA = os.path.join(util.UNITTEST_DATA_PATH, 'io_utils')

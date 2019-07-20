@@ -240,7 +240,7 @@ By default, the output format is NIfTI. Advantages and disadvantages of this for
 
 We recommend using input as Dicom images, which is likely what is produced from any acquisition system, and output as NIfTI volumes.
 
-The default output file format can be changed in the [`defaults.py`](./defaults.py) file by updating the `DEFAULT_OUTPUT_IMAGE_DATA_FORMAT` field. Additionally, to use certain formats in specific cases, use the `--format` flag detailed in [Base Information](### Base information).
+The default output file format can be changed in the [`defaults.py`](dosma/defaults.py) file by updating the `DEFAULT_OUTPUT_IMAGE_DATA_FORMAT` field. Additionally, to use certain formats in specific cases, use the `--format` flag detailed in [Base Information](### Base information).
 
 ### Multiple Orientations
 We support volumes acquired in the sagittal, axial, and coronal planes and support reformatting to the expected plane during computation.

@@ -3,12 +3,12 @@ import random
 import re
 import unittest
 
-from data_io.format_io import ImageDataFormat
+from dosma.data_io.format_io import ImageDataFormat
 from . import util as ututils
 
 
 class TestNiftiIO(unittest.TestCase):
-    from data_io.nifti_io import NiftiReader, NiftiWriter
+    from dosma.data_io.nifti_io import NiftiReader, NiftiWriter
 
     nr = NiftiReader()
     nw = NiftiWriter()
@@ -48,7 +48,7 @@ class TestNiftiIO(unittest.TestCase):
 
 
 class TestDicomIO(unittest.TestCase):
-    from data_io.dicom_io import DicomReader, DicomWriter
+    from dosma.data_io.dicom_io import DicomReader, DicomWriter
 
     dr = DicomReader()
     dw = DicomWriter()
@@ -244,8 +244,8 @@ class TestDicomIO(unittest.TestCase):
 
 
 class TestInterIO(unittest.TestCase):
-    from data_io.nifti_io import NiftiReader, NiftiWriter
-    from data_io.dicom_io import DicomReader, DicomWriter
+    from dosma.data_io.nifti_io import NiftiReader, NiftiWriter
+    from dosma.data_io.dicom_io import DicomReader, DicomWriter
 
     nr = NiftiReader()
     nw = NiftiWriter()

@@ -1,9 +1,9 @@
 import os
 import unittest
 
-from data_io import ImageDataFormat, NiftiReader
-from scan_sequences import CubeQuant, QDess
-from tissues.femoral_cartilage import FemoralCartilage
+from dosma.data_io import ImageDataFormat, NiftiReader
+from dosma.scan_sequences import CubeQuant, QDess
+from dosma.tissues.femoral_cartilage import FemoralCartilage
 from .. import util
 
 # target mask path used to register Cubequant volume to qDESS volume

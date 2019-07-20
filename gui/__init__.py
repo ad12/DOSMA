@@ -1,1 +1,0 @@
-from .ims import DosmaViewer
