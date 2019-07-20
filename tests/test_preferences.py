@@ -16,7 +16,6 @@ _test_preferences_sample_filepath = os.path.join(os.path.dirname(os.path.abspath
                                                  'resources/preferences.yml')
 _test_preferences_duplicate_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                                     'resources/.test.preferences.yml')
-copyfile(_test_preferences_sample_filepath, _test_preferences_duplicate_filepath)
 
 
 class PreferencesMock(_Preferences):
@@ -24,6 +23,10 @@ class PreferencesMock(_Preferences):
 
 
 class TestPreferences(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        copyfile(_test_preferences_sample_filepath, _test_preferences_duplicate_filepath)
+
     @classmethod
     def tearDownClass(cls):
         if os.path.isfile(_test_preferences_duplicate_filepath):
@@ -93,6 +96,15 @@ class TestPreferences(unittest.TestCase):
 
 
 class TestPreferencesSchema(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        copyfile(_test_preferences_sample_filepath, _test_preferences_duplicate_filepath)
+
+    @classmethod
+    def tearDownClass(cls):
+        if os.path.isfile(_test_preferences_duplicate_filepath):
+            os.remove(_test_preferences_duplicate_filepath)
+
     def test_cmd_line_schema(self):
         """Test that the command line schema for preferences is valid.
 
