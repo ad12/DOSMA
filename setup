@@ -12,14 +12,47 @@
 # @author: Arjun Desai, Stanford University
 #          (c) Stanford University, 2018
 
+openURL() {
+    if [[ "$OSTYPE" == "linux-gnu" ]]; then
+            xdg-open $1
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+            # Mac OSX
+            open $1
+    else
+        echo "Only Linux and MacOS are supported"
+        exit 125
+    fi
+}
 
-# Check if conda exists
+# Constants
 ANACONDA_KEYWORD="anaconda"
 MINICONDA_KEYWORD="miniconda"
+ANACONDA_DOWNLOAD_URL=" https://www.anaconda.com/distribution/"
 GOOGLE_FORM="https://forms.gle/sprthTC2swyt8dDb6"
+DOSMA_ENV_NAME='dosma_env'
 
 hasAnaconda=0
+force=0
 
+while getopts ":hf" opt; do
+    case ${opt} in
+        h )
+            echo "Usage:"
+            echo "      setup -h                Display this help message"
+            echo "      setup -f                Force install"
+            exit 0
+            ;;
+        f )
+            force=1
+            ;;
+        \? )
+            echo "Usage: cmd [-h] [-f]"
+            exit 0
+            ;;
+    esac
+done
+
+# Check if conda exists
 if echo $PATH | grep -q $ANACONDA_KEYWORD; then
     hasAnaconda=1
     echo "Conda found in path"
@@ -32,7 +65,8 @@ then
 fi
 
 if [[ $hasAnaconda -eq 0 ]]; then
-    echo "Anaconda/Miniconda not installed - install from https://www.anaconda.com/distribution/"
+    echo "Anaconda/Miniconda not installed - install from $ANACONDA_DOWNLOAD_URL"
+    openURL $ANACONDA_DOWNLOAD_URL
     exit 125
 fi
 
@@ -50,10 +84,15 @@ else
 fi
 
 # Create Anaconda environment (dosma_env)
-if [[ -z `conda env list | grep dosma_env` ]]; then
-    conda env create -f $env_file
+if [[ -nz `conda env list | grep $DOSMA_ENV_NAME` ]]; then
+    if [[ ${force} -eq 0 ]]; then
+        echo "Environment 'dosma_env' found. Run 'conda activate dosma_env' to get started."
+    else
+        conda env remove -n $DOSMA_ENV_NAME
+        conda env create -f $env_file
+    fi
 else
-    echo "Environment 'dosma_env' found. Run 'conda activate dosma_env' to get started."
+    conda env create -f $env_file
 fi
 
 # Launch google form

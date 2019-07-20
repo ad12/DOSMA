@@ -17,6 +17,7 @@ dependencies:
   - jupyter==1.0.0
   - keras==2.1.6
   - natsort==5.3.3
+  - nested-lookup>=0.2.17
   - nibabel==2.3.0
   - nipy==0.4.2
   - nipype==1.1.2
