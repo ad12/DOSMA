@@ -1,0 +1,44 @@
+# """Schema for command line information for preferences.
+# All preferences options that can be accessed from the command-line/GUI should be listed here.
+# If new argument is added, please follow the Argparse schema with at minimum the following arguments:
+#     -name: A readable name
+#     -aliases: The names given to the command-line argument.
+#     -type: The expected type.
+#     -nargs: Number of arguments expected. This should typically be '?', as none of these flags are required
+#     -help: A short help description.
+#
+# Fields should first start with the fields above, then follow in alphabetical order
+# """
+data:
+  format:
+    name: 'Data Format'
+    aliases: ['--df', '--data_format']
+    type: 'str'
+    nargs: '?'
+    choices: ['dicom', 'nifti']
+    help: 'format to save medical data'
+fitting:
+  r2.threshold:
+    name: 'r2 Threshold'
+    aliases: ['--r2', '--r2_threshold']
+    metavar: 'T'
+    type: 'float'
+    nargs: '?'
+    help: 'r^2 threshold for goodness of fit. Range [0-1).'
+visualization:
+  matplotlib:
+    rcParams:
+      savefig.dpi:
+        name: 'Figure dpi'
+        aliases: ['--dpi']
+        metavar: 'DPI'
+        type: 'float'
+        nargs: '?'
+        help: 'figure resolution in dots per inch (dpi)'
+      savefig.format:
+        name: 'Figure format'
+        aliases: ['--vf', '--visualization_format']
+        type: 'str'
+        nargs: '?'
+        choices: ['png', 'eps', 'pdf', 'jpeg', 'pgf', 'ps', 'raw', 'rgba', 'svg', 'svgz', 'tiff']
+        help: 'format to save figures'
