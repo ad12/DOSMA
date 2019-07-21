@@ -92,7 +92,7 @@ if [[ "$OSTYPE" != "linux-gnu" && "$OSTYPE" != "darwin"* ]]; then
 fi
 
 # Create Anaconda environment (dosma_env)
-if [[ -nz `conda env list | grep $DOSMA_ENV_NAME` ]]; then
+if [[ `conda env list | grep $DOSMA_ENV_NAME` ]]; then
     if [[ ${force} -eq 0 ]]; then
         echo "Environment 'dosma_env' found. Run 'conda activate dosma_env' to get started."
     else
