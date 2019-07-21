@@ -104,7 +104,7 @@ else
 fi
 
 # Add dosma to path
-if [[ -z `cat ${bash_file} | grep -q '# added by DOSMA setup'` ]]; then
+if [[ -z `cat ${bash_file} | grep '# added by DOSMA setup'` ]]; then
     cp $bash_file $bash_file"-dosma.bak"
     echo $bash_file
     echo "Adding dosma to path - changes made in $bash_file"
