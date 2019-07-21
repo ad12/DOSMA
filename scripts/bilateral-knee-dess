@@ -1,18 +1,21 @@
 #!/bin/bash
 
 # 1. Separate dicom files from bilateral dess knee scan into left dicoms and right dicoms
-# 2. Run dess analysis
+# 2. Run qDESS analysis on left and right knees
 #
 # @usage (from terminal/command line):
 # ./bilateral-knee-dess PATH_TO_DICOM_FOLDER PATIENT_ID
-# eg: "./bilateral-knee-dess /Users/data/P07/005 07"
+# eg: "./bilateral-knee-dess /Users/data/Patient07/005 07"
 #
 # @initialization protocol:
 #   1. run "chmod +x bilateral-knee-dess" from the command line
-#   2. Update `WEIGHTS_DIRECTORY` field below
+#   2. Update `WEIGHTS_DIRECTORY` field below to point to the appropriate weights
+#   3. Update 'TISSUES' field if additional tissues desired
+#      e.g. '--fc --tc' for femoral cartilage and tibial cartilage
 #
 # @assumptions:
-#   - Scan volumes are acquired in sagittal direction
+#   - Scan volumes are acquired in sagittal direction from patient left to patient right
+#     (i.e. left knee, then right knee)
 #   - Volume slices (1...N) - Left knee slices (1...N/2), right knee slices (N/2 + 1, ... N)
 #   - Left knee - lateral --> medial
 #   - Right knee - medial --> lateral
@@ -21,20 +24,23 @@
 #          (c) Stanford University, 2018
 
 
-WEIGHTS_DIRECTORY=`pwd`/"../weights"
+SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+DOSMA_DIR="$( cd "$( dirname "${SCRIPTS_DIR}" )" >/dev/null 2>&1 && pwd )"
+
+WEIGHTS_DIRECTORY=$DOSMA_DIR/"../weights"
 TISSUES='--fc'
 
-if [ -z "$WEIGHTS_DIRECTORY" ]; then
+if [[ -z "$WEIGHTS_DIRECTORY" ]]; then
     echo "Please define WEIGHTS_DIRECTORY in script. Use the absolute path"
     exit 125
 fi
 
-if [ $# -lt 1 ]; then
+if [[ $# -lt 1 ]]; then
 	echo "Please provide path to dicom folder and patient id"
 	exit 125
 fi
 
-if [ $# -lt 2 ]; then
+if [[ $# -lt 2 ]]; then
 	echo "Please provide patient id"
 	exit 125
 fi
@@ -61,27 +67,27 @@ half_point=$((${#dicom_array[@]} / 2))
 DIRS_EXIST=1
 
 LEFT_DIR="$DICOM_PATH/LEFT/"
-if [ ! -d "$LEFT_DIR" ]; then
+if [[ ! -d "$LEFT_DIR" ]]; then
 	mkdir $LEFT_DIR
 	DIRS_EXIST=0
 fi
 
 RIGHT_DIR="$DICOM_PATH/RIGHT/"
-if [ ! -d "$RIGHT_DIR" ]; then
+if [[ ! -d "$RIGHT_DIR" ]]; then
 	mkdir $RIGHT_DIR
     DIRS_EXIST=0
 fi
 
 # if the directories already exist, assume the data has already been separated into different folders
-if [ $DIRS_EXIST -eq 0 ]; then
+if [[ $DIRS_EXIST -eq 0 ]]; then
     counter=1
     for filepath in ${dicom_array[@]}
     do
 
         filename=$(basename $filepath)
 
-        if [ $counter -gt $half_point ]; then
-            # store in left directory
+        if [[ $counter -gt $half_point ]]; then
+            # store in right directory
             cp $filepath $RIGHT_DIR
         else
             cp $filepath $LEFT_DIR
@@ -104,14 +110,14 @@ echo "Save path: $DATA_DIR"
 
 DATA_DIR_LEFT="$DATA_DIR/LEFT"
 
-python -m dosma --d $LEFT_DIR --s $DATA_DIR_LEFT qdess $TISSUES segment --rms --weights_dir $WEIGHTS_DIRECTORY
-python -m dosma --l $DATA_DIR_LEFT qdess $TISSUES t2
-python -m dosma --l $DATA_DIR_LEFT knee --pid $PID $TISSUES
+dosma --d $LEFT_DIR --s $DATA_DIR_LEFT qdess $TISSUES segment --rms --weights_dir $WEIGHTS_DIRECTORY
+dosma --l $DATA_DIR_LEFT qdess $TISSUES t2
+dosma --l $DATA_DIR_LEFT knee --pid $PID $TISSUES
 
 
 DATA_DIR_RIGHT="$DATA_DIR/RIGHT"
 
-python -m dosma --d $RIGHT_DIR --s $DATA_DIR_RIGHT qdess $TISSUES segment --rms --weights_dir $WEIGHTS_DIRECTORY
-python -m dosma --l $DATA_DIR_RIGHT qdess $TISSUES t2
-python -m dosma --l $DATA_DIR_RIGHT knee --ml --pid $PID $TISSUES
+dosma --d $RIGHT_DIR --s $DATA_DIR_RIGHT qdess $TISSUES segment --rms --weights_dir $WEIGHTS_DIRECTORY
+dosma --l $DATA_DIR_RIGHT qdess $TISSUES t2
+dosma --l $DATA_DIR_RIGHT knee --ml --pid $PID $TISSUES
 
