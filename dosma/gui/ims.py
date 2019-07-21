@@ -1,4 +1,4 @@
-import os
+import os, sys
 import matplotlib
 
 import matplotlib.pyplot as plt
@@ -36,7 +36,7 @@ class DosmaViewer(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
         for F in (StartPage, DosmaFrame, PageThree, AnalysisFrame):
             frame = F(container, self)
 
@@ -47,6 +47,10 @@ class DosmaViewer(tk.Tk):
         self.show_frame(StartPage)
 
         self.pref = PreferencesManager()
+
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            sys.exit()
 
     def show_frame(self, cont):
         frame = self.frames[cont]

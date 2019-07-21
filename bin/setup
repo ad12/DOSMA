@@ -24,16 +24,30 @@ openURL() {
     fi
 }
 
+setBashFile() {
+    if [[ "$OSTYPE" == "linux-gnu" ]]; then
+            bash_file="$HOME/.bashrc"
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+            bash_file="$HOME/.bash_profile"
+    else
+        echo "Only Linux and MacOS are supported"
+        exit 125
+    fi
+}
+
 BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+DOSMA_DIR="$( cd "$( dirname "${BIN_DIR}" )" >/dev/null 2>&1 && pwd )"
 
 ANACONDA_KEYWORD="anaconda"
 ANACONDA_DOWNLOAD_URL="https://www.anaconda.com/distribution/"
 MINICONDA_KEYWORD="miniconda"
 DOSMA_ENV_NAME="dosma_env"
+ENV_FILE=$DOSMA_DIR/environment.yml
 GOOGLE_FORM_URL="https://forms.gle/sprthTC2swyt8dDb6"
 
 hasAnaconda=0
 force=0
+setBashFile
 
 while getopts ":hf" opt; do
     case ${opt} in
@@ -72,14 +86,7 @@ if [[ $hasAnaconda -eq 0 ]]; then
 fi
 
 # Check if OS is supported
-env_file=`pwd`/envs/dosma_env.yml
-
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
-        env_file=`pwd`/envs/dosma_env.yml
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-        # Mac OSX
-        env_file=`pwd`/envs/dosma_env.yml
-else
+if [[ "$OSTYPE" != "linux-gnu" && "$OSTYPE" != "darwin"* ]]; then
     echo "Only Linux and MacOS are supported"
     exit 125
 fi
@@ -90,21 +97,21 @@ if [[ -nz `conda env list | grep $DOSMA_ENV_NAME` ]]; then
         echo "Environment 'dosma_env' found. Run 'conda activate dosma_env' to get started."
     else
         conda env remove -n $DOSMA_ENV_NAME
-        conda env create -f $env_file
+        conda env create -f $ENV_FILE
     fi
 else
-    conda env create -f $env_file
+    conda env create -f $ENV_FILE
+fi
+
+# Add dosma to path
+if [[ -z `cat ${bash_file} | grep -q '# added by DOSMA setup'` ]]; then
+    cp $bash_file $bash_file"-dosma.bak"
+    echo $bash_file
+    echo "Adding dosma to path - changes made in $bash_file"
+    echo "" >> $bash_file
+    echo "# added by DOSMA setup" >> $bash_file
+    echo 'export PATH='$BIN_DIR':$PATH' >> $bash_file
 fi
 
 # Launch google form
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
-        xdg-open $GOOGLE_FORM
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-        # Mac OSX
-        open $GOOGLE_FORM
-else
-    echo "Only Linux and MacOS are supported"
-    exit 125
-fi
-
-# TODO (arjundd): Add to path, add bashprofile changes
+openURL $GOOGLE_FORM_URL

@@ -5,8 +5,8 @@ import unittest
 
 import natsort
 
+from dosma.cli import SUPPORTED_SCAN_TYPES, parse_args
 from dosma.data_io.format_io import ImageDataFormat
-from dosma import SUPPORTED_SCAN_TYPES, parse_args
 from dosma.utils import io_utils
 
 UNITTEST_DATA_PATH = os.path.join(os.path.dirname(__file__), '../unittest-data/')

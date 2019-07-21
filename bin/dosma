@@ -14,7 +14,7 @@
 #          (c) Stanford University, 2019
 
 BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-DOSMA_DIR="$( cd "$( dirname "${BIN_DIR}" )" >/dev/null 2>&1 && pwd )/dosma"
+DOSMA_DIR="$( cd "$( dirname "${BIN_DIR}" )" >/dev/null 2>&1 && pwd )"
 DOSMA_ENV_NAME="dosma_env"
 
 
@@ -26,5 +26,7 @@ fi
 
 cd $DOSMA_DIR
 if [[ $1 == "--app" ]]; then
-    python -m app
+    python -m dosma.app
+else
+    python -m dosma.cli $*
 fi
