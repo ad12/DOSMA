@@ -8,8 +8,8 @@ import tkinter as tk
 from tkinter import ttk
 
 from dosma.gui.gui_utils.filedialog_reader import FileDialogReader
+from dosma.cli import BASIC_TYPES
 
-BASIC_TYPES = [bool, str, float, int, list, tuple]
 
 class TextWithVar(tk.Text):
     '''A text widget that accepts a 'textvariable' option'''

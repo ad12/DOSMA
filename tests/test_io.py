@@ -3,6 +3,8 @@ import random
 import re
 import unittest
 
+import difflib
+
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.data_io.dicom_io import DicomReader, DicomWriter
 from dosma.data_io.nifti_io import NiftiReader, NiftiWriter
@@ -62,8 +64,6 @@ class TestDicomIO(unittest.TestCase):
         :param h2:
         :return:
         """
-        import difflib
-
         rep = []
         for dataset in (h1, h2):
             lines = str(dataset).split("\n")

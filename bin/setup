@@ -113,5 +113,8 @@ if [[ -z `cat ${bash_file} | grep -q '# added by DOSMA setup'` ]]; then
     echo 'export PATH='$BIN_DIR':$PATH' >> $bash_file
 fi
 
+echo "for command line: 'dosma -h'"
+echo "for GUI (user interface): 'dosma --app'"
+
 # Launch google form
 openURL $GOOGLE_FORM_URL
