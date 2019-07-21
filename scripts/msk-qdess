@@ -40,7 +40,7 @@ cd ..
 for i in $FILES; do
     DIRNAME=$(dirname $i)
     DIRNAME="$DIRNAME/data"
-    python -m dosma --d $i --s $DIRNAME qdess --fc segment --rms --weights_dir $WEIGHTS_DIRECTORY
-    python -m dosma --l $DIRNAME qdess --fc t2
-    python -m dosma --l $DIRNAME knee --fc --t2
+    dosma --d $i --s $DIRNAME qdess --fc segment --rms --weights_dir $WEIGHTS_DIRECTORY
+    dosma --l $DIRNAME qdess --fc t2
+    dosma --l $DIRNAME knee --fc --t2
 done

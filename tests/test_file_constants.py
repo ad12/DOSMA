@@ -1,6 +1,6 @@
 import unittest
 
-import file_constants as fc
+from dosma import file_constants as fc
 
 
 class FileConstants(unittest.TestCase):

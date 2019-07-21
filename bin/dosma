@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Bash interface for DOSMA
+#
+# @usage (from terminal/command line):
+#   Command line interface: ./dosma command-line-args
+#   User Interface: ./dosma --app
+#
+# @initialization protocol:
+#   1. Navigate to this folder
+#   2. Run "chmod +x dosma" from command-line (Linux) or Terminal (MacOS)
+#
+# @author: Arjun Desai, Stanford University
+#          (c) Stanford University, 2019
+
+BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+DOSMA_DIR="$( cd "$( dirname "${BIN_DIR}" )" >/dev/null 2>&1 && pwd )"
+DOSMA_ENV_NAME="dosma_env"
+
+
+# Check if environment is active
+if [[ -z `conda env list | grep \* | grep $DOSMA_ENV_NAME` ]]; then
+    echo "Activate $DOSMA_ENV_NAME before running this script."
+    exit 1
+fi
+
+cd $DOSMA_DIR
+if [[ $1 == "--app" ]]; then
+    python -m dosma.app
+else
+    python -m dosma.cli $*
+fi

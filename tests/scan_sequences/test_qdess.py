@@ -1,9 +1,9 @@
 import os
 import unittest
 
-from models.util import get_model
-from scan_sequences.qdess import QDess
-from tissues.femoral_cartilage import FemoralCartilage
+from dosma.models.util import get_model
+from dosma.scan_sequences.qdess import QDess
+from dosma.tissues.femoral_cartilage import FemoralCartilage
 from .. import util
 
 SEGMENTATION_WEIGHTS_FOLDER = os.path.join(os.path.dirname(__file__), '../../weights')

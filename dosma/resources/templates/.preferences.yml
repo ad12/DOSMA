@@ -1,0 +1,17 @@
+data:
+  format: 'nifti'
+fitting:
+  r2.threshold: 0.9
+registration:
+  mask:
+    dilation.rate: 9.0
+    dilation.threshold: 0.0001
+segmentation:
+  batch.size: 16
+visualization:
+  matplotlib:
+    rcParams:
+      font.size: 16
+      savefig.dpi: 200
+      savefig.format: 'png'
+  use.vmax: False

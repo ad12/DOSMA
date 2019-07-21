@@ -9,7 +9,7 @@ from shutil import copyfile
 
 import nested_lookup
 
-from defaults import _Preferences
+from dosma.defaults import _Preferences
 
 # Duplicate the resources file
 _test_preferences_sample_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)),

@@ -1,37 +1,38 @@
 # DOSMA: Deep Open-Source MRI Analysis
 
-This repository hosts an open-source pipeline for MRI image segmentation, registration, and quantitative analysis.
-
-The current code uses the [command line interface](https://www.computerhope.com/jargon/c/commandi.htm) for use. Pull requests for a GUI to command-line translation are welcome.
-
-## How to Cite
-```
-@misc{arjun_d_desai_2019_2559549,
-  author       = {Arjun D. Desai and
-                  Marco Barbieri and
-                  Valentina Mazzoli and
-                  Elka Rubin and
-                  Marianne S. Black and
-                  Lauren E. Watkins and
-                  Garry E. Gold and
-                  Brian A. Hargreaves and
-                  Akshay S. Chaudhari},
-  title        = {ad12/DOSMA: v0.0.9: DOSMA (prerelease)},
-  month        = feb,
-  year         = 2019,
-  doi          = {10.5281/zenodo.2559549},
-  url          = {https://doi.org/10.5281/zenodo.2559549}
-}
-```
-Additional citation details can be found [here](https://zenodo.org/record/2559549#.XFyRrs9KjyJ).
-
-## Overview
-This repo is to serve as an open-source location for developers to add MRI processing techniques. This includes, but is not limited to:
-- image processing tasks (denoising, super-resolution, segmentation, etc)
-- relaxation parameter analysis (T1, T1-rho, T2, T2*, etc)
-- anatomical features (patellar tilt, femoral cartilage thickness, etc)
+This repository hosts an open-source Python library for MRI processing techniques. This includes, but is not limited to:
+- image processing tasks (denoising, super-resolution, segmentation, etc.)
+- relaxation parameter analysis (T1, T1-rho, T2, T2*, etc.)
+- anatomical features (patellar tilt, femoral cartilage thickness, etc.)
 
 We hope that this open-source pipeline will be useful for quick anatomy/pathology analysis from MRI and will serve as a hub for adding support for analyzing different anatomies and scan sequences.
+
+## Installation
+Download this repo to your disk. **Avoid spaces in file paths**. In other words, do not use spaces when naming directories or files. In general, this library may fail when file/directory names have spaces.
+
+### OS Compatibility
+This library has been optimized for use on Mac/Linux operating systems. Windows 10 may work using the [Linux Terminal Shell](https://itsfoss.com/install-Terminal-on-windows/). We are working on a Windows specific solution for the library ([Issue #39](https://github.com/ad12/DOSMA/issues/39)).
+
+### Anaconda
+Please install the [Anaconda](https://www.anaconda.com/download) virtual environment to run the pipeline from the command line or graphical user interface (GUI).
+
+### Setup
+1. Download this repository to a non-temporary location (i.e. not the `Downloads` folder)
+2. Open the DOSMA directory in the Terminal
+3. Run `cd bin`
+4. Run `chmod +x setup`
+5. Run `./setup`
+6. Restart terminal
+
+If you want to update your Anaconda environment, run `setup -f` in step 5.
+
+### Weights
+For pretrained weights for MSK knee segmentation, request access using this [Google form](https://goo.gl/forms/JlxgS3aoUeeUUlVh2). Note that these weights are optimized to run on single-echo RMS DESS sequence as used in the [OsteoArthritis Initiative (OAI)](https://oai.epi-ucsf.org/datarelease/).
+
+Save these weights in an accessible location. **Do not rename these files**.
+
+### Pip/Conda install
+###### *Coming soon!*
 
 ## Supported Commands
 Currently, this pipeline supports analysis of the femoral cartilage in the knee using [qDESS](https://onlinelibrary.wiley.com/doi/pdf/10.1002/mrm.26577) and cubequant scanning protocols. Basic cones protocol is provided, but still under construction. Details are provided below.
@@ -56,42 +57,39 @@ Dicom files should be named in the format *001.dcm: echo1*, *002.dcm: echo2*, *0
 Analysis for the following anatomical regions are supported
 
 #### MSK - knee
-*Tissues*: Femoral Cartilage
+*Tissues*: femoral cartilage, meniscus, tibial cartilage, patellar cartilage
 
-## Installation
-Download this repo to your disk. Note that the path to this repo should not have any spaces. In general, this pipeline does not handle folder paths that have spaces in between folder names.
+## Usage
+DOSMA command-line interface and a graphical user interface (GUI). While the GUI may be easier to visualize, the command-line allows for scripting for processing large batches of data.
 
-### Virtual Environment
-We recommend using the [Anaconda](https://www.anaconda.com/download) virtual environment to run python.
+Based on the preferred mode, run the corresponding command from the terminal:
+- Command-line interface: `dosma ...`
+- GUI: `dosma --app`
 
-An environment file `envs/dosma_env.yml` file is provided in this repo containing all libraries used.
+Because GUIs are typically easier to decipher, we will spend the following sections talking about command-line syntax for the DOSMA. The help menus will have a `In:` and `Out:` section. `In:` is what is run from the terminal. `Out:` is the result.
 
-To automatically install this environment (assumes Anaconda/Miniconda is installed):
-1. Navigate to the DOSMA directory in the Terminal
-2. Run `chmod +x setup`
-3. Run `./setup`
-
-### Weights
-For pretrained weights for MSK knee segmentation, request access using this [Google form](https://goo.gl/forms/JlxgS3aoUeeUUlVh2). Note that these weights are optimized to run on single-echo RMS DESS sequence as used in the [OsteoArthritis Initiative (OAI)](https://oai.epi-ucsf.org/datarelease/).
-
-Save these weights in an accessible location. **Do not rename these files**.
-
-## Shell interface help
-To run the program from a shell, run `python -m opt/path/dosma` with the flags detailed below. `opt/path` is the path to the file `python`
-
-### Base information
+### Help Menu (General)
 ```
-usage: DOSMA [-h] [--debug] [--d [D]] [--l [L]] [--s [S]] [--df [F]]
-             [--gpu [G]]
-             {qdess,cubequant,knee} ...
+In:
+---------
+dosma -h
+
+Out:
+---------
+usage: DOSMA [-h] [--debug] [--d [D]] [--l [L]] [--s [S]] [--ignore_ext]
+             [--split_by [G]] [--gpu [G]] [--df [{dicom,nifti}]] [--r2 [T]]
+             [--dpi [DPI]]
+             [--vf [{png,eps,pdf,jpeg,pgf,ps,raw,rgba,svg,svgz,tiff}]]
+             {qdess,cubequant,mapss,knee} ...
 
 A deep-learning powered open source MRI analysis pipeline
 
 positional arguments:
-  {qdess,cubequant,knee}
+  {qdess,cubequant,mapss,knee}
                         sub-command help
     qdess               analyze qdess sequence
     cubequant           analyze cubequant sequence
+    mapss               analyze mapss sequence
     knee                calculate/analyze quantitative data for knee
 
 optional arguments:
@@ -100,10 +98,16 @@ optional arguments:
   --d [D], --dicom [D]  path to directory storing dicom files
   --l [L], --load [L]   path to data directory to load from
   --s [S], --save [S]   path to data directory to save to. Default: L/D
-  --df [F], --format [F]
-                        data format to store information in ['nifti',
-                        'dicom']. Default: nifti
+  --ignore_ext          ignore .dcm extension when loading dicoms. Default: False
+  --split_by [G]        override dicom tag to split volumes by (eg. `EchoNumbers`)
   --gpu [G]             gpu id. Default: None
+  --df [{dicom,nifti}], --data_format [{dicom,nifti}]
+                        format to save medical data
+  --r2 [T], --r2_threshold [T]
+                        r^2 threshold for goodness of fit. Range [0-1).
+  --dpi [DPI]           figure resolution in dots per inch (dpi)
+  --vf [{png,eps,pdf,jpeg,pgf,ps,raw,rgba,svg,svgz,tiff}], --visualization_format [{png,eps,pdf,jpeg,pgf,ps,raw,rgba,svg,svgz,tiff}]
+                        format to save figures
 
 Either `--d` or `---l` must be specified. If both are given, `-d` will be used
 ```
@@ -115,45 +119,65 @@ The qDESS protocol used here is detailed in [this](https://onlinelibrary.wiley.c
 
 
 ```
-usage: DOSMA qdess [-h] [--fc] [--men] [--tc] {segment,generate_t2_map,t2} ...
+In:
+---------
+dosma qdess -h
+
+Out:
+---------
+usage: DOSMA qdess [-h] [--fc] [--men] [--tc] [--pc]
+                   {segment,generate_t2_map,t2} ...
 
 optional arguments:
   -h, --help            show this help message and exit
   --fc                  analyze femoral cartilage
   --men                 analyze meniscus
   --tc                  analyze tibial cartilage
+  --pc                  analyze patellar cartilage
 
 subcommands:
   qdess subcommands
 
   {segment,generate_t2_map,t2}
-    segment             generate automatic segmentation
-    generate_t2_map (t2)
-                        generate T2 map
+    segment              generate automatic segmentation
+    generate_t2_map (t2) generate T2 map
 ```
 
 #### Segmentation
 ```
-usage: DOSMA qdess segment [-h] --weights_dir WEIGHTS_DIR [--model [{unet2d}]]
-                           [--batch_size [B]] [--rms]
+In:
+---------
+dosma qdess segment -h
+
+Out:
+---------
+usage: DOSMA qdess segment [-h] --weights_dir WEIGHTS_DIR
+                           [--model [{oai-unet2d}]] [--batch_size [B]] [--rms]
 
 optional arguments:
-  -h, --help            show this help message and exit
-  --weights_dir WEIGHTS_DIR
-                        path to directory with weights
-  --model [{unet2d}]    Model to use for segmentation. Choices: {unet2d}
-  --batch_size [B]      batch size for inference. Default: 16
-  --rms, --use_rms      use root mean square (rms) of two echos for
-                        segmentation. Default: False
+  -h, --help                show this help message and exit
+  --weights_dir WEIGHTS_DIR path to directory with weights
+  --model [{oai-unet2d}]    Model to use for segmentation. Choices: ['oai-unet2d']
+  --batch_size [B]          batch size for inference. Default: 16
+  --rms, --use_rms          use root mean square (rms) of two echos for segmentation. Default: False
 ```
 
 #### T2 Estimation
 ```
-usage: DOSMA qdess generate_t2_map [-h] [--suppress_fat]
+In:
+---------
+dosma qdess t2 -h
+
+Out:
+---------
+usage: DOSMA qdess generate_t2_map [-h] [--suppress_fat] [--gl_area [GL_AREA]]
+                                   [--tg [TG]]
 
 optional arguments:
-  -h, --help      show this help message and exit
-  --suppress_fat  suppress computation on low SNR fat regions. Default: False
+  -h, --help           show this help message and exit
+  --suppress_fat       suppress computation on low SNR fat regions. Default: False
+  --gl_area [GL_AREA]  gl_area. Default: None
+  --tg [TG]            tg. Default: None
 ```
 
 ### Cubequant
@@ -227,6 +251,9 @@ If no quantitative value flag (e.g. `--t2`, `--t1_rho`, `--t2_star`) is specifie
 If no tissue flag (e.g. `--fc`) is specified, all tissues will be calculated by default.
 
 ## Additional features
+### Preferences
+We understand that different users have different preferences (visualizations, data formats, etc.). You can set your own preferences by launching the GUI (`dosma --app`) and pressing the `Preferences` button on the home page and change your settings. To save settings for all future computation sessions, click `Save Settings`. To apply settings just to this session, click `Apply Settings`.
+
 ### Input/Output (I/O)
 Currently, image data I/O is supported in two common formats: Dicom and NIfTI.
 
@@ -240,7 +267,7 @@ By default, the output format is NIfTI. Advantages and disadvantages of this for
 
 We recommend using input as Dicom images, which is likely what is produced from any acquisition system, and output as NIfTI volumes.
 
-The default output file format can be changed in the [`defaults.py`](./defaults.py) file by updating the `DEFAULT_OUTPUT_IMAGE_DATA_FORMAT` field. Additionally, to use certain formats in specific cases, use the `--format` flag detailed in [Base Information](### Base information).
+The default output file format can be changed in the preferences. Additionally, to use certain formats in specific cases, use the `--data_format` flag detailed in [Base Information](#help-menu-(general)).
 
 ### Multiple Orientations
 We support volumes acquired in the sagittal, axial, and coronal planes and support reformatting to the expected plane during computation.
@@ -274,20 +301,20 @@ research_data
     ...
 ```
 
-All use cases assume that the [current working directory](https://www.computerhope.com/jargon/c/currentd.htm) is this repo. If the working directory is different, make sure to specify the path to ```dosma.py``` when running the script. For example, ```python -m ~/DOSMA/dosma.py``` if the repo is located in the user directory.
+All use cases assume that the `./setup` script run in [Setup](#setup).
 
 ### qDESS
 *Analyze patient01's femoral cartilage T<sub>2</sub> properties using qDESS sequence*
 
 ```bash
 # 1. Calculate 3D T2 map
-python -m dosma --d research_data/patient01/dess --s research_data/patient01/data qdess --fc t2
+dosma --d research_data/patient01/dess --s research_data/patient01/data qdess --fc t2
 
 # 2. Segment femoral cartilage using root mean square (RMS) of two echo qDESS echos
-python -m dosma --d research_data/patient01/dess --s research_data/patient01/data qdess --fc segment --rms --weights_dir unet_weights
+dosma --d research_data/patient01/dess --s research_data/patient01/data qdess --fc segment --rms --weights_dir unet_weights
 
 # 3. Calculate/visualize T2 for knee tissues per region*
-python -m dosma --l research_data/patient01/data --s research_data/patient01/data knee --fc --t2
+dosma --l research_data/patient01/data --s research_data/patient01/data knee --fc --t2
 ```
 
 ### Cubequant
@@ -295,11 +322,32 @@ python -m dosma --l research_data/patient01/data --s research_data/patient01/dat
 
 ```bash
 # 1. Register cubequant volume to first echo of qDESS sequence
-python -m dosma --d research_data/patient01/cubequant --s research_data/patient01/data cubequant --fc interregister --ts research_data/patient01/data/dess/echo1.nii.gz --tm research_data/patient01/data/fc/fc.nii.gz
+dosma --d research_data/patient01/cubequant --s research_data/patient01/data cubequant --fc interregister --ts research_data/patient01/data/dess/echo1.nii.gz --tm research_data/patient01/data/fc/fc.nii.gz
 
 # 2. Calculate 3D T1-rho map of interregistered sequence
-python -m dosma --l research_data/patient01/data cubequant --fc t1_rho
+dosma --l research_data/patient01/data cubequant --fc t1_rho
 
 # 3. Calculate/visualize T1-rho for knee tissues per region
-python -m dosma --l research_data/patient01/data --s research_data/patient01/data knee --fc --t1_rho
+dosma --l research_data/patient01/data --s research_data/patient01/data knee --fc --t1_rho
 ```
+
+## How to Cite
+```
+@misc{arjun_d_desai_2019_2559549,
+  author       = {Arjun D. Desai and
+                  Marco Barbieri and
+                  Valentina Mazzoli and
+                  Elka Rubin and
+                  Marianne S. Black and
+                  Lauren E. Watkins and
+                  Garry E. Gold and
+                  Brian A. Hargreaves and
+                  Akshay S. Chaudhari},
+  title        = {ad12/DOSMA: v0.0.9: DOSMA (prerelease)},
+  month        = feb,
+  year         = 2019,
+  doi          = {10.5281/zenodo.2559549},
+  url          = {https://doi.org/10.5281/zenodo.2559549}
+}
+```
+Additional citation details can be found [here](https://zenodo.org/record/2559549#.XFyRrs9KjyJ).

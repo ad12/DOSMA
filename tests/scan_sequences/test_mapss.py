@@ -1,9 +1,9 @@
 import os
 
-from data_io import NiftiReader
-from models.util import get_model
-from scan_sequences import Mapss
-from tissues.femoral_cartilage import FemoralCartilage
+from dosma.data_io import NiftiReader
+from dosma.models.util import get_model
+from dosma.scan_sequences import Mapss
+from dosma.tissues.femoral_cartilage import FemoralCartilage
 from .. import util
 
 SEGMENTATION_WEIGHTS_FOLDER = os.path.join(os.path.dirname(__file__), '../../weights')

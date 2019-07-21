@@ -5,9 +5,9 @@ import unittest
 
 import natsort
 
-from data_io.format_io import ImageDataFormat
-from dosma import SUPPORTED_SCAN_TYPES, parse_args
-from utils import io_utils
+from dosma.cli import SUPPORTED_SCAN_TYPES, parse_args
+from dosma.data_io.format_io import ImageDataFormat
+from dosma.utils import io_utils
 
 UNITTEST_DATA_PATH = os.path.join(os.path.dirname(__file__), '../unittest-data/')
 UNITTEST_SCANDATA_PATH = os.path.join(UNITTEST_DATA_PATH, 'scans')
@@ -57,7 +57,7 @@ def get_expected_data_path(fp):
 
 
 class ScanTest(unittest.TestCase):
-    from scan_sequences.scans import ScanSequence
+    from dosma.scan_sequences.scans import ScanSequence
     SCAN_TYPE = ScanSequence  # override in subclasses
 
     dicom_dirpath = None

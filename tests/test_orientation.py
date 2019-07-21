@@ -3,14 +3,14 @@ import unittest
 
 import numpy as np
 
-sys.path.append('../')
 from . import util as ututils
-from data_io.format_io import ImageDataFormat
+
+from dosma.data_io.format_io import ImageDataFormat
+from dosma.data_io.med_volume import MedicalVolume
+from dosma.data_io.nifti_io import NiftiReader, NiftiWriter
 
 
 class TestOrientation(unittest.TestCase):
-    from data_io.nifti_io import NiftiReader, NiftiWriter
-    from data_io.med_volume import MedicalVolume
     nr = NiftiReader()
     nw = NiftiWriter()
 

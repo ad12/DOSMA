@@ -1,0 +1,120 @@
+#!/bin/bash
+
+# Initialize DOSMA
+#
+# @usage (from terminal/command line):
+# ./setup
+#
+# @initialization protocol:
+#   1. Navigate to this folder in terminal/command line
+#   2. Run "chmod +x setup" from command-line (Linux) or Terminal (MacOS)
+#
+# @author: Arjun Desai, Stanford University
+#          (c) Stanford University, 2018
+
+openURL() {
+    if [[ "$OSTYPE" == "linux-gnu" ]]; then
+            xdg-open $1
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+            # Mac OSX
+            open $1
+    else
+        echo "Only Linux and MacOS are supported"
+        exit 125
+    fi
+}
+
+setBashFile() {
+    if [[ "$OSTYPE" == "linux-gnu" ]]; then
+            bash_file="$HOME/.bashrc"
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+            bash_file="$HOME/.bash_profile"
+    else
+        echo "Only Linux and MacOS are supported"
+        exit 125
+    fi
+}
+
+BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+DOSMA_DIR="$( cd "$( dirname "${BIN_DIR}" )" >/dev/null 2>&1 && pwd )"
+
+ANACONDA_KEYWORD="anaconda"
+ANACONDA_DOWNLOAD_URL="https://www.anaconda.com/distribution/"
+MINICONDA_KEYWORD="miniconda"
+DOSMA_ENV_NAME="dosma_env"
+ENV_FILE=$DOSMA_DIR/environment.yml
+GOOGLE_FORM_URL="https://forms.gle/sprthTC2swyt8dDb6"
+
+hasAnaconda=0
+force=0
+setBashFile
+
+while getopts ":hf" opt; do
+    case ${opt} in
+        h )
+            echo "Usage:"
+            echo "      setup -h                Display this help message"
+            echo "      setup -f                Force install"
+            exit 0
+            ;;
+        f )
+            force=1
+            ;;
+        \? )
+            echo "Usage: cmd [-h] [-f]"
+            exit 0
+            ;;
+    esac
+done
+
+# Check if conda exists
+if echo $PATH | grep -q $ANACONDA_KEYWORD; then
+    hasAnaconda=1
+    echo "Conda found in path"
+fi
+
+if echo $PATH | grep -q $MINICONDA_KEYWORD
+then
+    hasAnaconda=1
+    echo "Miniconda found in path"
+fi
+
+if [[ $hasAnaconda -eq 0 ]]; then
+    echo "Anaconda/Miniconda not installed - install from $ANACONDA_DOWNLOAD_URL"
+    openURL $ANACONDA_DOWNLOAD_URL
+    exit 125
+fi
+
+# Check if OS is supported
+if [[ "$OSTYPE" != "linux-gnu" && "$OSTYPE" != "darwin"* ]]; then
+    echo "Only Linux and MacOS are supported"
+    exit 125
+fi
+
+# Create Anaconda environment (dosma_env)
+if [[ `conda env list | grep $DOSMA_ENV_NAME` ]]; then
+    if [[ ${force} -eq 0 ]]; then
+        echo "Environment 'dosma_env' found. Run 'conda activate dosma_env' to get started."
+    else
+        conda env remove -n $DOSMA_ENV_NAME
+        conda env create -f $ENV_FILE
+    fi
+else
+    conda env create -f $ENV_FILE
+fi
+
+# Add dosma to path
+if [[ -z `cat ${bash_file} | grep -q '# added by DOSMA setup'` ]]; then
+    cp $bash_file $bash_file"-dosma.bak"
+    echo $bash_file
+    echo "Adding dosma to path - changes made in $bash_file"
+    echo "" >> $bash_file
+    echo "# added by DOSMA setup" >> $bash_file
+    echo 'export PATH='$BIN_DIR':$PATH' >> $bash_file
+fi
+
+echo "for command line: 'dosma -h'"
+echo "for GUI (user interface): 'dosma --app'"
+
+# Launch google form
+openURL $GOOGLE_FORM_URL

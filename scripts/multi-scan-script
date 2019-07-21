@@ -34,6 +34,9 @@
 # @author: Arjun Desai, Stanford University
 #          (c) Stanford University, 2018
 
+echo "This file is currently deprecated - if needed, please make an issue on the corresponding Github repository"
+exit 125
+
 WEIGHTS_DIRECTORY="/Users/arjundesai/Documents/stanford/research/msk_pipeline_raw/weights"
 if [ -z "$WEIGHTS_DIRECTORY" ]; then
     echo "Please define WEIGHTS_DIRECTORY in script. Use the absolute path"
@@ -73,29 +76,29 @@ for i in $FILES; do
 
     # use qDESS to get femoral cartilage segmentation + 3D t2 maps
     if [ ! -e $TARGET_SCAN ]; then
-    	python -m dosma --d $i --s $SAVE_DIRNAME qdess --fc segment --rms --weights_dir $WEIGHTS_DIRECTORY
-    	python -m dosma --l $SAVE_DIRNAME qdess --fc t2
+    	dosma --d $i --s $SAVE_DIRNAME qdess --fc segment --rms --weights_dir $WEIGHTS_DIRECTORY
+    	dosma --l $SAVE_DIRNAME qdess --fc t2
 	fi
 
 	# interregister cubequant with qdess
 	if [ ! -e $CUBEQUANT_INTERREGISTERED_DATA ]; then
 		echo $CUBEQUANT_INTERREGISTERED_DATA
-    	python -m dosma --d $CUBEQUANT_DIRNAME --s $SAVE_DIRNAME cubequant interregister --ts $TARGET_SCAN --tm $MASK
+    	dosma --d $CUBEQUANT_DIRNAME --s $SAVE_DIRNAME cubequant interregister --ts $TARGET_SCAN --tm $MASK
     fi
 
     # cubequant 3D t1rho map
     if [ ! -e $CUEQUANT_T1RHO ]; then
-    	python -m dosma --l $SAVE_DIRNAME cubequant t1_rho
+    	dosma --l $SAVE_DIRNAME cubequant t1_rho
     fi
 
     # interregister cones with qdess
     if [ ! -e $CONES_INTERREGISTERED_DATA ]; then
-    	python -m dosma --d $CONES_DIRNAME --s $SAVE_DIRNAME cones interregister --ts $TARGET_SCAN --tm $MASK
+    	dosma --d $CONES_DIRNAME --s $SAVE_DIRNAME cones interregister --ts $TARGET_SCAN --tm $MASK
     fi
 
     # cones 3D t2_star map
     if [ ! -e $CONES_T2STAR ]; then
-    	python -m dosma --l $SAVE_DIRNAME cones t2_star
+    	dosma --l $SAVE_DIRNAME cones t2_star
     fi
 
     # analyze femoral cartilage
