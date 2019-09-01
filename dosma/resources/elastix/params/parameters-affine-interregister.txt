@@ -1,0 +1,70 @@
+// *********************
+// * rigid
+// *********************
+
+// *********************
+// * ImageTypes
+// *********************
+(FixedInternalImagePixelType "float")
+(MovingInternalImagePixelType "float")
+(UseDirectionCosines "true")
+
+// *********************
+// * Components
+// *********************
+(FixedImagePyramid "FixedSmoothingImagePyramid")
+(MovingImagePyramid "MovingSmoothingImagePyramid")
+(Registration "MultiResolutionRegistration")
+(Interpolator "BSplineInterpolator")
+(ResampleInterpolator "FinalBSplineInterpolator")
+(Metric "AdvancedMattesMutualInformation")
+(BSplineInterpolationOrder 3)
+(Resampler "DefaultResampler")
+(Optimizer "AdaptiveStochasticGradientDescent")
+(Transform "EulerTransform")
+
+// *********************
+// * Mask settings
+// *********************
+(ErodeMask "false")
+(ErodeFixedMask "false")
+
+// *********************
+// * Optimizer settings
+// *********************
+(NumberOfResolutions 3)
+(MaximumNumberOfIterations 400)
+(ASGDParameterEstimationMethod "Original")
+(AutomaticParameterEstimation "true")
+(AutomaticTransformInitialization "true")
+(AutomaticScalesEstimation "true")
+
+// *********************
+// * Transform settings
+// *********************
+(HowToCombineTransforms "Compose")
+
+// *********************
+// * Pyramid settings
+// *********************
+(NumberOfHistogramBins 32)
+
+
+// *********************
+// * Sampler parameters
+// *********************
+(NumberOfSpatialSamples 2000)
+//(ImageSampler "RandomSparseMask")
+(ImageSampler "RandomCoordinate")
+(CheckNumberOfSamples "true")
+(NewSamplesEveryIteration "true")
+(FinalBSplineInterpolationOrder 0)
+
+// *********************
+// * Output settings
+// *********************
+(DefaultPixelValue 0)
+(WriteTransformParametersEachIteration "false")
+(WriteResultImage  "true")
+(ResultImageFormat "nii.gz")
+(ResultImagePixelType "float")
