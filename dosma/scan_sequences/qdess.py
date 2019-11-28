@@ -70,10 +70,14 @@ class QDess(TargetSequence):
         return mask
 
     def generate_t2_map(self, tissue: Tissue, suppress_fat: bool = False,
+                        suppress_fluid: bool = False, beta: float = 1.2,
                         gl_area: float = None, tg: float = None):
-        """ Generate 3D t2 map
+        """ Generate 3D t2 map.
         :param tissue: A Tissue instance
         :param suppress_fat: Suppress fat region in t2 computation (i.e. reduce noise)
+        :param suppress_fluid: Suppress fluid region in t2 computation. Fluid-nulled image is calculated as
+            `S1 - beta*S2`.
+        :param beta: Beta value used for suppressing fluid. Defaults to 1.2.
         :param gl_area: GL Area - required if not provided in the dicom
         :param tg: tg value (in microseconds) - required if not provided in the dicom
         :return MedicalVolume with 3D map of t2 values
@@ -139,6 +143,10 @@ class QDess(TargetSequence):
 
         if suppress_fat:
             t2map = t2map * (echo_1 > 0.15 * np.max(echo_1))
+
+        if suppress_fluid:
+            vol_null_fluid = echo_1 - beta * echo_2
+            t2map = t2map * (vol_null_fluid > 0.1 * np.max(vol_null_fluid))
 
         t2_map_wrapped = MedicalVolume(t2map,
                                        affine=subvolumes[0].affine,
@@ -211,6 +219,8 @@ class QDess(TargetSequence):
                                                aliases=['t2'],
                                                param_help={
                                                    'suppress_fat': 'suppress computation on low SNR fat regions',
+                                                   'suppress_fluid': 'suppress computation on fluid regions',
+                                                   'beta': 'constant for calculating fluid-nulled image (S1-beta*S2)',
                                                    'gl_area': 'gl_area',
                                                    'tg': 'tg'},
                                                help='generate T2 map')
