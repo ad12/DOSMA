@@ -14,6 +14,7 @@ from dosma.models.seg_model import SegModel
 from dosma.models.util import SUPPORTED_MODELS
 from dosma.models.util import get_model
 from dosma.msk import knee
+from dosma.scan_sequences.cones import Cones
 from dosma.scan_sequences.cube_quant import CubeQuant
 from dosma.scan_sequences.mapss import Mapss
 from dosma.scan_sequences.qdess import QDess
@@ -41,7 +42,7 @@ SEGMENTATION_BATCH_SIZE_KEY = 'batch_size'
 
 TISSUES_KEY = 'tissues'
 
-SUPPORTED_SCAN_TYPES = [QDess, CubeQuant, Mapss]
+SUPPORTED_SCAN_TYPES = [Cones, CubeQuant, Mapss, QDess]
 BASIC_TYPES = [bool, str, float, int, list, tuple]
 
 
