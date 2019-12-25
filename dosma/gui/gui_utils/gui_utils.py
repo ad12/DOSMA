@@ -122,8 +122,10 @@ def convert_base_type_to_gui(param_name, param_type, param_default, root, **kwar
         else:
             hbox = format_str_gui(root, param_name, type_var)
 
-    if balloon and param_help:
-        balloon.bind(hbox, param_help)
+    # TODO: Add suport for float and int values.
+    if hbox:
+        if balloon and param_help:
+            balloon.bind(hbox, param_help)
 
     return type_var
 

@@ -52,7 +52,7 @@ class QDessTest(util.ScanTest):
         self.__cmd_line_helper__(cmdline_str)
 
         # Generate T2 map for femoral cartilage, tibial cartilage, and meniscus via command line
-        cmdline_str = '--l %s qdess --fc t2 --suppress_fat' % self.data_dirpath
+        cmdline_str = '--l %s qdess --fc t2 --suppress_fat --suppress_fluid --beta 1.1' % self.data_dirpath
         self.__cmd_line_helper__(cmdline_str)
 
 
