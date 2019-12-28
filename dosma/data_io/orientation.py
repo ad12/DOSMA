@@ -1,5 +1,4 @@
-"""
-Standardized orientation among different libraries
+"""Standardized orientation among different libraries.
 
 Various libraries have different ways to interpret information read from various image formats (Dicom, NIfTi, etc)
 Here, we standardize the orientation for this framework.
@@ -32,15 +31,16 @@ e.g.:
 | z |       [  0.        ,  -0.3125    ,   0.        ,  88.58760071]     | k |
 | 1 |       [  0.        ,   0.        ,   0.        ,   1.        ]     | 1 |
 
-
-@author: Arjun Desai
-        (C) Stanford University, 2019
+Attributes:
+    SAGITTAL (tuple[str]): Image orientation for sagittal scans.
+    CORONAL (tuple[str]): Image orientation for coronal scans.
+    AXIAL (tuple[str]): Image orientation for axial scans.
 """
 
-__all__ = ['get_transpose_inds', 'get_flip_inds', 'orientation_nib_to_standard', 'orientation_standard_to_nib',
-           'SAGITTAL', 'CORONAL', 'AXIAL']
+__all__ = ["get_transpose_inds", "get_flip_inds", "orientation_nib_to_standard", "orientation_standard_to_nib",
+           "SAGITTAL", "CORONAL", "AXIAL"]
 
-# Default Orientations
+
 SAGITTAL = ('SI', 'AP', 'LR')
 CORONAL = ('SI', 'LR', 'AP')
 AXIAL = ('AP', 'LR', 'SI')
@@ -53,12 +53,13 @@ __ORIENTATIONS_TO_AXIS_ID__ = {'LR': 0, 'RL': 0,
 
 
 def __check_orientation__(orientation: tuple):
-    """
-    Check if orientation tuple defines a valid orientation
+    """Check if orientation tuple defines a valid orientation.
 
-    :param orientation: a tuple defining image orientation using standard orientation format
+    Args:
+        orientation (tuple[str]): Image orientation in standard orientation format.
 
-    :raises ValueError if orientation tuple is invalid
+    Raises:
+        ValueError: If orientation tuple is invalid.
     """
     is_orientation_format = len(orientation) == __EXPECTED_ORIENTATION_TUPLE_LEN__ and sum(
         [type(o) is str for o in orientation]) == __EXPECTED_ORIENTATION_TUPLE_LEN__
@@ -70,19 +71,21 @@ def __check_orientation__(orientation: tuple):
     unique_ids = len(orientation_ids) == len(set(orientation_ids))
 
     if not is_orientation_format or not orientation_str_exists or not unique_ids:
-        raise ValueError(
-            "Orientation format mismatch: Orientations must be tuple of strings of length %d." % __EXPECTED_ORIENTATION_TUPLE_LEN__)
+        raise ValueError("Orientation format mismatch: Orientations must be tuple of strings of "
+                         "length {}".format(__EXPECTED_ORIENTATION_TUPLE_LEN__))
 
 
 def get_transpose_inds(curr_orientation: tuple, new_orientation: tuple):
-    """
-    Get indices for transposing orientation axes to format volume in different plane
+    """Get indices for transposing orientation axes to format volume in different plane.
+
     i.e. sagittal <--> axial, sagittal <--> coronal, coronal <--> axial
 
-    :param curr_orientation: a tuple defining image orientation using standard orientation format
-    :param new_orientation: a tuple defining image orientation using standard orientation format
+    Args:
+        curr_orientation (tuple[str]): Current image orientation.
+        new_orientation (tuple[str]): New image orientation.
 
-    :return: a tuple of ints
+    Returns:
+        tuple[int]: Axes to transpose to change orientation.
     """
     __check_orientation__(curr_orientation)
     __check_orientation__(new_orientation)
@@ -99,15 +102,17 @@ def get_transpose_inds(curr_orientation: tuple, new_orientation: tuple):
 
 
 def get_flip_inds(curr_orientation: tuple, new_orientation: tuple):
-    """
-    Get indices for flipping orientation around axis - i.e. x --> -x, y --> -y, z --> -z
+    """Get indices for flipping orientation around axis - i.e. x --> -x, y --> -y, z --> -z.
 
-    :param curr_orientation: a tuple defining image orientation using standard orientation format
-    :param new_orientation: a tuple defining image orientation using standard orientation format
+    Args:
+        curr_orientation (tuple[str]): Current image orientation.
+        new_orientation (tuple[str]): New image orientation.
 
-    :raises ValueError if mismatch in orientation indices. To avoid this error, apply transpose prior to flipping
+    Returns:
+        list[int]: Axes in volume to flip.
 
-    :return: indices in tuple to flip
+    Raises:
+        ValueError: If mismatch in orientation indices. To avoid this error, apply transpose prior to flipping.
     """
     __check_orientation__(curr_orientation)
     __check_orientation__(new_orientation)
@@ -126,19 +131,20 @@ def get_flip_inds(curr_orientation: tuple, new_orientation: tuple):
     return flip_axs_inds
 
 
-# Nibabel to standard orientation conversion utils
+# Nibabel to standard orientation conversion utils.
 __nib_to_standard_orientation_map__ = {'R': 'LR', 'L': 'RL',
                                        'A': 'PA', 'P': 'AP',
                                        'S': 'IS', 'I': 'SI'}
 
 
 def orientation_nib_to_standard(nib_orientation):
-    """
-    Convert Nibabel orientation to the standard orientation format
+    """Convert Nibabel orientation to the standard orientation format.
 
-    :param nib_orientation: a RAS+ tuple orientation used by Nibabel
+    Args:
+        nib_orientation: a RAS+ tuple orientation used by Nibabel.
 
-    :return: a tuple corresponding to the standard orientation format
+    Returns:
+        tuple[str]: Image orientation in the standard orientation format.
     """
     orientation = []
     for symb in nib_orientation:
@@ -147,12 +153,13 @@ def orientation_nib_to_standard(nib_orientation):
 
 
 def orientation_standard_to_nib(orientation):
-    """
-    Convert standard orientation format to Nibabel orientation
+    """Convert standard orientation format to Nibabel orientation.
 
-    :param orientation: a tuple corresponding to the standard orientation format
+    Args:
+        orientation: Image orientation in the standard orientation format.
 
-    :return: a RAS+ tuple orientation used by Nibabel
+    Returns:
+        tuple[str]: RAS+ tuple orientation used by Nibabel.
     """
     nib_orientation = []
     for symb in orientation:

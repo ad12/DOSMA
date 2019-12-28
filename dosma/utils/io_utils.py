@@ -4,13 +4,19 @@ import pickle
 import h5py
 import pandas as pd
 
-__all__ = ['check_dir', 'save_pik', 'load_pik', 'save_h5', 'load_h5', 'save_tables']
+from typing import Sequence
+
+__all__ = ['mkdirs', 'save_pik', 'load_pik', 'save_h5', 'load_h5', 'save_tables']
 
 
-def check_dir(dir_path):
-    """Make directory is directory does not exist
-    :param dir_path: path to directory
-    :return: path to directory
+def mkdirs(dir_path: str):
+    """Make directory is directory does not exist.
+
+    Args:
+        dir_path (str): Directory path to make.
+
+    Returns:
+        str: path to directory
     """
     if not os.path.isdir(dir_path):
         os.makedirs(dir_path)
@@ -18,65 +24,89 @@ def check_dir(dir_path):
     return dir_path
 
 
-def save_pik(filepath, data):
-    """Save data using pickle
-    :param data: data to save
-    :param filepath: a string
+def save_pik(file_path: str, data):
+    """Save data using `pickle`.
+
+    Pickle is not be stable across Python 2/3.
+
+    Args:
+        file_path (str): File path to save to.
+        data (Any): Data to serialize.
     """
-    check_dir(os.path.dirname(filepath))
-    with open(filepath, "wb") as f:
+    mkdirs(os.path.dirname(file_path))
+    with open(file_path, "wb") as f:
         pickle.dump(data, f)
 
 
-def load_pik(filepath):
-    """Load data using pickle
-    :param filepath: filepath to load from
-    :return: data saved using save_pik
-    """
-    if (not os.path.isfile(filepath)):
-        raise FileNotFoundError('%s does not exist' % filepath)
+def load_pik(file_path: str):
+    """Load data using `pickle`.
 
-    with open(filepath, "rb") as f:
+    Should be used with :any:`save_pik`.
+
+    Pickle is not be stable across Python 2/3.
+
+    Args:
+        file_path (str): File path to load from.
+
+    Returns:
+        Any: Loaded data.
+
+    Raises:
+        FileNotFoundError: If `file_path` does not exist.
+    """
+    if not os.path.isfile(file_path):
+        raise FileNotFoundError("{} does not exist".format(file_path))
+
+    with open(file_path, "rb") as f:
         return pickle.load(f)
 
 
-def save_h5(filepath, data_dict):
-    """Save data in H5DF format
-    :param filepath: path to h5 file to create
-    :param data_dict: dictionary of data to store
-    :return:
+def save_h5(file_path: str, data_dict: dict):
+    """Save data in H5DF format.
+
+    Args:
+        file_path (str): File path to save to.
+        data_dict (dict): Dictionary of data to store. Dictionary can only have depth of 1.
     """
-    check_dir(os.path.dirname(filepath))
-    with h5py.File(filepath, 'w') as f:
+    mkdirs(os.path.dirname(file_path))
+    with h5py.File(file_path, 'w') as f:
         for key in data_dict.keys():
             f.create_dataset(key, data=data_dict[key])
 
 
-def load_h5(filepath):
-    """Load data in H5DF format
-    :param filepath: path to h5 file
-    :return: dictionary of data values stored using save_h5
+def load_h5(file_path):
+    """Load data in H5DF format.
+
+    Args:
+        file_path (str): File path to save to.
+
+    Returns:
+        dict: Loaded data.
+
+    Raises:
+        FileNotFoundError: If `file_path` does not exist.
     """
-    if not os.path.isfile(filepath):
-        raise FileNotFoundError('%s does not exist' % filepath)
+    if not os.path.isfile(file_path):
+        raise FileNotFoundError("{} does not exist".format(file_path))
 
     data = dict()
-    with h5py.File(filepath, 'r') as f:
+    with h5py.File(file_path, 'r') as f:
         for key in f.keys():
             data[key] = f.get(key).value
 
     return data
 
 
-def save_tables(filepath, data_frames, sheet_names=None):
-    """Save data in excel tables
-    :param filepath: filepath to excel file
-    :param data_frames: panda dataframes to use
-    :param sheet_names: names of different sheets if storing multi-sheet data
-    :return:
+def save_tables(file_path: str, data_frames: Sequence[pd.DataFrame], sheet_names: Sequence[str]=None):
+    """Save data in excel tables.
+
+    Args:
+        file_path (str): File path to excel file.
+        data_frames (Sequence[pd.DataFrame]): Tables to store to excel file. One table stored per sheet.
+        sheet_names (:obj:`Sequence[str]`, optional): Sheet names for each data frame.
     """
-    check_dir(os.path.dirname(filepath))
-    writer = pd.ExcelWriter(filepath)
+    mkdirs(os.path.dirname(file_path))
+    writer = pd.ExcelWriter(file_path)
 
     if sheet_names is None:
         sheet_names = []

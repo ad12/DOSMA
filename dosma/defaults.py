@@ -10,6 +10,9 @@ import nested_lookup
 import shutil
 import yaml
 
+
+__all__ = ['preferences']
+
 # Parse preferences file
 _file_dirpath = os.path.dirname(os.path.abspath(__file__))
 _internal_preferences_template_filepath = os.path.join(_file_dirpath, 'resources/templates/.preferences.yml')
@@ -28,7 +31,7 @@ DEFAULT_FONT_SIZE = 16
 DEFAULT_TEXT_SPACING = DEFAULT_FONT_SIZE * 0.01
 
 
-class _Preferences():
+class _Preferences(object):
     """A pseudo-Singleton class implementation to track preferences.
 
     Do not instantiate this class. To modify/update preferences use the preferences module variable defined below.

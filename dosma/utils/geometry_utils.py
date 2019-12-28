@@ -5,6 +5,15 @@ __all__ = ['circle_fit', 'cart2pol']
 
 
 def circle_fit(x, y):
+    """Fit a circle given (x, y) scatter points in a plane.
+
+    Args:
+      x (np.ndarray): x-coordinates of scatter points.
+      y (np.ndarray): y-coordinates of scatter points.
+
+    Returns:
+        tuple[float, float, float]: Coordinates and radius of circle (center x, center y, radius).
+    """
     ###
     # this function fit a circle given (x,y) scatter points in a plane.
     #
@@ -46,6 +55,15 @@ def circle_fit(x, y):
 
 
 def cart2pol(x, y):
+    """Convert cartesian coordinates to polar coordinates.
+
+    Args:
+        x: x-coordinate.
+        y: y-coordinate.
+
+    Returns:
+        tuple[float, float]: radius (rho) and angle (phi).
+    """
     rho = np.sqrt(x ** 2 + y ** 2)
     phi = np.arctan2(y, x)
 

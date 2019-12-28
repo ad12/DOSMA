@@ -1,50 +1,57 @@
-"""
-MedicalVolume: Wrapper for 3D volumes
+"""MedicalVolume
 
-@author: Arjun Desai
-        (C) Stanford University, 2019
+This module defines `MedicalVolume`, which is a wrapper for 3D volumes.
 """
 
 import nibabel as nib
 import numpy as np
 
+import pydicom
+
 from dosma.data_io import orientation as stdo
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
 
-__all__ = ['MedicalVolume']
+from typing import List
+
+__all__ = ["MedicalVolume"]
 
 
-class MedicalVolume():
-    """Wrapper for 3D volumes """
+class MedicalVolume(object):
+    """Wrapper for 3D medical volumes.
 
-    def __init__(self, volume: np.ndarray, affine: np.ndarray, headers=None):
-        """
-        :param volume: a 3D numpy array
-        :param affine: a 4x4 numpy array resembling affine matrix transform in RAS+ coordinates
-        """
+    Medical volumes are 3D matrices representing medical data. These volumes have inherent metadata, such as pixel/voxel
+        spacing, global coordinates, rotation information, which can be characterized by an affine matrix.
+
+    Args:
+        volume (np.ndarray): 3D volume.
+        affine (np.ndarray): 4x4 array corresponding to affine matrix transform in RAS+ coordinates.
+        headers (list[pydicom.FileDataset]): Headers for DICOM files.
+    """
+
+    def __init__(self, volume: np.ndarray, affine: np.ndarray, headers: List[pydicom.FileDataset] = None):
         if headers and len(headers) != volume.shape[-1]:
-            raise ValueError('Header mismatch. %d headers, but %d slices' % (len(headers), volume.shape[-1]))
+            raise ValueError("Header mismatch. {:d} headers, but {:d} slices".format(len(headers), volume.shape[-1]))
 
         self._volume = volume
         self._affine = np.array(affine)
         self._headers = headers
 
-    def save_volume(self, filepath, data_format: ImageDataFormat = ImageDataFormat.nifti):
-        """
-        Write volumes to specified image data format
-        :param filepath: filepath to save data
-        :param data_format: an ImageDataFormat
+    def save_volume(self, file_path: str, data_format: ImageDataFormat = ImageDataFormat.nifti):
+        """Write volumes in specified data format.
+
+        Args:
+            file_path (str): File path to save data. May be modified to follow convention given by the data format in which
+                the volume will be saved.
+            data_format (ImageDataFormat): Format to save data.
         """
         import dosma.data_io.format_io_utils
         writer = dosma.data_io.format_io_utils.get_writer(data_format)
 
-        writer.save(self, filepath)
+        writer.save(self, file_path)
 
     def reformat(self, new_orientation: tuple):
-        """
-        Reorients self to a specified orientation
-        :param new_orientation: a tuple specifying orientation
+        """Reorients volume to a specified orientation.
 
         Reorientation method:
         ---------------------
@@ -60,6 +67,9 @@ class MedicalVolume():
         1. Transpose: Switching (transposing) axes in volume is the same as switching columns in affine matrix
         2. Flipping: Negate each column corresponding to pixel axis to flip (i, j, k) and reestablish origins based on
                      flipped axes
+
+        Args:
+            new_orientation (tuple): New orientation.
         """
         # Check if new_orientation is the same as current orientation
         assert type(new_orientation) is tuple, "Orientation must be a tuple"
@@ -111,18 +121,34 @@ class MedicalVolume():
         self._volume = volume
 
     def is_identical(self, mv):
-        """
-        Check if another medical volume is identical to self
-        Two volumes are identical if they have the same pixel_spacing, orientation, scanner_origin, and volume
-        :param mv: a MedicalVolume
-        :return: a boolean
+        """Check if another medical volume is identical.
+
+        Two volumes are identical if they have the same pixel_spacing, orientation, scanner_origin, and volume.
+
+        Args:
+            mv (MedicalVolume): Volume to compare with.
+
+        Returns:
+            bool: `True` if identical, `False` otherwise.
         """
         if type(mv) != type(self):
             raise TypeError('type(mv) must be %s' % str(type(self)))
 
         return self.is_same_dimensions(mv) and (mv.volume == self.volume).all()
 
-    def __allclose_spacing(self, mv, precision=None):
+    def __allclose_spacing(self, mv, precision: int = None):
+        """Check if spacing between self and another medical volume is within tolerance.
+
+        Tolerance is `10 ** (-precision)`.
+
+        Args:
+            mv (MedicalVolume): Volume to compare with.
+            precision (`int`, optional): Number of significant figures after the decimal. If not specified, check that
+                affine matrices between two volumes are identical. Defaults to `None`.
+
+        Returns:
+            bool: `True` if spacing between two volumes within tolerance, `False` otherwise.
+        """
         if precision:
             tol = 10 ** (-precision)
             return np.allclose(mv.affine[:3, :3], self.affine[:3, :3], atol=tol) and np.allclose(mv.scanner_origin,
@@ -131,53 +157,65 @@ class MedicalVolume():
         else:
             return (mv.affine == self.affine).all()
 
-    def is_same_dimensions(self, mv, precision=None):
-        """
-        Check if two volumes have the same dimensions
-        Two volumes have the same dimensions if they have the same pixel_spacing, orientation, and scanner_origin
-        :param mv:
-        :return: a boolean
+    def is_same_dimensions(self, mv, precision: int = None):
+        """Check if two volumes have the same dimensions.
+
+        Two volumes have the same dimensions if they have the same pixel_spacing, orientation, and scanner_origin.
+
+        Args:
+            mv (MedicalVolume): Volume to compare with.
+            precision (`int`, optional): Number of significant figures after the decimal. If not specified, check that
+                affine matrices between two volumes are identical. Defaults to `None`.
+
+        Returns:
+            bool: `True` if pixel spacing, orientation, and scanner origin between two volumes within tolerance, `False`
+                otherwise.
+
+        Raises:
+            TypeError: If `mv` is not a MedicalVolume.
         """
         if type(mv) != type(self):
-            raise TypeError('type(mv) must be %s' % str(type(self)))
+            raise TypeError("'mv' must be of type {}".format(str(type(self))))
 
-        if precision:
-            return self.__allclose_spacing(mv,
-                                           precision) and mv.orientation == self.orientation and mv.volume.shape == self.volume.shape
-        else:
-            return self.__allclose_spacing(mv,
-                                           precision) and mv.orientation == self.orientation and mv.volume.shape == self.volume.shape
+        return self.__allclose_spacing(mv, precision) \
+               and mv.orientation == self.orientation \
+               and mv.volume.shape == self.volume.shape
 
     def match_orientation(self, mv):
-        """
-        Reorient another MedicalVolume to orientation specified by self.orientation
-        :param mv: a MedicalVolume
+        """Reorient another MedicalVolume to orientation specified by self.orientation.
+
+        Args:
+            mv (MedicalVolume): Volume to reorient.
         """
         if type(mv) != type(self):
-            raise TypeError('type(mv) must be %s' % str(type(self)))
+            raise TypeError("'mv' must be of type {}".format(str(type(self))))
 
         mv.reformat(self.orientation)
 
     def match_orientation_batch(self, mvs):
-        """
-        Reorient a group of MedicalVolumes to orientation specified by self.orientation
-        :param mvs: a list/tuple of MedicalVolumes
+        """Reorient a collection of MedicalVolumes to orientation specified by self.orientation.
+
+        Args:
+            mvs (list[MedicalVolume]): Collection of MedicalVolumes.
         """
         for mv in mvs:
             self.match_orientation(mv)
 
-    # Properties
     @property
     def volume(self):
+        """np.ndarray: 3D numpy array representing volume values."""
         return self._volume
 
     @volume.setter
     def volume(self, value: np.ndarray):
+        """
+        If the volume is of a different shape, the headers are no longer valid, so delete all reorientations are done
+            as part of MedicalVolume, so reorientations are permitted.
+
+        However, external setting of the volume to a different shape array is not allowed.
+        """
         assert value.ndim == 3, "Volume must be 3D"
 
-        # if the volume is of a different shape, the headers are no longer valid, so delete
-        # all reorientations are done as part of MedicalVolume, so reorientations are permitted
-        # however, external setting of the volume to a different shape array is not allowed
         if self._volume.shape != value.shape:
             self._headers = None
 
@@ -185,37 +223,34 @@ class MedicalVolume():
 
     @property
     def headers(self):
+        """list[pydicom.FileDataset]: Headers for DICOM files."""
         return self._headers
 
     @property
     def pixel_spacing(self):
-        """
-        Get pixel spacing in order of current orientation
-        :return a tuple
-        """
+        """tuple[float]: Pixel spacing in order of current orientation."""
         vecs = self._affine[:3, :3]
         ps = tuple(np.sqrt(np.sum(vecs ** 2, axis=0)))
 
-        assert len(ps) == 3, "pixel spacing must have length of 3"
+        assert len(ps) == 3, "Pixel spacing must have length of 3"
         return ps
 
     @property
     def orientation(self):
-        """
-        Get the closest orientation in standard orientation coordinates
-        :return: a tuple of standard orientation coordinates (see orientation.py for more information on format)
+        """tuple[str]: Image orientation in standard orientation format.
+
+        See orientation.py for more information on conventions.
         """
         nib_orientation = nib.aff2axcodes(self._affine)
         return stdo.orientation_nib_to_standard(nib_orientation)
 
     @property
     def scanner_origin(self):
-        """
-        Get the scanner origin in global RAS+ x,y,z coordinates
-        :return:
+        """tuple[float]: Scanner origin in global RAS+ x,y,z coordinates.
         """
         return tuple(self._affine[:3, 3])
 
     @property
     def affine(self):
+        """np.ndarray: 4x4 affine matrix for volume in current orientation."""
         return self._affine

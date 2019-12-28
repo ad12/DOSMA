@@ -7,42 +7,27 @@ from matplotlib.lines import Line2D
 
 from dosma import defaults
 
-__all__ = ['downsample_slice', 'write_regions']
+__all__ = ["downsample_slice", "write_regions"]
 
 
 def downsample_slice(img_array, ds_factor, is_mask=False):
-    '''
-    
-    Function Info:
-        Takes in a 3D array and then downsamples in the z-direction by 
-        a user-specified downsampling factor
+    """Takes in a 3D array and then downsamples in the z-direction by a user-specified downsampling factor.
         
-    Parameters:
-    -----------
-    img_array : float32 array
-        3D numpy array for now (xres x yres x zres)
-    ds_factor : int
-        Downsampling factor
-    is_mask : bool
-        Set to True if downsampling a mask and binarizing (unlike for image)
+    Args:
+        img_array (np.ndarray): 3D numpy array for now (xres x yres x zres)
+        ds_factor (int): Downsampling factor
+        is_mask (:obj:`bool`, optional): If `True`, `img_array` is a mask and will be binarized after downsampling.
+            Defaults to `False`.
 
     Returns:
-    --------
-    final : float32 array
-        3D numpy array for now (xres x yres x zres//ds_factor)
+        np.ndarray: 3D numpy array of dimensions (xres x yres x zres//ds_factor)
         
-    Example:
-    --------        
-    input_image  = numpy.random.rand(4,4,4)
-    input_mask   = (a > 0.5)*1
-    output_image = downsample_slice(input_mask, ds_factor = 2, is_mask = False)
-    output_mask  = downsample_slice(input_mask, ds_factor = 2, is_mask = True)
-
-    Created By:
-    -----------  
-    Akshay Chaudhari, akshaysc@stanford.edu, October 16th 2018
-
-    '''
+    Examples:
+        >>> input_image  = numpy.random.rand(4,4,4)
+        >>> input_mask   = (a > 0.5) * 1.0
+        >>> output_image = downsample_slice(input_mask, ds_factor = 2, is_mask = False)
+        >>> output_mask  = downsample_slice(input_mask, ds_factor = 2, is_mask = True)
+    """
 
     img_array = np.transpose(img_array, (2, 0, 1))
     L = list(img_array)
@@ -54,37 +39,42 @@ def downsample_slice(img_array, ds_factor, is_mask=False):
     final = np.array([sum(x) for x in grouper(L, ds_factor)])
     final = np.transpose(final, (1, 2, 0))
 
-    #     Binarize if it is a mask
+    # Binarize if it is a mask.
     if is_mask is True:
         final = (final >= 1) * 1
 
     return final
 
 
-def write_regions(filepath, arr, plt_dict=None):
-    """
-    Write 2D array to region image where colors correspond to the region
+def write_regions(file_path, arr, plt_dict=None):
+    """Write 2D array to region image where colors correspond to the region.
 
-    All finite values should be >= 1
-    nan/inf value are ignored - written as white
+    All finite values should be >= 1.
+    nan/inf value are ignored - written as white.
 
-    :param filepath: Filepath to save image
-    :param arr: The 2D numpy array to convert to region image
-    :param labels: labels for unique values, default = None
+    Args:
+        file_path (str): File path to save image.
+        arr (np.ndarray): The 2D numpy array to convert to region image. Unique non-zero values correspond to different
+            regions. Values that are `0` or `np.nan` will be written as white pixels.
+        plt_dict (:obj:`dict`, optional): Dictionary of values to use when plotting with `matplotlib`. Keys are strings
+            like `xlabel`, `ylabel`, etc. Use Key `labels` to specify a mapping from unique non-zero values in the array
+            to names for the legend.
     """
 
     if len(arr.shape) != 2:
-        raise ValueError('\'arr\' must be a 2D numpy array')
+        raise ValueError("`arr` must be a 2D numpy array")
 
     unique_vals = np.unique(arr.flatten())
     if 0 in unique_vals:
-        raise ValueError('All finite values in \'arr\' must be >=1')
+        raise ValueError("All finite values in `arr` must be >=1")
 
     unique_vals = unique_vals[np.isfinite(unique_vals)]
     num_unique_vals = len(unique_vals)
 
-    if plt_dict is None:
-        plt_dict = {'xlabel': '', 'ylabel': '', 'title': '', 'labels': None}
+    plt_dict_int = {'xlabel': '', 'ylabel': '', 'title': '', 'labels': None}
+    if plt_dict:
+        plt_dict_int.update(plt_dict)
+    plt_dict = plt_dict_int
 
     labels = plt_dict['labels']
     if labels is None:
@@ -119,4 +109,4 @@ def write_regions(filepath, arr, plt_dict=None):
                      fancybox=True, shadow=True, ncol=3)
     plt.imshow(arr_rgb)
 
-    plt.savefig(filepath, bbox_extra_artists=(lgd,), bbox_inches='tight')
+    plt.savefig(file_path, bbox_extra_artists=(lgd,), bbox_inches='tight')

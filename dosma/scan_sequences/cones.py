@@ -1,3 +1,9 @@
+"""Ultra-short Echo Time Cones (UTE-Cones).
+
+Paper:
+    Qian Y, Williams AA, Chu CR, Boada FE. "Multicomponent T2* mapping of knee cartilage: technical feasibility ex vivo."
+    Magnetic resonance in medicine 2010;64(5):1426-1431."
+"""
 import os
 
 import numpy as np
@@ -14,7 +20,7 @@ from dosma.utils import io_utils
 from dosma.utils.cmd_line_utils import ActionWrapper
 from dosma.utils.fits import MonoExponentialFit
 
-__all__ = ['Cones']
+__all__ = ["Cones"]
 
 __EXPECTED_NUM_ECHO_TIMES__ = 4
 
@@ -27,7 +33,7 @@ __T2_STAR_DECIMAL_PRECISION__ = 3
 
 class Cones(NonTargetSequence):
     """Handles analysis for Cones scan sequence."""
-    NAME = 'cones'
+    NAME = "cones"
 
     def __init__(self, dicom_path=None, load_path=None, **kwargs):
         self.subvolumes = None
@@ -38,7 +44,7 @@ class Cones(NonTargetSequence):
             self.subvolumes, self.echo_times = self.__split_volumes__(__EXPECTED_NUM_ECHO_TIMES__)
 
         if self.subvolumes is None:
-            raise ValueError('Either dicom_path or load_path must be specified')
+            raise ValueError("Either dicom_path or load_path must be specified")
 
     def __validate_scan__(self):
         return True
@@ -53,7 +59,7 @@ class Cones(NonTargetSequence):
         self.echo_times = natsorted(echo_times)
 
     def interregister(self, target_path: str, target_mask_path: str = None):
-        temp_raw_dirpath = io_utils.check_dir(os.path.join(self.temp_path, 'raw'))
+        temp_raw_dirpath = io_utils.mkdirs(os.path.join(self.temp_path, "raw"))
         subvolumes = self.subvolumes
 
         raw_filepaths = dict()
@@ -61,22 +67,22 @@ class Cones(NonTargetSequence):
         echo_time_inds = natsorted(list(subvolumes.keys()))
 
         for i in range(len(echo_time_inds)):
-            raw_filepath = os.path.join(temp_raw_dirpath, '%03d.nii.gz' % i)
+            raw_filepath = os.path.join(temp_raw_dirpath, "{:03d}.nii.gz".format(i))
             subvolumes[i].save_volume(raw_filepath)
             raw_filepaths[i] = raw_filepath
 
         # last echo should be base
         base_echo_time, base_image = len(echo_time_inds) - 1, raw_filepaths[len(echo_time_inds) - 1]
 
-        temp_interregistered_dirpath = io_utils.check_dir(os.path.join(self.temp_path, 'interregistered'))
+        temp_interregistered_dirpath = io_utils.mkdirs(os.path.join(self.temp_path, "interregistered"))
 
-        print('')
-        print('==' * 40)
-        print('Interregistering...')
-        print('Target: %s' % target_path)
+        print("")
+        print("==" * 40)
+        print("Interregistering...")
+        print("Target: {}".format(target_path))
         if target_mask_path is not None:
-            print('Mask: %s' % target_mask_path)
-        print('==' * 40)
+            print("Mask: {}".format(target_mask_path))
+        print("==" * 40)
 
         files_to_warp = []
         for echo_time_ind in raw_filepaths.keys():
@@ -114,19 +120,24 @@ class Cones(NonTargetSequence):
         self.subvolumes = subvolumes
 
     def generate_t2_star_map(self, tissue: Tissue, mask_path: str = None):
-        """Generate 3D T2* map and r2 fit map using mono-exponential fit across subvolumes acquired at different
-                echo times.
-        :param tissue: A Tissue instance
-        :param mask_path: path to mask of ROI to analyze
+        """Generate 3D T2-star map and r-squared fit map using mono-exponential fit across subvolumes acquired at
+            different echo times.
 
-        :return: a T2Star instance
+        T2-star map is also added to the tissue.
+
+        Args:
+            tissue (Tissue): Tissue to generate quantitative value for.
+            mask_path (str): File path to mask of ROI to analyze
+
+        Returns:
+            qv.T2Star: T2-star fit for tissue.
         """
         # only calculate for focused region if a mask is available, this speeds up computation
         mask = tissue.get_mask()
         if (not mask or np.sum(mask.volume) == 0) and mask_path:
             mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
             if tuple(np.unique(mask.volume)) != (0, 1):
-                raise ValueError('mask_filepath must reference binary segmentation volume')
+                raise ValueError("`mask_filepath` must reference binary segmentation volume")
 
         spin_lock_times = []
         subvolumes_list = []
@@ -145,13 +156,23 @@ class Cones(NonTargetSequence):
         t2star_map, r2 = mef.fit()
 
         quant_val_map = qv.T2Star(t2star_map)
-        quant_val_map.add_additional_volume('r2', r2)
+        quant_val_map.add_additional_volume("r2", r2)
 
         tissue.add_quantitative_value(quant_val_map)
 
         return quant_val_map
 
     def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format):
+        """Save data to disk.
+
+        Data will be saved in the directory '`base_save_dirpath`/cones/'.
+
+        Serializes variables specified in by self.__serializable_variables__().
+
+        Args:
+            base_save_dirpath (str): Directory path where all data is stored.
+            data_format (ImageDataFormat): Format to save data.
+        """
         super().save_data(base_save_dirpath, data_format=data_format)
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
 
@@ -163,6 +184,16 @@ class Cones(NonTargetSequence):
             self.subvolumes[spin_lock_time].save_volume(filepath)
 
     def load_data(self, base_load_dirpath: str):
+        """Load data from disk.
+
+        Data will be loaded from the directory '`base_load_dirpath`/cones'.
+
+        Args:
+           base_load_dirpath (str): Directory path where all data is stored.
+
+        Raises:
+           NotADirectoryError: if `base_load_dirpath`/cones/ does not exist.
+        """
         super().load_data(base_load_dirpath)
         base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
 
@@ -178,7 +209,7 @@ class Cones(NonTargetSequence):
 
     @classmethod
     def cmd_line_actions(cls):
-        """Provide command line information (such as name, help strings, etc) as list of dictionary"""
+        """Provide command line information (such as name, help strings, etc) as list of dictionary."""
 
         interregister_action = ActionWrapper(name=cls.interregister.__name__,
                                              help='register to another scan',

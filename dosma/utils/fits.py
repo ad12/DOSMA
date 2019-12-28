@@ -8,38 +8,56 @@ from dosma import defaults
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.defaults import preferences
 
-__all__ = ['Fit', 'MonoExponentialFit']
+from typing import List, Tuple, Union
+
+__all__ = ["MonoExponentialFit"]
 
 
-class Fit(ABC):
-    """Abstract class for fitting functionality"""
+class _Fit(ABC):
+    """Abstract class for fitting quantitative values.
+    """
 
     @abstractmethod
-    def fit(self):
+    def fit(self) -> Tuple[MedicalVolume, MedicalVolume]:
+        """Fit quantitative values per pixel across multiple volumes.
+
+        Pixels with errors in fitting are set to np.nan.
+
+        Returns:
+            tuple[MedicalVolume, MedicalVolume]: Quantitative value volume and r-squared goodness of fit volume.
+        """
         pass
 
 
-class MonoExponentialFit(Fit):
-    """Fit data using monoexponential fit of model A*exp(b*t)"""
+class MonoExponentialFit(_Fit):
+    """Fit quantitative  using mono-exponential fit of model :math:`A*exp(b*t)`.
 
-    def __init__(self, ts, subvolumes, mask: MedicalVolume = None, bounds=(0, 100.0), tc0=30.0, decimal_precision=1):
-        """
-        :param ts: 1D list or numpy array of times corresponding to different subvolumes
-        :param subvolumes: list of MedicalVolumes
-        :param mask: a MedicalVolume mask of pixels to fit - speeds up fitting time
-                        all pixels outside of mask are ignored
-        :param bounds: tuple of [lower, upper) bound
-        :param tc0: initial time constant guess (in milliseconds)
-        :param decimal_precision: precision of rounding
-        """
-        assert (len(ts) == len(subvolumes))
+    Args:
+        ts (:obj:`array-like`): 1D array of times in milliseconds (typically echo times) corresponding to different
+            volumes.
+        subvolumes (list[MedicalVolumes]): Volumes (in order) corresponding to times in `ts`.
+        mask (:obj:`MedicalVolume`, optional): Mask of pixels to fit. If specified, pixels outside of mask region are
+            ignored and set to `np.nan`. Speeds fitting time as fewer fits are required. Defaults to `None`.
+        bounds (:obj:`tuple[float, float]`, optional): Upper and lower bound for quantitative values. Values outside
+            those bounds will be set to `np.nan`. Defaults to `(0, 100.0)`.
+        tc0 (:obj:`float`, optional): Initial time constant guess (in milliseconds). Defaults to `30.0`.
+        decimal_precision (:obj:`int`, optional): Rounding precision after the decimal point. Defaults to `1`.
+    """
+
+    def __init__(self, ts: Union[List, np.ndarray][float], subvolumes: List[MedicalVolume], mask: MedicalVolume = None,
+                 bounds: Tuple[float, float] = (0, 100.0), tc0: float = 30.0, decimal_precision: int = 1):
+
+        if (not isinstance(subvolumes, list)) or (not all([isinstance(sv, MedicalVolume) for sv in subvolumes])):
+            raise TypeError("`subvolumes` must be list of MedicalVolumes.")
+
+        if len(ts) != len(subvolumes):
+            raise ValueError("`len(ts)`={:d}, but `len(subvolumes)`={:d}".format(len(ts), len(subvolumes)))
         self.ts = ts
 
-        assert (type(subvolumes) is list)
-        for sv in subvolumes:
-            assert type(sv) is MedicalVolume
-
         self.subvolumes = subvolumes
+
+        if mask and not isinstance(mask, MedicalVolume):
+            raise TypeError("`mask` must be a MedicalVolume")
         self.mask = mask
 
         orientation = self.subvolumes[0].orientation
@@ -49,16 +67,14 @@ class MonoExponentialFit(Fit):
         if self.mask:
             self.mask.reformat(orientation)
 
-        assert len(bounds) == 2, "Bounds should provide upper lower bound in format (lb, ub)"
+        if len(bounds) != 2:
+            raise ValueError("`bounds` should provide lower/upper bound in format (lb, ub)")
         self.bounds = bounds
 
         self.tc0 = tc0
         self.decimal_precision = decimal_precision
 
     def fit(self):
-        """Fit data used to initialize object
-        :return: tuple of MedicalVolumes of time-constant estimate, r2 vals
-        """
         svs = []
         msk = None
 
@@ -67,7 +83,8 @@ class MonoExponentialFit(Fit):
             assert subvolumes[0].is_same_dimensions(sv), "Dimension mismatch within subvolumes"
 
         if self.mask:
-            assert subvolumes[0].is_same_dimensions(self.mask, defaults.AFFINE_DECIMAL_PRECISION), "Mask dimension mismatch"
+            assert subvolumes[0].is_same_dimensions(self.mask,
+                                                    defaults.AFFINE_DECIMAL_PRECISION), "Mask dimension mismatch"
             msk = self.mask.volume
             msk = msk.reshape(1, -1)
 
@@ -90,10 +107,10 @@ class MonoExponentialFit(Fit):
         map_unfiltered = vals.reshape(original_shape)
         r_squared = r_squared.reshape(original_shape)
 
-        # All accepted values must meet an Rsquared threshold of DEFAULT_R2_THRESHOLD
+        # All accepted values must meet an r-squared threshold of `DEFAULT_R2_THRESHOLD`.
         tc_map = map_unfiltered * (r_squared >= preferences.fitting_r2_threshold)
 
-        # Filter calculated values that are below limit bounds
+        # Filter calculated values that are below limit bounds.
         tc_map[tc_map <= self.bounds[0]] = np.nan
         tc_map = np.nan_to_num(tc_map)
         tc_map[tc_map > self.bounds[1]] = np.nan

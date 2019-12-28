@@ -1,8 +1,8 @@
-"""
-File detailing modules for NIfTI format IO
+"""NIfTI I/O.
 
-@author: Arjun Desai
-        (C) Stanford University, 2019
+This module contains NIfTI input/output helpers.
+
+
 """
 
 import os
@@ -15,12 +15,11 @@ from dosma.data_io.med_volume import MedicalVolume
 from dosma.defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 from dosma.utils import io_utils
 
-__all__ = ['NiftiReader', 'NiftiWriter']
+__all__ = ["NiftiReader", "NiftiWriter"]
 
 
 class NiftiReader(DataReader):
-    """
-    A class for reading data in NIfTI format
+    """A class for reading NIfTI files.
     """
     data_format_code = ImageDataFormat.nifti
 
@@ -43,25 +42,28 @@ class NiftiReader(DataReader):
 
         return aff
 
-    def load(self, filepath):
+    def load(self, file_path):
+        """Load volume from NIfTI file path.
+
+        A NIfTI file should only correspond to one volume.
+
+        Args:
+            file_path (str): File path to NIfTI file.
+
+        Returns:
+            MedicalVolume: Loaded volume.
+
+        Raises:
+            FileNotFoundError: If `file_path` not found.
+            ValueError: If `file_path` does not end in a supported NIfTI extension.
         """
-        Load image data from filepath
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError("{} not found".format(file_path))
 
-        A NIfTI file should only correspond to one volume. As a result, only one volume is outputted
+        if not self.data_format_code.is_filetype(file_path):
+            raise ValueError("{} must be a file with extension '.nii' or '.nii.gz'".format(file_path))
 
-        :param filepath: a string defining filepath to nifti file
-
-        :raises FileNotFoundError if filepath not found
-        :raises ValueError if filepath does not contain supported NIfTI extension
-        :return: a MedicalVolume
-        """
-        if not os.path.isfile(filepath):
-            raise FileNotFoundError('%s not found' % filepath)
-
-        if not self.data_format_code.is_filetype(filepath):
-            raise ValueError('%s must be a file with extension `.nii` or `.nii.gz`' % filepath)
-
-        nib_img = nib.load(filepath)
+        nib_img = nib.load(file_path)
         nib_img_affine = nib_img.affine
         nib_img_affine = self.__normalize_affine(nib_img_affine)
 
@@ -71,27 +73,28 @@ class NiftiReader(DataReader):
 
 
 class NiftiWriter(DataWriter):
-    """
-    A class for writing data in NIfTI format
+    """A class for writing volumes in NIfTI format.
     """
     data_format_code = ImageDataFormat.nifti
 
-    def save(self, im: MedicalVolume, filepath: str):
-        """
-        Save a MedicalVolume in NIfTI format
-        :param im: a Medical Volume
-        :param filepath: a string defining filepath to save image to
+    def save(self, volume: MedicalVolume, file_path: str):
+        """Save volume in NIfTI format,
 
-        :raises ValueError if filepath does not contain supported NIfTI extension
+        Args:
+            volume (MedicalVolume): Volume to save.
+            file_path (str): File path to NIfTI file.
+
+        Raises:
+            ValueError: If `file_path` does not end in a supported NIfTI extension.
         """
-        if not self.data_format_code.is_filetype(filepath):
-            raise ValueError('%s must be a file with extension `.nii` or `.nii.gz`' % filepath)
+        if not self.data_format_code.is_filetype(file_path):
+            raise ValueError("{} must be a file with extension '.nii' or '.nii.gz'".format(file_path))
 
         # Create dir if does not exist
-        io_utils.check_dir(os.path.dirname(filepath))
+        io_utils.mkdirs(os.path.dirname(file_path))
 
-        nib_affine = im.affine
-        np_im = im.volume
+        nib_affine = volume.affine
+        np_im = volume.volume
         nib_img = nib.Nifti1Image(np_im, nib_affine)
 
-        nib.save(nib_img, filepath)
+        nib.save(nib_img, file_path)

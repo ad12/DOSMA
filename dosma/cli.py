@@ -19,7 +19,7 @@ from dosma.scan_sequences.cube_quant import CubeQuant
 from dosma.scan_sequences.mapss import Mapss
 from dosma.scan_sequences.qdess import QDess
 from dosma.tissues.tissue import Tissue
-from dosma.quant_vals import QuantitativeValues as QV
+from dosma.quant_vals import QuantitativeValueType as QV
 
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
