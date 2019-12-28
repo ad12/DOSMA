@@ -267,9 +267,9 @@ class DicomWriter(DataWriter):
         original_orientation = volume.orientation
 
         volume.reformat(orientation)
-        volume = volume.volume
-        assert volume.shape[2] == len(headers), \
-            "Dimension mismatch - {:d} slices but {:d} headers".format(volume.shape[-1], len(headers))
+        volume_arr = volume.volume
+        assert volume_arr.shape[2] == len(headers), \
+            "Dimension mismatch - {:d} slices but {:d} headers".format(volume_arr.shape[-1], len(headers))
 
         # Check if dir_path exists.
         dir_path = io_utils.mkdirs(dir_path)
@@ -279,7 +279,7 @@ class DicomWriter(DataWriter):
 
         for s in range(num_slices):
             s_filepath = os.path.join(dir_path, filename_format % (s + 1))
-            self.__write_dicom_file__(volume[..., s], headers[s], s_filepath)
+            self.__write_dicom_file__(volume_arr[..., s], headers[s], s_filepath)
 
         # Reformat image to original orientation (before saving).
         # We do this, because saving should not affect the existing state of any variable.
