@@ -242,7 +242,7 @@ class CubeQuant(NonTargetSequence):
         return var_names
 
     @classmethod
-    def cmd_line_actions(cls) -> List[(function, ActionWrapper)]:
+    def cmd_line_actions(cls):
         """Provide command line information (such as name, help strings, etc) as list of dictionary."""
 
         interregister_action = ActionWrapper(name=cls.interregister.__name__,

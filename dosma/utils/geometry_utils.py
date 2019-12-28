@@ -4,7 +4,7 @@ from scipy import optimize
 __all__ = ['circle_fit', 'cart2pol']
 
 
-def circle_fit(x, y):
+def circle_fit(x: np.ndarray, y: np.ndarray):
     """Fit a circle given (x, y) scatter points in a plane.
 
     Args:
@@ -12,7 +12,7 @@ def circle_fit(x, y):
       y (np.ndarray): y-coordinates of scatter points.
 
     Returns:
-        tuple[float, float, float]: Coordinates and radius of circle (center x, center y, radius).
+        tuple[float]: Coordinates and radius of circle (center x, center y, radius).
     """
     ###
     # this function fit a circle given (x,y) scatter points in a plane.

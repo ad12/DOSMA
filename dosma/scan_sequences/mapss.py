@@ -21,7 +21,7 @@ from dosma import quant_vals as qv
 from dosma.utils.cmd_line_utils import ActionWrapper
 from dosma.utils.fits import MonoExponentialFit
 
-from typing import List, Tuple, Union
+from typing import List, Sequence
 
 
 __EXPECTED_NUM_ECHO_TIMES__ = 7
@@ -167,7 +167,7 @@ class Mapss(TargetSequence):
 
         return qv_map
 
-    def __fitting_helper(self, qv_type: QuantitativeValueType, echo_inds: Union[List, Tuple][int], tissue: Tissue,
+    def __fitting_helper(self, qv_type: QuantitativeValueType, echo_inds: Sequence[int], tissue: Tissue,
                          bounds, tc0, decimal_precision, mask_path):
         echo_info = [(self.echo_times[i], self.volumes[i]) for i in echo_inds]
 

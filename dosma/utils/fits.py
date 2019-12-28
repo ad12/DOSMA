@@ -8,7 +8,7 @@ from dosma import defaults
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.defaults import preferences
 
-from typing import List, Tuple, Union
+from typing import List, Sequence, Tuple
 
 __all__ = ["MonoExponentialFit"]
 
@@ -44,8 +44,8 @@ class MonoExponentialFit(_Fit):
         decimal_precision (:obj:`int`, optional): Rounding precision after the decimal point. Defaults to `1`.
     """
 
-    def __init__(self, ts: Union[List, np.ndarray][float], subvolumes: List[MedicalVolume], mask: MedicalVolume = None,
-                 bounds: Tuple[float, float] = (0, 100.0), tc0: float = 30.0, decimal_precision: int = 1):
+    def __init__(self, ts: Sequence[float], subvolumes: List[MedicalVolume], mask: MedicalVolume = None,
+                 bounds: Tuple[float] = (0, 100.0), tc0: float = 30.0, decimal_precision: int = 1):
 
         if (not isinstance(subvolumes, list)) or (not all([isinstance(sv, MedicalVolume) for sv in subvolumes])):
             raise TypeError("`subvolumes` must be list of MedicalVolumes.")

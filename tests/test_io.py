@@ -89,7 +89,8 @@ class TestDicomIO(unittest.TestCase):
                                                                                               curr_scan,
                                                                                               len(volumes))
 
-            # if multiple echos, all echo volumes must share the same orientation, shape, scanner origin, and pixel spacing
+            # If multiple echos, all echo volumes must share the same orientation, shape, scanner origin, and pixel
+            # spacing.
             e1 = volumes[0]
             for echo_volume in volumes[1:]:
                 assert e1.orientation == echo_volume.orientation, "Orientation mismatch: orientations of multiple dicom volumes loaded from single folder should be identical"
@@ -107,7 +108,7 @@ class TestDicomIO(unittest.TestCase):
 
     def test_dicom_reader_separate(self):
         # User manually separates two echos into different folders
-        # still be able to read volume in
+        # still be able to read volume in.
 
         for ind, dp in enumerate(ututils.SCAN_DIRPATHS):
             curr_scan = ututils.SCANS[ind]
