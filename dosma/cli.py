@@ -1,5 +1,18 @@
-"""
-Main file for scan pipeline - handle argparse
+"""Initialize and parse command line arguments for DOSMA.
+
+This module is the entry point for executing DOSMA from the command line. The DOSMA library is critical for processing.
+
+To use this file, it must be run as a module from the parent directory::
+
+    $ python -m dosma/cli ...
+
+Example:
+    Run T2 fitting on Subject 01, Series 007, a quantitative DESS (qDESS) scan, for femoral cartilage::
+
+        $ python -m dosma/cli --dicom subject01/dicoms/007/ --save subject01/data/ qdess --fc generate_t2_map
+
+Hint:
+    Run `python -m dosma/cli --help` for a detailed description of different command line arguments.
 """
 
 import argparse
@@ -18,6 +31,7 @@ from dosma.scan_sequences.cones import Cones
 from dosma.scan_sequences.cube_quant import CubeQuant
 from dosma.scan_sequences.mapss import Mapss
 from dosma.scan_sequences.qdess import QDess
+from dosma.scan_sequences.scans import ScanSequence
 from dosma.tissues.tissue import Tissue
 from dosma.quant_vals import QuantitativeValueType as QV
 
@@ -46,20 +60,20 @@ SUPPORTED_SCAN_TYPES = [Cones, CubeQuant, Mapss, QDess]
 BASIC_TYPES = [bool, str, float, int, list, tuple]
 
 
-def get_nargs_for_basic_type(base_type):
+def get_nargs_for_basic_type(base_type: type):
     if base_type in [str, float, int]:
         return 1
     elif base_type in [list, tuple]:
         return '+'
 
 
-def add_tissues(parser):
+def add_tissues(parser: argparse.ArgumentParser):
     for tissue in knee.SUPPORTED_TISSUES:
         parser.add_argument('--%s' % tissue.STR_ID, action='store_const', default=False, const=True,
                             help='analyze %s' % tissue.FULL_NAME)
 
 
-def parse_tissues(vargin):
+def parse_tissues(vargin: dict):
     tissues = []
     for tissue in knee.SUPPORTED_TISSUES:
         t = tissue()
@@ -105,7 +119,7 @@ def add_segmentation_subparser(parser):
     return parser
 
 
-def handle_segmentation(vargin, scan, tissue):
+def handle_segmentation(vargin, scan: ScanSequence, tissue: Tissue):
     segment_weights_path = vargin[SEGMENTATION_WEIGHTS_DIR_KEY][0]
     tissue.find_weights(segment_weights_path)
 
@@ -114,7 +128,7 @@ def handle_segmentation(vargin, scan, tissue):
     input_shape = (dims[0], dims[1], 1)
     model = get_model(vargin[SEGMENTATION_MODEL_KEY],
                       input_shape=input_shape,
-                      weights_path=tissue.weights_filepath)
+                      weights_path=tissue.weights_file_path)
     model.batch_size = vargin[SEGMENTATION_BATCH_SIZE_KEY]
 
     return model

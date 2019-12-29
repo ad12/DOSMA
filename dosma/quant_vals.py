@@ -134,7 +134,7 @@ class QuantitativeValue(ABC):
         Raises:
             ValueError: If no QuantitativeValue corresponding to `qv_id` found.
         """
-        for qv in [T1Rho, T2, T2Star]:
+        for qv in [T1Rho(), T2(), T2Star()]:
             if qv.NAME.lower() == qv_id or qv.NAME == qv_id or qv.ID == qv_id:
                 return qv
 
@@ -164,7 +164,7 @@ class QuantitativeValue(ABC):
             list[QuantitativeValue]: Quantitative value wrappers.
         """
         qvs = []
-        for qv in [T1Rho, T2, T2Star]:
+        for qv in [T1Rho(), T2(), T2Star()]:
             possible_qv_filepath = os.path.join(dir_path, qv.NAME, "{}.nii.gz".format(qv.NAME))
             if os.path.isfile(possible_qv_filepath):
                 qv.load_data(dir_path)

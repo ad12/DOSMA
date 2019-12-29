@@ -32,7 +32,7 @@ class TestNiftiIO(unittest.TestCase):
                     _ = self.nr.load(dp)
 
                 with self.assertRaises(ValueError):
-                    _ = self.nr.load(os.path.join(dicoms_path, 'I0001.dcm'))
+                    _ = self.nr.load(os.path.join(dicoms_path, 'I0002.dcm'))
 
     def test_nifti_write(self):
         for dp in ututils.SCAN_DIRPATHS:

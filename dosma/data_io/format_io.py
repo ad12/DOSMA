@@ -106,10 +106,8 @@ class DataWriter(ABC):
     """
     data_format_code = None
 
-    from dosma.data_io.med_volume import MedicalVolume  # noqa
-
     @abstractmethod
-    def save(self, volume: MedicalVolume, file_path: str):
+    def save(self, volume, file_path: str):
         """Save volume.
 
         Args:

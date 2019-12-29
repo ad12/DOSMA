@@ -2,12 +2,14 @@
 
 This module contains DICOM input/output helpers.
 
-Notes:
+Note:
+
     1. Dicom utilizes LPS convention:
         - LPS: right --> left, anterior --> posterior, inferior --> superior
         - we will call it LPS+, such that letters correspond to increasing end of axis
 
 Attributes:
+
     TOTAL_NUM_ECHOS_KEY (tuple[int]): Hexadecimal encoding of DICOM tag corresponding to number of echos.
 """
 

@@ -37,6 +37,7 @@ class ScanSequence(ABC):
     All scan sequence classes should inherit from this abstract classes.
 
     In practice, only either `dicom_path` or `load_path` should be specified.
+
     If both are specified, the dicom_path is used, and all information in `load_path` is ignored.
 
     Args:
@@ -45,6 +46,7 @@ class ScanSequence(ABC):
         **kwargs: Arbitrary keyword arguments.
 
     Kwargs:
+
         split_by (`str` or `tuple`, optional): DICOM field tag name or tag number used to group dicoms. Default depends
             on scan sequence - typically EchoNumber. `dicom_path` must be specified.
         ignore_ext (`bool`, optional): Ignore extension when loading DICOM files. `dicom_path` must be specified.
@@ -52,6 +54,7 @@ class ScanSequence(ABC):
     Raises:
         NotADirectoryError: If `dicom_path` is not a valid directory.
         ValueError: If dicoms do not correspond to the expected sequence.
+
     """
     NAME = ''
     __DEFAULT_SPLIT_BY__ = 'EchoNumbers'
