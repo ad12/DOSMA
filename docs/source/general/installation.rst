@@ -14,8 +14,7 @@ Installation
    The commands in this documentation are for Linux or Mac OS. If you work on Windows:
 
    - Substitute ``/`` with ``\``
-   - Use the python :ref:`terminal <terminal>` provided in the Anaconda distribution
-
+   - Use the `Linux bash <https://itsfoss.com/install-bash-on-windows/>`_ provided in Windows 10
 
 
 Anaconda
