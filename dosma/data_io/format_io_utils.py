@@ -1,8 +1,4 @@
-"""
-Utils for data I/O
-
-@author: Arjun Desai
-        (C) Stanford University, 2019
+"""Utils for data I/O.
 """
 
 import os
@@ -11,90 +7,100 @@ from dosma.data_io.dicom_io import DicomWriter, DicomReader
 from dosma.data_io.format_io import DataWriter, DataReader, ImageDataFormat
 from dosma.data_io.nifti_io import NiftiWriter, NiftiReader
 
-__all__ = ['get_reader', 'get_writer', 'get_filepath_variations', 'convert_image_data_format',
-           'generic_load']
+__all__ = ["get_reader", "get_writer", "get_filepath_variations", "convert_image_data_format", "generic_load"]
 
-__READERS = {ImageDataFormat.dicom: DicomReader, ImageDataFormat.nifti: NiftiReader}
-__WRITERS = {ImageDataFormat.dicom: DicomWriter, ImageDataFormat.nifti: NiftiWriter}
+_READERS = {ImageDataFormat.dicom: DicomReader, ImageDataFormat.nifti: NiftiReader}
+_WRITERS = {ImageDataFormat.dicom: DicomWriter, ImageDataFormat.nifti: NiftiWriter}
 
 
 def get_reader(data_format: ImageDataFormat) -> DataReader:
-    """
-    Return a DataReader corresponding to the given data_format
+    """Return a DataReader corresponding to the given data format.
 
-    :param data_format: an Image DataFormat
-    :return: a DataReader
+    Args:
+        data_format (ImageDataFormat): Data format to read.
+
+    Returns:
+        DataReader: Reader for given format.
     """
-    return __READERS[data_format]()
+    return _READERS[data_format]()
 
 
 def get_writer(data_format: ImageDataFormat) -> DataWriter:
+    """Return a DataWriter corresponding to given data format.
+
+    Args:
+        data_format (ImageDataFormat): Data format to write.
+
+    Returns:
+        DataWriter: Writer for given format.
     """
-    Return a DataWriter corresponding to given data_format
+    return _WRITERS[data_format]()
 
-    :param data_format: an ImageDataFormat
-    :return: a DataWriter
+
+def convert_image_data_format(file_or_dir_path: str, new_data_format: ImageDataFormat) -> str:
+    """Change a file or directory name to convention of another data format.
+
+    Args:
+        file_or_dir_path (str): File or directory path.
+        new_data_format (ImageDataFormat): Data format convention for file/directory name.
+
+    Returns:
+        str: File/directory path based on convention of new data format.
+
+    Raises:
+        NotImplementedError: If conversion from current image data format to new image data format not found.
     """
-    return __WRITERS[data_format]()
-
-
-def convert_image_data_format(file_or_dirname: str, new_data_format: ImageDataFormat) -> str:
-    """
-    Convert a file or directory name given an image data format
-
-    :param file_or_dirname: a filepath or directory path
-    :param new_data_format: an ImageDataFormat used to convert file/directory name
-
-    :raises NotImplementedError if conversion from current image data format to new image data format not found
-
-    :return: a string defining file/directory path based on new_data_format
-    """
-    current_format = ImageDataFormat.get_data_format(file_or_dirname)
+    current_format = ImageDataFormat.get_image_data_format(file_or_dir_path)
 
     if current_format == new_data_format:
-        return file_or_dirname
+        return file_or_dir_path
 
     if current_format == ImageDataFormat.dicom and new_data_format == ImageDataFormat.nifti:
-        dirname = os.path.dirname(file_or_dirname)
-        basename = os.path.basename(file_or_dirname)
-        return os.path.join(dirname, '%s.nii.gz' % basename)
+        dirname = os.path.dirname(file_or_dir_path)
+        basename = os.path.basename(file_or_dir_path)
+        return os.path.join(dirname, "{}.nii.gz".format(basename))
 
     if current_format == ImageDataFormat.nifti and new_data_format == ImageDataFormat.dicom:
-        dirname = os.path.dirname(file_or_dirname)
-        basename = os.path.basename(file_or_dirname)
-        basename = basename.split('.', 1)[0]
+        dirname = os.path.dirname(file_or_dir_path)
+        basename = os.path.basename(file_or_dir_path)
+        basename = basename.split(".", 1)[0]
         return os.path.join(dirname, basename)
 
-    raise NotImplementedError('%s --> %s not implemented.' % (current_format.name, new_data_format.name))
+    raise NotImplementedError("{} -> {} not implemented".format(current_format.name, new_data_format.name))
 
 
-def get_filepath_variations(file_or_dirname: str):
-    """
-    Get variations in filepath given different image data formats
+def get_filepath_variations(file_or_dir_path: str):
+    """Get file paths using convention for all different image data formats.
 
-    :param file_or_dirname: a filepath or directory path
-    :return: a list of filepaths corresponding to naming conventions of different ImageDataFormats
+    Args:
+        file_or_dir_path (str): File or directory path.
+
+    Returns:
+        list[str]: File paths corresponding to naming conventions of different ImageDataFormats.
     """
     filepath_variations = []
     for io_format in ImageDataFormat:
-        filepath_variations.append(convert_image_data_format(file_or_dirname, io_format))
+        filepath_variations.append(convert_image_data_format(file_or_dir_path, io_format))
     return filepath_variations
 
 
-def generic_load(file_or_dirname: str, expected_num_volumes=None):
+def generic_load(file_or_dir_path: str, expected_num_volumes: int = None):
+    """Load MedicalVolume(s) from a file or directory without knowing data format.
+
+    Args:
+        file_or_dir_path (str): File or directory path.
+        expected_num_volumes (int, `optional`): Number of volumes expected. If specified, assert if number of loaded
+            volumes != expected num volumes. Defaults to `None`.
+
+    Returns:
+        `list[MedicalVolume]` or `MedicalVolume`: Volume(s) loaded. If `expected_num_volumes = 1`, returns
+            `MedicalVolume`.
+
+    Raises:
+        ValueError: If multiple file paths corresponding to different ImageDataFormats exist.
+        FileNotFoundError: If file path or corresponding versions of file path not found.
     """
-    Load MedicalVolume(s) from a filepath or directory path regardless of ImageDataFormat
-
-    :param file_or_dirname: a string defining filepath or directory path
-    :param expected_num_volumes (optional): an int defining the number of volumes expected. default: None.
-                                            if specified, assert if number of loaded volumes != expected num volumes
-
-    :raises ValueError if multiple filepaths corresponding to different ImageDataFormats exist
-    :raises FileNotFoundError if filepath or corresponding versions of filepath not found
-
-    :return: a list of MedicalVolumes or a single MedicalVolume if expected_num_volumes == 1
-    """
-    possible_filepaths = get_filepath_variations(file_or_dirname)
+    possible_filepaths = get_filepath_variations(file_or_dir_path)
     exist_path = None
 
     for fp in possible_filepaths:
@@ -105,9 +111,9 @@ def generic_load(file_or_dirname: str, expected_num_volumes=None):
             exist_path = fp
 
     if exist_path is None:
-        raise FileNotFoundError('No file associated with basename %s found' % os.path.basename(file_or_dirname))
+        raise FileNotFoundError('No file associated with basename %s found' % os.path.basename(file_or_dir_path))
 
-    io_format = ImageDataFormat.get_data_format(exist_path)
+    io_format = ImageDataFormat.get_image_data_format(exist_path)
     r = get_reader(io_format)
     vols = r.load(exist_path)
 

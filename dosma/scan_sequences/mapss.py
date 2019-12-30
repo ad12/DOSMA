@@ -14,11 +14,15 @@ from dosma.data_io.med_volume import MedicalVolume
 from dosma.data_io.nifti_io import NiftiReader
 from dosma.defaults import preferences
 from dosma.models.seg_model import SegModel
+from dosma.quant_vals import QuantitativeValueType
 from dosma.tissues.tissue import Tissue
 from dosma.utils import io_utils
 from dosma import quant_vals as qv
 from dosma.utils.cmd_line_utils import ActionWrapper
 from dosma.utils.fits import MonoExponentialFit
+
+from typing import List, Sequence
+
 
 __EXPECTED_NUM_ECHO_TIMES__ = 7
 
@@ -32,11 +36,11 @@ __T2_UPPER_BOUND__ = 100
 
 __DECIMAL_PRECISION__ = 3
 
-__all__ = ['Mapss']
+__all__ = ["Mapss"]
 
 
 class Mapss(TargetSequence):
-    NAME = 'mapss'
+    NAME = "mapss"
 
     def __init__(self, dicom_path=None, load_path=None, **kwargs):
         self.echo_times = None
@@ -55,33 +59,38 @@ class Mapss(TargetSequence):
         return len(self.volumes) == 7
 
     def segment(self, model: SegModel, tissue: Tissue):
-        raise NotImplementedError('This method is currently not implemented. '
-                                  'Automatic segmentation model is currently being trained')
+        """Currently not implemented."""
+        raise NotImplementedError("This method is currently not implemented. "
+                                  "Automatic segmentation model is currently being trained")
 
     def __intraregister__(self, volumes: List[MedicalVolume]):
-        """
-        Intraregister different subvolumes to ensure they are in the same space during computation
+        """Intraregister volumes.
 
-        :param volumes: a list of MedicalVolumes
-        :return:
+        Sets `self.volumes` to intraregistered volumes.
+
+        Args:
+            volumes (list[MedicalVolume]): Volumes to register.
+
+        Raises:
+            TypeError: If `volumes` is not `list[MedicalVolume]`.
         """
         if (not volumes) or (type(volumes) is not list) or (len(volumes) != __EXPECTED_NUM_ECHO_TIMES__):
-            raise TypeError('volumes must be of type List[MedicalVolume]')
+            raise TypeError("`volumes` must be of type List[MedicalVolume]")
 
         num_echos = len(volumes)
 
-        print('')
-        print('==' * 40)
-        print('Intraregistering...')
-        print('==' * 40)
+        print("")
+        print("==" * 40)
+        print("Intraregistering...")
+        print("==" * 40)
 
         # temporarily save subvolumes as nifti file
-        raw_volumes_base_path = io_utils.check_dir(os.path.join(self.temp_path, 'raw'))
+        raw_volumes_base_path = io_utils.mkdirs(os.path.join(self.temp_path, "raw"))
 
         # Use first subvolume as a basis for registration - save in nifti format to use with elastix/transformix
         volume_files = []
         for echo_index in range(num_echos):
-            filepath = os.path.join(raw_volumes_base_path, '%03d' % echo_index + '.nii.gz')
+            filepath = os.path.join(raw_volumes_base_path, "{:03d}.nii.gz".format(echo_index))
             volume_files.append(filepath)
 
             volumes[echo_index].save_volume(filepath, data_format=ImageDataFormat.nifti)
@@ -97,12 +106,12 @@ class Mapss(TargetSequence):
             reg = Registration()
             reg.inputs.fixed_image = target_image_filepath
             reg.inputs.moving_image = moving_image
-            reg.inputs.output_path = io_utils.check_dir(os.path.join(self.temp_path,
-                                                                     'intraregistered',
-                                                                     '%03d' % echo_index))
+            reg.inputs.output_path = io_utils.mkdirs(os.path.join(self.temp_path,
+                                                                     "intraregistered",
+                                                                     "{:03d}".format(echo_index)))
             reg.inputs.parameters = [fc.ELASTIX_AFFINE_PARAMS_FILE]
             reg.terminal_output = fc.NIPYPE_LOGGING
-            print('Registering %s --> %s' % (str(echo_index), str(target_echo_index)))
+            print("Registering {} -> {}".format(str(echo_index), str(target_echo_index)))
             tmp = reg.run()
 
             warped_file = tmp.outputs.warped_file
@@ -119,13 +128,15 @@ class Mapss(TargetSequence):
         self.volumes = intraregistered_volumes
 
     def generate_t1_rho_map(self, tissue: Tissue = None, mask_path: str = None):
-        """Generate 3D T1-rho map and r2 fit map using monoexponential fit across subvolumes acquired at different
-                echo times
+        """Generate 3D T1-rho map and r-squared fit map using mono-exponential fit across subvolumes acquired at
+            different echo times.
 
-        :param tissue: Tissue to fit data for - if provided and tissue contains mask, mask is used
-        :param mask_path: path to arbitrary mask in NIfTI format - ignored if tissue argument has mask
+        Args:
+            tissue (Tissue): Tissue to generate quantitative value for.
+            mask_path (str): File path to mask of ROI to analyze
 
-        :return: a T1Rho instance
+        Returns:
+            qv.T1Rho: T1-rho fit for tissue.
         """
         echo_inds = range(4)
         bounds = (__T1_RHO_LOWER_BOUND__, __T1_RHO_UPPER_BOUND__)
@@ -137,13 +148,15 @@ class Mapss(TargetSequence):
         return qv_map
 
     def generate_t2_map(self, tissue: Tissue = None, mask_path: str = None):
-        """ Generate 3D T2 map and r2 fit map using monoexponential fit across subvolumes acquired at different
-                echo times
+        """Generate 3D T2 map and r-squared fit map using mono-exponential fit across subvolumes acquired at different
+            echo times.
 
-        :param tissue: Tissue to fit data for - if provided and tissue contains mask, mask is used
-        :param mask_path: path to arbitrary mask in NIfTI format - ignored if tissue argument has mask
+        Args:
+            tissue (Tissue): Tissue to generate quantitative value for.
+            mask_path (str): File path to mask of ROI to analyze
 
-        :return a T2 instance
+        Returns:
+            qv.T2: T2 fit for tissue.
         """
         echo_inds = [0, 4, 5, 6]
         bounds = (__T2_LOWER_BOUND__, __T2_UPPER_BOUND__)
@@ -154,7 +167,8 @@ class Mapss(TargetSequence):
 
         return qv_map
 
-    def __fitting_helper(self, qv_type, echo_inds, tissue, bounds, tc0, decimal_precision, mask_path):
+    def __fitting_helper(self, qv_type: QuantitativeValueType, echo_inds: Sequence[int], tissue: Tissue,
+                         bounds, tc0, decimal_precision, mask_path):
         echo_info = [(self.echo_times[i], self.volumes[i]) for i in echo_inds]
 
         # sort by echo time
@@ -185,25 +199,46 @@ class Mapss(TargetSequence):
         return quant_val_map
 
     def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format):
+        """Save data to disk.
+
+        Data will be saved in the directory '`base_save_dirpath`/mapss/'.
+
+        Serializes variables specified in by self.__serializable_variables__().
+
+        Args:
+            base_save_dirpath (str): Directory path where all data is stored.
+            data_format (ImageDataFormat): Format to save data.
+        """
         super().save_data(base_save_dirpath, data_format=data_format)
 
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
 
-        # write echos
+        # Write echos.
         for i in range(len(self.volumes)):
-            nii_registration_filepath = os.path.join(base_save_dirpath, 'echo%d.nii.gz' % (i + 1))
+            nii_registration_filepath = os.path.join(base_save_dirpath, "echo{:d}.nii.gz".format(i + 1))
             filepath = fio_utils.convert_image_data_format(nii_registration_filepath, data_format)
             self.volumes[i].save_volume(filepath, data_format=data_format)
 
     def load_data(self, base_load_dirpath):
+        """Load data from disk.
+
+        Data will be loaded from the directory '`base_load_dirpath`/mapss'.
+
+        Args:
+           base_load_dirpath (str): Directory path where all data is stored.
+
+        Raises:
+           NotADirectoryError: if `base_load_dirpath`/mapss/ does not exist.
+        """
         super().load_data(base_load_dirpath)
 
         base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
 
         self.volumes = []
-        # Load subvolumes from nifti file
+
+        # Load subvolumes from nifti file.
         for i in range(__EXPECTED_NUM_ECHO_TIMES__):
-            nii_registration_filepath = os.path.join(base_load_dirpath, 'echo%d.nii.gz' % (i + 1))
+            nii_registration_filepath = os.path.join(base_load_dirpath, "echo{:d}.nii.gz".format(i + 1))
             subvolume = NiftiReader().load(nii_registration_filepath)
             self.volumes.append(subvolume)
 
@@ -214,7 +249,7 @@ class Mapss(TargetSequence):
 
     @classmethod
     def cmd_line_actions(cls):
-        """Provide command line information (such as name, help strings, etc) as list of dictionary"""
+        """Provide command line information (such as name, help strings, etc) as list of dictionary."""
 
         generate_t1_rho_map_action = ActionWrapper(name=cls.generate_t1_rho_map.__name__,
                                                    aliases=['t1_rho'],

@@ -13,10 +13,12 @@ UNITTEST_DATA_PATH = os.path.join(os.path.dirname(__file__), '../unittest-data/'
 UNITTEST_SCANDATA_PATH = os.path.join(UNITTEST_DATA_PATH, 'scans')
 TEMP_PATH = os.path.join(UNITTEST_SCANDATA_PATH, 'temp')  # should be used when for writing with assert_raises clauses
 
-SCANS = ['qdess', 'mapss', 'cubequant']
+SCANS = ['qdess', 'mapss', 'cubequant', 'cones']
 SCANS_INFO = {'mapss': {'expected_num_echos': 7},
               'qdess': {'expected_num_echos': 2},
-              'cubequant': {'expected_num_echos': 4}}
+              'cubequant': {'expected_num_echos': 4},
+              'cones': {'expected_num_echos': 4},
+              }
 
 SCAN_DIRPATHS = [os.path.join(UNITTEST_SCANDATA_PATH, x) for x in SCANS]
 
@@ -70,7 +72,7 @@ class ScanTest(unittest.TestCase):
     def setUpClass(cls):
         cls.dicom_dirpath = get_dicoms_path(os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME))
         cls.data_dirpath = get_data_path(os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME))
-        io_utils.check_dir(cls.data_dirpath)
+        io_utils.mkdirs(cls.data_dirpath)
 
     @classmethod
     def tearDownClass(cls):

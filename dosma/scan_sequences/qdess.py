@@ -1,3 +1,9 @@
+"""Quantitative Double Echo in Steady State (qDESS) sequence.
+
+Paper:
+    Sveinsson, B., A. S. Chaudhari, G. E. Gold, and B. A. Hargreaves. "A simple analytic method for estimating T2 in the
+    knee from DESS." Magnetic resonance imaging 38 (2017): 63-70.
+"""
 import math
 import os
 from copy import deepcopy
@@ -16,12 +22,15 @@ from dosma.tissues.tissue import Tissue
 from dosma.utils.cmd_line_utils import ActionWrapper
 from dosma.quant_vals import T2
 
-__all__ = ['QDess']
+__all__ = ["QDess"]
 
 
 class QDess(TargetSequence):
-    """Handles analysis for DESS scan sequence """
-    NAME = 'qdess'
+    """Handles analysis for qDESS scan sequence.
+
+    qDESS consists of two echos (S1, S2).
+    """
+    NAME = "qdess"
 
     # DESS DICOM header keys
     __GL_AREA_TAG__ = Tag(0x001910b6)
@@ -41,27 +50,38 @@ class QDess(TargetSequence):
         super().__init__(dicom_path=dicom_path, load_path=load_path, **kwargs)
 
     def __validate_scan__(self) -> bool:
-        """Validate that the dicoms are of qDESS sequence
-        Scans should have 2 echos and dicom metadata for GL_AREA and TG
-        :return: a boolean
+        """Validate that the dicoms are of qDESS sequence.
+
+        Returns:
+            bool: `True` if has 2 echos, `False` otherwise.
         """
         ref_dicom = self.ref_dicom
-        #contains_expected_dicom_metadata = self.__GL_AREA_TAG__ in ref_dicom and self.__TG_TAG__ in ref_dicom
+        # contains_expected_dicom_metadata = self.__GL_AREA_TAG__ in ref_dicom and self.__TG_TAG__ in ref_dicom
         has_expected_num_echos = len(self.volumes) == self.__NUM_ECHOS__
 
-        #return contains_expected_dicom_metadata & has_expected_num_echos
+        # return contains_expected_dicom_metadata & has_expected_num_echos
         return has_expected_num_echos
 
     def segment(self, model: SegModel, tissue: Tissue, use_rms: bool = False):
-        # Use first echo for segmentation
-        print('Segmenting %s...' % tissue.FULL_NAME)
+        """Segment tissue in scan.
+
+        Args:
+            model (SegModel): Model to use for segmenting scans.
+            tissue (Tissue): The tissue to segment.
+            use_rms (`bool`, optional): Use root-mean-square of echos for segmentation (preferred). Defaults to `False`.
+
+        Returns:
+            MedicalVolume: Binary mask for segmented region.
+        """
+        # Use first echo for segmentation.
+        print("Segmenting {}...".format(tissue.FULL_NAME))
 
         if use_rms:
             segmentation_volume = self.calc_rms()
         else:
             segmentation_volume = self.volumes[0]
 
-        # Segment tissue and add it to list
+        # Segment tissue and add it to list.
         mask = model.generate_mask(segmentation_volume)
         tissue.set_mask(mask)
 
@@ -70,14 +90,25 @@ class QDess(TargetSequence):
         return mask
 
     def generate_t2_map(self, tissue: Tissue, suppress_fat: bool = False,
+                        suppress_fluid: bool = False, beta: float = 1.2,
                         gl_area: float = None, tg: float = None):
-        """ Generate 3D t2 map
-        :param tissue: A Tissue instance
-        :param suppress_fat: Suppress fat region in t2 computation (i.e. reduce noise)
-        :param gl_area: GL Area - required if not provided in the dicom
-        :param tg: tg value (in microseconds) - required if not provided in the dicom
-        :return MedicalVolume with 3D map of t2 values
-                all invalid pixels are denoted by the value 0
+        """Generate 3D T2 map.
+
+        Method is detailed in this `paper <https://www.ncbi.nlm.nih.gov/pubmed/28017730>`_.
+
+        Args:
+            tissue (Tissue): Tissue to generate T2 map for.
+            suppress_fat (`bool`, optional): Suppress fat region in T2 computation. Helps reduce noise.
+            suppress_fluid (`bool`, optional): Suppress fluid region in T2 computation. Fluid-nulled image is calculated
+                as `S1 - beta*S2`.
+            beta (`float`, optional): Beta value used for suppressing fluid. Defaults to 1.2.
+            gl_area (`float`, optional): GL Area. Required if not provided in the dicom. Defaults to value in dicom
+                tag '0x001910b6'.
+            tg: tg value (in microseconds). Required if not provided in the dicom. Defaults to value in dicom tag
+                '0x001910b7'.
+
+        Returns:
+            qv.T2: T2 fit for tissue.
         """
 
         if not self.__validate_scan__() and (not gl_area or not tg):
@@ -140,15 +171,30 @@ class QDess(TargetSequence):
         if suppress_fat:
             t2map = t2map * (echo_1 > 0.15 * np.max(echo_1))
 
+        if suppress_fluid:
+            vol_null_fluid = echo_1 - beta * echo_2
+            t2map = t2map * (vol_null_fluid > 0.1 * np.max(vol_null_fluid))
+
         t2_map_wrapped = MedicalVolume(t2map,
                                        affine=subvolumes[0].affine,
                                        headers=deepcopy(subvolumes[0].headers))
+        t2_map_wrapped = T2(t2_map_wrapped)
 
-        tissue.add_quantitative_value(T2(t2_map_wrapped))
+        tissue.add_quantitative_value(t2_map_wrapped)
 
-        return t2map
+        return t2_map_wrapped
 
     def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format):
+        """Save data to disk.
+
+        Data will be saved in the directory '`base_save_dirpath`/qdess/'.
+
+        Serializes variables specified in by self.__serializable_variables__().
+
+        Args:
+            base_save_dirpath (str): Directory path where all data is stored.
+            data_format (ImageDataFormat): Format to save data.
+        """
         super().save_data(base_save_dirpath, data_format=data_format)
 
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
@@ -160,6 +206,16 @@ class QDess(TargetSequence):
             self.volumes[i].save_volume(filepath, data_format=data_format)
 
     def load_data(self, base_load_dirpath):
+        """Load data from disk.
+
+        Data will be loaded from the directory '`base_load_dirpath`/qdess'.
+
+        Args:
+           base_load_dirpath (str): Directory path where all data is stored.
+
+        Raises:
+           NotADirectoryError: if `base_load_dirpath`/qdess/ does not exist.
+        """
         super().load_data(base_load_dirpath)
 
         base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
@@ -174,8 +230,10 @@ class QDess(TargetSequence):
                 self.volumes.append(subvolume)
 
     def calc_rms(self):
-        """Calculate RMS of 2 echos
-        :return: A MedicalVolume
+        """Calculate root-mean-square (RMS) of two echos.
+
+        Returns:
+            MedicalVolume: Volume with RMS of two echos.
         """
         if self.volumes is None:
             raise ValueError('Volumes must be initialized')
@@ -200,7 +258,7 @@ class QDess(TargetSequence):
 
     @classmethod
     def cmd_line_actions(cls):
-        """Provide command line information (such as name, help strings, etc) as list of dictionary"""
+        """Provide command line information (such as name, help strings, etc) as list of dictionary."""
 
         segment_action = ActionWrapper(name=cls.segment.__name__,
                                        help='generate automatic segmentation',
@@ -211,8 +269,12 @@ class QDess(TargetSequence):
                                                aliases=['t2'],
                                                param_help={
                                                    'suppress_fat': 'suppress computation on low SNR fat regions',
-                                                   'gl_area': 'gl_area',
-                                                   'tg': 'tg'},
+                                                   'suppress_fluid': 'suppress computation on fluid regions',
+                                                   'beta': 'constant for calculating fluid-nulled image (S1-beta*S2)',
+                                                   'gl_area': 'GL Area. Defaults to value in dicom tag \'0x001910b6\'',
+                                                   'tg': 'Gradient time (in microseconds). '
+                                                         'Defaults to value in dicom tag \'0x001910b7\'.'
+                                               },
                                                help='generate T2 map')
 
         return [(cls.segment, segment_action), (cls.generate_t2_map, generate_t2_map_action)]

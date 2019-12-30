@@ -87,7 +87,9 @@ class ScanReader():
                                                         param_help=action_wrapper.get_param_help(param_name))
 
             # map parameter name --> variable, is_required
-            is_required = param_type is not bool and param_default == inspect._empty
+            # if you have a non zero default value, it must be specified.
+            is_required = (param_type is not bool and param_default == inspect._empty) or \
+                          (param_type in [float, int] and bool(param_default))
             self.params[param_name] = (param_var, is_required)
 
     def get_cmd_line_str(self):

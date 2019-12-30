@@ -1,3 +1,8 @@
+"""Analysis for patellar cartilage.
+
+Attributes:
+    BOUNDS (dict): Upper bounds for quantitative values.
+"""
 import os
 import warnings
 from copy import deepcopy
@@ -11,60 +16,61 @@ from dosma.tissues.tissue import Tissue
 
 from dosma.defaults import preferences
 from dosma.utils import io_utils
-from dosma.quant_vals import QuantitativeValues
+from dosma.quant_vals import QuantitativeValueType
 
 # milliseconds
-BOUNDS = {QuantitativeValues.T2: 60.0,
-          QuantitativeValues.T1_RHO: 100.0,
-          QuantitativeValues.T2_STAR: 50.0}
+BOUNDS = {QuantitativeValueType.T2: 60.0,
+          QuantitativeValueType.T1_RHO: 100.0,
+          QuantitativeValueType.T2_STAR: 50.0}
 
-__all__ = ['PatellarCartilage']
+__all__ = ["PatellarCartilage"]
 
 
 class PatellarCartilage(Tissue):
-    """Handles analysis and visualization for patellar cartilage"""
+    """Handles analysis and visualization for patellar cartilage."""
     ID = 2
-    STR_ID = 'pc'
-    FULL_NAME = 'patellar cartilage'
+    STR_ID = "pc"
+    FULL_NAME = "patellar cartilage"
 
     # Expected quantitative values
     T1_EXPECTED = 1000  # milliseconds
 
     # Region Keys
-    ANTERIOR_KEY = 0
-    POSTERIOR_KEY = 1
-    CORONAL_KEYS = [ANTERIOR_KEY, POSTERIOR_KEY]
+    _ANTERIOR_KEY = 0
+    _POSTERIOR_KEY = 1
+    _CORONAL_KEYS = [_ANTERIOR_KEY, _POSTERIOR_KEY]
 
-    MEDIAL_KEY = 0
-    LATERAL_KEY = 1
-    SAGGITAL_KEYS = [MEDIAL_KEY, LATERAL_KEY]
+    _MEDIAL_KEY = 0
+    _LATERAL_KEY = 1
+    _SAGITTAL_KEYS = [_MEDIAL_KEY, _LATERAL_KEY]
 
-    __REGION_DEEP_KEY = 0
-    __REGION_SUPERFICIAL_KEY = 1
-    TOTAL_AXIAL_KEY = -1
+    _REGION_DEEP_KEY = 0
+    _REGION_SUPERFICIAL_KEY = 1
+    _TOTAL_AXIAL_KEY = -1
 
-    def __init__(self, weights_dir=None, medial_to_lateral=None):
-        """
-        :param weights_dir: Directory to weights files
-        :param medial_to_lateral: True or False, if false, then lateral to medial
-        """
-        super().__init__(weights_dir=weights_dir)
+    def __init__(self,  weights_dir: str = None, medial_to_lateral: bool = None):
+        super().__init__(weights_dir=weights_dir, medial_to_lateral=medial_to_lateral)
 
         self.regions_mask = None
-        self.medial_to_lateral = medial_to_lateral
 
-    def unroll_coronal(self, quant_map):
-        """Average data in sagittal direction"""
+    def unroll_coronal(self, quant_map: np.ndarray):
+        """Unroll patellar cartilage in the coronal direction.
+
+        Because patellar cartilage is flat, "unrolling" is projecting the patellar cartilage onto the coronal axis.
+
+        Args:
+            quant_map (np.ndarray):
+        """
         mask = self.__mask__.volume
 
         assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
         region_mask_deep_superficial = self.regions_mask[..., 0]
 
-        superficial = (region_mask_deep_superficial == self.__REGION_SUPERFICIAL_KEY) * mask * quant_map
+        superficial = (region_mask_deep_superficial == self._REGION_SUPERFICIAL_KEY) * mask * quant_map
         superficial[superficial == 0] = np.nan
         superficial = np.nanmean(superficial, axis=2)
 
-        deep = (region_mask_deep_superficial == self.__REGION_DEEP_KEY) * mask * quant_map
+        deep = (region_mask_deep_superficial == self._REGION_DEEP_KEY) * mask * quant_map
         deep[deep == 0] = np.nan
         deep = np.nanmean(deep, axis=2)
 
@@ -99,8 +105,8 @@ class PatellarCartilage(Tissue):
                 center_of_mass = sni.measurements.center_of_mass(c_slice)
                 ds_split = int(center_of_mass[1])
             com_deep_superficial = ds_split
-            region_mask_sup_deep[:, :com_deep_superficial, s] = self.__REGION_SUPERFICIAL_KEY
-            region_mask_sup_deep[:, com_deep_superficial:, s] = self.__REGION_DEEP_KEY
+            region_mask_sup_deep[:, :com_deep_superficial, s] = self._REGION_SUPERFICIAL_KEY
+            region_mask_sup_deep[:, com_deep_superficial:, s] = self._REGION_DEEP_KEY
 
         return region_mask_sup_deep[..., np.newaxis]
 
@@ -122,10 +128,10 @@ class PatellarCartilage(Tissue):
         pd_header = ['Subject', 'Location', 'Mean', 'Std', 'Median']
         pd_list = []
 
-        for axial in [self.__REGION_SUPERFICIAL_KEY, self.__REGION_DEEP_KEY, self.TOTAL_AXIAL_KEY]:
-            if axial == self.TOTAL_AXIAL_KEY:
-                axial_map = np.asarray(deep_superficial_map == self.__REGION_SUPERFICIAL_KEY, dtype=np.float32) + \
-                            np.asarray(deep_superficial_map == self.__REGION_DEEP_KEY, dtype=np.float32)
+        for axial in [self._REGION_SUPERFICIAL_KEY, self._REGION_DEEP_KEY, self._TOTAL_AXIAL_KEY]:
+            if axial == self._TOTAL_AXIAL_KEY:
+                axial_map = np.asarray(deep_superficial_map == self._REGION_SUPERFICIAL_KEY, dtype=np.float32) + \
+                            np.asarray(deep_superficial_map == self._REGION_DEEP_KEY, dtype=np.float32)
                 axial_map = np.asarray(axial_map, dtype=np.bool)
             else:
                 axial_map = deep_superficial_map == axial
@@ -175,7 +181,7 @@ class PatellarCartilage(Tissue):
         q_names = []
         dfs = []
 
-        for quant_val in QuantitativeValues:
+        for quant_val in QuantitativeValueType:
             if quant_val.name not in self.quant_vals.keys():
                 continue
 
@@ -183,7 +189,7 @@ class PatellarCartilage(Tissue):
             q_val = self.quant_vals[quant_val.name]
             dfs.append(q_val[1])
 
-            q_name_dirpath = io_utils.check_dir(os.path.join(dirpath, quant_val.name.lower()))
+            q_name_dirpath = io_utils.mkdirs(os.path.join(dirpath, quant_val.name.lower()))
             for q_map_data in q_val[0]:
                 filepath = os.path.join(q_name_dirpath, q_map_data['filename'])
                 xlabel = ''

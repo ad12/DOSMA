@@ -9,7 +9,7 @@ import uuid
 
 from dosma.defaults import preferences
 from dosma.tissues import FemoralCartilage, TibialCartilage, Meniscus, PatellarCartilage
-from dosma.quant_vals import QuantitativeValues as QV
+from dosma.quant_vals import QuantitativeValueType as QV
 
 KNEE_KEY = 'knee'
 MEDIAL_TO_LATERAL_KEY = 'ml'

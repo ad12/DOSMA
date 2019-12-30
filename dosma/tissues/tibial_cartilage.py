@@ -1,3 +1,8 @@
+"""Analysis for tibial cartilage.
+
+Attributes:
+    BOUNDS (dict): Upper bounds for quantitative values.
+"""
 import os
 import warnings
 from copy import deepcopy
@@ -12,45 +17,41 @@ from dosma.tissues.tissue import Tissue
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.defaults import preferences
 from dosma.utils import io_utils
-from dosma.quant_vals import QuantitativeValues
+from dosma.quant_vals import QuantitativeValueType
 
 # milliseconds
-BOUNDS = {QuantitativeValues.T2: 60.0,
-          QuantitativeValues.T1_RHO: 100.0,
-          QuantitativeValues.T2_STAR: 50.0}
+BOUNDS = {QuantitativeValueType.T2: 60.0,
+          QuantitativeValueType.T1_RHO: 100.0,
+          QuantitativeValueType.T2_STAR: 50.0}
 
-__all__ = ['TibialCartilage']
+__all__ = ["TibialCartilage"]
 
 
 class TibialCartilage(Tissue):
-    """Handles analysis and visualization for tibial cartilage"""
+    """Handles analysis and visualization for tibial cartilage."""
     ID = 2
-    STR_ID = 'tc'
-    FULL_NAME = 'tibial cartilage'
+    STR_ID = "tc"
+    FULL_NAME = "tibial cartilage"
 
     # Expected quantitative values
     T1_EXPECTED = 1000  # milliseconds
 
     # Coronal Keys
-    ANTERIOR_KEY = 0
-    POSTERIOR_KEY = 1
-    CORONAL_KEYS = [ANTERIOR_KEY, POSTERIOR_KEY]
+    _ANTERIOR_KEY = 0
+    _POSTERIOR_KEY = 1
+    _CORONAL_KEYS = [_ANTERIOR_KEY, _POSTERIOR_KEY]
 
     # Saggital Keys
-    MEDIAL_KEY = 0
-    LATERAL_KEY = 1
-    SAGGITAL_KEYS = [MEDIAL_KEY, LATERAL_KEY]
+    _MEDIAL_KEY = 0
+    _LATERAL_KEY = 1
+    _SAGITTAL_KEYS = [_MEDIAL_KEY, _LATERAL_KEY]
 
     # Axial Keys
-    SUPERIOR_KEY = 0
-    INFERIOR_KEY = 1
-    TOTAL_AXIAL_KEY = -1
+    _SUPERIOR_KEY = 0
+    _INFERIOR_KEY = 1
+    _TOTAL_AXIAL_KEY = -1
 
     def __init__(self, weights_dir=None, medial_to_lateral=None):
-        """
-        :param weights_dir: Directory to weights files
-        :param medial_to_lateral: True or False, if false, then lateral to medial
-        """
         super().__init__(weights_dir=weights_dir, medial_to_lateral=medial_to_lateral)
 
         self.regions_mask = None
@@ -61,11 +62,11 @@ class TibialCartilage(Tissue):
         assert self.regions_mask is not None, "region_mask not initialized. Should be initialized when mask is set"
         region_mask_sup_inf = self.regions_mask[..., 0]
 
-        superior = (region_mask_sup_inf == self.SUPERIOR_KEY) * mask * quant_map
+        superior = (region_mask_sup_inf == self._SUPERIOR_KEY) * mask * quant_map
         superior[superior == 0] = np.nan
         superior = np.nanmean(superior, axis=0)
 
-        inferior = (region_mask_sup_inf == self.INFERIOR_KEY) * mask * quant_map
+        inferior = (region_mask_sup_inf == self._INFERIOR_KEY) * mask * quant_map
         inferior[inferior == 0] = np.nan
         inferior = np.nanmean(inferior, axis=0)
 
@@ -83,16 +84,16 @@ class TibialCartilage(Tissue):
         com_med_lat = int(np.ceil(center_of_mass[2]))
 
         region_mask_sup_inf = np.zeros(base_map.shape)
-        region_mask_sup_inf[:com_sup_inf, :, :] = self.SUPERIOR_KEY
-        region_mask_sup_inf[com_sup_inf:, :, :] = self.INFERIOR_KEY
+        region_mask_sup_inf[:com_sup_inf, :, :] = self._SUPERIOR_KEY
+        region_mask_sup_inf[com_sup_inf:, :, :] = self._INFERIOR_KEY
 
         region_mask_ant_post = np.zeros(base_map.shape)
-        region_mask_ant_post[:, :com_ant_post, :] = self.ANTERIOR_KEY
-        region_mask_ant_post[:, com_ant_post:, :] = self.POSTERIOR_KEY
+        region_mask_ant_post[:, :com_ant_post, :] = self._ANTERIOR_KEY
+        region_mask_ant_post[:, com_ant_post:, :] = self._POSTERIOR_KEY
 
         region_mask_med_lat = np.zeros(base_map.shape)
-        region_mask_med_lat[:, :, :com_med_lat] = self.MEDIAL_KEY if self.medial_to_lateral else self.LATERAL_KEY
-        region_mask_med_lat[:, :, com_med_lat:] = self.LATERAL_KEY if self.medial_to_lateral else self.MEDIAL_KEY
+        region_mask_med_lat[:, :, :com_med_lat] = self._MEDIAL_KEY if self.medial_to_lateral else self._LATERAL_KEY
+        region_mask_med_lat[:, :, com_med_lat:] = self._LATERAL_KEY if self.medial_to_lateral else self._MEDIAL_KEY
 
         self.regions_mask = np.stack([region_mask_sup_inf, region_mask_ant_post, region_mask_med_lat], axis=-1)
 
@@ -119,16 +120,16 @@ class TibialCartilage(Tissue):
         pd_header = ['Subject', 'Location', 'Side', 'Region', 'Mean', 'Std', 'Median']
         pd_list = []
 
-        for axial in [self.SUPERIOR_KEY, self.INFERIOR_KEY, self.TOTAL_AXIAL_KEY]:
-            if axial == self.TOTAL_AXIAL_KEY:
-                axial_map = np.asarray(axial_region_mask == self.SUPERIOR_KEY, dtype=np.float32) + \
-                            np.asarray(axial_region_mask == self.INFERIOR_KEY, dtype=np.float32)
+        for axial in [self._SUPERIOR_KEY, self._INFERIOR_KEY, self._TOTAL_AXIAL_KEY]:
+            if axial == self._TOTAL_AXIAL_KEY:
+                axial_map = np.asarray(axial_region_mask == self._SUPERIOR_KEY, dtype=np.float32) + \
+                            np.asarray(axial_region_mask == self._INFERIOR_KEY, dtype=np.float32)
                 axial_map = np.asarray(axial_map, dtype=np.bool)
             else:
                 axial_map = axial_region_mask == axial
 
-            for coronal in [self.MEDIAL_KEY, self.LATERAL_KEY]:
-                for sagittal in [self.ANTERIOR_KEY, self.POSTERIOR_KEY]:
+            for coronal in [self._MEDIAL_KEY, self._LATERAL_KEY]:
+                for sagittal in [self._ANTERIOR_KEY, self._POSTERIOR_KEY]:
                     curr_region_mask = quant_map_volume * (coronal_region_mask == coronal) * (
                             sagittal_region_mask == sagittal) * axial_map
                     curr_region_mask[curr_region_mask == 0] = np.nan
@@ -177,7 +178,7 @@ class TibialCartilage(Tissue):
         q_names = []
         dfs = []
 
-        for quant_val in QuantitativeValues:
+        for quant_val in QuantitativeValueType:
             if quant_val.name not in self.quant_vals.keys():
                 continue
 
@@ -185,7 +186,7 @@ class TibialCartilage(Tissue):
             q_val = self.quant_vals[quant_val.name]
             dfs.append(q_val[1])
 
-            q_name_dirpath = io_utils.check_dir(os.path.join(dirpath, quant_val.name.lower()))
+            q_name_dirpath = io_utils.mkdirs(os.path.join(dirpath, quant_val.name.lower()))
             for q_map_data in q_val[0]:
                 filepath = os.path.join(q_name_dirpath, q_map_data['filename'])
                 xlabel = 'Slice'

@@ -2,6 +2,7 @@ import os
 from abc import ABC, abstractmethod
 
 import numpy as np
+import pandas as pd
 
 from dosma.data_io import format_io_utils as fio_utils
 from dosma.data_io.format_io import ImageDataFormat
@@ -9,36 +10,49 @@ from dosma.data_io.med_volume import MedicalVolume
 from dosma.data_io.orientation import SAGITTAL
 from dosma.defaults import preferences
 from dosma.utils import io_utils
-from dosma.quant_vals import QuantitativeValues, QuantitativeValue
+from dosma.quant_vals import QuantitativeValueType, QuantitativeValue
 
-WEIGHTS_FILE_EXT = 'h5'
+WEIGHTS_FILE_EXT = "h5"
 
-__all__ = ['Tissue']
+__all__ = ["Tissue"]
 
 
 class Tissue(ABC):
-    """
-    Handles analysis for all tissues
-    Technically this includes non-tissue anatomy, like bone
-    """
-    ID = -1  # should be unique to all tissues, and should not change - replace with a unique identifier
-    STR_ID = ''  # short hand string id such as 'fc' for femoral cartilage
-    FULL_NAME = ''  # full name of tissue 'femoral cartilage' for femoral cartilage
+    """Abstract class for tissues.
 
-    # Expected quantitative param values
+    Tissues are defined loosely as any tissue structures (bones, soft tissue, etc.).
+
+    Args:
+        weights_dir (str): Directory to all segmentation weights.
+        medial_to_lateral (`bool`, optional): If `True`, anatomy is from medial_to_lateral. Defaults to `False`.
+
+    Attributes:
+        FULL_NAME (str): Full name of tissue 'femoral cartilage' for femoral cartilage.
+        ID (int): Unique integer ID for tissue. Should be unique to all tissues, and should not change.
+        STR_ID (str): Short hand string id such as 'fc' for femoral cartilage.
+        T1_EXPECTED (float): Expected T1 value (in milliseconds).
+        medial_to_lateral (bool): If mask is in medial to lateral direction. In the future, this will be something that
+            will be determined automatically.
+        pid (str): Patient/subject ID. Should be anonymized.
+        quant_vals (dict[str, tuple[np.ndarray, pd.DataFrame]]): Mapping from quantitative value name (t2, t1-rho, etc.)
+            to tuple of unrolled map and DataFrame containing measurement values.
+        weights_filepath (str): File path to weights directory for neural network segmentation.
+    """
+    ID = -1
+    STR_ID = ''
+    FULL_NAME = ''
+
+    # Expected quantitative param values.
     T1_EXPECTED = None
 
-    def __init__(self, weights_dir=None, medial_to_lateral=None):
-        """
-        :param weights_dir: Directory with segmentation weights
-        """
+    def __init__(self, weights_dir: str = None, medial_to_lateral: bool = None):
         self.pid = None
         self.__mask__ = None
         self.quant_vals = dict()
-        self.weights_filepath = None
+        self.weights_file_path = None
 
         if weights_dir is not None:
-            self.weights_filepath = self.find_weights(weights_dir)
+            self.weights_file_path = self.find_weights(weights_dir)
 
         self.medial_to_lateral = medial_to_lateral
 
@@ -46,50 +60,74 @@ class Tissue(ABC):
         self.quantitative_values = []
 
     @abstractmethod
-    def split_regions(self, base_map):
-        """
-        Split mask into anatomical regions
-        :param base_map: a 3D numpy array
-        :return: a 4D numpy array (region, height, width, depth) - save in variable self.regions
+    def split_regions(self, base_map: np.ndarray):
+        """Split mask into anatomical regions.
+
+        Args:
+            base_map (np.ndarray): 3D numpy array typically corresponding to volume to split.
+
+        Returns:
+            np.ndarray: 4D numpy array (region, height, width, depth). Saved in variable `self.regions`.
         """
         pass
 
     def calc_quant_vals(self):
-        """
-        Get all quantitative values for tissue
-        :param quant_map: a 3D numpy array for quantitative measures (t2, t2*, t1-rho, etc)
-        :param map_type: an enum instance of QuantitativeValue
-        :return: a list of dictionaries of quantitative values, save in quant_vals
+        """Calculate quantitative values for pixels corresponding to the tissue.
+
+        Requires mask to be set for this tissue.
         """
         for qv in self.quantitative_values:
-            self.__calc_quant_vals__(qv.volumetric_map, qv.get_enum())
+            self.__calc_quant_vals__(qv.volumetric_map, qv.qv_type)
 
     @abstractmethod
-    def __calc_quant_vals__(self, quant_map, map_type):
-        """
-        Private method to get quantitative values for tissue - implemented by tissue
-        :param quant_map: a 3D numpy array for quantitative measures (t2, t2*, t1-rho, etc)
-        :param map_type: an enum instance of QuantitativeValue
-        :return: a dictionary of quantitative values, save in quant_vals
-        """
+    def __calc_quant_vals__(self, quant_map: MedicalVolume, map_type: QuantitativeValueType):
+        """Helper method to get quantitative values for tissue - implemented per tissue.
 
-        assert type(quant_map) is MedicalVolume
-        assert type(map_type) is QuantitativeValues
+        Different tissues should override this as they see fit.
+
+        Args:
+            quant_map (MedicalVolume): 3D map of pixel-wise quantitative measures (T2, T2*, T1-rho, etc.). Volume should
+                have `np.nan` values for all pixels unable to be calculated.
+            map_type (QuantitativeValueType): Type of quantitative value to analyze.
+
+        Raises:
+            TypeError: If `quant_map` is not of type `MedicalVolume` or `map_type` is not of type
+                `QuantitativeValueType`.
+            ValueError: If no mask is found for tissue.
+        """
+        if not isinstance(quant_map, MedicalVolume):
+            raise TypeError("`Expected type 'MedicalVolume' for `quant_map`")
+        if not isinstance(map_type, QuantitativeValueType):
+            raise TypeError("`Expected type 'QuantitativeValueType' for `map_type`")
 
         if self.__mask__ is None:
-            raise ValueError('Please initialize mask for %s' % self.FULL_NAME)
+            raise ValueError("Please initialize mask for {}".format(self.FULL_NAME))
 
         quant_map.reformat(self.__mask__.orientation)
         pass
 
-    def __store_quant_vals__(self, quant_map, quant_df, map_type):
+    def __store_quant_vals__(self, quant_map: MedicalVolume, quant_df: pd.DataFrame, map_type: QuantitativeValueType):
+        """Adds quantitative value in `self.quant_vals`.
+
+        Args:
+            quant_map (list[dict]): Dictionaries of different unrolled maps and corresponding plotting data (title,
+                xlabel, etc.).
+            quant_df (pd.DataFrame): Computed data for this quantitative value.
+            map_type (QuantitativeValueType): Type of quantitative value to analyze.
+        """
         self.quant_vals[map_type.name] = (quant_map, quant_df)
 
-    def find_weights(self, weights_dir):
-        """
-        Search for weights file in weights directory
-        :param weights_dir: directory where weights are stored
-        :return: filepath to weights corresponding to tissue
+    def find_weights(self, weights_dir: str):
+        """Search for weights file in weights directory.
+
+        Args:
+            weights_dir (str): Directory where weights are stored.
+
+        Returns:
+            str: File path to weights corresponding to tissue.
+
+        Raises:
+            ValueError: If multiple weights files exists for the tissue or no valid weights file found.
         """
 
         # Find weights file with NAME in the filename, like 'fc_weights.h5'
@@ -99,33 +137,37 @@ class Tissue(ABC):
             file = os.path.join(weights_dir, f)
             if os.path.isfile(file) and file.endswith(WEIGHTS_FILE_EXT) and self.STR_ID in file:
                 if weights_file is not None:
-                    raise ValueError('There are multiple weights files, please remove duplicates')
+                    raise ValueError("There are multiple weights files, please remove duplicates")
                 weights_file = file
 
         if weights_file is None:
-            raise ValueError('No file found that contains \'%s\' and ends in \'%s\'' % (self.STR_ID, WEIGHTS_FILE_EXT))
+            raise ValueError("No file found that contains '{}' and ends in '{}'".format(self.STR_ID, WEIGHTS_FILE_EXT))
 
-        self.weights_filepath = weights_file
+        self.weights_file_path = weights_file
 
         return weights_file
 
-    def save_data(self, save_dirpath, data_format: ImageDataFormat = preferences.image_data_format):
-        """Save data for tissue
+    def save_data(self, save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format):
+        """Save data for tissue.
 
-        Saves mask and quantitative values associated with this tissue
+        Saves mask and quantitative values associated with this tissue.
 
-        Extension (Overriding) protocol: When overriding in subclasses, call super().save_data(save_dirpath) first
-                                            e.g. femoral_cartilage.py
+        Override in subclasses to save additional data. When overriding in subclasses, call
+            `super().save_data(save_dirpath)` first to save mask and quantitative values by default. See
+            `femoral_cartilage.py` for details.
 
-        :param save_dirpath: base path to save data
-        :param data_format: an ImageDataFormat enum specifying which format to save data in
+        .. literalinclude:: femoral_cartilage.py
+
+        Args:
+            save_dirpath (str): Directory path where all data is stored.
+            data_format (`ImageDataFormat`, optional): Format to save data. Defaults to `preferences.image_data_format`.
         """
         save_dirpath = self.__save_dirpath__(save_dirpath)
 
         if self.__mask__ is not None:
-            mask_filepath = os.path.join(save_dirpath, '%s.nii.gz' % self.STR_ID)
-            mask_filepath = fio_utils.convert_image_data_format(mask_filepath, data_format)
-            self.__mask__.save_volume(mask_filepath, data_format=data_format)
+            mask_file_path = os.path.join(save_dirpath, "{}.nii.gz".format(self.STR_ID))
+            mask_file_path = fio_utils.convert_image_data_format(mask_file_path, data_format)
+            self.__mask__.save_volume(mask_file_path, data_format=data_format)
 
         for qv in self.quantitative_values:
             qv.save_data(save_dirpath, data_format)
@@ -133,56 +175,76 @@ class Tissue(ABC):
         self.__save_quant_data__(save_dirpath)
 
     @abstractmethod
-    def __save_quant_data__(self, dirpath):
-        """
-        Save quantitative data generated for this tissue
-        :param dirpath: Path to directory where to save quantitative information
-        :return:
+    def __save_quant_data__(self, dirpath: str):
+        """Save quantitative data generated for this tissue.
+
+        Called by `save_data`.
+
+        Args:
+            dirpath (str): Directory path to tissue data.
         """
         pass
 
-    def load_data(self, load_dirpath):
-        """Load information for tissue
+    def load_data(self, load_dir_path: str):
+        """Load data for tissue.
 
-        All tissue information is based on the mask.
-        If mask for tissue doesn't exist, there is no information to load.
+        All tissue information is based on the mask. If mask for tissue doesn't exist, there is no information to load.
 
-        :param load_dirpath: base path to load data (same as 'save_dirpath' arg input to self.save_data(save_dirpath))
+        Args:
+            load_dir_path (str): Directory path where all data is stored.
         """
-        load_dirpath = self.__save_dirpath__(load_dirpath)
-        mask_filepath = os.path.join(load_dirpath, '%s.nii.gz' % self.STR_ID)
+        load_dir_path = self.__save_dirpath__(load_dir_path)
+        mask_file_path = os.path.join(load_dir_path, "{}.nii.gz".format(self.STR_ID))
 
-        # try to load mask, if file exists
+        # Try to load mask, if file exists.
         try:
-            msk = fio_utils.generic_load(mask_filepath, expected_num_volumes=1)
+            msk = fio_utils.generic_load(mask_file_path, expected_num_volumes=1)
             self.set_mask(msk)
         except FileNotFoundError:
             # do nothing
             pass
 
-        self.quantitative_values = QuantitativeValue.load_qvs(load_dirpath)
+        self.quantitative_values = QuantitativeValue.load_qvs(load_dir_path)
 
     def __save_dirpath__(self, dirpath):
-        """Subdirectory to store data - save_dirpath/self.STR_ID/
-        :param dirpath: base dirpath
-        :return:
-        """
-        return io_utils.check_dir(os.path.join(dirpath, '%s' % self.STR_ID))
+        """Tissue-specific subdirectory to store data.
 
-    # TODO (arjundd): Refactor get/set methods of mask to property
-    def set_mask(self, mask):
-        """Set mask for tissue
-        :param mask: a MedicalVolume
+        Subdirectory will have path '`dirpath`/`self.STR_ID`/'.
+
+        If directory does not exist, it will be created.
+
+        Args:
+            dirpath (str): Directory path where all data is stored.
+
+        Returns:
+            str: Tissue-specific data directory.
+        """
+        return io_utils.mkdirs(os.path.join(dirpath, self.STR_ID))
+
+    # TODO (arjundd): Refactor get/set methods of mask to property.
+    def set_mask(self, mask: MedicalVolume):
+        """Set mask for tissue.
+
+        Args:
+            mask (MedicalVolume): Binary mask of segmented tissue.
         """
         assert type(mask) is MedicalVolume, "mask for tissue must be of type MedicalVolume"
         mask.reformat(SAGITTAL)
         self.__mask__ = mask
 
     def get_mask(self):
-        # if mask is None, try loading mask
+        """
+        Returns:
+            MedicalVolume: Binary mask of segmented tissue.
+        """
         return self.__mask__
 
-    def add_quantitative_value(self, qv_new):
+    def add_quantitative_value(self, qv_new: QuantitativeValue):
+        """Add quantitative value to the tissue.
+
+        Args:
+            qv_new (QuantitativeValue): Quantitative value to add to tissue.
+        """
         # for qv in self.quantitative_values:
         #     if qv_new.NAME == qv.NAME:
         #         raise ValueError('This quantitative value already exists. '
@@ -191,7 +253,20 @@ class Tissue(ABC):
 
         self.quantitative_values.append(qv_new)
 
-    def __get_axis_bounds__(self, im: np.ndarray, ignore_nan=True, leave_buffer=False):
+    def __get_axis_bounds__(self, im: np.ndarray, ignore_nan: bool = True, leave_buffer: bool = False):
+        """Get tightest bounds for data in the array.
+
+        When plotting data, we would like to avoid making our dynamic range too large such that we cannot detect color
+            changes in differences that matter. To avoid this, we make our bounds as tight as possible.
+
+        Bounds are calculated with respect to non-zero elements. If unique values are [0, 8, 9], the dyanmic range will
+            be [8, 9].
+
+        Args:
+             im (np.ndarray): Array containing information for which bounds have to be computed.
+             ignore_nan (obj:`bool`, optional): Ignore `nan` values when computing the bounds. Defaults to `True`.
+             leave_buffer (obj:`bool`, optional): Add buffer of +/-5 to dynamic range.
+        """
         im_temp = im
         axs = []
         if ignore_nan:

@@ -27,7 +27,7 @@ class MapssTest(util.ScanTest):
         input_shape = (dims[0], dims[1], 1)
         model = get_model(SEGMENTATION_MODEL,
                           input_shape=input_shape,
-                          weights_path=tissue.weights_filepath)
+                          weights_path=tissue.weights_file_path)
 
         # automatic segmentation currently not implemented
         with self.assertRaises(NotImplementedError):

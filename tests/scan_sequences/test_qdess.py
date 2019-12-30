@@ -22,7 +22,7 @@ class QDessTest(util.ScanTest):
         input_shape = (dims[0], dims[1], 1)
         model = get_model(SEGMENTATION_MODEL,
                           input_shape=input_shape,
-                          weights_path=tissue.weights_filepath)
+                          weights_path=tissue.weights_file_path)
         scan.segment(model, tissue)
     #
     # def test_t2_map(self):
@@ -52,7 +52,7 @@ class QDessTest(util.ScanTest):
         self.__cmd_line_helper__(cmdline_str)
 
         # Generate T2 map for femoral cartilage, tibial cartilage, and meniscus via command line
-        cmdline_str = '--l %s qdess --fc t2 --suppress_fat' % self.data_dirpath
+        cmdline_str = '--l %s qdess --fc t2 --suppress_fat --suppress_fluid --beta 1.1' % self.data_dirpath
         self.__cmd_line_helper__(cmdline_str)
 
 

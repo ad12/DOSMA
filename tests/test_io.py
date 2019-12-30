@@ -23,16 +23,16 @@ class TestNiftiIO(unittest.TestCase):
             read_filepaths = ututils.get_read_paths(dp, self.data_format)
 
             for read_filepath in read_filepaths:
-                mv = self.nr.load(read_filepath)
+                _ = self.nr.load(read_filepath)
 
                 with self.assertRaises(FileNotFoundError):
-                    mv = self.nr.load(os.path.join(dp, 'bleh'))
+                    _ = self.nr.load(os.path.join(dp, 'bleh'))
 
                 with self.assertRaises(FileNotFoundError):
-                    mv = self.nr.load(dp)
+                    _ = self.nr.load(dp)
 
                 with self.assertRaises(ValueError):
-                    mv = self.nr.load(os.path.join(dicoms_path, 'I0001.dcm'))
+                    _ = self.nr.load(os.path.join(dicoms_path, 'I0002.dcm'))
 
     def test_nifti_write(self):
         for dp in ututils.SCAN_DIRPATHS:
@@ -89,7 +89,8 @@ class TestDicomIO(unittest.TestCase):
                                                                                               curr_scan,
                                                                                               len(volumes))
 
-            # if multiple echos, all echo volumes must share the same orientation, shape, scanner origin, and pixel spacing
+            # If multiple echos, all echo volumes must share the same orientation, shape, scanner origin, and pixel
+            # spacing.
             e1 = volumes[0]
             for echo_volume in volumes[1:]:
                 assert e1.orientation == echo_volume.orientation, "Orientation mismatch: orientations of multiple dicom volumes loaded from single folder should be identical"
@@ -107,7 +108,7 @@ class TestDicomIO(unittest.TestCase):
 
     def test_dicom_reader_separate(self):
         # User manually separates two echos into different folders
-        # still be able to read volume in
+        # still be able to read volume in.
 
         for ind, dp in enumerate(ututils.SCAN_DIRPATHS):
             curr_scan = ututils.SCANS[ind]
@@ -287,13 +288,14 @@ class TestInterIO(unittest.TestCase):
             for rfp in nifti_read_paths:
                 gt_nifti_vols.append(self.nr.load(rfp))
 
-            # DicomReader to read multiple echo volumes from scan sequence
+            # DicomReader to read multiple echo volumes from scan sequence.
             dicom_loaded_vols = self.dr.load(dicom_path)
 
             # Get dicom and itksnap in same orientation
             o = dicom_loaded_vols[0].orientation
             for v in dicom_loaded_vols[1:]:
-                assert o == v.orientation, "orientations of multiple dicom volumes loaded from single folder should be identical"
+                assert o == v.orientation, \
+                    "Orientations of multiple dicom volumes loaded from single folder should be identical"
 
             for v in gt_nifti_vols:
                 v.reformat(o)
@@ -303,8 +305,8 @@ class TestInterIO(unittest.TestCase):
                 nifti_vol = gt_nifti_vols[i]
                 echo_num = i + 1
 
-                assert (
-                        dcm_vol.volume == nifti_vol.volume).all(), "e%d volumes (dcm, nifti-ground truth) should be identical" % echo_num
+                assert (dcm_vol.volume == nifti_vol.volume).all(), \
+                    "e%d volumes (dcm, nifti-ground truth) should be identical" % echo_num
 
             # Use NiftiWriter to save volumes (read in as dicoms)
             for i in range(len(dicom_loaded_vols)):

@@ -53,8 +53,8 @@ while getopts ":hf" opt; do
     case ${opt} in
         h )
             echo "Usage:"
-            echo "      setup -h                Display this help message"
-            echo "      setup -f                Force install"
+            echo "    -h                Display this help message"
+            echo "    -f                Force install. Updates virtual environment as well."
             exit 0
             ;;
         f )
