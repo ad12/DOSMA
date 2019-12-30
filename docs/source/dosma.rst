@@ -16,14 +16,6 @@ Subpackages
 Submodules
 ----------
 
-dosma.cli module
-----------------
-
-.. automodule:: dosma.cli
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 dosma.defaults module
 ---------------------
 

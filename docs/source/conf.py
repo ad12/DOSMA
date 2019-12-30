@@ -13,6 +13,7 @@
 import os
 import sys
 import sphinx_bootstrap_theme
+import sphinx_rtd_theme
 sys.path.insert(0, os.path.abspath('../..'))
 
 
@@ -42,6 +43,8 @@ extensions = [
     'sphinx.ext.githubpages',
     'sphinx.ext.napoleon',
     'sphinx.ext.mathbase',
+    'sphinxcontrib.bibtex',
+    'sphinx_rtd_theme',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -59,8 +62,9 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 #html_theme = 'alabaster'
-html_theme = 'bootstrap'
-html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
+#html_theme = 'bootstrap'
+#html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
+html_theme = "sphinx_rtd_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -69,3 +73,4 @@ html_static_path = ['_static']
 
 # Documentation to include
 todo_include_todos = True
+napoleon_use_ivar = True
