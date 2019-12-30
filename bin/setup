@@ -41,9 +41,13 @@ DOSMA_DIR="$( cd "$( dirname "${BIN_DIR}" )" >/dev/null 2>&1 && pwd )"
 ANACONDA_KEYWORD="anaconda"
 ANACONDA_DOWNLOAD_URL="https://www.anaconda.com/distribution/"
 MINICONDA_KEYWORD="miniconda"
+
 DOSMA_ENV_NAME="dosma_env"
 ENV_FILE=$DOSMA_DIR/environment.yml
+
 GOOGLE_FORM_URL="https://forms.gle/sprthTC2swyt8dDb6"
+
+DOSMA_SETUP_PATTERN="dosma setup|export PATH.*dosma\/bin"
 
 hasAnaconda=0
 force=0
@@ -52,9 +56,13 @@ setBashFile
 while getopts ":hf" opt; do
     case ${opt} in
         h )
+            echo "DOSMA setup"
+            echo "     Create Anaconda virtual environment and add dosma executable to PATH variable"
             echo "Usage:"
             echo "    -h                Display this help message"
-            echo "    -f                Force install. Updates virtual environment as well."
+            echo "    -f                Force install. Updates virtual environment and"
+            echo "                      PATH variable. If updating DOSMA, use this"
+            echo "                      option"
             exit 0
             ;;
         f )
@@ -103,18 +111,26 @@ else
     conda env create -f $ENV_FILE
 fi
 
-# Add dosma to path
-if [[ -z `cat ${bash_file} | grep '# added by DOSMA setup'` ]]; then
+# If DOSMA executable already exists as a shortcut and force setup, then remove the path lines
+if [[ -z `cat ${bash_file} | egrep ${DOSMA_SETUP_PATTERN}` && ${force} -ne 0 ]]; then
     cp $bash_file $bash_file"-dosma.bak"
-    echo $bash_file
+    egrep -iv $DOSMA_SETUP_PATTERN $bash_file >> $bash_file
+fi
+
+# Add dosma to path
+if [[ -z `cat ${bash_file} | egrep ${DOSMA_SETUP_PATTERN}` ]]; then
+    cp $bash_file $bash_file"-dosma.bak"
+
     echo "Adding dosma to path - changes made in $bash_file"
     echo "" >> $bash_file
-    echo "# added by DOSMA setup" >> $bash_file
+    echo "# Added by DOSMA setup" >> $bash_file
     echo 'export PATH='$BIN_DIR':$PATH' >> $bash_file
 fi
 
-echo "for command line: 'dosma -h'"
-echo "for GUI (user interface): 'dosma --app'"
+echo "DOSMA Usage"
+echo "------------"
+echo "For command line help menu: 'dosma -h'"
+echo "For GUI (user interface): 'dosma --app'"
 
 # Launch google form
 openURL $GOOGLE_FORM_URL

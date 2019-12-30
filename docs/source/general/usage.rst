@@ -28,6 +28,11 @@ To being a session using DOSMA from the command-line or GUI, follow the step bel
     # Or run DOSMA as a user interface (UI).
     $ dosma --app
 
+.. note::
+
+    If you are using a remote connection, enable X11 port-forwarding to execute Step 4. If it is not enabled, the GUI
+    cannot be used for remote connections.
+
 
 .. _usage-cli:
 
@@ -146,7 +151,7 @@ Analyze patient01 femoral cartilage |T2star| properties using UTE Cones sequence
     $ dosma --dicom research_data/patient01/cones --save research_data/patient01/data cones --fc interregister --target_path research_data/patient01/data/dess/echo1.nii.gz --target_mask research_data/patient01/data/fc/fc.nii.gz
 
     # 2. Calculate 3D T2-star map only for femoral cartilage region
-    $ dosma --load research_data/patient01/data cubequant --fc t2_star --mask_path research_data/patient01/data/fc/fc.nii.gz
+    $ dosma --load research_data/patient01/data cones --fc t2_star --mask_path research_data/patient01/data/fc/fc.nii.gz
 
     # 3. Calculate/visualize T1-rho for femoral cartilage
     $ dosma --load research_data/patient01/data knee --fc --t2_star

@@ -24,7 +24,7 @@ copyright = '2019, Arjun Desai'
 author = 'Arjun Desai'
 
 # The full version, including alpha/beta/rc tags
-release = 'v0.0.10'
+release = 'v0.0.11'
 
 
 # -- General configuration ---------------------------------------------------

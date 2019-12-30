@@ -27,8 +27,8 @@ Setup
 The following steps will create an Anaconda environment and a shortcut for running DOSMA from the command-line.
 **Avoid spaces in file paths.**
 
-1. Download the DOSMA `repository <https://github.com/ad12/DOSMA>`_ to a non-temporary location (i.e. not the `Downloads` folder)
-2. Open the DOSMA directory in the Terminal
+1. Download the latest DOSMA `release <https://github.com/ad12/DOSMA/releases>`_ to a non-temporary location (i.e. not the `Downloads` folder)
+2. Open the project folder in the Terminal
 3. Navigate to ``bin`` folder::
 
     $ cd bin
@@ -88,7 +88,4 @@ Verification
 
     $ dosma --app
 
-.. note::
 
-    If you are using a remote connection, enable X11 port-forwarding to execute Step 4. If it is not enabled, the GUI
-    cannot be used for remote connections.
