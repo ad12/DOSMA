@@ -50,29 +50,18 @@ GOOGLE_FORM_URL="https://forms.gle/sprthTC2swyt8dDb6"
 DOSMA_SETUP_PATTERN="dosma setup|export PATH.*dosma\/bin"
 
 hasAnaconda=0
-updateEnv=0
-updatePath=0
+updateEnv=1
+updatePath=1
 setBashFile
 
-while getopts ":hue" opt; do
+while getopts ":h" opt; do
     case ${opt} in
         h )
             echo "DOSMA setup"
             echo "     Create Anaconda virtual environment and add dosma executable to PATH variable"
             echo "Usage:"
             echo "    -h                Display this help message"
-            echo "    -u                Update DOSMA path variables"
-            echo "                      If updating to latest version, use"
-            echo "                      this option"
-            echo "    -e                Update DOSMA environment. Use only if"
-            echo "                      specified in version update."
             exit 0
-            ;;
-        u )
-            updatePath=1
-            ;;
-        e )
-            updateEnv=1
             ;;
         \? )
             echo "Usage: cmd [-h] [-u] [-e]"
