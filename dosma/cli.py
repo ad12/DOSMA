@@ -324,8 +324,8 @@ def parse_args(f_input=None):
     """
     parser = argparse.ArgumentParser(prog='DOSMA',
                                      description='A deep-learning powered open source MRI analysis pipeline',
-                                     epilog='Either `--d` or `---l` must be specified. '
-                                            'If both are given, `-d` will be used')
+                                     epilog='Either `--dicom` or `--load` must be specified. '
+                                            'If both are given, `--dicom` will be used')
     parser.add_argument('--%s' % DEBUG_KEY, action='store_true', help='use debug mode')
 
     # Dicom and results paths

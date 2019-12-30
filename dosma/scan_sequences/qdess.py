@@ -27,6 +27,8 @@ __all__ = ["QDess"]
 
 class QDess(TargetSequence):
     """Handles analysis for qDESS scan sequence.
+
+    qDESS consists of two echos (S1, S2).
     """
     NAME = "qdess"
 
@@ -54,10 +56,10 @@ class QDess(TargetSequence):
             bool: `True` if has 2 echos, `False` otherwise.
         """
         ref_dicom = self.ref_dicom
-        #contains_expected_dicom_metadata = self.__GL_AREA_TAG__ in ref_dicom and self.__TG_TAG__ in ref_dicom
+        # contains_expected_dicom_metadata = self.__GL_AREA_TAG__ in ref_dicom and self.__TG_TAG__ in ref_dicom
         has_expected_num_echos = len(self.volumes) == self.__NUM_ECHOS__
 
-        #return contains_expected_dicom_metadata & has_expected_num_echos
+        # return contains_expected_dicom_metadata & has_expected_num_echos
         return has_expected_num_echos
 
     def segment(self, model: SegModel, tissue: Tissue, use_rms: bool = False):
@@ -269,8 +271,10 @@ class QDess(TargetSequence):
                                                    'suppress_fat': 'suppress computation on low SNR fat regions',
                                                    'suppress_fluid': 'suppress computation on fluid regions',
                                                    'beta': 'constant for calculating fluid-nulled image (S1-beta*S2)',
-                                                   'gl_area': 'gl_area',
-                                                   'tg': 'tg'},
+                                                   'gl_area': 'GL Area. Defaults to value in dicom tag \'0x001910b6\'',
+                                                   'tg': 'Gradient time (in microseconds). '
+                                                         'Defaults to value in dicom tag \'0x001910b7\'.'
+                                               },
                                                help='generate T2 map')
 
         return [(cls.segment, segment_action), (cls.generate_t2_map, generate_t2_map_action)]

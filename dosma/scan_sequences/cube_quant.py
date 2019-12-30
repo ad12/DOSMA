@@ -97,10 +97,14 @@ class CubeQuant(NonTargetSequence):
 
         Args:
             tissue (Tissue): Tissue to generate quantitative value for.
-            mask_path (str): File path to mask of ROI to analyze
+            mask_path (:obj:`str`, optional): File path to mask of ROI to analyze. If specified, only voxels specified
+                by mask will be fit. Speeds up computation. Defaults to `None`.
 
         Returns:
             qv.T1Rho: T1-rho fit for tissue.
+
+        Raises:
+            ValueError: If `mask_path` specifies volume with values other than `0` or `1` (i.e. not binary).
         """
         spin_lock_times = []
         subvolumes_list = []
@@ -110,7 +114,7 @@ class CubeQuant(NonTargetSequence):
         if (not mask or np.sum(mask.volume) == 0) and mask_path:
             mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
             if tuple(np.unique(mask.volume)) != (0, 1):
-                raise ValueError("`mask_filepath` must reference binary segmentation volume")
+                raise ValueError("`mask_path` must reference binary segmentation volume")
 
         sorted_keys = natsorted(list(self.subvolumes.keys()))
         for spin_lock_time_index in sorted_keys:
@@ -254,6 +258,11 @@ class CubeQuant(NonTargetSequence):
                                                                       'target_mask_path': ['tm', 'target_mask']})
         generate_t1rho_map_action = ActionWrapper(name=cls.generate_t1_rho_map.__name__,
                                                   help='generate T1-rho map',
-                                                  aliases=['t1_rho'])
+                                                  aliases=['t1_rho'],
+                                                  param_help={
+                                                      'mask_path': 'Mask used for fitting select voxels - '
+                                                                   'in nifti format (.nii.gz)',
+                                                  },
+                                                  )
 
         return [(cls.interregister, interregister_action), (cls.generate_t1_rho_map, generate_t1rho_map_action)]
