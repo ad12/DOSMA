@@ -1,0 +1,288 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dosma.msk.knee &mdash; DOSMA v0.0.10 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> DOSMA
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/faq.html">FAQs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">DOSMA</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dosma.msk.knee</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dosma.msk.knee</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Command line interface declaration for knee-related analyses</span>
+
+<span class="sd">@author: Arjun Desai</span>
+<span class="sd">        (C) Stanford University, 2019</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">uuid</span>
+
+<span class="kn">from</span> <span class="nn">dosma.defaults</span> <span class="kn">import</span> <span class="n">preferences</span>
+<span class="kn">from</span> <span class="nn">dosma.tissues</span> <span class="kn">import</span> <span class="n">FemoralCartilage</span><span class="p">,</span> <span class="n">TibialCartilage</span><span class="p">,</span> <span class="n">Meniscus</span><span class="p">,</span> <span class="n">PatellarCartilage</span>
+<span class="kn">from</span> <span class="nn">dosma.quant_vals</span> <span class="kn">import</span> <span class="n">QuantitativeValueType</span> <span class="k">as</span> <span class="n">QV</span>
+
+<span class="n">KNEE_KEY</span> <span class="o">=</span> <span class="s1">&#39;knee&#39;</span>
+<span class="n">MEDIAL_TO_LATERAL_KEY</span> <span class="o">=</span> <span class="s1">&#39;ml&#39;</span>
+<span class="n">TISSUES_KEY</span> <span class="o">=</span> <span class="s1">&#39;tissues&#39;</span>
+<span class="n">LOAD_KEY</span> <span class="o">=</span> <span class="s1">&#39;load&#39;</span>
+<span class="n">SAVE_KEY</span> <span class="o">=</span> <span class="s1">&#39;save&#39;</span>
+<span class="n">PID_KEY</span> <span class="o">=</span> <span class="s1">&#39;pid&#39;</span>
+
+<span class="n">SUPPORTED_TISSUES</span> <span class="o">=</span> <span class="p">[</span><span class="n">FemoralCartilage</span><span class="p">,</span> <span class="n">Meniscus</span><span class="p">,</span> <span class="n">TibialCartilage</span><span class="p">,</span> <span class="n">PatellarCartilage</span><span class="p">]</span>
+<span class="n">SUPPORTED_QUANTITATIVE_VALUES</span> <span class="o">=</span> <span class="p">[</span><span class="n">QV</span><span class="o">.</span><span class="n">T2</span><span class="p">,</span> <span class="n">QV</span><span class="o">.</span><span class="n">T1_RHO</span><span class="p">,</span> <span class="n">QV</span><span class="o">.</span><span class="n">T2_STAR</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="knee_parser"><a class="viewcode-back" href="../../../dosma.msk.html#dosma.msk.knee.knee_parser">[docs]</a><span class="k">def</span> <span class="nf">knee_parser</span><span class="p">(</span><span class="n">base_parser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse command line input related to knee</span>
+
+<span class="sd">    :param base_parser: the base parser to add knee subcommand to</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parser_tissue</span> <span class="o">=</span> <span class="n">base_parser</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="n">KNEE_KEY</span><span class="p">,</span>
+                                           <span class="n">help</span><span class="o">=</span><span class="s1">&#39;calculate/analyze quantitative data for knee&#39;</span><span class="p">)</span>
+
+    <span class="n">parser_tissue</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">MEDIAL_TO_LATERAL_KEY</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_const&#39;</span><span class="p">,</span> <span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                               <span class="n">help</span><span class="o">=</span><span class="s2">&quot;defines slices in sagittal direction going from medial -&gt; lateral&quot;</span><span class="p">)</span>
+
+    <span class="n">parser_tissue</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">PID_KEY</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;?&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()),</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;specify pid&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">tissue</span> <span class="ow">in</span> <span class="n">SUPPORTED_TISSUES</span><span class="p">:</span>
+        <span class="n">parser_tissue</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">tissue</span><span class="o">.</span><span class="n">STR_ID</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_const&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                   <span class="n">help</span><span class="o">=</span><span class="s1">&#39;analyze </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">tissue</span><span class="o">.</span><span class="n">FULL_NAME</span><span class="p">)</span>
+
+    <span class="n">qvs_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">qv</span> <span class="ow">in</span> <span class="n">SUPPORTED_QUANTITATIVE_VALUES</span><span class="p">:</span>
+        <span class="n">qv_name</span> <span class="o">=</span> <span class="n">qv</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">qvs_dict</span><span class="p">[</span><span class="n">qv_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">qv</span>
+        <span class="n">parser_tissue</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">qv_name</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_const&#39;</span><span class="p">,</span> <span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                   <span class="n">help</span><span class="o">=</span><span class="s1">&#39;quantify </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">qv_name</span><span class="p">)</span>
+
+    <span class="n">parser_tissue</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">handle_knee</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="handle_knee"><a class="viewcode-back" href="../../../dosma.msk.html#dosma.msk.knee.handle_knee">[docs]</a><span class="k">def</span> <span class="nf">handle_knee</span><span class="p">(</span><span class="n">vargin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handle parsing command-line input for knee subcommand</span>
+<span class="sd">    :param vargin:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tissues</span> <span class="o">=</span> <span class="n">vargin</span><span class="p">[</span><span class="n">TISSUES_KEY</span><span class="p">]</span>
+    <span class="n">load_path</span> <span class="o">=</span> <span class="n">vargin</span><span class="p">[</span><span class="n">LOAD_KEY</span><span class="p">]</span>
+    <span class="n">medial_to_lateral</span> <span class="o">=</span> <span class="n">vargin</span><span class="p">[</span><span class="n">MEDIAL_TO_LATERAL_KEY</span><span class="p">]</span>
+    <span class="n">pid</span> <span class="o">=</span> <span class="n">vargin</span><span class="p">[</span><span class="n">PID_KEY</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">tissues</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">tissues</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Computing for all supported knee tissues...&#39;</span><span class="p">)</span>
+        <span class="n">tissues</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">SUPPORTED_TISSUES</span><span class="p">:</span>
+            <span class="n">tissues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">())</span>
+
+    <span class="c1"># Get all supported quantitative values</span>
+    <span class="n">qvs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">qv</span> <span class="ow">in</span> <span class="n">SUPPORTED_QUANTITATIVE_VALUES</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">vargin</span><span class="p">[</span><span class="n">qv</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()]:</span>
+            <span class="n">qvs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">qv</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">qvs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Computing for all supported quantitative values...&#39;</span><span class="p">)</span>
+        <span class="n">qvs</span> <span class="o">=</span> <span class="n">SUPPORTED_QUANTITATIVE_VALUES</span>
+
+    <span class="k">for</span> <span class="n">tissue</span> <span class="ow">in</span> <span class="n">tissues</span><span class="p">:</span>
+        <span class="n">tissue</span><span class="o">.</span><span class="n">pid</span> <span class="o">=</span> <span class="n">pid</span>
+        <span class="n">tissue</span><span class="o">.</span><span class="n">medial_to_lateral</span> <span class="o">=</span> <span class="n">medial_to_lateral</span>
+        <span class="n">tissue</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">load_path</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;==&#39;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">tissue</span><span class="o">.</span><span class="n">FULL_NAME</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;==&#39;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">qv</span> <span class="ow">in</span> <span class="n">qvs</span><span class="p">:</span>
+            <span class="c1"># load file</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Analyzing </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">qv</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+            <span class="n">tissue</span><span class="o">.</span><span class="n">calc_quant_vals</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">tissue</span> <span class="ow">in</span> <span class="n">tissues</span><span class="p">:</span>
+        <span class="n">tissue</span><span class="o">.</span><span class="n">save_data</span><span class="p">(</span><span class="n">vargin</span><span class="p">[</span><span class="n">SAVE_KEY</span><span class="p">],</span> <span class="n">data_format</span><span class="o">=</span><span class="n">preferences</span><span class="o">.</span><span class="n">image_data_format</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tissues</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,270 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Scans &mdash; DOSMA v0.0.10 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tissues" href="tissues.html" />
+    <link rel="prev" title="Documentation" href="documentation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DOSMA
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="documentation.html">Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Scans</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#qdess">qDESS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cubequant-3d-fse">CubeQuant (3D FSE)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#d-mapss-spgr">3D MAPSS (SPGR)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ute-cones">UTE Cones</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tissues.html">Tissues</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DOSMA</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="documentation.html">Documentation</a> &raquo;</li>
+        
+      <li>Scans</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/general/scans.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="scans">
+<span id="id1"></span><h1>Scans<a class="headerlink" href="#scans" title="Permalink to this headline">¶</a></h1>
+<p>DOSMA currently supports 4 scan types:</p>
+<ol class="arabic simple">
+<li><p>Quantitative DESS (qDESS)</p></li>
+<li><p>CubeQuant</p></li>
+<li><p>MAPSS</p></li>
+<li><p>UTE Cones</p></li>
+</ol>
+<p>Each scan implements a subset of the following actions:</p>
+<ol class="arabic simple">
+<li><p><strong>Segment</strong> tissues from scan</p></li>
+<li><p><strong>Interregister</strong> to register between lower resolution (moving) and higher resolution (target) scans</p></li>
+<li><p><strong>Quantitative fitting</strong> for voxel-wise parameter maps.</p></li>
+</ol>
+<p>Below we briefly discuss the different scan types and associated actions.</p>
+<div class="section" id="qdess">
+<h2>qDESS<a class="headerlink" href="#qdess" title="Permalink to this headline">¶</a></h2>
+<p>Quantitative double echo in steady state (qDESS) is a high-resolution scan that has shown high efficacy for analytic
+T<sub>2</sub> mapping <a class="bibtex reference internal" href="zreferences.html#sveinsson2017simple" id="id2">[SCGH17]</a>. Because of its high resolution, qDESS scans have been shown to be good candidates for automatic
+segmentation.</p>
+<p>DOSMA supports both automatic segmentation and analytical T<sub>2</sub> solving for qDESS scans. Automated segmentation uses
+pre-trained convolutional neural networks (CNNs).</p>
+</div>
+<div class="section" id="cubequant-3d-fse">
+<h2>CubeQuant (3D FSE)<a class="headerlink" href="#cubequant-3d-fse" title="Permalink to this headline">¶</a></h2>
+<p>Cubequant is a 3D fast-spin-echo (FSE) T<sub>1</sub><span class="math notranslate nohighlight">\({\rho}\)</span>-weighted sequence. Acquisitions between spin-locks are
+susceptible to motion, and as a result, volumes within the scan have to be registered to each other
+(i.e. <em>intra</em>-registered).</p>
+<p>Moreover, CubeQuant scans often have lower resolution to increase SNR in practice. Because of the
+low-resolution, these scans are often registered to higher resolution target scans <a class="bibtex reference internal" href="zreferences.html#jordan2014variability" id="id3">[JMM+14]</a>.</p>
+<p>By default, DOSMA intraregisters volumes acquired at different spin-locks to one another. This framework also supports
+both registration between scan types (interregistration) and T<sub>1</sub><span class="math notranslate nohighlight">\({\rho}\)</span> fitting.</p>
+<p>Because registration is sensitive to the target scan type, different registration approaches may work better with
+different scan types. By default, the registration approaches are optimized to register CubeQuant scans to qDESS scans.</p>
+</div>
+<div class="section" id="d-mapss-spgr">
+<h2>3D MAPSS (SPGR)<a class="headerlink" href="#d-mapss-spgr" title="Permalink to this headline">¶</a></h2>
+<p>Magnetization‐prepared angle‐modulated partitioned k‐space spoiled gradient echo snapshots (3D MAPSS) is a spoiled
+gradient (SPGR) sequence that reduce specific absorption rate (SAR), increase SNR, and reduce the extent of
+retrospective correction of contaminating T<sub>1</sub> effects <a class="bibtex reference internal" href="zreferences.html#li2008vivo" id="id4">[LHBM08]</a>.</p>
+<p>The MAPSS sequence can be used to estimate both T<sub>1</sub><span class="math notranslate nohighlight">\({\rho}\)</span> and T<sub>2</sub> quantitative values. Like CubeQuant scans, MAPSS scans
+must also be intraregistered to ensure alignment between all volumes acquired at different echos and spin-lock times.</p>
+<p>DOSMA automatically performs intraregistration among volumes within the MAPSS scan. T<sub>2</sub> and T<sub>1</sub><span class="math notranslate nohighlight">\({\rho}\)</span> fitting is also
+supported.</p>
+</div>
+<div class="section" id="ute-cones">
+<h2>UTE Cones<a class="headerlink" href="#ute-cones" title="Permalink to this headline">¶</a></h2>
+<p>Ultra-short echo time (UTE) Cones (or Cones) is a T<sub>2</sub><sup>*</sup>-weighted sequence. In practice, many of these scans are low
+resolution.</p>
+<p>DOSMA supports interregistration between Cones and other scan sequences; however, registration files are optimized for
+registration to qDESS. T<sub>2</sub><sup>*</sup> fitting is also supported.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tissues.html" class="btn btn-neutral float-right" title="Tissues" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="documentation.html" class="btn btn-neutral float-left" title="Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

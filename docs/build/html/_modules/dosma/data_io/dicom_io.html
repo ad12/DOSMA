@@ -1,0 +1,480 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dosma.data_io.dicom_io &mdash; DOSMA v0.0.10 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> DOSMA
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/faq.html">FAQs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">DOSMA</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dosma.data_io.dicom_io</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dosma.data_io.dicom_io</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;DICOM I/O.</span>
+
+<span class="sd">This module contains DICOM input/output helpers.</span>
+
+<span class="sd">Note:</span>
+
+<span class="sd">    1. Dicom utilizes LPS convention:</span>
+<span class="sd">        - LPS: right --&gt; left, anterior --&gt; posterior, inferior --&gt; superior</span>
+<span class="sd">        - we will call it LPS+, such that letters correspond to increasing end of axis</span>
+
+<span class="sd">Attributes:</span>
+
+<span class="sd">    TOTAL_NUM_ECHOS_KEY (tuple[int]): Hexadecimal encoding of DICOM tag corresponding to number of echos.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">log10</span><span class="p">,</span> <span class="n">ceil</span>
+
+<span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nib</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pydicom</span>
+<span class="kn">from</span> <span class="nn">natsort</span> <span class="kn">import</span> <span class="n">natsorted</span>
+
+<span class="kn">from</span> <span class="nn">dosma.data_io</span> <span class="kn">import</span> <span class="n">orientation</span> <span class="k">as</span> <span class="n">stdo</span>
+<span class="kn">from</span> <span class="nn">dosma.data_io.format_io</span> <span class="kn">import</span> <span class="n">DataReader</span><span class="p">,</span> <span class="n">DataWriter</span><span class="p">,</span> <span class="n">ImageDataFormat</span>
+<span class="kn">from</span> <span class="nn">dosma.data_io.med_volume</span> <span class="kn">import</span> <span class="n">MedicalVolume</span>
+<span class="kn">from</span> <span class="nn">dosma.defaults</span> <span class="kn">import</span> <span class="n">AFFINE_DECIMAL_PRECISION</span><span class="p">,</span> <span class="n">SCANNER_ORIGIN_DECIMAL_PRECISION</span>
+<span class="kn">from</span> <span class="nn">dosma.utils</span> <span class="kn">import</span> <span class="n">io_utils</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DicomReader&quot;</span><span class="p">,</span> <span class="s2">&quot;DicomWriter&quot;</span><span class="p">]</span>
+
+<span class="n">TOTAL_NUM_ECHOS_KEY</span> <span class="o">=</span> <span class="p">(</span><span class="mh">0x19</span><span class="p">,</span> <span class="mh">0x107e</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">__update_np_dtype__</span><span class="p">(</span><span class="n">arr</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">bit_depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create copy of np_array with bit-depth and type specified here.</span>
+
+<span class="sd">    Note pydicom only supports writing dicoms with bit-depth 8/16 - only supports bit depths 8/16.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        arr (np.ndarray): Numpy array to put into given bit depth.</span>
+<span class="sd">        bit_depth (int): Bit depth for writing dicom. Must be either `8` or `16`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: Copy of input np_array.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If `arr` out of bit-depth range.</span>
+<span class="sd">        TypeError: If `arr` contains float values out of supported float types.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">bit_depth</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">],</span> <span class="s2">&quot;Only bit-depths of 8 and 16 are currently supported.&quot;</span>
+    <span class="n">dtype_dict</span> <span class="o">=</span> <span class="p">{</span><span class="mi">8</span><span class="p">:</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="o">-</span><span class="mi">128</span><span class="p">,</span> <span class="mi">127</span><span class="p">),</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)],</span>
+                  <span class="mi">16</span><span class="p">:</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span> <span class="o">-</span><span class="mf">6.55e4</span><span class="p">,</span> <span class="mf">6.55e4</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span> <span class="o">**</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">15</span><span class="p">),</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">16</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]}</span>
+    <span class="n">supported_floats</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">]</span>
+    <span class="n">curr_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="n">curr_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="n">contains_float</span> <span class="o">=</span> <span class="p">(</span><span class="n">arr</span> <span class="o">%</span> <span class="mi">1</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
+
+    <span class="n">dtypes</span> <span class="o">=</span> <span class="n">dtype_dict</span><span class="p">[</span><span class="n">bit_depth</span><span class="p">]</span>
+
+    <span class="n">new_dtype</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">dtype_min</span><span class="p">,</span> <span class="n">dtype_max</span> <span class="ow">in</span> <span class="n">dtypes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">curr_min</span> <span class="o">&lt;</span> <span class="n">dtype_min</span> <span class="ow">or</span> <span class="n">curr_max</span> <span class="o">&gt;</span> <span class="n">dtype_max</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">new_dtype</span> <span class="o">=</span> <span class="n">dtype</span>
+        <span class="k">break</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">new_dtype</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot cast numpy array (</span><span class="si">{}</span><span class="s2">) to bit-depth of </span><span class="si">{}</span><span class="s2"> bits&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span> <span class="n">bit_depth</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">contains_float</span> <span class="ow">and</span> <span class="n">new_dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">supported_floats</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Array contains float. Cannot cast to numpy array (</span><span class="si">{}</span><span class="s2">) to </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
+                                                                                             <span class="n">new_dtype</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">arr</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">new_dtype</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">LPSplus_to_RASplus</span><span class="p">(</span><span class="n">headers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">pydicom</span><span class="o">.</span><span class="n">FileDataset</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Convert from LPS+ orientation (default for DICOM) to RAS+ standardized orientation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        headers (list[pydicom.FileDataset]): Headers for DICOM files to reorient. Files should correspond to single</span>
+<span class="sd">            volume.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: Affine matrix.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">im_dir</span> <span class="o">=</span> <span class="n">headers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ImageOrientationPatient</span>
+    <span class="n">in_plane_pixel_spacing</span> <span class="o">=</span> <span class="n">headers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">PixelSpacing</span>
+
+    <span class="n">orientation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+    <span class="c1"># Determine vector for in-plane pixel directions (i, j).</span>
+    <span class="n">i_vec</span><span class="p">,</span> <span class="n">j_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">im_dir</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">im_dir</span><span class="p">[</span><span class="mi">3</span><span class="p">:])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>  <span class="c1"># unique to pydicom, please revise if using different library to load dicoms</span>
+    <span class="n">i_vec</span><span class="p">,</span> <span class="n">j_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">i_vec</span><span class="p">,</span> <span class="n">AFFINE_DECIMAL_PRECISION</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">j_vec</span><span class="p">,</span> <span class="n">AFFINE_DECIMAL_PRECISION</span><span class="p">)</span>
+    <span class="n">i_vec</span> <span class="o">=</span> <span class="n">i_vec</span> <span class="o">*</span> <span class="n">in_plane_pixel_spacing</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">j_vec</span> <span class="o">=</span> <span class="n">j_vec</span> <span class="o">*</span> <span class="n">in_plane_pixel_spacing</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Determine vector for through-plane pixel direction (k).</span>
+    <span class="c1"># 1. Normalize k_vector by magnitude.</span>
+    <span class="c1"># 2. Multiply by magnitude given by SpacingBetweenSlices field.</span>
+    <span class="c1"># These actions are done to avoid rounding errors that might result from float subtraction.</span>
+    <span class="n">k_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">headers</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">ImagePositionPatient</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">headers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ImagePositionPatient</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">k_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">k_vec</span><span class="p">,</span> <span class="n">AFFINE_DECIMAL_PRECISION</span><span class="p">)</span>
+
+    <span class="n">orientation</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">j_vec</span><span class="p">,</span> <span class="n">i_vec</span><span class="p">,</span> <span class="n">k_vec</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">scanner_origin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">headers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ImagePositionPatient</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">scanner_origin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">scanner_origin</span><span class="p">,</span> <span class="n">SCANNER_ORIGIN_DECIMAL_PRECISION</span><span class="p">)</span>
+
+    <span class="n">affine</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+    <span class="n">affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">orientation</span>
+    <span class="n">affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">scanner_origin</span>
+    <span class="n">affine</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">affine</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">affine</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">affine</span><span class="p">[</span><span class="n">affine</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="n">affine</span>
+
+
+<div class="viewcode-block" id="DicomReader"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.dicom_io.DicomReader">[docs]</a><span class="k">class</span> <span class="nc">DicomReader</span><span class="p">(</span><span class="n">DataReader</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class for reading DICOM files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_format_code</span> <span class="o">=</span> <span class="n">ImageDataFormat</span><span class="o">.</span><span class="n">dicom</span>
+
+<div class="viewcode-block" id="DicomReader.load"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.dicom_io.DicomReader.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dicom_dir_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;EchoNumbers&#39;</span><span class="p">,</span> <span class="n">ignore_ext</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load dicoms into `MedicalVolume`s grouped by `group_by` tag.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dicom_dir_path (str): Path to directory with dicom files.</span>
+<span class="sd">            group_by (`str` or `tuple`, optional): DICOM field tag name or tag number used to group dicoms. Defaults</span>
+<span class="sd">                to `EchoNumbers`. Most DICOM headers encode different echo numbers as volumes acquired at different echo</span>
+<span class="sd">                times or different phases.</span>
+<span class="sd">            ignore_ext (`bool`, optional): Ignore extension (`.dcm`) when loading dicoms. Defaults to `False`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[MedicalVolume]: Different volumes grouped by the `group_by` DICOM tag.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            NotADirectoryError: If `dicom_dir_path` does not exist or is not a directory.</span>
+<span class="sd">            FileNotFoundError: If no dicom files found in directory.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            This function sorts files using natsort, an intelligent sorting tool. Please verify dicoms are labeled in a</span>
+<span class="sd">                sequenced manner (e.g.: dicom1,dicom2,dicom3,...).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dicom_dir_path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotADirectoryError</span><span class="p">(</span><span class="s2">&quot;Directory </span><span class="si">{}</span><span class="s2"> does not exist&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dicom_dir_path</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">group_by</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`group_by` must be specified, even if there are not multiple volumes encoded in dicoms&quot;</span><span class="p">)</span>
+
+        <span class="n">possible_files</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dicom_dir_path</span><span class="p">)</span>
+
+        <span class="n">lstFilesDCM</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">possible_files</span><span class="p">:</span>
+            <span class="c1"># If ignore extension, don&#39;t look for &#39;.dcm&#39; extension.</span>
+            <span class="n">match_ext</span> <span class="o">=</span> <span class="n">ignore_ext</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">ignore_ext</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_format_code</span><span class="o">.</span><span class="n">is_filetype</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
+            <span class="n">is_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dicom_dir_path</span><span class="p">,</span> <span class="n">f</span><span class="p">))</span>
+            <span class="n">is_hidden_file</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_file</span> <span class="ow">and</span> <span class="n">match_ext</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_hidden_file</span><span class="p">:</span>
+                <span class="n">lstFilesDCM</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dicom_dir_path</span><span class="p">,</span> <span class="n">f</span><span class="p">))</span>
+
+        <span class="n">lstFilesDCM</span> <span class="o">=</span> <span class="n">natsorted</span><span class="p">(</span><span class="n">lstFilesDCM</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lstFilesDCM</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;No files found in directory </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dicom_dir_path</span><span class="p">))</span>
+
+        <span class="c1"># Check if dicom file has the group_by element specified</span>
+        <span class="n">temp_dicom</span> <span class="o">=</span> <span class="n">pydicom</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">lstFilesDCM</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">temp_dicom</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">group_by</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Tag </span><span class="si">{}</span><span class="s2"> does not exist in dicom&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">group_by</span><span class="p">))</span>
+
+        <span class="n">dicom_data</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">dicom_filename</span> <span class="ow">in</span> <span class="n">lstFilesDCM</span><span class="p">:</span>
+            <span class="c1"># read the file</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">pydicom</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">dicom_filename</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">val_groupby</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">group_by</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">val_groupby</span><span class="p">)</span> <span class="ow">is</span> <span class="n">pydicom</span><span class="o">.</span><span class="n">DataElement</span><span class="p">:</span>
+                <span class="n">val_groupby</span> <span class="o">=</span> <span class="n">val_groupby</span><span class="o">.</span><span class="n">value</span>
+
+            <span class="k">if</span> <span class="n">val_groupby</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dicom_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">dicom_data</span><span class="p">[</span><span class="n">val_groupby</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;headers&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;arr&quot;</span><span class="p">:</span> <span class="p">[]}</span>
+
+            <span class="n">dicom_data</span><span class="p">[</span><span class="n">val_groupby</span><span class="p">][</span><span class="s2">&quot;headers&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+            <span class="n">dicom_data</span><span class="p">[</span><span class="n">val_groupby</span><span class="p">][</span><span class="s2">&quot;arr&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">pixel_array</span><span class="p">)</span>
+
+        <span class="n">vols</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">dicom_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+            <span class="n">dd</span> <span class="o">=</span> <span class="n">dicom_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">dd</span><span class="p">[</span><span class="s2">&quot;headers&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">dd</span><span class="p">[</span><span class="s2">&quot;arr&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">affine</span> <span class="o">=</span> <span class="n">LPSplus_to_RASplus</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+
+            <span class="n">vol</span> <span class="o">=</span> <span class="n">MedicalVolume</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span>
+                                <span class="n">affine</span><span class="p">,</span>
+                                <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+            <span class="n">vols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vol</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">vols</span></div></div>
+
+
+<div class="viewcode-block" id="DicomWriter"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.dicom_io.DicomWriter">[docs]</a><span class="k">class</span> <span class="nc">DicomWriter</span><span class="p">(</span><span class="n">DataWriter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class for writing volumes in DICOM format.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_format_code</span> <span class="o">=</span> <span class="n">ImageDataFormat</span><span class="o">.</span><span class="n">dicom</span>
+
+    <span class="k">def</span> <span class="nf">__write_dicom_file__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">np_slice</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">header</span><span class="p">:</span> <span class="n">pydicom</span><span class="o">.</span><span class="n">FileDataset</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Replace data in header with 2D numpy array and write to `file_path`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            np_slice (np.ndarray): 2D slice to encode in dicom file.</span>
+<span class="sd">            header (pydicom.FileDataset): DICOM header.</span>
+<span class="sd">            file_path: File path to write to.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">expected_dimensions</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">Rows</span><span class="p">,</span> <span class="n">header</span><span class="o">.</span><span class="n">Columns</span>
+        <span class="k">assert</span> <span class="n">np_slice</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">expected_dimensions</span><span class="p">,</span> \
+            <span class="s2">&quot;In-plane dimension mismatch - expected shape </span><span class="si">{}</span><span class="s2">, got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">expected_dimensions</span><span class="p">),</span>
+                                                                             <span class="nb">str</span><span class="p">(</span><span class="n">np_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+        <span class="n">np_slice_bytes</span> <span class="o">=</span> <span class="n">np_slice</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
+        <span class="n">bit_depth</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">np_slice_bytes</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">bit_depth</span> <span class="o">!=</span> <span class="n">header</span><span class="o">.</span><span class="n">BitsAllocated</span><span class="p">:</span>
+            <span class="n">np_slice</span> <span class="o">=</span> <span class="n">__update_np_dtype__</span><span class="p">(</span><span class="n">np_slice</span><span class="p">,</span> <span class="n">header</span><span class="o">.</span><span class="n">BitsAllocated</span><span class="p">)</span>
+            <span class="n">np_slice_bytes</span> <span class="o">=</span> <span class="n">np_slice</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
+            <span class="n">bit_depth</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">np_slice_bytes</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="mi">8</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">bit_depth</span> <span class="o">==</span> <span class="n">header</span><span class="o">.</span><span class="n">BitsAllocated</span><span class="p">,</span> \
+            <span class="s2">&quot;Bit depth mismatch: Expected </span><span class="si">{:d}</span><span class="s2"> got </span><span class="si">{:d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">BitsAllocated</span><span class="p">,</span> <span class="n">bit_depth</span><span class="p">)</span>
+
+        <span class="n">header</span><span class="o">.</span><span class="n">PixelData</span> <span class="o">=</span> <span class="n">np_slice_bytes</span>
+
+        <span class="n">header</span><span class="o">.</span><span class="n">save_as</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DicomWriter.save"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.dicom_io.DicomWriter.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">volume</span><span class="p">:</span> <span class="n">MedicalVolume</span><span class="p">,</span> <span class="n">dir_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save `medical volume` in dicom format.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            volume (MedicalVolume): Volume to save.</span>
+<span class="sd">            dir_path: Directory path to store dicom files. Dicoms are stored in directories, as multiple files are</span>
+<span class="sd">                needed to store the volume.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If `im` does not have initialized headers. Or if `im` was flipped across any axis. Flipping</span>
+<span class="sd">                changes scanner origin, which is currently not handled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get orientation indicated by headers.</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="n">volume</span><span class="o">.</span><span class="n">headers</span>
+        <span class="k">if</span> <span class="n">headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;MedicalVolume headers must be initialized to save as a dicom&quot;</span><span class="p">)</span>
+
+        <span class="n">affine</span> <span class="o">=</span> <span class="n">LPSplus_to_RASplus</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+        <span class="n">orientation</span> <span class="o">=</span> <span class="n">stdo</span><span class="o">.</span><span class="n">orientation_nib_to_standard</span><span class="p">(</span><span class="n">nib</span><span class="o">.</span><span class="n">aff2axcodes</span><span class="p">(</span><span class="n">affine</span><span class="p">))</span>
+
+        <span class="c1"># Currently do not support mismatch in scanner_origin.</span>
+        <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span> <span class="o">!=</span> <span class="n">volume</span><span class="o">.</span><span class="n">scanner_origin</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Scanner origin mismatch. &quot;</span>
+                             <span class="s2">&quot;Currently we do not handle mismatch in scanner origin (i.e. cannot flip across axis)&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Reformat medical volume to expected orientation specified by dicom headers.</span>
+        <span class="c1"># Store original orientation so we can undo the dicom-specific reformatting.</span>
+        <span class="n">original_orientation</span> <span class="o">=</span> <span class="n">volume</span><span class="o">.</span><span class="n">orientation</span>
+
+        <span class="n">volume</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="n">orientation</span><span class="p">)</span>
+        <span class="n">volume_arr</span> <span class="o">=</span> <span class="n">volume</span><span class="o">.</span><span class="n">volume</span>
+        <span class="k">assert</span> <span class="n">volume_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">headers</span><span class="p">),</span> \
+            <span class="s2">&quot;Dimension mismatch - </span><span class="si">{:d}</span><span class="s2"> slices but </span><span class="si">{:d}</span><span class="s2"> headers&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">volume_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">headers</span><span class="p">))</span>
+
+        <span class="c1"># Check if dir_path exists.</span>
+        <span class="n">dir_path</span> <span class="o">=</span> <span class="n">io_utils</span><span class="o">.</span><span class="n">mkdirs</span><span class="p">(</span><span class="n">dir_path</span><span class="p">)</span>
+
+        <span class="n">num_slices</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+        <span class="n">filename_format</span> <span class="o">=</span> <span class="s2">&quot;I%0&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">ceil</span><span class="p">(</span><span class="n">log10</span><span class="p">(</span><span class="n">num_slices</span><span class="p">))))</span> <span class="o">+</span> <span class="s2">&quot;d.dcm&quot;</span>
+
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_slices</span><span class="p">):</span>
+            <span class="n">s_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="n">filename_format</span> <span class="o">%</span> <span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__write_dicom_file__</span><span class="p">(</span><span class="n">volume_arr</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">s</span><span class="p">],</span> <span class="n">headers</span><span class="p">[</span><span class="n">s</span><span class="p">],</span> <span class="n">s_filepath</span><span class="p">)</span>
+
+        <span class="c1"># Reformat image to original orientation (before saving).</span>
+        <span class="c1"># We do this, because saving should not affect the existing state of any variable.</span>
+        <span class="n">volume</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="n">original_orientation</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

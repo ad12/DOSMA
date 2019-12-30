@@ -1,0 +1,1068 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dosma.tissues package &mdash; DOSMA v0.0.10 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DOSMA
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="general/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/faq.html">FAQs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DOSMA</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>dosma.tissues package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/dosma.tissues.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dosma-tissues-package">
+<h1>dosma.tissues package<a class="headerlink" href="#dosma-tissues-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-dosma.tissues.femoral_cartilage">
+<span id="dosma-tissues-femoral-cartilage-module"></span><h2>dosma.tissues.femoral_cartilage module<a class="headerlink" href="#module-dosma.tissues.femoral_cartilage" title="Permalink to this headline">¶</a></h2>
+<p>Analysis for femoral cartilage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">ivar ~dosma.tissues.femoral_cartilage.BOUNDS</dt>
+<dd class="field-odd"><p>Upper bounds for quantitative values.</p>
+</dd>
+<dt class="field-even">vartype ~dosma.tissues.femoral_cartilage.BOUNDS</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+<dt class="field-odd">ivar ~dosma.tissues.femoral_cartilage.THICKNESS_DIVISOR</dt>
+<dd class="field-odd"><p>Threshold for split between superficial/deep cartilage.</p>
+</dd>
+<dt class="field-even">vartype ~dosma.tissues.femoral_cartilage.THICKNESS_DIVISOR</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">ivar ~dosma.tissues.femoral_cartilage.NB_BINS</dt>
+<dd class="field-odd"><p>Number of bins to split 360 degrees. <cite>dtheta= 360/NB_BINS</cite>.</p>
+</dd>
+<dt class="field-even">vartype ~dosma.tissues.femoral_cartilage.NB_BINS</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+<dl class="class">
+<dt id="dosma.tissues.femoral_cartilage.FemoralCartilage">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.tissues.femoral_cartilage.</code><code class="sig-name descname">FemoralCartilage</code><span class="sig-paren">(</span><em class="sig-param">weights_dir=None</em>, <em class="sig-param">medial_to_lateral=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/femoral_cartilage.html#FemoralCartilage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.femoral_cartilage.FemoralCartilage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.tissues.tissue.Tissue</span></code></a></p>
+<p>Handles analysis and visualization for femoral cartilage.</p>
+<p>This class extends functionality from <cite>Tissue</cite>.</p>
+<p>For visualization, the femoral cartilage is unrolled onto a 2D plane using angular binning [1].</p>
+<dl class="simple">
+<dt>[1] Monu UD, Jordan CD, Samuelson BL, Hargreaves BA, Gold GE, McWalter EJ. “Cluster analysis of quantitative MRI T2</dt><dd><p>and T1ρ relaxation times of cartilage identifies differences between healthy and ACL-injured individuals at 3T.”
+Osteoarthritis and cartilage 2017;25(4):513-520.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="dosma.tissues.femoral_cartilage.FemoralCartilage.ACP_BOUNDARY">
+<code class="sig-name descname">ACP_BOUNDARY</code><em class="property"> = None</em><a class="headerlink" href="#dosma.tissues.femoral_cartilage.FemoralCartilage.ACP_BOUNDARY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.femoral_cartilage.FemoralCartilage.FULL_NAME">
+<code class="sig-name descname">FULL_NAME</code><em class="property"> = 'femoral cartilage'</em><a class="headerlink" href="#dosma.tissues.femoral_cartilage.FemoralCartilage.FULL_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.femoral_cartilage.FemoralCartilage.ID">
+<code class="sig-name descname">ID</code><em class="property"> = 1</em><a class="headerlink" href="#dosma.tissues.femoral_cartilage.FemoralCartilage.ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.femoral_cartilage.FemoralCartilage.ML_BOUNDARY">
+<code class="sig-name descname">ML_BOUNDARY</code><em class="property"> = None</em><a class="headerlink" href="#dosma.tissues.femoral_cartilage.FemoralCartilage.ML_BOUNDARY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.femoral_cartilage.FemoralCartilage.STR_ID">
+<code class="sig-name descname">STR_ID</code><em class="property"> = 'fc'</em><a class="headerlink" href="#dosma.tissues.femoral_cartilage.FemoralCartilage.STR_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.femoral_cartilage.FemoralCartilage.T1_EXPECTED">
+<code class="sig-name descname">T1_EXPECTED</code><em class="property"> = 1200</em><a class="headerlink" href="#dosma.tissues.femoral_cartilage.FemoralCartilage.T1_EXPECTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.femoral_cartilage.FemoralCartilage.save_data">
+<code class="sig-name descname">save_data</code><span class="sig-paren">(</span><em class="sig-param">save_dirpath</em>, <em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat = &lt;ImageDataFormat.nifti: 1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/femoral_cartilage.html#FemoralCartilage.save_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.femoral_cartilage.FemoralCartilage.save_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save data for tissue.</p>
+<p>Saves mask and quantitative values associated with this tissue.</p>
+<dl class="simple">
+<dt>Override in subclasses to save additional data. When overriding in subclasses, call</dt><dd><p><cite>super().save_data(save_dirpath)</cite> first to save mask and quantitative values by default. See
+<cite>femoral_cartilage.py</cite> for details.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>save_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p></li>
+<li><p><strong>data_format</strong> (<cite>ImageDataFormat</cite>, optional) – Format to save data. Defaults to <cite>preferences.image_data_format</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.femoral_cartilage.FemoralCartilage.set_mask">
+<code class="sig-name descname">set_mask</code><span class="sig-paren">(</span><em class="sig-param">mask: dosma.data_io.med_volume.MedicalVolume</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/femoral_cartilage.html#FemoralCartilage.set_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.femoral_cartilage.FemoralCartilage.set_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set mask for tissue.</p>
+<dl class="simple">
+<dt>Mask is cleaned by selecting the largest connected component from the mask. Femoral cartilage is expected to be</dt><dd><p>single connected tissue.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mask</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Binary mask of segmented tissue.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.femoral_cartilage.FemoralCartilage.split_regions">
+<code class="sig-name descname">split_regions</code><span class="sig-paren">(</span><em class="sig-param">base_map: numpy.ndarray</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/femoral_cartilage.html#FemoralCartilage.split_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.femoral_cartilage.FemoralCartilage.split_regions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split volume into anatomical regions.</p>
+<dl class="simple">
+<dt>Pixels corresponding to femoral cartilage are divided across 3 planes:</dt><dd><ul class="simple">
+<li><p>Coronal: Posterior, Central, or Anterior</p></li>
+<li><p>Sagittal: Medial, Lateral</p></li>
+<li><p>Axial: Deep, Superficial</p></li>
+</ul>
+</dd>
+</dl>
+<p>For example, a pixel could correspond to the Posterior Lateral Deep region of femoral cartilage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>base_map</strong> (<em>np.ndarray</em>) – 3D numpy array typically corresponding to volume to split.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>4D numpy array (region, height, width, depth). Saved in variable <cite>self.regions</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.femoral_cartilage.FemoralCartilage.unroll">
+<code class="sig-name descname">unroll</code><span class="sig-paren">(</span><em class="sig-param">qv_map: numpy.ndarray</em>, <em class="sig-param">regions_mask: numpy.ndarray</em>, <em class="sig-param">theta_bins</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/femoral_cartilage.html#FemoralCartilage.unroll"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.femoral_cartilage.FemoralCartilage.unroll" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unroll femoral cartilage 3D quantitative value (qv) maps to 2D for visualization.</p>
+<p>The function multiplies a 3D segmentation mask to a 3D qv map –&gt; 3D femoral cartilage qv (fc_qv) map
+It then fits a circle to the collapsed sagittal projection of the fc_qv map
+Each slice is binned into bins of 5 degree sizes</p>
+<p>The unrolled map is then divided into deep and superficial cartilage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>qv_map</strong> (<em>np.ndarray</em>) – 3D array (slices last) of sagittal knee describing quantitative parameter values</p></li>
+<li><p><strong>regions_mask</strong> (<em>np.ndarray</em>) – regions_mask</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>(row, column) format</dt><dd><ol class="arabic simple">
+<li><p>2D Total unrolled cartilage (slices, degrees) - average of superficial and deep layers</p></li>
+<li><p>Superficial unrolled cartilage (slices, degrees) - superficial layer</p></li>
+<li><p>Deep unrolled cartilage (slices, degrees) - deep layer</p></li>
+</ol>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.tissues.meniscus">
+<span id="dosma-tissues-meniscus-module"></span><h2>dosma.tissues.meniscus module<a class="headerlink" href="#module-dosma.tissues.meniscus" title="Permalink to this headline">¶</a></h2>
+<p>Analysis for meniscus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">ivar ~dosma.tissues.meniscus.BOUNDS</dt>
+<dd class="field-odd"><p>Upper bounds for quantitative values.</p>
+</dd>
+<dt class="field-even">vartype ~dosma.tissues.meniscus.BOUNDS</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+<dl class="class">
+<dt id="dosma.tissues.meniscus.Meniscus">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.tissues.meniscus.</code><code class="sig-name descname">Meniscus</code><span class="sig-paren">(</span><em class="sig-param">weights_dir: str = None</em>, <em class="sig-param">medial_to_lateral: bool = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/meniscus.html#Meniscus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.meniscus.Meniscus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.tissues.tissue.Tissue</span></code></a></p>
+<p>Handles analysis and visualization for meniscus.</p>
+<p>This class extends functionality from <cite>Tissue</cite>.</p>
+<p>For visualization, the meniscus is unrolled across the axial plane.</p>
+<dl class="attribute">
+<dt id="dosma.tissues.meniscus.Meniscus.FULL_NAME">
+<code class="sig-name descname">FULL_NAME</code><em class="property"> = 'meniscus'</em><a class="headerlink" href="#dosma.tissues.meniscus.Meniscus.FULL_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.meniscus.Meniscus.ID">
+<code class="sig-name descname">ID</code><em class="property"> = 2</em><a class="headerlink" href="#dosma.tissues.meniscus.Meniscus.ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.meniscus.Meniscus.STR_ID">
+<code class="sig-name descname">STR_ID</code><em class="property"> = 'men'</em><a class="headerlink" href="#dosma.tissues.meniscus.Meniscus.STR_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.meniscus.Meniscus.T1_EXPECTED">
+<code class="sig-name descname">T1_EXPECTED</code><em class="property"> = 1000</em><a class="headerlink" href="#dosma.tissues.meniscus.Meniscus.T1_EXPECTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.meniscus.Meniscus.set_mask">
+<code class="sig-name descname">set_mask</code><span class="sig-paren">(</span><em class="sig-param">mask: dosma.data_io.med_volume.MedicalVolume</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/meniscus.html#Meniscus.set_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.meniscus.Meniscus.set_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set mask for tissue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mask</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Binary mask of segmented tissue.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.meniscus.Meniscus.split_regions">
+<code class="sig-name descname">split_regions</code><span class="sig-paren">(</span><em class="sig-param">base_map</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/meniscus.html#Meniscus.split_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.meniscus.Meniscus.split_regions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split mask into anatomical regions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>base_map</strong> (<em>np.ndarray</em>) – 3D numpy array typically corresponding to volume to split.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>4D numpy array (region, height, width, depth). Saved in variable <cite>self.regions</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.meniscus.Meniscus.unroll_axial">
+<code class="sig-name descname">unroll_axial</code><span class="sig-paren">(</span><em class="sig-param">quant_map: numpy.ndarray</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/meniscus.html#Meniscus.unroll_axial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.meniscus.Meniscus.unroll_axial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unroll meniscus in axial direction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>quant_map</strong> (<em>np.ndarray</em>) – Map to roll out.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.tissues.patellar_cartilage">
+<span id="dosma-tissues-patellar-cartilage-module"></span><h2>dosma.tissues.patellar_cartilage module<a class="headerlink" href="#module-dosma.tissues.patellar_cartilage" title="Permalink to this headline">¶</a></h2>
+<p>Analysis for patellar cartilage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">ivar ~dosma.tissues.patellar_cartilage.BOUNDS</dt>
+<dd class="field-odd"><p>Upper bounds for quantitative values.</p>
+</dd>
+<dt class="field-even">vartype ~dosma.tissues.patellar_cartilage.BOUNDS</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+<dl class="class">
+<dt id="dosma.tissues.patellar_cartilage.PatellarCartilage">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.tissues.patellar_cartilage.</code><code class="sig-name descname">PatellarCartilage</code><span class="sig-paren">(</span><em class="sig-param">weights_dir: str = None</em>, <em class="sig-param">medial_to_lateral: bool = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/patellar_cartilage.html#PatellarCartilage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.patellar_cartilage.PatellarCartilage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.tissues.tissue.Tissue</span></code></a></p>
+<p>Handles analysis and visualization for patellar cartilage.</p>
+<dl class="attribute">
+<dt id="dosma.tissues.patellar_cartilage.PatellarCartilage.FULL_NAME">
+<code class="sig-name descname">FULL_NAME</code><em class="property"> = 'patellar cartilage'</em><a class="headerlink" href="#dosma.tissues.patellar_cartilage.PatellarCartilage.FULL_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.patellar_cartilage.PatellarCartilage.ID">
+<code class="sig-name descname">ID</code><em class="property"> = 2</em><a class="headerlink" href="#dosma.tissues.patellar_cartilage.PatellarCartilage.ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.patellar_cartilage.PatellarCartilage.STR_ID">
+<code class="sig-name descname">STR_ID</code><em class="property"> = 'pc'</em><a class="headerlink" href="#dosma.tissues.patellar_cartilage.PatellarCartilage.STR_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.patellar_cartilage.PatellarCartilage.T1_EXPECTED">
+<code class="sig-name descname">T1_EXPECTED</code><em class="property"> = 1000</em><a class="headerlink" href="#dosma.tissues.patellar_cartilage.PatellarCartilage.T1_EXPECTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.patellar_cartilage.PatellarCartilage.set_mask">
+<code class="sig-name descname">set_mask</code><span class="sig-paren">(</span><em class="sig-param">mask</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/patellar_cartilage.html#PatellarCartilage.set_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.patellar_cartilage.PatellarCartilage.set_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set mask for tissue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mask</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Binary mask of segmented tissue.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.patellar_cartilage.PatellarCartilage.split_regions">
+<code class="sig-name descname">split_regions</code><span class="sig-paren">(</span><em class="sig-param">base_map</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/patellar_cartilage.html#PatellarCartilage.split_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.patellar_cartilage.PatellarCartilage.split_regions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split patellar cartilage into deep/superficial regions</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.patellar_cartilage.PatellarCartilage.unroll_coronal">
+<code class="sig-name descname">unroll_coronal</code><span class="sig-paren">(</span><em class="sig-param">quant_map: numpy.ndarray</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/patellar_cartilage.html#PatellarCartilage.unroll_coronal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.patellar_cartilage.PatellarCartilage.unroll_coronal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unroll patellar cartilage in the coronal direction.</p>
+<p>Because patellar cartilage is flat, “unrolling” is projecting the patellar cartilage onto the coronal axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>quant_map</strong> (<em>np.ndarray</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.tissues.tibial_cartilage">
+<span id="dosma-tissues-tibial-cartilage-module"></span><h2>dosma.tissues.tibial_cartilage module<a class="headerlink" href="#module-dosma.tissues.tibial_cartilage" title="Permalink to this headline">¶</a></h2>
+<p>Analysis for tibial cartilage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">ivar ~dosma.tissues.tibial_cartilage.BOUNDS</dt>
+<dd class="field-odd"><p>Upper bounds for quantitative values.</p>
+</dd>
+<dt class="field-even">vartype ~dosma.tissues.tibial_cartilage.BOUNDS</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+<dl class="class">
+<dt id="dosma.tissues.tibial_cartilage.TibialCartilage">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.tissues.tibial_cartilage.</code><code class="sig-name descname">TibialCartilage</code><span class="sig-paren">(</span><em class="sig-param">weights_dir=None</em>, <em class="sig-param">medial_to_lateral=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tibial_cartilage.html#TibialCartilage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.tibial_cartilage.TibialCartilage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.tissues.tissue.Tissue</span></code></a></p>
+<p>Handles analysis and visualization for tibial cartilage.</p>
+<dl class="attribute">
+<dt id="dosma.tissues.tibial_cartilage.TibialCartilage.FULL_NAME">
+<code class="sig-name descname">FULL_NAME</code><em class="property"> = 'tibial cartilage'</em><a class="headerlink" href="#dosma.tissues.tibial_cartilage.TibialCartilage.FULL_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.tibial_cartilage.TibialCartilage.ID">
+<code class="sig-name descname">ID</code><em class="property"> = 2</em><a class="headerlink" href="#dosma.tissues.tibial_cartilage.TibialCartilage.ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.tibial_cartilage.TibialCartilage.STR_ID">
+<code class="sig-name descname">STR_ID</code><em class="property"> = 'tc'</em><a class="headerlink" href="#dosma.tissues.tibial_cartilage.TibialCartilage.STR_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.tibial_cartilage.TibialCartilage.T1_EXPECTED">
+<code class="sig-name descname">T1_EXPECTED</code><em class="property"> = 1000</em><a class="headerlink" href="#dosma.tissues.tibial_cartilage.TibialCartilage.T1_EXPECTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.tibial_cartilage.TibialCartilage.set_mask">
+<code class="sig-name descname">set_mask</code><span class="sig-paren">(</span><em class="sig-param">mask: dosma.data_io.med_volume.MedicalVolume</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tibial_cartilage.html#TibialCartilage.set_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.tibial_cartilage.TibialCartilage.set_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set mask for tissue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mask</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Binary mask of segmented tissue.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.tibial_cartilage.TibialCartilage.split_regions">
+<code class="sig-name descname">split_regions</code><span class="sig-paren">(</span><em class="sig-param">base_map</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tibial_cartilage.html#TibialCartilage.split_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.tibial_cartilage.TibialCartilage.split_regions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split mask into anatomical regions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>base_map</strong> (<em>np.ndarray</em>) – 3D numpy array typically corresponding to volume to split.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>4D numpy array (region, height, width, depth). Saved in variable <cite>self.regions</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.tibial_cartilage.TibialCartilage.unroll_axial">
+<code class="sig-name descname">unroll_axial</code><span class="sig-paren">(</span><em class="sig-param">quant_map</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tibial_cartilage.html#TibialCartilage.unroll_axial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.tibial_cartilage.TibialCartilage.unroll_axial" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.tissues.tissue">
+<span id="dosma-tissues-tissue-module"></span><h2>dosma.tissues.tissue module<a class="headerlink" href="#module-dosma.tissues.tissue" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="dosma.tissues.tissue.Tissue">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.tissues.tissue.</code><code class="sig-name descname">Tissue</code><span class="sig-paren">(</span><em class="sig-param">weights_dir: str = None</em>, <em class="sig-param">medial_to_lateral: bool = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tissue.html#Tissue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.tissue.Tissue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract class for tissues.</p>
+<p>Tissues are defined loosely as any tissue structures (bones, soft tissue, etc.).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>weights_dir</strong> (<em>str</em>) – Directory to all segmentation weights.</p></li>
+<li><p><strong>medial_to_lateral</strong> (<cite>bool</cite>, optional) – If <cite>True</cite>, anatomy is from medial_to_lateral. Defaults to <cite>False</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#dosma.tissues.tissue.Tissue.FULL_NAME" title="dosma.tissues.tissue.Tissue.FULL_NAME"><strong>FULL_NAME</strong></a> (<em>str</em>) – Full name of tissue ‘femoral cartilage’ for femoral cartilage.</p></li>
+<li><p><a class="reference internal" href="#dosma.tissues.tissue.Tissue.ID" title="dosma.tissues.tissue.Tissue.ID"><strong>ID</strong></a> (<em>int</em>) – Unique integer ID for tissue. Should be unique to all tissues, and should not change.</p></li>
+<li><p><a class="reference internal" href="#dosma.tissues.tissue.Tissue.STR_ID" title="dosma.tissues.tissue.Tissue.STR_ID"><strong>STR_ID</strong></a> (<em>str</em>) – Short hand string id such as ‘fc’ for femoral cartilage.</p></li>
+<li><p><a class="reference internal" href="#dosma.tissues.tissue.Tissue.T1_EXPECTED" title="dosma.tissues.tissue.Tissue.T1_EXPECTED"><strong>T1_EXPECTED</strong></a> (<em>float</em>) – Expected T1 value (in milliseconds).</p></li>
+<li><p><strong>medial_to_lateral</strong> (<em>bool</em>) – If mask is in medial to lateral direction. In the future, this will be something that
+will be determined automatically.</p></li>
+<li><p><strong>pid</strong> (<em>str</em>) – Patient/subject ID. Should be anonymized.</p></li>
+<li><p><strong>quant_vals</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>tuple</em><em>[</em><em>np.ndarray</em><em>, </em><em>pd.DataFrame</em><em>]</em><em>]</em>) – Mapping from quantitative value name (t2, t1-rho, etc.)
+to tuple of unrolled map and DataFrame containing measurement values.</p></li>
+<li><p><strong>weights_filepath</strong> (<em>str</em>) – File path to weights directory for neural network segmentation.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="dosma.tissues.tissue.Tissue.FULL_NAME">
+<code class="sig-name descname">FULL_NAME</code><em class="property"> = ''</em><a class="headerlink" href="#dosma.tissues.tissue.Tissue.FULL_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.tissue.Tissue.ID">
+<code class="sig-name descname">ID</code><em class="property"> = -1</em><a class="headerlink" href="#dosma.tissues.tissue.Tissue.ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.tissue.Tissue.STR_ID">
+<code class="sig-name descname">STR_ID</code><em class="property"> = ''</em><a class="headerlink" href="#dosma.tissues.tissue.Tissue.STR_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.tissue.Tissue.T1_EXPECTED">
+<code class="sig-name descname">T1_EXPECTED</code><em class="property"> = None</em><a class="headerlink" href="#dosma.tissues.tissue.Tissue.T1_EXPECTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.tissue.Tissue.add_quantitative_value">
+<code class="sig-name descname">add_quantitative_value</code><span class="sig-paren">(</span><em class="sig-param">qv_new: dosma.quant_vals.QuantitativeValue</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tissue.html#Tissue.add_quantitative_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.tissue.Tissue.add_quantitative_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add quantitative value to the tissue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>qv_new</strong> (<a class="reference internal" href="dosma.html#dosma.quant_vals.QuantitativeValue" title="dosma.quant_vals.QuantitativeValue"><em>QuantitativeValue</em></a>) – Quantitative value to add to tissue.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.tissue.Tissue.calc_quant_vals">
+<code class="sig-name descname">calc_quant_vals</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tissue.html#Tissue.calc_quant_vals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.tissue.Tissue.calc_quant_vals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate quantitative values for pixels corresponding to the tissue.</p>
+<p>Requires mask to be set for this tissue.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.tissue.Tissue.find_weights">
+<code class="sig-name descname">find_weights</code><span class="sig-paren">(</span><em class="sig-param">weights_dir: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tissue.html#Tissue.find_weights"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.tissue.Tissue.find_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search for weights file in weights directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>weights_dir</strong> (<em>str</em>) – Directory where weights are stored.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>File path to weights corresponding to tissue.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If multiple weights files exists for the tissue or no valid weights file found.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.tissue.Tissue.get_mask">
+<code class="sig-name descname">get_mask</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tissue.html#Tissue.get_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.tissue.Tissue.get_mask" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Binary mask of segmented tissue.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">MedicalVolume</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.tissue.Tissue.load_data">
+<code class="sig-name descname">load_data</code><span class="sig-paren">(</span><em class="sig-param">load_dir_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tissue.html#Tissue.load_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.tissue.Tissue.load_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data for tissue.</p>
+<p>All tissue information is based on the mask. If mask for tissue doesn’t exist, there is no information to load.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>load_dir_path</strong> (<em>str</em>) – Directory path where all data is stored.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.tissue.Tissue.save_data">
+<code class="sig-name descname">save_data</code><span class="sig-paren">(</span><em class="sig-param">save_dirpath: str</em>, <em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat = &lt;ImageDataFormat.nifti: 1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tissue.html#Tissue.save_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.tissue.Tissue.save_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save data for tissue.</p>
+<p>Saves mask and quantitative values associated with this tissue.</p>
+<dl class="simple">
+<dt>Override in subclasses to save additional data. When overriding in subclasses, call</dt><dd><p><cite>super().save_data(save_dirpath)</cite> first to save mask and quantitative values by default. See
+<cite>femoral_cartilage.py</cite> for details.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>save_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p></li>
+<li><p><strong>data_format</strong> (<cite>ImageDataFormat</cite>, optional) – Format to save data. Defaults to <cite>preferences.image_data_format</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.tissue.Tissue.set_mask">
+<code class="sig-name descname">set_mask</code><span class="sig-paren">(</span><em class="sig-param">mask: dosma.data_io.med_volume.MedicalVolume</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tissue.html#Tissue.set_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.tissue.Tissue.set_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set mask for tissue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mask</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Binary mask of segmented tissue.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.tissue.Tissue.split_regions">
+<em class="property">abstract </em><code class="sig-name descname">split_regions</code><span class="sig-paren">(</span><em class="sig-param">base_map: numpy.ndarray</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tissue.html#Tissue.split_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.tissue.Tissue.split_regions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split mask into anatomical regions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>base_map</strong> (<em>np.ndarray</em>) – 3D numpy array typically corresponding to volume to split.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>4D numpy array (region, height, width, depth). Saved in variable <cite>self.regions</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.tissues">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-dosma.tissues" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="dosma.tissues.FemoralCartilage">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.tissues.</code><code class="sig-name descname">FemoralCartilage</code><span class="sig-paren">(</span><em class="sig-param">weights_dir=None</em>, <em class="sig-param">medial_to_lateral=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/femoral_cartilage.html#FemoralCartilage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.FemoralCartilage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.tissues.tissue.Tissue</span></code></a></p>
+<p>Handles analysis and visualization for femoral cartilage.</p>
+<p>This class extends functionality from <cite>Tissue</cite>.</p>
+<p>For visualization, the femoral cartilage is unrolled onto a 2D plane using angular binning [1].</p>
+<dl class="simple">
+<dt>[1] Monu UD, Jordan CD, Samuelson BL, Hargreaves BA, Gold GE, McWalter EJ. “Cluster analysis of quantitative MRI T2</dt><dd><p>and T1ρ relaxation times of cartilage identifies differences between healthy and ACL-injured individuals at 3T.”
+Osteoarthritis and cartilage 2017;25(4):513-520.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="dosma.tissues.FemoralCartilage.ACP_BOUNDARY">
+<code class="sig-name descname">ACP_BOUNDARY</code><em class="property"> = None</em><a class="headerlink" href="#dosma.tissues.FemoralCartilage.ACP_BOUNDARY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.FemoralCartilage.FULL_NAME">
+<code class="sig-name descname">FULL_NAME</code><em class="property"> = 'femoral cartilage'</em><a class="headerlink" href="#dosma.tissues.FemoralCartilage.FULL_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.FemoralCartilage.ID">
+<code class="sig-name descname">ID</code><em class="property"> = 1</em><a class="headerlink" href="#dosma.tissues.FemoralCartilage.ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.FemoralCartilage.ML_BOUNDARY">
+<code class="sig-name descname">ML_BOUNDARY</code><em class="property"> = None</em><a class="headerlink" href="#dosma.tissues.FemoralCartilage.ML_BOUNDARY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.FemoralCartilage.STR_ID">
+<code class="sig-name descname">STR_ID</code><em class="property"> = 'fc'</em><a class="headerlink" href="#dosma.tissues.FemoralCartilage.STR_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.FemoralCartilage.T1_EXPECTED">
+<code class="sig-name descname">T1_EXPECTED</code><em class="property"> = 1200</em><a class="headerlink" href="#dosma.tissues.FemoralCartilage.T1_EXPECTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.FemoralCartilage.save_data">
+<code class="sig-name descname">save_data</code><span class="sig-paren">(</span><em class="sig-param">save_dirpath</em>, <em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat = &lt;ImageDataFormat.nifti: 1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/femoral_cartilage.html#FemoralCartilage.save_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.FemoralCartilage.save_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save data for tissue.</p>
+<p>Saves mask and quantitative values associated with this tissue.</p>
+<dl class="simple">
+<dt>Override in subclasses to save additional data. When overriding in subclasses, call</dt><dd><p><cite>super().save_data(save_dirpath)</cite> first to save mask and quantitative values by default. See
+<cite>femoral_cartilage.py</cite> for details.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>save_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p></li>
+<li><p><strong>data_format</strong> (<cite>ImageDataFormat</cite>, optional) – Format to save data. Defaults to <cite>preferences.image_data_format</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.FemoralCartilage.set_mask">
+<code class="sig-name descname">set_mask</code><span class="sig-paren">(</span><em class="sig-param">mask: dosma.data_io.med_volume.MedicalVolume</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/femoral_cartilage.html#FemoralCartilage.set_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.FemoralCartilage.set_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set mask for tissue.</p>
+<dl class="simple">
+<dt>Mask is cleaned by selecting the largest connected component from the mask. Femoral cartilage is expected to be</dt><dd><p>single connected tissue.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mask</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Binary mask of segmented tissue.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.FemoralCartilage.split_regions">
+<code class="sig-name descname">split_regions</code><span class="sig-paren">(</span><em class="sig-param">base_map: numpy.ndarray</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/femoral_cartilage.html#FemoralCartilage.split_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.FemoralCartilage.split_regions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split volume into anatomical regions.</p>
+<dl class="simple">
+<dt>Pixels corresponding to femoral cartilage are divided across 3 planes:</dt><dd><ul class="simple">
+<li><p>Coronal: Posterior, Central, or Anterior</p></li>
+<li><p>Sagittal: Medial, Lateral</p></li>
+<li><p>Axial: Deep, Superficial</p></li>
+</ul>
+</dd>
+</dl>
+<p>For example, a pixel could correspond to the Posterior Lateral Deep region of femoral cartilage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>base_map</strong> (<em>np.ndarray</em>) – 3D numpy array typically corresponding to volume to split.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>4D numpy array (region, height, width, depth). Saved in variable <cite>self.regions</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.FemoralCartilage.unroll">
+<code class="sig-name descname">unroll</code><span class="sig-paren">(</span><em class="sig-param">qv_map: numpy.ndarray</em>, <em class="sig-param">regions_mask: numpy.ndarray</em>, <em class="sig-param">theta_bins</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/femoral_cartilage.html#FemoralCartilage.unroll"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.FemoralCartilage.unroll" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unroll femoral cartilage 3D quantitative value (qv) maps to 2D for visualization.</p>
+<p>The function multiplies a 3D segmentation mask to a 3D qv map –&gt; 3D femoral cartilage qv (fc_qv) map
+It then fits a circle to the collapsed sagittal projection of the fc_qv map
+Each slice is binned into bins of 5 degree sizes</p>
+<p>The unrolled map is then divided into deep and superficial cartilage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>qv_map</strong> (<em>np.ndarray</em>) – 3D array (slices last) of sagittal knee describing quantitative parameter values</p></li>
+<li><p><strong>regions_mask</strong> (<em>np.ndarray</em>) – regions_mask</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>(row, column) format</dt><dd><ol class="arabic simple">
+<li><p>2D Total unrolled cartilage (slices, degrees) - average of superficial and deep layers</p></li>
+<li><p>Superficial unrolled cartilage (slices, degrees) - superficial layer</p></li>
+<li><p>Deep unrolled cartilage (slices, degrees) - deep layer</p></li>
+</ol>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.tissues.Meniscus">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.tissues.</code><code class="sig-name descname">Meniscus</code><span class="sig-paren">(</span><em class="sig-param">weights_dir: str = None</em>, <em class="sig-param">medial_to_lateral: bool = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/meniscus.html#Meniscus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.Meniscus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.tissues.tissue.Tissue</span></code></a></p>
+<p>Handles analysis and visualization for meniscus.</p>
+<p>This class extends functionality from <cite>Tissue</cite>.</p>
+<p>For visualization, the meniscus is unrolled across the axial plane.</p>
+<dl class="attribute">
+<dt id="dosma.tissues.Meniscus.FULL_NAME">
+<code class="sig-name descname">FULL_NAME</code><em class="property"> = 'meniscus'</em><a class="headerlink" href="#dosma.tissues.Meniscus.FULL_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.Meniscus.ID">
+<code class="sig-name descname">ID</code><em class="property"> = 2</em><a class="headerlink" href="#dosma.tissues.Meniscus.ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.Meniscus.STR_ID">
+<code class="sig-name descname">STR_ID</code><em class="property"> = 'men'</em><a class="headerlink" href="#dosma.tissues.Meniscus.STR_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.Meniscus.T1_EXPECTED">
+<code class="sig-name descname">T1_EXPECTED</code><em class="property"> = 1000</em><a class="headerlink" href="#dosma.tissues.Meniscus.T1_EXPECTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.Meniscus.set_mask">
+<code class="sig-name descname">set_mask</code><span class="sig-paren">(</span><em class="sig-param">mask: dosma.data_io.med_volume.MedicalVolume</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/meniscus.html#Meniscus.set_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.Meniscus.set_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set mask for tissue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mask</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Binary mask of segmented tissue.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.Meniscus.split_regions">
+<code class="sig-name descname">split_regions</code><span class="sig-paren">(</span><em class="sig-param">base_map</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/meniscus.html#Meniscus.split_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.Meniscus.split_regions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split mask into anatomical regions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>base_map</strong> (<em>np.ndarray</em>) – 3D numpy array typically corresponding to volume to split.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>4D numpy array (region, height, width, depth). Saved in variable <cite>self.regions</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.Meniscus.unroll_axial">
+<code class="sig-name descname">unroll_axial</code><span class="sig-paren">(</span><em class="sig-param">quant_map: numpy.ndarray</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/meniscus.html#Meniscus.unroll_axial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.Meniscus.unroll_axial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unroll meniscus in axial direction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>quant_map</strong> (<em>np.ndarray</em>) – Map to roll out.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.tissues.PatellarCartilage">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.tissues.</code><code class="sig-name descname">PatellarCartilage</code><span class="sig-paren">(</span><em class="sig-param">weights_dir: str = None</em>, <em class="sig-param">medial_to_lateral: bool = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/patellar_cartilage.html#PatellarCartilage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.PatellarCartilage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.tissues.tissue.Tissue</span></code></a></p>
+<p>Handles analysis and visualization for patellar cartilage.</p>
+<dl class="attribute">
+<dt id="dosma.tissues.PatellarCartilage.FULL_NAME">
+<code class="sig-name descname">FULL_NAME</code><em class="property"> = 'patellar cartilage'</em><a class="headerlink" href="#dosma.tissues.PatellarCartilage.FULL_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.PatellarCartilage.ID">
+<code class="sig-name descname">ID</code><em class="property"> = 2</em><a class="headerlink" href="#dosma.tissues.PatellarCartilage.ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.PatellarCartilage.STR_ID">
+<code class="sig-name descname">STR_ID</code><em class="property"> = 'pc'</em><a class="headerlink" href="#dosma.tissues.PatellarCartilage.STR_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.PatellarCartilage.T1_EXPECTED">
+<code class="sig-name descname">T1_EXPECTED</code><em class="property"> = 1000</em><a class="headerlink" href="#dosma.tissues.PatellarCartilage.T1_EXPECTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.PatellarCartilage.set_mask">
+<code class="sig-name descname">set_mask</code><span class="sig-paren">(</span><em class="sig-param">mask</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/patellar_cartilage.html#PatellarCartilage.set_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.PatellarCartilage.set_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set mask for tissue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mask</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Binary mask of segmented tissue.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.PatellarCartilage.split_regions">
+<code class="sig-name descname">split_regions</code><span class="sig-paren">(</span><em class="sig-param">base_map</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/patellar_cartilage.html#PatellarCartilage.split_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.PatellarCartilage.split_regions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split patellar cartilage into deep/superficial regions</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.PatellarCartilage.unroll_coronal">
+<code class="sig-name descname">unroll_coronal</code><span class="sig-paren">(</span><em class="sig-param">quant_map: numpy.ndarray</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/patellar_cartilage.html#PatellarCartilage.unroll_coronal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.PatellarCartilage.unroll_coronal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unroll patellar cartilage in the coronal direction.</p>
+<p>Because patellar cartilage is flat, “unrolling” is projecting the patellar cartilage onto the coronal axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>quant_map</strong> (<em>np.ndarray</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.tissues.TibialCartilage">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.tissues.</code><code class="sig-name descname">TibialCartilage</code><span class="sig-paren">(</span><em class="sig-param">weights_dir=None</em>, <em class="sig-param">medial_to_lateral=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tibial_cartilage.html#TibialCartilage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.TibialCartilage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.tissues.tissue.Tissue</span></code></a></p>
+<p>Handles analysis and visualization for tibial cartilage.</p>
+<dl class="attribute">
+<dt id="dosma.tissues.TibialCartilage.FULL_NAME">
+<code class="sig-name descname">FULL_NAME</code><em class="property"> = 'tibial cartilage'</em><a class="headerlink" href="#dosma.tissues.TibialCartilage.FULL_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.TibialCartilage.ID">
+<code class="sig-name descname">ID</code><em class="property"> = 2</em><a class="headerlink" href="#dosma.tissues.TibialCartilage.ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.TibialCartilage.STR_ID">
+<code class="sig-name descname">STR_ID</code><em class="property"> = 'tc'</em><a class="headerlink" href="#dosma.tissues.TibialCartilage.STR_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.tissues.TibialCartilage.T1_EXPECTED">
+<code class="sig-name descname">T1_EXPECTED</code><em class="property"> = 1000</em><a class="headerlink" href="#dosma.tissues.TibialCartilage.T1_EXPECTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.TibialCartilage.set_mask">
+<code class="sig-name descname">set_mask</code><span class="sig-paren">(</span><em class="sig-param">mask: dosma.data_io.med_volume.MedicalVolume</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tibial_cartilage.html#TibialCartilage.set_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.TibialCartilage.set_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set mask for tissue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mask</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Binary mask of segmented tissue.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.TibialCartilage.split_regions">
+<code class="sig-name descname">split_regions</code><span class="sig-paren">(</span><em class="sig-param">base_map</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tibial_cartilage.html#TibialCartilage.split_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.TibialCartilage.split_regions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split mask into anatomical regions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>base_map</strong> (<em>np.ndarray</em>) – 3D numpy array typically corresponding to volume to split.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>4D numpy array (region, height, width, depth). Saved in variable <cite>self.regions</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.tissues.TibialCartilage.unroll_axial">
+<code class="sig-name descname">unroll_axial</code><span class="sig-paren">(</span><em class="sig-param">quant_map</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/tissues/tibial_cartilage.html#TibialCartilage.unroll_axial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.TibialCartilage.unroll_axial" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

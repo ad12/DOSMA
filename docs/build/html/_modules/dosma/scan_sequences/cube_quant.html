@@ -1,0 +1,460 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dosma.scan_sequences.cube_quant &mdash; DOSMA v0.0.10 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> DOSMA
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/faq.html">FAQs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">DOSMA</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dosma.scan_sequences.cube_quant</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dosma.scan_sequences.cube_quant</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">natsort</span> <span class="kn">import</span> <span class="n">natsorted</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.elastix</span> <span class="kn">import</span> <span class="n">Registration</span>
+
+<span class="kn">from</span> <span class="nn">dosma.scan_sequences.scans</span> <span class="kn">import</span> <span class="n">NonTargetSequence</span>
+
+<span class="kn">from</span> <span class="nn">dosma</span> <span class="kn">import</span> <span class="n">file_constants</span> <span class="k">as</span> <span class="n">fc</span>
+<span class="kn">from</span> <span class="nn">dosma.data_io</span> <span class="kn">import</span> <span class="n">ImageDataFormat</span><span class="p">,</span> <span class="n">NiftiReader</span>
+<span class="kn">from</span> <span class="nn">dosma.data_io</span> <span class="kn">import</span> <span class="n">format_io_utils</span> <span class="k">as</span> <span class="n">fio_utils</span>
+<span class="kn">from</span> <span class="nn">dosma.defaults</span> <span class="kn">import</span> <span class="n">preferences</span>
+<span class="kn">from</span> <span class="nn">dosma.tissues.tissue</span> <span class="kn">import</span> <span class="n">Tissue</span>
+<span class="kn">from</span> <span class="nn">dosma.utils</span> <span class="kn">import</span> <span class="n">io_utils</span>
+<span class="kn">from</span> <span class="nn">dosma</span> <span class="kn">import</span> <span class="n">quant_vals</span> <span class="k">as</span> <span class="n">qv</span>
+<span class="kn">from</span> <span class="nn">dosma.utils.cmd_line_utils</span> <span class="kn">import</span> <span class="n">ActionWrapper</span>
+<span class="kn">from</span> <span class="nn">dosma.utils.fits</span> <span class="kn">import</span> <span class="n">MonoExponentialFit</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;CubeQuant&quot;</span><span class="p">]</span>
+
+<span class="n">__EXPECTED_NUM_SPIN_LOCK_TIMES__</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">__R_SQUARED_THRESHOLD__</span> <span class="o">=</span> <span class="mf">0.9</span>
+<span class="n">__INITIAL_T1_RHO_VAL__</span> <span class="o">=</span> <span class="mf">70.0</span>
+
+<span class="n">__T1_RHO_LOWER_BOUND__</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">__T1_RHO_UPPER_BOUND__</span> <span class="o">=</span> <span class="mi">500</span>
+<span class="n">__T1_RHO_DECIMAL_PRECISION__</span> <span class="o">=</span> <span class="mi">3</span>
+
+
+<div class="viewcode-block" id="CubeQuant"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.cube_quant.CubeQuant">[docs]</a><span class="k">class</span> <span class="nc">CubeQuant</span><span class="p">(</span><span class="n">NonTargetSequence</span><span class="p">):</span>
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s2">&quot;cubequant&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dicom_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">load_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subvolumes</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spin_lock_times</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intraregistered_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dicom_path</span><span class="o">=</span><span class="n">dicom_path</span><span class="p">,</span> <span class="n">load_path</span><span class="o">=</span><span class="n">load_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dicom_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">subvolumes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spin_lock_times</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__split_volumes__</span><span class="p">(</span><span class="n">__EXPECTED_NUM_SPIN_LOCK_TIMES__</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">intraregistered_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__intraregister__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subvolumes</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subvolumes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either dicom_path or load_path must be specified&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__validate_scan__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="CubeQuant.interregister"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.cube_quant.CubeQuant.interregister">[docs]</a>    <span class="k">def</span> <span class="nf">interregister</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target_mask_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">base_spin_lock_time</span><span class="p">,</span> <span class="n">base_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">intraregistered_data</span><span class="p">[</span><span class="s1">&#39;BASE&#39;</span><span class="p">]</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">intraregistered_data</span><span class="p">[</span><span class="s1">&#39;FILES&#39;</span><span class="p">]</span>
+
+        <span class="n">temp_interregistered_dirpath</span> <span class="o">=</span> <span class="n">io_utils</span><span class="o">.</span><span class="n">mkdirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_path</span><span class="p">,</span> <span class="s1">&#39;interregistered&#39;</span><span class="p">))</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;==&quot;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Interregistering...&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Target: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target_path</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">target_mask_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Mask: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target_mask_path</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;==&quot;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">target_mask_path</span><span class="p">:</span>
+            <span class="n">parameter_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">fc</span><span class="o">.</span><span class="n">ELASTIX_RIGID_PARAMS_FILE</span><span class="p">,</span> <span class="n">fc</span><span class="o">.</span><span class="n">ELASTIX_AFFINE_PARAMS_FILE</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parameter_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">fc</span><span class="o">.</span><span class="n">ELASTIX_RIGID_INTERREGISTER_PARAMS_FILE</span><span class="p">,</span> <span class="n">fc</span><span class="o">.</span><span class="n">ELASTIX_AFFINE_INTERREGISTER_PARAMS_FILE</span><span class="p">]</span>
+
+        <span class="n">warped_file</span><span class="p">,</span> <span class="n">transformation_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__interregister_base_file__</span><span class="p">((</span><span class="n">base_image</span><span class="p">,</span> <span class="n">base_spin_lock_time</span><span class="p">),</span>
+                                                                             <span class="n">target_path</span><span class="p">,</span>
+                                                                             <span class="n">temp_interregistered_dirpath</span><span class="p">,</span>
+                                                                             <span class="n">mask_path</span><span class="o">=</span><span class="n">target_mask_path</span><span class="p">,</span>
+                                                                             <span class="n">parameter_files</span><span class="o">=</span><span class="n">parameter_files</span><span class="p">)</span>
+        <span class="n">warped_files</span> <span class="o">=</span> <span class="p">[(</span><span class="n">base_spin_lock_time</span><span class="p">,</span> <span class="n">warped_file</span><span class="p">)]</span>
+
+        <span class="n">nifti_reader</span> <span class="o">=</span> <span class="n">NiftiReader</span><span class="p">()</span>
+
+        <span class="c1"># Load the transformation file. Apply same transform to the remaining images</span>
+        <span class="k">for</span> <span class="n">spin_lock_time</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="n">warped_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__apply_transform__</span><span class="p">((</span><span class="n">filename</span><span class="p">,</span> <span class="n">spin_lock_time</span><span class="p">),</span>
+                                                   <span class="n">transformation_files</span><span class="p">,</span>
+                                                   <span class="n">temp_interregistered_dirpath</span><span class="p">)</span>
+            <span class="c1"># append the last warped file - this has all the transforms applied</span>
+            <span class="n">warped_files</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">spin_lock_time</span><span class="p">,</span> <span class="n">warped_file</span><span class="p">))</span>
+
+        <span class="c1"># copy each of the interregistered warped files to their own output</span>
+        <span class="n">subvolumes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">spin_lock_time</span><span class="p">,</span> <span class="n">warped_file</span> <span class="ow">in</span> <span class="n">warped_files</span><span class="p">:</span>
+            <span class="n">subvolumes</span><span class="p">[</span><span class="n">spin_lock_time</span><span class="p">]</span> <span class="o">=</span> <span class="n">nifti_reader</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">warped_file</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">subvolumes</span> <span class="o">=</span> <span class="n">subvolumes</span></div>
+
+<div class="viewcode-block" id="CubeQuant.generate_t1_rho_map"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.cube_quant.CubeQuant.generate_t1_rho_map">[docs]</a>    <span class="k">def</span> <span class="nf">generate_t1_rho_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tissue</span><span class="p">:</span> <span class="n">Tissue</span><span class="p">,</span> <span class="n">mask_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate 3D T1-rho map and r-squared fit map using mono-exponential fit across subvolumes acquired at</span>
+<span class="sd">            different spin lock times.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tissue (Tissue): Tissue to generate quantitative value for.</span>
+<span class="sd">            mask_path (:obj:`str`, optional): File path to mask of ROI to analyze. If specified, only voxels specified</span>
+<span class="sd">                by mask will be fit. Speeds up computation. Defaults to `None`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            qv.T1Rho: T1-rho fit for tissue.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If `mask_path` specifies volume with values other than `0` or `1` (i.e. not binary).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">spin_lock_times</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">subvolumes_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># only calculate for focused region if a mask is available, this speeds up computation</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">tissue</span><span class="o">.</span><span class="n">get_mask</span><span class="p">()</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">mask</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">volume</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">mask_path</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">fio_utils</span><span class="o">.</span><span class="n">generic_load</span><span class="p">(</span><span class="n">mask_path</span><span class="p">,</span> <span class="n">expected_num_volumes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">volume</span><span class="p">))</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`mask_path` must reference binary segmentation volume&quot;</span><span class="p">)</span>
+
+        <span class="n">sorted_keys</span> <span class="o">=</span> <span class="n">natsorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subvolumes</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="k">for</span> <span class="n">spin_lock_time_index</span> <span class="ow">in</span> <span class="n">sorted_keys</span><span class="p">:</span>
+            <span class="n">subvolumes_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subvolumes</span><span class="p">[</span><span class="n">spin_lock_time_index</span><span class="p">])</span>
+            <span class="n">spin_lock_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spin_lock_times</span><span class="p">[</span><span class="n">spin_lock_time_index</span><span class="p">])</span>
+
+        <span class="n">mef</span> <span class="o">=</span> <span class="n">MonoExponentialFit</span><span class="p">(</span><span class="n">spin_lock_times</span><span class="p">,</span> <span class="n">subvolumes_list</span><span class="p">,</span>
+                                 <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
+                                 <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="n">__T1_RHO_LOWER_BOUND__</span><span class="p">,</span> <span class="n">__T1_RHO_UPPER_BOUND__</span><span class="p">),</span>
+                                 <span class="n">tc0</span><span class="o">=</span><span class="n">__INITIAL_T1_RHO_VAL__</span><span class="p">,</span>
+                                 <span class="n">decimal_precision</span><span class="o">=</span><span class="n">__T1_RHO_DECIMAL_PRECISION__</span><span class="p">)</span>
+
+        <span class="n">t1rho_map</span><span class="p">,</span> <span class="n">r2</span> <span class="o">=</span> <span class="n">mef</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+
+        <span class="n">quant_val_map</span> <span class="o">=</span> <span class="n">qv</span><span class="o">.</span><span class="n">T1Rho</span><span class="p">(</span><span class="n">t1rho_map</span><span class="p">)</span>
+        <span class="n">quant_val_map</span><span class="o">.</span><span class="n">add_additional_volume</span><span class="p">(</span><span class="s2">&quot;r2&quot;</span><span class="p">,</span> <span class="n">r2</span><span class="p">)</span>
+
+        <span class="n">tissue</span><span class="o">.</span><span class="n">add_quantitative_value</span><span class="p">(</span><span class="n">quant_val_map</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">quant_val_map</span></div>
+
+    <span class="k">def</span> <span class="nf">__intraregister__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subvolumes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Intra-register volumes.</span>
+
+<span class="sd">        Patient could have moved between acquisition of different volumes, so different volumes of CubeQuant scan</span>
+<span class="sd">            have to be registered with each other.</span>
+
+<span class="sd">        The first spin lock time has the highest SNR, so it is used as the target. Volumes corresponding to the other</span>
+<span class="sd">            spin lock times are registered to the target.</span>
+
+<span class="sd">        Affine registration is done using Elastix.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            subvolumes (dict[int, MedicalVolume]): Dictionary of spin lock time index -&gt; volume. (e.g.</span>
+<span class="sd">                {0 --&gt; MedicalVolume A, 1 --&gt; MedicalVolume B}).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict[int, str]: Dictionary of base, other files spin-lock index -&gt; output nifti file path.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">subvolumes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;subvolumes must be dict&quot;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;==&quot;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Intraregistering...&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;==&quot;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+
+        <span class="c1"># temporarily save subvolumes as nifti file</span>
+        <span class="n">ordered_spin_lock_time_indices</span> <span class="o">=</span> <span class="n">natsorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">subvolumes</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="n">raw_volumes_base_path</span> <span class="o">=</span> <span class="n">io_utils</span><span class="o">.</span><span class="n">mkdirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_path</span><span class="p">,</span> <span class="s2">&quot;raw&quot;</span><span class="p">))</span>
+
+        <span class="c1"># Use first spin lock time as a basis for registration</span>
+        <span class="n">spin_lock_nii_files</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">spin_lock_time_index</span> <span class="ow">in</span> <span class="n">ordered_spin_lock_time_indices</span><span class="p">:</span>
+            <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">raw_volumes_base_path</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{:03d}</span><span class="s2">.nii.gz&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">spin_lock_time_index</span><span class="p">))</span>
+            <span class="n">spin_lock_nii_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+
+            <span class="n">subvolumes</span><span class="p">[</span><span class="n">spin_lock_time_index</span><span class="p">]</span><span class="o">.</span><span class="n">save_volume</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+
+        <span class="n">target_filepath</span> <span class="o">=</span> <span class="n">spin_lock_nii_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">intraregistered_files</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">spin_lock_nii_files</span><span class="p">)):</span>
+            <span class="n">spin_file</span> <span class="o">=</span> <span class="n">spin_lock_nii_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">spin_lock_time_index</span> <span class="o">=</span> <span class="n">ordered_spin_lock_time_indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="n">reg</span> <span class="o">=</span> <span class="n">Registration</span><span class="p">()</span>
+            <span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fixed_image</span> <span class="o">=</span> <span class="n">target_filepath</span>
+            <span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">moving_image</span> <span class="o">=</span> <span class="n">spin_file</span>
+            <span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">output_path</span> <span class="o">=</span> <span class="n">io_utils</span><span class="o">.</span><span class="n">mkdirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_path</span><span class="p">,</span>
+                                                                     <span class="s2">&quot;intraregistered&quot;</span><span class="p">,</span>
+                                                                     <span class="s2">&quot;</span><span class="si">{:03d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">spin_lock_time_index</span><span class="p">)))</span>
+            <span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="p">[</span><span class="n">fc</span><span class="o">.</span><span class="n">ELASTIX_AFFINE_PARAMS_FILE</span><span class="p">]</span>
+            <span class="n">reg</span><span class="o">.</span><span class="n">terminal_output</span> <span class="o">=</span> <span class="n">fc</span><span class="o">.</span><span class="n">NIPYPE_LOGGING</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Registering </span><span class="si">{}</span><span class="s2"> -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">spin_lock_time_index</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">ordered_spin_lock_time_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+            <span class="n">warped_file</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">warped_file</span>
+            <span class="n">intraregistered_files</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">spin_lock_time_index</span><span class="p">,</span> <span class="n">warped_file</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;BASE&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">ordered_spin_lock_time_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">spin_lock_nii_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="s2">&quot;FILES&quot;</span><span class="p">:</span> <span class="n">intraregistered_files</span><span class="p">}</span>
+
+<div class="viewcode-block" id="CubeQuant.save_data"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.cube_quant.CubeQuant.save_data">[docs]</a>    <span class="k">def</span> <span class="nf">save_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_save_dirpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data_format</span><span class="p">:</span> <span class="n">ImageDataFormat</span> <span class="o">=</span> <span class="n">preferences</span><span class="o">.</span><span class="n">image_data_format</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save data to disk.</span>
+
+<span class="sd">        Data will be saved in the directory &#39;`base_save_dirpath`/cubequant/&#39;.</span>
+
+<span class="sd">        Serializes variables specified in by self.__serializable_variables__().</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            base_save_dirpath (str): Directory path where all data is stored.</span>
+<span class="sd">            data_format (ImageDataFormat): Format to save data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">save_data</span><span class="p">(</span><span class="n">base_save_dirpath</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">)</span>
+        <span class="n">base_save_dirpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__save_dir__</span><span class="p">(</span><span class="n">base_save_dirpath</span><span class="p">)</span>
+
+        <span class="c1"># Save interregistered files</span>
+        <span class="n">interregistered_dirpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_save_dirpath</span><span class="p">,</span> <span class="s2">&quot;interregistered&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">spin_lock_time_index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">subvolumes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">nii_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">interregistered_dirpath</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{:03d}</span><span class="s2">.nii.gz&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">spin_lock_time_index</span><span class="p">))</span>
+            <span class="n">filepath</span> <span class="o">=</span> <span class="n">fio_utils</span><span class="o">.</span><span class="n">convert_image_data_format</span><span class="p">(</span><span class="n">nii_filepath</span><span class="p">,</span> <span class="n">data_format</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">subvolumes</span><span class="p">[</span><span class="n">spin_lock_time_index</span><span class="p">]</span><span class="o">.</span><span class="n">save_volume</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CubeQuant.load_data"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.cube_quant.CubeQuant.load_data">[docs]</a>    <span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_load_dirpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load data from disk.</span>
+
+<span class="sd">        Data will be loaded from the directory &#39;`base_load_dirpath`/cubequant&#39;.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">           base_load_dirpath (str): Directory path where all data is stored.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">           NotADirectoryError: if `base_load_dirpath`/cubequant/ does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">base_load_dirpath</span><span class="p">)</span>
+        <span class="n">base_load_dirpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__save_dir__</span><span class="p">(</span><span class="n">base_load_dirpath</span><span class="p">,</span> <span class="n">create_dir</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">interregistered_dirpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_load_dirpath</span><span class="p">,</span> <span class="s2">&quot;interregistered&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">subvolumes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__load_interregistered_files__</span><span class="p">(</span><span class="n">interregistered_dirpath</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__serializable_variables__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">var_names</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__serializable_variables__</span><span class="p">()</span>
+        <span class="n">var_names</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s1">&#39;spin_lock_times&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">var_names</span>
+
+<div class="viewcode-block" id="CubeQuant.cmd_line_actions"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.cube_quant.CubeQuant.cmd_line_actions">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">cmd_line_actions</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Provide command line information (such as name, help strings, etc) as list of dictionary.&quot;&quot;&quot;</span>
+
+        <span class="n">interregister_action</span> <span class="o">=</span> <span class="n">ActionWrapper</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">interregister</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                             <span class="n">help</span><span class="o">=</span><span class="s1">&#39;register to another scan&#39;</span><span class="p">,</span>
+                                             <span class="n">param_help</span><span class="o">=</span><span class="p">{</span>
+                                                 <span class="s1">&#39;target_path&#39;</span><span class="p">:</span> <span class="s1">&#39;path to target image in nifti format (.nii.gz)&#39;</span><span class="p">,</span>
+                                                 <span class="s1">&#39;target_mask_path&#39;</span><span class="p">:</span> <span class="s1">&#39;path to target mask in nifti format (.nii.gz)&#39;</span><span class="p">},</span>
+                                             <span class="n">alternative_param_names</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;target_path&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;tp&#39;</span><span class="p">,</span> <span class="s1">&#39;target&#39;</span><span class="p">],</span>
+                                                                      <span class="s1">&#39;target_mask_path&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;tm&#39;</span><span class="p">,</span> <span class="s1">&#39;target_mask&#39;</span><span class="p">]})</span>
+        <span class="n">generate_t1rho_map_action</span> <span class="o">=</span> <span class="n">ActionWrapper</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">generate_t1_rho_map</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                                  <span class="n">help</span><span class="o">=</span><span class="s1">&#39;generate T1-rho map&#39;</span><span class="p">,</span>
+                                                  <span class="n">aliases</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;t1_rho&#39;</span><span class="p">],</span>
+                                                  <span class="n">param_help</span><span class="o">=</span><span class="p">{</span>
+                                                      <span class="s1">&#39;mask_path&#39;</span><span class="p">:</span> <span class="s1">&#39;Mask used for fitting select voxels - &#39;</span>
+                                                                   <span class="s1">&#39;in nifti format (.nii.gz)&#39;</span><span class="p">,</span>
+                                                  <span class="p">},</span>
+                                                  <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[(</span><span class="bp">cls</span><span class="o">.</span><span class="n">interregister</span><span class="p">,</span> <span class="n">interregister_action</span><span class="p">),</span> <span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">generate_t1_rho_map</span><span class="p">,</span> <span class="n">generate_t1rho_map_action</span><span class="p">)]</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

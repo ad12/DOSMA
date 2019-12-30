@@ -32,7 +32,7 @@ debug_runs.py
 /gui/gui_playground.py
 
 # build files
-**/build
+#**/build
 **/dist
 *.spec
 

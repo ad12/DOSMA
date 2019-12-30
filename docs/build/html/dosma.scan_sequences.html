@@ -1,0 +1,1230 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dosma.scan_sequences package &mdash; DOSMA v0.0.10 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DOSMA
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="general/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/faq.html">FAQs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DOSMA</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>dosma.scan_sequences package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/dosma.scan_sequences.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dosma-scan-sequences-package">
+<h1>dosma.scan_sequences package<a class="headerlink" href="#dosma-scan-sequences-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-dosma.scan_sequences.cones">
+<span id="dosma-scan-sequences-cones-module"></span><h2>dosma.scan_sequences.cones module<a class="headerlink" href="#module-dosma.scan_sequences.cones" title="Permalink to this headline">¶</a></h2>
+<p>Ultra-short Echo Time Cones (UTE-Cones).</p>
+<dl class="simple">
+<dt>Paper:</dt><dd><p>Qian Y, Williams AA, Chu CR, Boada FE. “Multicomponent T2* mapping of knee cartilage: technical feasibility ex vivo.”
+Magnetic resonance in medicine 2010;64(5):1426-1431.”</p>
+</dd>
+</dl>
+<dl class="class">
+<dt id="dosma.scan_sequences.cones.Cones">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.scan_sequences.cones.</code><code class="sig-name descname">Cones</code><span class="sig-paren">(</span><em class="sig-param">dicom_path=None</em>, <em class="sig-param">load_path=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cones.html#Cones"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.cones.Cones" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.scan_sequences.scans.NonTargetSequence" title="dosma.scan_sequences.scans.NonTargetSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.scan_sequences.scans.NonTargetSequence</span></code></a></p>
+<p>Handles analysis for Cones scan sequence.</p>
+<dl class="attribute">
+<dt id="dosma.scan_sequences.cones.Cones.NAME">
+<code class="sig-name descname">NAME</code><em class="property"> = 'cones'</em><a class="headerlink" href="#dosma.scan_sequences.cones.Cones.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.cones.Cones.cmd_line_actions">
+<em class="property">classmethod </em><code class="sig-name descname">cmd_line_actions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cones.html#Cones.cmd_line_actions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.cones.Cones.cmd_line_actions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide command line information (such as name, help strings, etc) as list of dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.cones.Cones.generate_t2_star_map">
+<code class="sig-name descname">generate_t2_star_map</code><span class="sig-paren">(</span><em class="sig-param">tissue: dosma.tissues.tissue.Tissue</em>, <em class="sig-param">mask_path: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cones.html#Cones.generate_t2_star_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.cones.Cones.generate_t2_star_map" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Generate 3D T2-star map and r-squared fit map using mono-exponential fit across subvolumes acquired at</dt><dd><p>different echo times.</p>
+</dd>
+</dl>
+<p>T2-star map is also added to the tissue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tissue</strong> (<a class="reference internal" href="dosma.tissues.html#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><em>Tissue</em></a>) – Tissue to generate quantitative value for.</p></li>
+<li><p><strong>mask_path</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – File path to mask of ROI to analyze. If specified, only voxels specified
+by mask will be fit. Speeds up computation. Defaults to <cite>None</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>T2-star fit for tissue.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>qv.T2Star</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>mask_path</cite> specifies volume with values other than <cite>0</cite> or <cite>1</cite> (i.e. not binary).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.cones.Cones.interregister">
+<code class="sig-name descname">interregister</code><span class="sig-paren">(</span><em class="sig-param">target_path: str</em>, <em class="sig-param">target_mask_path: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cones.html#Cones.interregister"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.cones.Cones.interregister" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register this scan to the target scan - save as parameter in scan (volumes, subvolumes, etc).</p>
+<dl class="simple">
+<dt>We use the term “interregister” to refer to registration between volumes of different scans. Conversely,</dt><dd><p>“intraregister” refers to registering volumes from the same scan.</p>
+</dd>
+<dt>If there are many subvolumes to interregister with the base scan, typically the following actions are used to</dt><dd><p>reduce error accumulation with multiple registrations.
+1. Pick the volume with the highest SNR. Call this the base moving image.
+2. Register the base moving image to the target image using elastix.
+3. Capture the transformation file(s) detailing the transforms to go from base moving image -&gt; target image.
+4. Apply these transformation(s) to the remaining volumes.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_path</strong> (<em>str</em>) – Path to NIfTI file storing scan. This scan will serve as the base for registration. Note
+the best target scan will have a high SNR.</p></li>
+<li><p><strong>mask_path</strong> (<em>str</em>) – Path to mask to use to use as focus points for registration.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.cones.Cones.load_data">
+<code class="sig-name descname">load_data</code><span class="sig-paren">(</span><em class="sig-param">base_load_dirpath: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cones.html#Cones.load_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.cones.Cones.load_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data from disk.</p>
+<p>Data will be loaded from the directory ‘<cite>base_load_dirpath</cite>/cones’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>base_load_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotADirectoryError</strong> – if <cite>base_load_dirpath</cite>/cones/ does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.cones.Cones.save_data">
+<code class="sig-name descname">save_data</code><span class="sig-paren">(</span><em class="sig-param">base_save_dirpath: str</em>, <em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat = &lt;ImageDataFormat.nifti: 1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cones.html#Cones.save_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.cones.Cones.save_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save data to disk.</p>
+<p>Data will be saved in the directory ‘<cite>base_save_dirpath</cite>/cones/’.</p>
+<p>Serializes variables specified in by self.__serializable_variables__().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_save_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p></li>
+<li><p><strong>data_format</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Format to save data.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.scan_sequences.cube_quant">
+<span id="dosma-scan-sequences-cube-quant-module"></span><h2>dosma.scan_sequences.cube_quant module<a class="headerlink" href="#module-dosma.scan_sequences.cube_quant" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="dosma.scan_sequences.cube_quant.CubeQuant">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.scan_sequences.cube_quant.</code><code class="sig-name descname">CubeQuant</code><span class="sig-paren">(</span><em class="sig-param">dicom_path=None</em>, <em class="sig-param">load_path=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cube_quant.html#CubeQuant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.cube_quant.CubeQuant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.scan_sequences.scans.NonTargetSequence" title="dosma.scan_sequences.scans.NonTargetSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.scan_sequences.scans.NonTargetSequence</span></code></a></p>
+<dl class="attribute">
+<dt id="dosma.scan_sequences.cube_quant.CubeQuant.NAME">
+<code class="sig-name descname">NAME</code><em class="property"> = 'cubequant'</em><a class="headerlink" href="#dosma.scan_sequences.cube_quant.CubeQuant.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.cube_quant.CubeQuant.cmd_line_actions">
+<em class="property">classmethod </em><code class="sig-name descname">cmd_line_actions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cube_quant.html#CubeQuant.cmd_line_actions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.cube_quant.CubeQuant.cmd_line_actions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide command line information (such as name, help strings, etc) as list of dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.cube_quant.CubeQuant.generate_t1_rho_map">
+<code class="sig-name descname">generate_t1_rho_map</code><span class="sig-paren">(</span><em class="sig-param">tissue: dosma.tissues.tissue.Tissue</em>, <em class="sig-param">mask_path: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cube_quant.html#CubeQuant.generate_t1_rho_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.cube_quant.CubeQuant.generate_t1_rho_map" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Generate 3D T1-rho map and r-squared fit map using mono-exponential fit across subvolumes acquired at</dt><dd><p>different spin lock times.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tissue</strong> (<a class="reference internal" href="dosma.tissues.html#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><em>Tissue</em></a>) – Tissue to generate quantitative value for.</p></li>
+<li><p><strong>mask_path</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – File path to mask of ROI to analyze. If specified, only voxels specified
+by mask will be fit. Speeds up computation. Defaults to <cite>None</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>T1-rho fit for tissue.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>qv.T1Rho</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>mask_path</cite> specifies volume with values other than <cite>0</cite> or <cite>1</cite> (i.e. not binary).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.cube_quant.CubeQuant.interregister">
+<code class="sig-name descname">interregister</code><span class="sig-paren">(</span><em class="sig-param">target_path: str</em>, <em class="sig-param">target_mask_path: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cube_quant.html#CubeQuant.interregister"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.cube_quant.CubeQuant.interregister" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register this scan to the target scan - save as parameter in scan (volumes, subvolumes, etc).</p>
+<dl class="simple">
+<dt>We use the term “interregister” to refer to registration between volumes of different scans. Conversely,</dt><dd><p>“intraregister” refers to registering volumes from the same scan.</p>
+</dd>
+<dt>If there are many subvolumes to interregister with the base scan, typically the following actions are used to</dt><dd><p>reduce error accumulation with multiple registrations.
+1. Pick the volume with the highest SNR. Call this the base moving image.
+2. Register the base moving image to the target image using elastix.
+3. Capture the transformation file(s) detailing the transforms to go from base moving image -&gt; target image.
+4. Apply these transformation(s) to the remaining volumes.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_path</strong> (<em>str</em>) – Path to NIfTI file storing scan. This scan will serve as the base for registration. Note
+the best target scan will have a high SNR.</p></li>
+<li><p><strong>mask_path</strong> (<em>str</em>) – Path to mask to use to use as focus points for registration.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.cube_quant.CubeQuant.load_data">
+<code class="sig-name descname">load_data</code><span class="sig-paren">(</span><em class="sig-param">base_load_dirpath: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cube_quant.html#CubeQuant.load_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.cube_quant.CubeQuant.load_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data from disk.</p>
+<p>Data will be loaded from the directory ‘<cite>base_load_dirpath</cite>/cubequant’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>base_load_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotADirectoryError</strong> – if <cite>base_load_dirpath</cite>/cubequant/ does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.cube_quant.CubeQuant.save_data">
+<code class="sig-name descname">save_data</code><span class="sig-paren">(</span><em class="sig-param">base_save_dirpath: str</em>, <em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat = &lt;ImageDataFormat.nifti: 1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cube_quant.html#CubeQuant.save_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.cube_quant.CubeQuant.save_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save data to disk.</p>
+<p>Data will be saved in the directory ‘<cite>base_save_dirpath</cite>/cubequant/’.</p>
+<p>Serializes variables specified in by self.__serializable_variables__().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_save_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p></li>
+<li><p><strong>data_format</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Format to save data.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.scan_sequences.mapss">
+<span id="dosma-scan-sequences-mapss-module"></span><h2>dosma.scan_sequences.mapss module<a class="headerlink" href="#module-dosma.scan_sequences.mapss" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="dosma.scan_sequences.mapss.Mapss">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.scan_sequences.mapss.</code><code class="sig-name descname">Mapss</code><span class="sig-paren">(</span><em class="sig-param">dicom_path=None</em>, <em class="sig-param">load_path=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/mapss.html#Mapss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.mapss.Mapss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.scan_sequences.scans.TargetSequence" title="dosma.scan_sequences.scans.TargetSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.scan_sequences.scans.TargetSequence</span></code></a></p>
+<dl class="attribute">
+<dt id="dosma.scan_sequences.mapss.Mapss.NAME">
+<code class="sig-name descname">NAME</code><em class="property"> = 'mapss'</em><a class="headerlink" href="#dosma.scan_sequences.mapss.Mapss.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.mapss.Mapss.cmd_line_actions">
+<em class="property">classmethod </em><code class="sig-name descname">cmd_line_actions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/mapss.html#Mapss.cmd_line_actions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.mapss.Mapss.cmd_line_actions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide command line information (such as name, help strings, etc) as list of dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.mapss.Mapss.generate_t1_rho_map">
+<code class="sig-name descname">generate_t1_rho_map</code><span class="sig-paren">(</span><em class="sig-param">tissue: dosma.tissues.tissue.Tissue = None</em>, <em class="sig-param">mask_path: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/mapss.html#Mapss.generate_t1_rho_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.mapss.Mapss.generate_t1_rho_map" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Generate 3D T1-rho map and r-squared fit map using mono-exponential fit across subvolumes acquired at</dt><dd><p>different echo times.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tissue</strong> (<a class="reference internal" href="dosma.tissues.html#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><em>Tissue</em></a>) – Tissue to generate quantitative value for.</p></li>
+<li><p><strong>mask_path</strong> (<em>str</em>) – File path to mask of ROI to analyze</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>T1-rho fit for tissue.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>qv.T1Rho</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.mapss.Mapss.generate_t2_map">
+<code class="sig-name descname">generate_t2_map</code><span class="sig-paren">(</span><em class="sig-param">tissue: dosma.tissues.tissue.Tissue = None</em>, <em class="sig-param">mask_path: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/mapss.html#Mapss.generate_t2_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.mapss.Mapss.generate_t2_map" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Generate 3D T2 map and r-squared fit map using mono-exponential fit across subvolumes acquired at different</dt><dd><p>echo times.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tissue</strong> (<a class="reference internal" href="dosma.tissues.html#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><em>Tissue</em></a>) – Tissue to generate quantitative value for.</p></li>
+<li><p><strong>mask_path</strong> (<em>str</em>) – File path to mask of ROI to analyze</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>T2 fit for tissue.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>qv.T2</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.mapss.Mapss.load_data">
+<code class="sig-name descname">load_data</code><span class="sig-paren">(</span><em class="sig-param">base_load_dirpath</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/mapss.html#Mapss.load_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.mapss.Mapss.load_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data from disk.</p>
+<p>Data will be loaded from the directory ‘<cite>base_load_dirpath</cite>/mapss’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>base_load_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotADirectoryError</strong> – if <cite>base_load_dirpath</cite>/mapss/ does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.mapss.Mapss.save_data">
+<code class="sig-name descname">save_data</code><span class="sig-paren">(</span><em class="sig-param">base_save_dirpath: str</em>, <em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat = &lt;ImageDataFormat.nifti: 1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/mapss.html#Mapss.save_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.mapss.Mapss.save_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save data to disk.</p>
+<p>Data will be saved in the directory ‘<cite>base_save_dirpath</cite>/mapss/’.</p>
+<p>Serializes variables specified in by self.__serializable_variables__().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_save_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p></li>
+<li><p><strong>data_format</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Format to save data.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.mapss.Mapss.segment">
+<code class="sig-name descname">segment</code><span class="sig-paren">(</span><em class="sig-param">model: dosma.models.seg_model.SegModel</em>, <em class="sig-param">tissue: dosma.tissues.tissue.Tissue</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/mapss.html#Mapss.segment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.mapss.Mapss.segment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Currently not implemented.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.scan_sequences.qdess">
+<span id="dosma-scan-sequences-qdess-module"></span><h2>dosma.scan_sequences.qdess module<a class="headerlink" href="#module-dosma.scan_sequences.qdess" title="Permalink to this headline">¶</a></h2>
+<p>Quantitative Double Echo in Steady State (qDESS) sequence.</p>
+<dl class="simple">
+<dt>Paper:</dt><dd><p>Sveinsson, B., A. S. Chaudhari, G. E. Gold, and B. A. Hargreaves. “A simple analytic method for estimating T2 in the
+knee from DESS.” Magnetic resonance imaging 38 (2017): 63-70.</p>
+</dd>
+</dl>
+<dl class="class">
+<dt id="dosma.scan_sequences.qdess.QDess">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.scan_sequences.qdess.</code><code class="sig-name descname">QDess</code><span class="sig-paren">(</span><em class="sig-param">dicom_path</em>, <em class="sig-param">load_path=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/qdess.html#QDess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.qdess.QDess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.scan_sequences.scans.TargetSequence" title="dosma.scan_sequences.scans.TargetSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.scan_sequences.scans.TargetSequence</span></code></a></p>
+<p>Handles analysis for qDESS scan sequence.</p>
+<p>qDESS consists of two echos (S1, S2).</p>
+<dl class="attribute">
+<dt id="dosma.scan_sequences.qdess.QDess.NAME">
+<code class="sig-name descname">NAME</code><em class="property"> = 'qdess'</em><a class="headerlink" href="#dosma.scan_sequences.qdess.QDess.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.qdess.QDess.calc_rms">
+<code class="sig-name descname">calc_rms</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/qdess.html#QDess.calc_rms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.qdess.QDess.calc_rms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate root-mean-square (RMS) of two echos.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Volume with RMS of two echos.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">MedicalVolume</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.qdess.QDess.cmd_line_actions">
+<em class="property">classmethod </em><code class="sig-name descname">cmd_line_actions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/qdess.html#QDess.cmd_line_actions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.qdess.QDess.cmd_line_actions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide command line information (such as name, help strings, etc) as list of dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.qdess.QDess.generate_t2_map">
+<code class="sig-name descname">generate_t2_map</code><span class="sig-paren">(</span><em class="sig-param">tissue: dosma.tissues.tissue.Tissue</em>, <em class="sig-param">suppress_fat: bool = False</em>, <em class="sig-param">suppress_fluid: bool = False</em>, <em class="sig-param">beta: float = 1.2</em>, <em class="sig-param">gl_area: float = None</em>, <em class="sig-param">tg: float = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/qdess.html#QDess.generate_t2_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.qdess.QDess.generate_t2_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate 3D T2 map.</p>
+<p>Method is detailed in this <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/28017730">paper</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tissue</strong> (<a class="reference internal" href="dosma.tissues.html#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><em>Tissue</em></a>) – Tissue to generate T2 map for.</p></li>
+<li><p><strong>suppress_fat</strong> (<cite>bool</cite>, optional) – Suppress fat region in T2 computation. Helps reduce noise.</p></li>
+<li><p><strong>suppress_fluid</strong> (<cite>bool</cite>, optional) – Suppress fluid region in T2 computation. Fluid-nulled image is calculated
+as <cite>S1 - beta*S2</cite>.</p></li>
+<li><p><strong>beta</strong> (<cite>float</cite>, optional) – Beta value used for suppressing fluid. Defaults to 1.2.</p></li>
+<li><p><strong>gl_area</strong> (<cite>float</cite>, optional) – GL Area. Required if not provided in the dicom. Defaults to value in dicom
+tag ‘0x001910b6’.</p></li>
+<li><p><strong>tg</strong> – tg value (in microseconds). Required if not provided in the dicom. Defaults to value in dicom tag
+‘0x001910b7’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>T2 fit for tissue.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>qv.T2</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.qdess.QDess.load_data">
+<code class="sig-name descname">load_data</code><span class="sig-paren">(</span><em class="sig-param">base_load_dirpath</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/qdess.html#QDess.load_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.qdess.QDess.load_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data from disk.</p>
+<p>Data will be loaded from the directory ‘<cite>base_load_dirpath</cite>/qdess’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>base_load_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotADirectoryError</strong> – if <cite>base_load_dirpath</cite>/qdess/ does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.qdess.QDess.save_data">
+<code class="sig-name descname">save_data</code><span class="sig-paren">(</span><em class="sig-param">base_save_dirpath: str</em>, <em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat = &lt;ImageDataFormat.nifti: 1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/qdess.html#QDess.save_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.qdess.QDess.save_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save data to disk.</p>
+<p>Data will be saved in the directory ‘<cite>base_save_dirpath</cite>/qdess/’.</p>
+<p>Serializes variables specified in by self.__serializable_variables__().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_save_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p></li>
+<li><p><strong>data_format</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Format to save data.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.qdess.QDess.segment">
+<code class="sig-name descname">segment</code><span class="sig-paren">(</span><em class="sig-param">model: dosma.models.seg_model.SegModel</em>, <em class="sig-param">tissue: dosma.tissues.tissue.Tissue</em>, <em class="sig-param">use_rms: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/qdess.html#QDess.segment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.qdess.QDess.segment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Segment tissue in scan.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="dosma.models.html#dosma.models.seg_model.SegModel" title="dosma.models.seg_model.SegModel"><em>SegModel</em></a>) – Model to use for segmenting scans.</p></li>
+<li><p><strong>tissue</strong> (<a class="reference internal" href="dosma.tissues.html#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><em>Tissue</em></a>) – The tissue to segment.</p></li>
+<li><p><strong>use_rms</strong> (<cite>bool</cite>, optional) – Use root-mean-square of echos for segmentation (preferred). Defaults to <cite>False</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Binary mask for segmented region.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">MedicalVolume</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.scan_sequences.scans">
+<span id="dosma-scan-sequences-scans-module"></span><h2>dosma.scan_sequences.scans module<a class="headerlink" href="#module-dosma.scan_sequences.scans" title="Permalink to this headline">¶</a></h2>
+<p>Abstract classes interface implementation of scan.</p>
+<p>This module defines the abstract interfaces that can be extended by concrete scan types.</p>
+<dl class="simple">
+<dt>Different scan types produce images with different qualities (different quantitative parameters, resolutions, etc.).</dt><dd><p>These scan types have different actions (or processing) associated with them.</p>
+</dd>
+</dl>
+<p>A scan can have multiple volumes if multiple phases or echo times are used to image in the scan.</p>
+<dl class="class">
+<dt id="dosma.scan_sequences.scans.NonTargetSequence">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.scan_sequences.scans.</code><code class="sig-name descname">NonTargetSequence</code><span class="sig-paren">(</span><em class="sig-param">dicom_path: str = None</em>, <em class="sig-param">load_path: str = None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/scans.html#NonTargetSequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.scans.NonTargetSequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.scan_sequences.scans.ScanSequence" title="dosma.scan_sequences.scans.ScanSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.scan_sequences.scans.ScanSequence</span></code></a></p>
+<p>Abstract class for scans that cannot serve as targets and have to be registered to some other target scan.</p>
+<p>Examples: Cubequant, Cones</p>
+<dl class="method">
+<dt id="dosma.scan_sequences.scans.NonTargetSequence.interregister">
+<em class="property">abstract </em><code class="sig-name descname">interregister</code><span class="sig-paren">(</span><em class="sig-param">target_path: str</em>, <em class="sig-param">mask_path: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/scans.html#NonTargetSequence.interregister"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.scans.NonTargetSequence.interregister" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register this scan to the target scan - save as parameter in scan (volumes, subvolumes, etc).</p>
+<dl class="simple">
+<dt>We use the term “interregister” to refer to registration between volumes of different scans. Conversely,</dt><dd><p>“intraregister” refers to registering volumes from the same scan.</p>
+</dd>
+<dt>If there are many subvolumes to interregister with the base scan, typically the following actions are used to</dt><dd><p>reduce error accumulation with multiple registrations.
+1. Pick the volume with the highest SNR. Call this the base moving image.
+2. Register the base moving image to the target image using elastix.
+3. Capture the transformation file(s) detailing the transforms to go from base moving image -&gt; target image.
+4. Apply these transformation(s) to the remaining volumes.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_path</strong> (<em>str</em>) – Path to NIfTI file storing scan. This scan will serve as the base for registration. Note
+the best target scan will have a high SNR.</p></li>
+<li><p><strong>mask_path</strong> (<em>str</em>) – Path to mask to use to use as focus points for registration.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.scan_sequences.scans.ScanSequence">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.scan_sequences.scans.</code><code class="sig-name descname">ScanSequence</code><span class="sig-paren">(</span><em class="sig-param">dicom_path: str = None</em>, <em class="sig-param">load_path: str = None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/scans.html#ScanSequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.scans.ScanSequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract class for scan sequences and corresponding analysis.</p>
+<p>All scan sequence classes should inherit from this abstract classes.</p>
+<p>In practice, only either <cite>dicom_path</cite> or <cite>load_path</cite> should be specified.</p>
+<p>If both are specified, the dicom_path is used, and all information in <cite>load_path</cite> is ignored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dicom_path</strong> (<em>str</em>) – Folder path to DICOM files.</p></li>
+<li><p><strong>load_path</strong> (<em>str</em>) – Base path where data is stored.</p></li>
+<li><p><strong>**kwargs</strong> – Arbitrary keyword arguments.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Kwargs:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>split_by (<cite>str</cite> or <cite>tuple</cite>, optional): DICOM field tag name or tag number used to group dicoms. Default depends</dt><dd><p>on scan sequence - typically EchoNumber. <cite>dicom_path</cite> must be specified.</p>
+</dd>
+</dl>
+<p>ignore_ext (<cite>bool</cite>, optional): Ignore extension when loading DICOM files. <cite>dicom_path</cite> must be specified.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>NotADirectoryError</strong> – If <cite>dicom_path</cite> is not a valid directory.</p></li>
+<li><p><strong>ValueError</strong> – If dicoms do not correspond to the expected sequence.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="dosma.scan_sequences.scans.ScanSequence.NAME">
+<code class="sig-name descname">NAME</code><em class="property"> = ''</em><a class="headerlink" href="#dosma.scan_sequences.scans.ScanSequence.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.scans.ScanSequence.get_dimensions">
+<code class="sig-name descname">get_dimensions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/scans.html#ScanSequence.get_dimensions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.scans.ScanSequence.get_dimensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get shape of volumes.</p>
+<p>All volumes in scan are assumed to be same dimension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Shape of volumes in scan.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>tuple[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.scans.ScanSequence.load_data">
+<code class="sig-name descname">load_data</code><span class="sig-paren">(</span><em class="sig-param">base_load_dirpath: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/scans.html#ScanSequence.load_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.scans.ScanSequence.load_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data from disk.</p>
+<p>Data will be loaded from the directory ‘<cite>base_load_dirpath</cite>/<cite>scan.NAME</cite>’ (e.g. ‘<a href="#id1"><span class="problematic" id="id2">`</span></a>base_load_dirpath’/dess/’).</p>
+<dl class="simple">
+<dt>Override this method to load additional information such as volumes, subvolumes, quantitative maps, etc.</dt><dd><p>In override, Call this function (super().save_data(base_load_dirpath)) before adding code to override this
+method.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>base_load_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotADirectoryError</strong> – if base_load_dirpath/scan.NAME/ does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.scans.ScanSequence.save_data">
+<code class="sig-name descname">save_data</code><span class="sig-paren">(</span><em class="sig-param">base_save_dirpath: str</em>, <em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat = &lt;ImageDataFormat.nifti: 1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/scans.html#ScanSequence.save_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.scans.ScanSequence.save_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save data to disk.</p>
+<dl class="simple">
+<dt>Data will be saved in the directory ‘<cite>base_save_dirpath</cite>/scan.NAME_data/’</dt><dd><p>(e.g. ‘<cite>base_save_dirpath</cite>/dess_data/’).</p>
+</dd>
+</dl>
+<p>Serializes variables specified in by self.__serializable_variables__().</p>
+<dl class="simple">
+<dt>Override this method to save additional information such as volumes, subvolumes, quantitative maps, etc.</dt><dd><p>In override, Call this function (super().save_data(base_save_dirpath)) before adding code to override this
+method.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_save_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p></li>
+<li><p><strong>data_format</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Format to save data.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.scan_sequences.scans.TargetSequence">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.scan_sequences.scans.</code><code class="sig-name descname">TargetSequence</code><span class="sig-paren">(</span><em class="sig-param">dicom_path: str = None</em>, <em class="sig-param">load_path: str = None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/scans.html#TargetSequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.scans.TargetSequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.scan_sequences.scans.ScanSequence" title="dosma.scan_sequences.scans.ScanSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.scan_sequences.scans.ScanSequence</span></code></a></p>
+<p>Abstract class for scans that support segmentation of tissues.</p>
+<dl class="simple">
+<dt>Scans that have high resolution &amp; signal-to-noise ratio (SNR) are typically used for segmentation. Because of this</dt><dd><p>property, they are often referred to as “target scans”. This allows them to serve as a good template that other
+lower SNR/resolution scans can be registered to.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="dosma.scan_sequences.scans.TargetSequence.segment">
+<em class="property">abstract </em><code class="sig-name descname">segment</code><span class="sig-paren">(</span><em class="sig-param">model: dosma.models.seg_model.SegModel</em>, <em class="sig-param">tissue: dosma.tissues.tissue.Tissue</em><span class="sig-paren">)</span> &#x2192; dosma.data_io.med_volume.MedicalVolume<a class="reference internal" href="_modules/dosma/scan_sequences/scans.html#TargetSequence.segment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.scans.TargetSequence.segment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Segment tissue in scan.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="dosma.models.html#dosma.models.seg_model.SegModel" title="dosma.models.seg_model.SegModel"><em>SegModel</em></a>) – Model to use for segmenting scans.</p></li>
+<li><p><strong>tissue</strong> (<a class="reference internal" href="dosma.tissues.html#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><em>Tissue</em></a>) – The tissue to segment.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Binary mask for segmented region.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">MedicalVolume</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.scan_sequences">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-dosma.scan_sequences" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="dosma.scan_sequences.Cones">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.scan_sequences.</code><code class="sig-name descname">Cones</code><span class="sig-paren">(</span><em class="sig-param">dicom_path=None</em>, <em class="sig-param">load_path=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cones.html#Cones"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.Cones" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.scan_sequences.scans.NonTargetSequence" title="dosma.scan_sequences.scans.NonTargetSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.scan_sequences.scans.NonTargetSequence</span></code></a></p>
+<p>Handles analysis for Cones scan sequence.</p>
+<dl class="attribute">
+<dt id="dosma.scan_sequences.Cones.NAME">
+<code class="sig-name descname">NAME</code><em class="property"> = 'cones'</em><a class="headerlink" href="#dosma.scan_sequences.Cones.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.Cones.cmd_line_actions">
+<em class="property">classmethod </em><code class="sig-name descname">cmd_line_actions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cones.html#Cones.cmd_line_actions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.Cones.cmd_line_actions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide command line information (such as name, help strings, etc) as list of dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.Cones.generate_t2_star_map">
+<code class="sig-name descname">generate_t2_star_map</code><span class="sig-paren">(</span><em class="sig-param">tissue: dosma.tissues.tissue.Tissue</em>, <em class="sig-param">mask_path: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cones.html#Cones.generate_t2_star_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.Cones.generate_t2_star_map" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Generate 3D T2-star map and r-squared fit map using mono-exponential fit across subvolumes acquired at</dt><dd><p>different echo times.</p>
+</dd>
+</dl>
+<p>T2-star map is also added to the tissue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tissue</strong> (<a class="reference internal" href="dosma.tissues.html#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><em>Tissue</em></a>) – Tissue to generate quantitative value for.</p></li>
+<li><p><strong>mask_path</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – File path to mask of ROI to analyze. If specified, only voxels specified
+by mask will be fit. Speeds up computation. Defaults to <cite>None</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>T2-star fit for tissue.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>qv.T2Star</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>mask_path</cite> specifies volume with values other than <cite>0</cite> or <cite>1</cite> (i.e. not binary).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.Cones.interregister">
+<code class="sig-name descname">interregister</code><span class="sig-paren">(</span><em class="sig-param">target_path: str</em>, <em class="sig-param">target_mask_path: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cones.html#Cones.interregister"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.Cones.interregister" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register this scan to the target scan - save as parameter in scan (volumes, subvolumes, etc).</p>
+<dl class="simple">
+<dt>We use the term “interregister” to refer to registration between volumes of different scans. Conversely,</dt><dd><p>“intraregister” refers to registering volumes from the same scan.</p>
+</dd>
+<dt>If there are many subvolumes to interregister with the base scan, typically the following actions are used to</dt><dd><p>reduce error accumulation with multiple registrations.
+1. Pick the volume with the highest SNR. Call this the base moving image.
+2. Register the base moving image to the target image using elastix.
+3. Capture the transformation file(s) detailing the transforms to go from base moving image -&gt; target image.
+4. Apply these transformation(s) to the remaining volumes.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_path</strong> (<em>str</em>) – Path to NIfTI file storing scan. This scan will serve as the base for registration. Note
+the best target scan will have a high SNR.</p></li>
+<li><p><strong>mask_path</strong> (<em>str</em>) – Path to mask to use to use as focus points for registration.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.Cones.load_data">
+<code class="sig-name descname">load_data</code><span class="sig-paren">(</span><em class="sig-param">base_load_dirpath: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cones.html#Cones.load_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.Cones.load_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data from disk.</p>
+<p>Data will be loaded from the directory ‘<cite>base_load_dirpath</cite>/cones’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>base_load_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotADirectoryError</strong> – if <cite>base_load_dirpath</cite>/cones/ does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.Cones.save_data">
+<code class="sig-name descname">save_data</code><span class="sig-paren">(</span><em class="sig-param">base_save_dirpath: str</em>, <em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat = &lt;ImageDataFormat.nifti: 1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cones.html#Cones.save_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.Cones.save_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save data to disk.</p>
+<p>Data will be saved in the directory ‘<cite>base_save_dirpath</cite>/cones/’.</p>
+<p>Serializes variables specified in by self.__serializable_variables__().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_save_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p></li>
+<li><p><strong>data_format</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Format to save data.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.scan_sequences.CubeQuant">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.scan_sequences.</code><code class="sig-name descname">CubeQuant</code><span class="sig-paren">(</span><em class="sig-param">dicom_path=None</em>, <em class="sig-param">load_path=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cube_quant.html#CubeQuant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.CubeQuant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.scan_sequences.scans.NonTargetSequence" title="dosma.scan_sequences.scans.NonTargetSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.scan_sequences.scans.NonTargetSequence</span></code></a></p>
+<dl class="attribute">
+<dt id="dosma.scan_sequences.CubeQuant.NAME">
+<code class="sig-name descname">NAME</code><em class="property"> = 'cubequant'</em><a class="headerlink" href="#dosma.scan_sequences.CubeQuant.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.CubeQuant.cmd_line_actions">
+<em class="property">classmethod </em><code class="sig-name descname">cmd_line_actions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cube_quant.html#CubeQuant.cmd_line_actions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.CubeQuant.cmd_line_actions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide command line information (such as name, help strings, etc) as list of dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.CubeQuant.generate_t1_rho_map">
+<code class="sig-name descname">generate_t1_rho_map</code><span class="sig-paren">(</span><em class="sig-param">tissue: dosma.tissues.tissue.Tissue</em>, <em class="sig-param">mask_path: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cube_quant.html#CubeQuant.generate_t1_rho_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.CubeQuant.generate_t1_rho_map" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Generate 3D T1-rho map and r-squared fit map using mono-exponential fit across subvolumes acquired at</dt><dd><p>different spin lock times.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tissue</strong> (<a class="reference internal" href="dosma.tissues.html#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><em>Tissue</em></a>) – Tissue to generate quantitative value for.</p></li>
+<li><p><strong>mask_path</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – File path to mask of ROI to analyze. If specified, only voxels specified
+by mask will be fit. Speeds up computation. Defaults to <cite>None</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>T1-rho fit for tissue.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>qv.T1Rho</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>mask_path</cite> specifies volume with values other than <cite>0</cite> or <cite>1</cite> (i.e. not binary).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.CubeQuant.interregister">
+<code class="sig-name descname">interregister</code><span class="sig-paren">(</span><em class="sig-param">target_path: str</em>, <em class="sig-param">target_mask_path: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cube_quant.html#CubeQuant.interregister"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.CubeQuant.interregister" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register this scan to the target scan - save as parameter in scan (volumes, subvolumes, etc).</p>
+<dl class="simple">
+<dt>We use the term “interregister” to refer to registration between volumes of different scans. Conversely,</dt><dd><p>“intraregister” refers to registering volumes from the same scan.</p>
+</dd>
+<dt>If there are many subvolumes to interregister with the base scan, typically the following actions are used to</dt><dd><p>reduce error accumulation with multiple registrations.
+1. Pick the volume with the highest SNR. Call this the base moving image.
+2. Register the base moving image to the target image using elastix.
+3. Capture the transformation file(s) detailing the transforms to go from base moving image -&gt; target image.
+4. Apply these transformation(s) to the remaining volumes.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_path</strong> (<em>str</em>) – Path to NIfTI file storing scan. This scan will serve as the base for registration. Note
+the best target scan will have a high SNR.</p></li>
+<li><p><strong>mask_path</strong> (<em>str</em>) – Path to mask to use to use as focus points for registration.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.CubeQuant.load_data">
+<code class="sig-name descname">load_data</code><span class="sig-paren">(</span><em class="sig-param">base_load_dirpath: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cube_quant.html#CubeQuant.load_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.CubeQuant.load_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data from disk.</p>
+<p>Data will be loaded from the directory ‘<cite>base_load_dirpath</cite>/cubequant’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>base_load_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotADirectoryError</strong> – if <cite>base_load_dirpath</cite>/cubequant/ does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.CubeQuant.save_data">
+<code class="sig-name descname">save_data</code><span class="sig-paren">(</span><em class="sig-param">base_save_dirpath: str</em>, <em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat = &lt;ImageDataFormat.nifti: 1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/cube_quant.html#CubeQuant.save_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.CubeQuant.save_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save data to disk.</p>
+<p>Data will be saved in the directory ‘<cite>base_save_dirpath</cite>/cubequant/’.</p>
+<p>Serializes variables specified in by self.__serializable_variables__().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_save_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p></li>
+<li><p><strong>data_format</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Format to save data.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.scan_sequences.Mapss">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.scan_sequences.</code><code class="sig-name descname">Mapss</code><span class="sig-paren">(</span><em class="sig-param">dicom_path=None</em>, <em class="sig-param">load_path=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/mapss.html#Mapss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.Mapss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.scan_sequences.scans.TargetSequence" title="dosma.scan_sequences.scans.TargetSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.scan_sequences.scans.TargetSequence</span></code></a></p>
+<dl class="attribute">
+<dt id="dosma.scan_sequences.Mapss.NAME">
+<code class="sig-name descname">NAME</code><em class="property"> = 'mapss'</em><a class="headerlink" href="#dosma.scan_sequences.Mapss.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.Mapss.cmd_line_actions">
+<em class="property">classmethod </em><code class="sig-name descname">cmd_line_actions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/mapss.html#Mapss.cmd_line_actions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.Mapss.cmd_line_actions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide command line information (such as name, help strings, etc) as list of dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.Mapss.generate_t1_rho_map">
+<code class="sig-name descname">generate_t1_rho_map</code><span class="sig-paren">(</span><em class="sig-param">tissue: dosma.tissues.tissue.Tissue = None</em>, <em class="sig-param">mask_path: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/mapss.html#Mapss.generate_t1_rho_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.Mapss.generate_t1_rho_map" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Generate 3D T1-rho map and r-squared fit map using mono-exponential fit across subvolumes acquired at</dt><dd><p>different echo times.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tissue</strong> (<a class="reference internal" href="dosma.tissues.html#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><em>Tissue</em></a>) – Tissue to generate quantitative value for.</p></li>
+<li><p><strong>mask_path</strong> (<em>str</em>) – File path to mask of ROI to analyze</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>T1-rho fit for tissue.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>qv.T1Rho</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.Mapss.generate_t2_map">
+<code class="sig-name descname">generate_t2_map</code><span class="sig-paren">(</span><em class="sig-param">tissue: dosma.tissues.tissue.Tissue = None</em>, <em class="sig-param">mask_path: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/mapss.html#Mapss.generate_t2_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.Mapss.generate_t2_map" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Generate 3D T2 map and r-squared fit map using mono-exponential fit across subvolumes acquired at different</dt><dd><p>echo times.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tissue</strong> (<a class="reference internal" href="dosma.tissues.html#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><em>Tissue</em></a>) – Tissue to generate quantitative value for.</p></li>
+<li><p><strong>mask_path</strong> (<em>str</em>) – File path to mask of ROI to analyze</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>T2 fit for tissue.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>qv.T2</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.Mapss.load_data">
+<code class="sig-name descname">load_data</code><span class="sig-paren">(</span><em class="sig-param">base_load_dirpath</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/mapss.html#Mapss.load_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.Mapss.load_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data from disk.</p>
+<p>Data will be loaded from the directory ‘<cite>base_load_dirpath</cite>/mapss’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>base_load_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotADirectoryError</strong> – if <cite>base_load_dirpath</cite>/mapss/ does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.Mapss.save_data">
+<code class="sig-name descname">save_data</code><span class="sig-paren">(</span><em class="sig-param">base_save_dirpath: str</em>, <em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat = &lt;ImageDataFormat.nifti: 1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/mapss.html#Mapss.save_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.Mapss.save_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save data to disk.</p>
+<p>Data will be saved in the directory ‘<cite>base_save_dirpath</cite>/mapss/’.</p>
+<p>Serializes variables specified in by self.__serializable_variables__().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_save_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p></li>
+<li><p><strong>data_format</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Format to save data.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.Mapss.segment">
+<code class="sig-name descname">segment</code><span class="sig-paren">(</span><em class="sig-param">model: dosma.models.seg_model.SegModel</em>, <em class="sig-param">tissue: dosma.tissues.tissue.Tissue</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/mapss.html#Mapss.segment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.Mapss.segment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Currently not implemented.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.scan_sequences.QDess">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.scan_sequences.</code><code class="sig-name descname">QDess</code><span class="sig-paren">(</span><em class="sig-param">dicom_path</em>, <em class="sig-param">load_path=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/qdess.html#QDess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.QDess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.scan_sequences.scans.TargetSequence" title="dosma.scan_sequences.scans.TargetSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.scan_sequences.scans.TargetSequence</span></code></a></p>
+<p>Handles analysis for qDESS scan sequence.</p>
+<p>qDESS consists of two echos (S1, S2).</p>
+<dl class="attribute">
+<dt id="dosma.scan_sequences.QDess.NAME">
+<code class="sig-name descname">NAME</code><em class="property"> = 'qdess'</em><a class="headerlink" href="#dosma.scan_sequences.QDess.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.QDess.calc_rms">
+<code class="sig-name descname">calc_rms</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/qdess.html#QDess.calc_rms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.QDess.calc_rms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate root-mean-square (RMS) of two echos.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Volume with RMS of two echos.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">MedicalVolume</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.QDess.cmd_line_actions">
+<em class="property">classmethod </em><code class="sig-name descname">cmd_line_actions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/qdess.html#QDess.cmd_line_actions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.QDess.cmd_line_actions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide command line information (such as name, help strings, etc) as list of dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.QDess.generate_t2_map">
+<code class="sig-name descname">generate_t2_map</code><span class="sig-paren">(</span><em class="sig-param">tissue: dosma.tissues.tissue.Tissue</em>, <em class="sig-param">suppress_fat: bool = False</em>, <em class="sig-param">suppress_fluid: bool = False</em>, <em class="sig-param">beta: float = 1.2</em>, <em class="sig-param">gl_area: float = None</em>, <em class="sig-param">tg: float = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/qdess.html#QDess.generate_t2_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.QDess.generate_t2_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate 3D T2 map.</p>
+<p>Method is detailed in this <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/28017730">paper</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tissue</strong> (<a class="reference internal" href="dosma.tissues.html#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><em>Tissue</em></a>) – Tissue to generate T2 map for.</p></li>
+<li><p><strong>suppress_fat</strong> (<cite>bool</cite>, optional) – Suppress fat region in T2 computation. Helps reduce noise.</p></li>
+<li><p><strong>suppress_fluid</strong> (<cite>bool</cite>, optional) – Suppress fluid region in T2 computation. Fluid-nulled image is calculated
+as <cite>S1 - beta*S2</cite>.</p></li>
+<li><p><strong>beta</strong> (<cite>float</cite>, optional) – Beta value used for suppressing fluid. Defaults to 1.2.</p></li>
+<li><p><strong>gl_area</strong> (<cite>float</cite>, optional) – GL Area. Required if not provided in the dicom. Defaults to value in dicom
+tag ‘0x001910b6’.</p></li>
+<li><p><strong>tg</strong> – tg value (in microseconds). Required if not provided in the dicom. Defaults to value in dicom tag
+‘0x001910b7’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>T2 fit for tissue.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>qv.T2</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.QDess.load_data">
+<code class="sig-name descname">load_data</code><span class="sig-paren">(</span><em class="sig-param">base_load_dirpath</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/qdess.html#QDess.load_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.QDess.load_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data from disk.</p>
+<p>Data will be loaded from the directory ‘<cite>base_load_dirpath</cite>/qdess’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>base_load_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotADirectoryError</strong> – if <cite>base_load_dirpath</cite>/qdess/ does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.QDess.save_data">
+<code class="sig-name descname">save_data</code><span class="sig-paren">(</span><em class="sig-param">base_save_dirpath: str</em>, <em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat = &lt;ImageDataFormat.nifti: 1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/qdess.html#QDess.save_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.QDess.save_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save data to disk.</p>
+<p>Data will be saved in the directory ‘<cite>base_save_dirpath</cite>/qdess/’.</p>
+<p>Serializes variables specified in by self.__serializable_variables__().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_save_dirpath</strong> (<em>str</em>) – Directory path where all data is stored.</p></li>
+<li><p><strong>data_format</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Format to save data.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.scan_sequences.QDess.segment">
+<code class="sig-name descname">segment</code><span class="sig-paren">(</span><em class="sig-param">model: dosma.models.seg_model.SegModel</em>, <em class="sig-param">tissue: dosma.tissues.tissue.Tissue</em>, <em class="sig-param">use_rms: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/scan_sequences/qdess.html#QDess.segment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.QDess.segment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Segment tissue in scan.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="dosma.models.html#dosma.models.seg_model.SegModel" title="dosma.models.seg_model.SegModel"><em>SegModel</em></a>) – Model to use for segmenting scans.</p></li>
+<li><p><strong>tissue</strong> (<a class="reference internal" href="dosma.tissues.html#dosma.tissues.tissue.Tissue" title="dosma.tissues.tissue.Tissue"><em>Tissue</em></a>) – The tissue to segment.</p></li>
+<li><p><strong>use_rms</strong> (<cite>bool</cite>, optional) – Use root-mean-square of echos for segmentation (preferred). Defaults to <cite>False</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Binary mask for segmented region.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">MedicalVolume</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

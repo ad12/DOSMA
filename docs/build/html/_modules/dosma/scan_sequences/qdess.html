@@ -1,0 +1,472 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dosma.scan_sequences.qdess &mdash; DOSMA v0.0.10 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> DOSMA
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/faq.html">FAQs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">DOSMA</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dosma.scan_sequences.qdess</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dosma.scan_sequences.qdess</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Quantitative Double Echo in Steady State (qDESS) sequence.</span>
+
+<span class="sd">Paper:</span>
+<span class="sd">    Sveinsson, B., A. S. Chaudhari, G. E. Gold, and B. A. Hargreaves. &quot;A simple analytic method for estimating T2 in the</span>
+<span class="sd">    knee from DESS.&quot; Magnetic resonance imaging 38 (2017): 63-70.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pydicom.tag</span> <span class="kn">import</span> <span class="n">Tag</span>
+
+<span class="kn">from</span> <span class="nn">dosma.scan_sequences.scans</span> <span class="kn">import</span> <span class="n">TargetSequence</span>
+
+<span class="kn">from</span> <span class="nn">dosma.data_io</span> <span class="kn">import</span> <span class="n">format_io_utils</span> <span class="k">as</span> <span class="n">fio_utils</span>
+<span class="kn">from</span> <span class="nn">dosma.data_io.format_io</span> <span class="kn">import</span> <span class="n">ImageDataFormat</span>
+<span class="kn">from</span> <span class="nn">dosma.data_io.med_volume</span> <span class="kn">import</span> <span class="n">MedicalVolume</span>
+<span class="kn">from</span> <span class="nn">dosma.defaults</span> <span class="kn">import</span> <span class="n">preferences</span>
+<span class="kn">from</span> <span class="nn">dosma.models.seg_model</span> <span class="kn">import</span> <span class="n">SegModel</span>
+<span class="kn">from</span> <span class="nn">dosma.tissues.tissue</span> <span class="kn">import</span> <span class="n">Tissue</span>
+<span class="kn">from</span> <span class="nn">dosma.utils.cmd_line_utils</span> <span class="kn">import</span> <span class="n">ActionWrapper</span>
+<span class="kn">from</span> <span class="nn">dosma.quant_vals</span> <span class="kn">import</span> <span class="n">T2</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;QDess&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="QDess"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.qdess.QDess">[docs]</a><span class="k">class</span> <span class="nc">QDess</span><span class="p">(</span><span class="n">TargetSequence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handles analysis for qDESS scan sequence.</span>
+
+<span class="sd">    qDESS consists of two echos (S1, S2).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s2">&quot;qdess&quot;</span>
+
+    <span class="c1"># DESS DICOM header keys</span>
+    <span class="n">__GL_AREA_TAG__</span> <span class="o">=</span> <span class="n">Tag</span><span class="p">(</span><span class="mh">0x001910b6</span><span class="p">)</span>
+    <span class="n">__TG_TAG__</span> <span class="o">=</span> <span class="n">Tag</span><span class="p">(</span><span class="mh">0x001910b7</span><span class="p">)</span>
+
+    <span class="c1"># DESS constants</span>
+    <span class="n">__NUM_ECHOS__</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">__VOLUME_DIMENSIONS__</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">__D__</span> <span class="o">=</span> <span class="mf">1.25</span> <span class="o">*</span> <span class="mf">1e-9</span>
+
+    <span class="c1"># Clipping bounds for t2</span>
+    <span class="n">__T2_LOWER_BOUND__</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">__T2_UPPER_BOUND__</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">__T2_DECIMAL_PRECISION__</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># 0.1 ms</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dicom_path</span><span class="p">,</span> <span class="n">load_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dicom_path</span><span class="o">=</span><span class="n">dicom_path</span><span class="p">,</span> <span class="n">load_path</span><span class="o">=</span><span class="n">load_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__validate_scan__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Validate that the dicoms are of qDESS sequence.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: `True` if has 2 echos, `False` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ref_dicom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_dicom</span>
+        <span class="c1"># contains_expected_dicom_metadata = self.__GL_AREA_TAG__ in ref_dicom and self.__TG_TAG__ in ref_dicom</span>
+        <span class="n">has_expected_num_echos</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volumes</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__NUM_ECHOS__</span>
+
+        <span class="c1"># return contains_expected_dicom_metadata &amp; has_expected_num_echos</span>
+        <span class="k">return</span> <span class="n">has_expected_num_echos</span>
+
+<div class="viewcode-block" id="QDess.segment"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.qdess.QDess.segment">[docs]</a>    <span class="k">def</span> <span class="nf">segment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">SegModel</span><span class="p">,</span> <span class="n">tissue</span><span class="p">:</span> <span class="n">Tissue</span><span class="p">,</span> <span class="n">use_rms</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Segment tissue in scan.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            model (SegModel): Model to use for segmenting scans.</span>
+<span class="sd">            tissue (Tissue): The tissue to segment.</span>
+<span class="sd">            use_rms (`bool`, optional): Use root-mean-square of echos for segmentation (preferred). Defaults to `False`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MedicalVolume: Binary mask for segmented region.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Use first echo for segmentation.</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Segmenting </span><span class="si">{}</span><span class="s2">...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tissue</span><span class="o">.</span><span class="n">FULL_NAME</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">use_rms</span><span class="p">:</span>
+            <span class="n">segmentation_volume</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_rms</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">segmentation_volume</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Segment tissue and add it to list.</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">generate_mask</span><span class="p">(</span><span class="n">segmentation_volume</span><span class="p">)</span>
+        <span class="n">tissue</span><span class="o">.</span><span class="n">set_mask</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__add_tissue__</span><span class="p">(</span><span class="n">tissue</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mask</span></div>
+
+<div class="viewcode-block" id="QDess.generate_t2_map"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.qdess.QDess.generate_t2_map">[docs]</a>    <span class="k">def</span> <span class="nf">generate_t2_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tissue</span><span class="p">:</span> <span class="n">Tissue</span><span class="p">,</span> <span class="n">suppress_fat</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                        <span class="n">suppress_fluid</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">,</span>
+                        <span class="n">gl_area</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tg</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate 3D T2 map.</span>
+
+<span class="sd">        Method is detailed in this `paper &lt;https://www.ncbi.nlm.nih.gov/pubmed/28017730&gt;`_.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tissue (Tissue): Tissue to generate T2 map for.</span>
+<span class="sd">            suppress_fat (`bool`, optional): Suppress fat region in T2 computation. Helps reduce noise.</span>
+<span class="sd">            suppress_fluid (`bool`, optional): Suppress fluid region in T2 computation. Fluid-nulled image is calculated</span>
+<span class="sd">                as `S1 - beta*S2`.</span>
+<span class="sd">            beta (`float`, optional): Beta value used for suppressing fluid. Defaults to 1.2.</span>
+<span class="sd">            gl_area (`float`, optional): GL Area. Required if not provided in the dicom. Defaults to value in dicom</span>
+<span class="sd">                tag &#39;0x001910b6&#39;.</span>
+<span class="sd">            tg: tg value (in microseconds). Required if not provided in the dicom. Defaults to value in dicom tag</span>
+<span class="sd">                &#39;0x001910b7&#39;.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            qv.T2: T2 fit for tissue.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__validate_scan__</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">gl_area</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">tg</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;dicoms in </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s1"> do not contain GL_Area and Tg tags. Please input manually&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dicom_path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">volumes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_dicom</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;volumes and ref_dicom fields must be initialized&#39;</span><span class="p">)</span>
+
+        <span class="n">ref_dicom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_dicom</span>
+
+        <span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">num_slices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">volume</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">subvolumes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">volumes</span>
+
+        <span class="c1"># Split echos</span>
+        <span class="n">echo_1</span> <span class="o">=</span> <span class="n">subvolumes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">volume</span>
+        <span class="n">echo_2</span> <span class="o">=</span> <span class="n">subvolumes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">volume</span>
+
+        <span class="c1"># All timing in seconds</span>
+        <span class="n">TR</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ref_dicom</span><span class="o">.</span><span class="n">RepetitionTime</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-3</span>
+        <span class="n">TE</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ref_dicom</span><span class="o">.</span><span class="n">EchoTime</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-3</span>
+        <span class="n">Tg</span> <span class="o">=</span> <span class="n">tg</span> <span class="o">*</span> <span class="mf">1e-6</span> <span class="k">if</span> <span class="n">tg</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">ref_dicom</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">__TG_TAG__</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-6</span>
+        <span class="n">T1</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tissue</span><span class="o">.</span><span class="n">T1_EXPECTED</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-3</span>
+
+        <span class="c1"># Flip Angle (degree -&gt; radians)</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">ref_dicom</span><span class="o">.</span><span class="n">FlipAngle</span><span class="p">))</span>
+
+        <span class="n">GlArea</span> <span class="o">=</span> <span class="n">gl_area</span> <span class="k">if</span> <span class="n">gl_area</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">ref_dicom</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">__GL_AREA_TAG__</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="n">Gl</span> <span class="o">=</span> <span class="n">GlArea</span> <span class="o">/</span> <span class="p">(</span><span class="n">Tg</span> <span class="o">*</span> <span class="mf">1e6</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="mi">4258</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>  <span class="c1"># Gamma, Rad / (G * s).</span>
+        <span class="n">dkL</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">Gl</span> <span class="o">*</span> <span class="n">Tg</span>
+
+        <span class="c1"># Simply math</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">((</span><span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)),</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="mi">1</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">TR</span> <span class="o">/</span> <span class="n">T1</span> <span class="o">-</span> <span class="n">TR</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">dkL</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">__D__</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span>
+                    <span class="mi">1</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">TR</span> <span class="o">/</span> <span class="n">T1</span> <span class="o">-</span> <span class="n">TR</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">dkL</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">__D__</span><span class="p">))</span>
+
+        <span class="n">c1</span> <span class="o">=</span> <span class="p">(</span><span class="n">TR</span> <span class="o">-</span> <span class="n">Tg</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">dkL</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">__D__</span>
+
+        <span class="c1"># T2 fit</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">num_slices</span><span class="p">])</span>
+
+        <span class="n">ratio</span> <span class="o">=</span> <span class="n">mask</span> <span class="o">*</span> <span class="n">echo_2</span> <span class="o">/</span> <span class="n">echo_1</span>
+        <span class="n">ratio</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">ratio</span><span class="p">)</span>
+
+        <span class="c1"># have to divide division into steps to avoid overflow error</span>
+        <span class="n">t2map</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">2000</span> <span class="o">*</span> <span class="p">(</span><span class="n">TR</span> <span class="o">-</span> <span class="n">TE</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">ratio</span><span class="p">)</span> <span class="o">/</span> <span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="n">c1</span><span class="p">))</span>
+
+        <span class="n">t2map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">t2map</span><span class="p">)</span>
+
+        <span class="c1"># Filter calculated T2 values that are below 0ms and over 100ms</span>
+        <span class="n">t2map</span><span class="p">[</span><span class="n">t2map</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__T2_LOWER_BOUND__</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="n">t2map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">t2map</span><span class="p">)</span>
+        <span class="n">t2map</span><span class="p">[</span><span class="n">t2map</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">__T2_UPPER_BOUND__</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="n">t2map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">t2map</span><span class="p">)</span>
+
+        <span class="n">t2map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">t2map</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__T2_DECIMAL_PRECISION__</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">suppress_fat</span><span class="p">:</span>
+            <span class="n">t2map</span> <span class="o">=</span> <span class="n">t2map</span> <span class="o">*</span> <span class="p">(</span><span class="n">echo_1</span> <span class="o">&gt;</span> <span class="mf">0.15</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">echo_1</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">suppress_fluid</span><span class="p">:</span>
+            <span class="n">vol_null_fluid</span> <span class="o">=</span> <span class="n">echo_1</span> <span class="o">-</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">echo_2</span>
+            <span class="n">t2map</span> <span class="o">=</span> <span class="n">t2map</span> <span class="o">*</span> <span class="p">(</span><span class="n">vol_null_fluid</span> <span class="o">&gt;</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">vol_null_fluid</span><span class="p">))</span>
+
+        <span class="n">t2_map_wrapped</span> <span class="o">=</span> <span class="n">MedicalVolume</span><span class="p">(</span><span class="n">t2map</span><span class="p">,</span>
+                                       <span class="n">affine</span><span class="o">=</span><span class="n">subvolumes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">affine</span><span class="p">,</span>
+                                       <span class="n">headers</span><span class="o">=</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">subvolumes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">headers</span><span class="p">))</span>
+        <span class="n">t2_map_wrapped</span> <span class="o">=</span> <span class="n">T2</span><span class="p">(</span><span class="n">t2_map_wrapped</span><span class="p">)</span>
+
+        <span class="n">tissue</span><span class="o">.</span><span class="n">add_quantitative_value</span><span class="p">(</span><span class="n">t2_map_wrapped</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">t2_map_wrapped</span></div>
+
+<div class="viewcode-block" id="QDess.save_data"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.qdess.QDess.save_data">[docs]</a>    <span class="k">def</span> <span class="nf">save_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_save_dirpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data_format</span><span class="p">:</span> <span class="n">ImageDataFormat</span> <span class="o">=</span> <span class="n">preferences</span><span class="o">.</span><span class="n">image_data_format</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save data to disk.</span>
+
+<span class="sd">        Data will be saved in the directory &#39;`base_save_dirpath`/qdess/&#39;.</span>
+
+<span class="sd">        Serializes variables specified in by self.__serializable_variables__().</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            base_save_dirpath (str): Directory path where all data is stored.</span>
+<span class="sd">            data_format (ImageDataFormat): Format to save data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">save_data</span><span class="p">(</span><span class="n">base_save_dirpath</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">)</span>
+
+        <span class="n">base_save_dirpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__save_dir__</span><span class="p">(</span><span class="n">base_save_dirpath</span><span class="p">)</span>
+
+        <span class="c1"># write echos</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volumes</span><span class="p">)):</span>
+            <span class="n">nii_registration_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_save_dirpath</span><span class="p">,</span> <span class="s1">&#39;echo</span><span class="si">%d</span><span class="s1">.nii.gz&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">filepath</span> <span class="o">=</span> <span class="n">fio_utils</span><span class="o">.</span><span class="n">convert_image_data_format</span><span class="p">(</span><span class="n">nii_registration_filepath</span><span class="p">,</span> <span class="n">data_format</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">save_volume</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="QDess.load_data"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.qdess.QDess.load_data">[docs]</a>    <span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_load_dirpath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load data from disk.</span>
+
+<span class="sd">        Data will be loaded from the directory &#39;`base_load_dirpath`/qdess&#39;.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">           base_load_dirpath (str): Directory path where all data is stored.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">           NotADirectoryError: if `base_load_dirpath`/qdess/ does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">base_load_dirpath</span><span class="p">)</span>
+
+        <span class="n">base_load_dirpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__save_dir__</span><span class="p">(</span><span class="n">base_load_dirpath</span><span class="p">,</span> <span class="n">create_dir</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># if reading dicoms from dicom path failed</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">volumes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">volumes</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="c1"># Load subvolumes from nifti file</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__NUM_ECHOS__</span><span class="p">):</span>
+                <span class="n">nii_registration_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_load_dirpath</span><span class="p">,</span> <span class="s1">&#39;echo</span><span class="si">%d</span><span class="s1">.nii.gz&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="n">subvolume</span> <span class="o">=</span> <span class="n">fio_utils</span><span class="o">.</span><span class="n">generic_load</span><span class="p">(</span><span class="n">nii_registration_filepath</span><span class="p">,</span> <span class="n">expected_num_volumes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">volumes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subvolume</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="QDess.calc_rms"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.qdess.QDess.calc_rms">[docs]</a>    <span class="k">def</span> <span class="nf">calc_rms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate root-mean-square (RMS) of two echos.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MedicalVolume: Volume with RMS of two echos.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">volumes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Volumes must be initialized&#39;</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volumes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;2 Echos expected&quot;</span>
+
+        <span class="n">echo1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">volume</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">echo2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">volume</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="p">(</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">iscomplex</span><span class="p">(</span><span class="n">echo1</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">iscomplex</span><span class="p">(</span><span class="n">echo2</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+        <span class="n">sq_sum</span> <span class="o">=</span> <span class="n">echo1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">echo2</span> <span class="o">**</span> <span class="mi">2</span>
+
+        <span class="k">assert</span> <span class="p">(</span><span class="n">sq_sum</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+        <span class="n">rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">echo1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">echo2</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">mv</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">mv</span><span class="o">.</span><span class="n">volume</span> <span class="o">=</span> <span class="n">rms</span>
+
+        <span class="k">return</span> <span class="n">mv</span></div>
+
+<div class="viewcode-block" id="QDess.cmd_line_actions"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.qdess.QDess.cmd_line_actions">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">cmd_line_actions</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Provide command line information (such as name, help strings, etc) as list of dictionary.&quot;&quot;&quot;</span>
+
+        <span class="n">segment_action</span> <span class="o">=</span> <span class="n">ActionWrapper</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">segment</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;generate automatic segmentation&#39;</span><span class="p">,</span>
+                                       <span class="n">param_help</span><span class="o">=</span><span class="p">{</span>
+                                           <span class="s1">&#39;use_rms&#39;</span><span class="p">:</span> <span class="s1">&#39;use root mean square (rms) of two echos for segmentation&#39;</span><span class="p">},</span>
+                                       <span class="n">alternative_param_names</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;use_rms&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;rms&#39;</span><span class="p">]})</span>
+        <span class="n">generate_t2_map_action</span> <span class="o">=</span> <span class="n">ActionWrapper</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">generate_t2_map</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                               <span class="n">aliases</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;t2&#39;</span><span class="p">],</span>
+                                               <span class="n">param_help</span><span class="o">=</span><span class="p">{</span>
+                                                   <span class="s1">&#39;suppress_fat&#39;</span><span class="p">:</span> <span class="s1">&#39;suppress computation on low SNR fat regions&#39;</span><span class="p">,</span>
+                                                   <span class="s1">&#39;suppress_fluid&#39;</span><span class="p">:</span> <span class="s1">&#39;suppress computation on fluid regions&#39;</span><span class="p">,</span>
+                                                   <span class="s1">&#39;beta&#39;</span><span class="p">:</span> <span class="s1">&#39;constant for calculating fluid-nulled image (S1-beta*S2)&#39;</span><span class="p">,</span>
+                                                   <span class="s1">&#39;gl_area&#39;</span><span class="p">:</span> <span class="s1">&#39;GL Area. Defaults to value in dicom tag </span><span class="se">\&#39;</span><span class="s1">0x001910b6</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">,</span>
+                                                   <span class="s1">&#39;tg&#39;</span><span class="p">:</span> <span class="s1">&#39;Gradient time (in microseconds). &#39;</span>
+                                                         <span class="s1">&#39;Defaults to value in dicom tag </span><span class="se">\&#39;</span><span class="s1">0x001910b7</span><span class="se">\&#39;</span><span class="s1">.&#39;</span>
+                                               <span class="p">},</span>
+                                               <span class="n">help</span><span class="o">=</span><span class="s1">&#39;generate T2 map&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[(</span><span class="bp">cls</span><span class="o">.</span><span class="n">segment</span><span class="p">,</span> <span class="n">segment_action</span><span class="p">),</span> <span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">generate_t2_map</span><span class="p">,</span> <span class="n">generate_t2_map_action</span><span class="p">)]</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,396 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dosma.models package &mdash; DOSMA v0.0.10 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DOSMA
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="general/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/faq.html">FAQs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DOSMA</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>dosma.models package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/dosma.models.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dosma-models-package">
+<h1>dosma.models package<a class="headerlink" href="#dosma-models-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-dosma.models.oaiunet2d">
+<span id="dosma-models-oaiunet2d-module"></span><h2>dosma.models.oaiunet2d module<a class="headerlink" href="#module-dosma.models.oaiunet2d" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>&#64;author: Arjun Desai</dt><dd><ol class="upperalpha simple" start="3">
+<li><p>Stanford University, 2019</p></li>
+</ol>
+</dd>
+</dl>
+<dl class="class">
+<dt id="dosma.models.oaiunet2d.OAIUnet2D">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.models.oaiunet2d.</code><code class="sig-name descname">OAIUnet2D</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#OAIUnet2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.oaiunet2d.OAIUnet2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.models.seg_model.KerasSegModel" title="dosma.models.seg_model.KerasSegModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.models.seg_model.KerasSegModel</span></code></a></p>
+<p>Model trained in Chaudhari et al. IWOAI 2018
+Original Github: <a class="reference external" href="https://github.com/akshaysc/msk_segmentation">https://github.com/akshaysc/msk_segmentation</a></p>
+<dl class="attribute">
+<dt id="dosma.models.oaiunet2d.OAIUnet2D.ALIASES">
+<code class="sig-name descname">ALIASES</code><em class="property"> = ['oai-unet2d', 'oai_unet2d']</em><a class="headerlink" href="#dosma.models.oaiunet2d.OAIUnet2D.ALIASES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.models.oaiunet2d.OAIUnet2D.generate_mask">
+<code class="sig-name descname">generate_mask</code><span class="sig-paren">(</span><em class="sig-param">volume: dosma.data_io.med_volume.MedicalVolume</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#OAIUnet2D.generate_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.oaiunet2d.OAIUnet2D.generate_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Segment the MRI volumes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>volume</strong> – A Medical Volume (height, width, slices)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A Medical volume or list of Medical Volumes with volume as binarized (0,1) uint8 3D numpy array of shape volumes.shape</p>
+</dd>
+</dl>
+<p>:raise ValueError if volumes is not 3D numpy array
+:raise ValueError if tissue is not a string or not in list permitted tissues</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.models.oaiunet2d.OAIUnet2D.sigmoid_threshold">
+<code class="sig-name descname">sigmoid_threshold</code><em class="property"> = 0.5</em><a class="headerlink" href="#dosma.models.oaiunet2d.OAIUnet2D.sigmoid_threshold" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.models.seg_model">
+<span id="dosma-models-seg-model-module"></span><h2>dosma.models.seg_model module<a class="headerlink" href="#module-dosma.models.seg_model" title="Permalink to this headline">¶</a></h2>
+<p>Abstract classes to wrap Keras model.</p>
+<p>T
+SegModel: Abstract wrapper for Keras model used for semantic segmentation.</p>
+<dl class="class">
+<dt id="dosma.models.seg_model.KerasSegModel">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.models.seg_model.</code><code class="sig-name descname">KerasSegModel</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/seg_model.html#KerasSegModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.seg_model.KerasSegModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.models.seg_model.SegModel" title="dosma.models.seg_model.SegModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.models.seg_model.SegModel</span></code></a></p>
+<p>Abstract wrapper for Keras model used for semantic segmentation</p>
+<dl class="method">
+<dt id="dosma.models.seg_model.KerasSegModel.build_model">
+<code class="sig-name descname">build_model</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/seg_model.html#KerasSegModel.build_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.seg_model.KerasSegModel.build_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds a segmentation model architecture and loads weights</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> – Input shape of volume</p></li>
+<li><p><strong>weights_path</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a segmentation model that can be used for segmenting tissues (a Keras/TF/PyTorch model)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.models.seg_model.SegModel">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.models.seg_model.</code><code class="sig-name descname">SegModel</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/seg_model.html#SegModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.seg_model.SegModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<dl class="attribute">
+<dt id="dosma.models.seg_model.SegModel.ALIASES">
+<code class="sig-name descname">ALIASES</code><em class="property"> = ['']</em><a class="headerlink" href="#dosma.models.seg_model.SegModel.ALIASES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.models.seg_model.SegModel.batch_size">
+<code class="sig-name descname">batch_size</code><em class="property"> = 16</em><a class="headerlink" href="#dosma.models.seg_model.SegModel.batch_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.models.seg_model.SegModel.build_model">
+<em class="property">abstract </em><code class="sig-name descname">build_model</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/seg_model.html#SegModel.build_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.seg_model.SegModel.build_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds a segmentation model architecture and loads weights</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> – Input shape of volume</p></li>
+<li><p><strong>weights_path</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a segmentation model that can be used for segmenting tissues (a Keras/TF/PyTorch model)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.models.seg_model.SegModel.generate_mask">
+<em class="property">abstract </em><code class="sig-name descname">generate_mask</code><span class="sig-paren">(</span><em class="sig-param">volume: dosma.data_io.med_volume.MedicalVolume</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/seg_model.html#SegModel.generate_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.seg_model.SegModel.generate_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Segment the MRI volumes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>volume</strong> – A Medical Volume (height, width, slices)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A Medical volume or list of Medical Volumes with volume as binarized (0,1) uint8 3D numpy array of shape volumes.shape</p>
+</dd>
+</dl>
+<p>:raise ValueError if volumes is not 3D numpy array
+:raise ValueError if tissue is not a string or not in list permitted tissues</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.models.seg_model.whiten_volume">
+<code class="sig-prename descclassname">dosma.models.seg_model.</code><code class="sig-name descname">whiten_volume</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/seg_model.html#whiten_volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.seg_model.whiten_volume" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whiten volumes by mean and std of all pixels
+:param x: 3D numpy array (MRI volumes)
+:rtype: whitened 3D numpy array</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.models.util">
+<span id="dosma-models-util-module"></span><h2>dosma.models.util module<a class="headerlink" href="#module-dosma.models.util" title="Permalink to this headline">¶</a></h2>
+<p>Functions for loading Keras models</p>
+<dl class="simple">
+<dt>&#64;author: Arjun Desai</dt><dd><ol class="upperalpha simple" start="3">
+<li><p>Stanford University, 2019</p></li>
+</ol>
+</dd>
+</dl>
+<dl class="function">
+<dt id="dosma.models.util.get_model">
+<code class="sig-prename descclassname">dosma.models.util.</code><code class="sig-name descname">get_model</code><span class="sig-paren">(</span><em class="sig-param">model_str</em>, <em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/util.html#get_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.util.get_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a Keras model
+:param model_str: model identifier
+:param input_shape: tuple or list of tuples for initializing input(s) into Keras model
+:param weights_path: filepath to weights used to initialize Keras model
+:return: a Keras model</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.models">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-dosma.models" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="dosma.models.get_model">
+<code class="sig-prename descclassname">dosma.models.</code><code class="sig-name descname">get_model</code><span class="sig-paren">(</span><em class="sig-param">model_str</em>, <em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/util.html#get_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.get_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a Keras model
+:param model_str: model identifier
+:param input_shape: tuple or list of tuples for initializing input(s) into Keras model
+:param weights_path: filepath to weights used to initialize Keras model
+:return: a Keras model</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.models.OAIUnet2D">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.models.</code><code class="sig-name descname">OAIUnet2D</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#OAIUnet2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.OAIUnet2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.models.seg_model.KerasSegModel" title="dosma.models.seg_model.KerasSegModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.models.seg_model.KerasSegModel</span></code></a></p>
+<p>Model trained in Chaudhari et al. IWOAI 2018
+Original Github: <a class="reference external" href="https://github.com/akshaysc/msk_segmentation">https://github.com/akshaysc/msk_segmentation</a></p>
+<dl class="attribute">
+<dt id="dosma.models.OAIUnet2D.ALIASES">
+<code class="sig-name descname">ALIASES</code><em class="property"> = ['oai-unet2d', 'oai_unet2d']</em><a class="headerlink" href="#dosma.models.OAIUnet2D.ALIASES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.models.OAIUnet2D.generate_mask">
+<code class="sig-name descname">generate_mask</code><span class="sig-paren">(</span><em class="sig-param">volume: dosma.data_io.med_volume.MedicalVolume</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#OAIUnet2D.generate_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.OAIUnet2D.generate_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Segment the MRI volumes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>volume</strong> – A Medical Volume (height, width, slices)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A Medical volume or list of Medical Volumes with volume as binarized (0,1) uint8 3D numpy array of shape volumes.shape</p>
+</dd>
+</dl>
+<p>:raise ValueError if volumes is not 3D numpy array
+:raise ValueError if tissue is not a string or not in list permitted tissues</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.models.OAIUnet2D.sigmoid_threshold">
+<code class="sig-name descname">sigmoid_threshold</code><em class="property"> = 0.5</em><a class="headerlink" href="#dosma.models.OAIUnet2D.sigmoid_threshold" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

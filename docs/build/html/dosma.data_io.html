@@ -1,0 +1,1305 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dosma.data_io package &mdash; DOSMA v0.0.10 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DOSMA
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="general/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/faq.html">FAQs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DOSMA</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>dosma.data_io package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/dosma.data_io.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dosma-data-io-package">
+<h1>dosma.data_io package<a class="headerlink" href="#dosma-data-io-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-dosma.data_io.dicom_io">
+<span id="dosma-data-io-dicom-io-module"></span><h2>dosma.data_io.dicom_io module<a class="headerlink" href="#module-dosma.data_io.dicom_io" title="Permalink to this headline">¶</a></h2>
+<p>DICOM I/O.</p>
+<p>This module contains DICOM input/output helpers.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt>Dicom utilizes LPS convention:</dt><dd><ul class="simple">
+<li><p>LPS: right –&gt; left, anterior –&gt; posterior, inferior –&gt; superior</p></li>
+<li><p>we will call it LPS+, such that letters correspond to increasing end of axis</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">ivar ~dosma.data_io.dicom_io.TOTAL_NUM_ECHOS_KEY</dt>
+<dd class="field-odd"><p>Hexadecimal encoding of DICOM tag corresponding to number of echos.</p>
+</dd>
+<dt class="field-even">vartype ~dosma.data_io.dicom_io.TOTAL_NUM_ECHOS_KEY</dt>
+<dd class="field-even"><p>tuple[int]</p>
+</dd>
+</dl>
+<dl class="class">
+<dt id="dosma.data_io.dicom_io.DicomReader">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.data_io.dicom_io.</code><code class="sig-name descname">DicomReader</code><a class="reference internal" href="_modules/dosma/data_io/dicom_io.html#DicomReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.dicom_io.DicomReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.data_io.format_io.DataReader" title="dosma.data_io.format_io.DataReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.data_io.format_io.DataReader</span></code></a></p>
+<p>A class for reading DICOM files.</p>
+<dl class="attribute">
+<dt id="dosma.data_io.dicom_io.DicomReader.data_format_code">
+<code class="sig-name descname">data_format_code</code><em class="property"> = 2</em><a class="headerlink" href="#dosma.data_io.dicom_io.DicomReader.data_format_code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.dicom_io.DicomReader.load">
+<code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param">dicom_dir_path: str</em>, <em class="sig-param">group_by: Union[str</em>, <em class="sig-param">tuple] = 'EchoNumbers'</em>, <em class="sig-param">ignore_ext: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/dicom_io.html#DicomReader.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.dicom_io.DicomReader.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load dicoms into <cite>MedicalVolume`s grouped by `group_by</cite> tag.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dicom_dir_path</strong> (<em>str</em>) – Path to directory with dicom files.</p></li>
+<li><p><strong>group_by</strong> (<cite>str</cite> or <cite>tuple</cite>, optional) – DICOM field tag name or tag number used to group dicoms. Defaults
+to <cite>EchoNumbers</cite>. Most DICOM headers encode different echo numbers as volumes acquired at different echo
+times or different phases.</p></li>
+<li><p><strong>ignore_ext</strong> (<cite>bool</cite>, optional) – Ignore extension (<cite>.dcm</cite>) when loading dicoms. Defaults to <cite>False</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Different volumes grouped by the <cite>group_by</cite> DICOM tag.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list[<a class="reference internal" href="#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">MedicalVolume</a>]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>NotADirectoryError</strong> – If <cite>dicom_dir_path</cite> does not exist or is not a directory.</p></li>
+<li><p><strong>FileNotFoundError</strong> – If no dicom files found in directory.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<dl class="simple">
+<dt>This function sorts files using natsort, an intelligent sorting tool. Please verify dicoms are labeled in a</dt><dd><p>sequenced manner (e.g.: dicom1,dicom2,dicom3,…).</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.data_io.dicom_io.DicomWriter">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.data_io.dicom_io.</code><code class="sig-name descname">DicomWriter</code><a class="reference internal" href="_modules/dosma/data_io/dicom_io.html#DicomWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.dicom_io.DicomWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.data_io.format_io.DataWriter" title="dosma.data_io.format_io.DataWriter"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.data_io.format_io.DataWriter</span></code></a></p>
+<p>A class for writing volumes in DICOM format.</p>
+<dl class="attribute">
+<dt id="dosma.data_io.dicom_io.DicomWriter.data_format_code">
+<code class="sig-name descname">data_format_code</code><em class="property"> = 2</em><a class="headerlink" href="#dosma.data_io.dicom_io.DicomWriter.data_format_code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.dicom_io.DicomWriter.save">
+<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param">volume: dosma.data_io.med_volume.MedicalVolume</em>, <em class="sig-param">dir_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/dicom_io.html#DicomWriter.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.dicom_io.DicomWriter.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save <cite>medical volume</cite> in dicom format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>volume</strong> (<a class="reference internal" href="#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Volume to save.</p></li>
+<li><p><strong>dir_path</strong> – Directory path to store dicom files. Dicoms are stored in directories, as multiple files are
+needed to store the volume.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>im</cite> does not have initialized headers. Or if <cite>im</cite> was flipped across any axis. Flipping
+    changes scanner origin, which is currently not handled.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.data_io.format_io">
+<span id="dosma-data-io-format-io-module"></span><h2>dosma.data_io.format_io module<a class="headerlink" href="#module-dosma.data_io.format_io" title="Permalink to this headline">¶</a></h2>
+<p>I/O formatting templates.</p>
+<p>This module consists of the templates for input/output (I/O) helper classes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">ivar ~dosma.data_io.format_io.SUPPORTED_VISUALIZATION_FORMATS</dt>
+<dd class="field-odd"><p>Image formats that are supported for visualization.</p>
+</dd>
+<dt class="field-even">vartype ~dosma.data_io.format_io.SUPPORTED_VISUALIZATION_FORMATS</dt>
+<dd class="field-even"><p>tuple[str]</p>
+</dd>
+</dl>
+<dl class="class">
+<dt id="dosma.data_io.format_io.ImageDataFormat">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.data_io.format_io.</code><code class="sig-name descname">ImageDataFormat</code><a class="reference internal" href="_modules/dosma/data_io/format_io.html#ImageDataFormat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.format_io.ImageDataFormat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Enum describing supported data formats for medical volume I/O.</p>
+<dl class="attribute">
+<dt id="dosma.data_io.format_io.ImageDataFormat.dicom">
+<code class="sig-name descname">dicom</code><em class="property"> = 2</em><a class="headerlink" href="#dosma.data_io.format_io.ImageDataFormat.dicom" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.data_io.format_io.ImageDataFormat.get_image_data_format">
+<code class="sig-name descname">get_image_data_format</code><em class="property"> = &lt;bound method ImageDataFormat.get_image_data_format of &lt;enum 'ImageDataFormat'&gt;&gt;</em><a class="reference internal" href="_modules/dosma/data_io/format_io.html#ImageDataFormat.get_image_data_format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.format_io.ImageDataFormat.get_image_data_format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.format_io.ImageDataFormat.is_filetype">
+<code class="sig-name descname">is_filetype</code><span class="sig-paren">(</span><em class="sig-param">file_path: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/dosma/data_io/format_io.html#ImageDataFormat.is_filetype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.format_io.ImageDataFormat.is_filetype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify if file path matches the file type specified by ImageDataFormat.</p>
+<p>This method checks to make sure the extensions are appropriate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if file_path has valid extension, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.data_io.format_io.ImageDataFormat.nifti">
+<code class="sig-name descname">nifti</code><em class="property"> = 1</em><a class="headerlink" href="#dosma.data_io.format_io.ImageDataFormat.nifti" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.data_io.format_io.DataReader">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.data_io.format_io.</code><code class="sig-name descname">DataReader</code><a class="reference internal" href="_modules/dosma/data_io/format_io.html#DataReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.format_io.DataReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract class for reading medical data.</p>
+<p>Format-specific readers should inherit from this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dosma.data_io.format_io.DataReader.data_format_code" title="dosma.data_io.format_io.DataReader.data_format_code"><strong>data_format_code</strong></a> (<a class="reference internal" href="#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Should be defined by subclasses.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="dosma.data_io.format_io.DataReader.data_format_code">
+<code class="sig-name descname">data_format_code</code><em class="property"> = None</em><a class="headerlink" href="#dosma.data_io.format_io.DataReader.data_format_code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.format_io.DataReader.load">
+<em class="property">abstract </em><code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param">file_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/format_io.html#DataReader.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.format_io.DataReader.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load volume.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path to load volume from.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The loaded volume.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">MedicalVolume</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.data_io.format_io.DataWriter">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.data_io.format_io.</code><code class="sig-name descname">DataWriter</code><a class="reference internal" href="_modules/dosma/data_io/format_io.html#DataWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.format_io.DataWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract class for writing medical data.</p>
+<p>Format-specific writers should inherit from this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dosma.data_io.format_io.DataWriter.data_format_code" title="dosma.data_io.format_io.DataWriter.data_format_code"><strong>data_format_code</strong></a> (<a class="reference internal" href="#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Should be defined by subclasses.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="dosma.data_io.format_io.DataWriter.data_format_code">
+<code class="sig-name descname">data_format_code</code><em class="property"> = None</em><a class="headerlink" href="#dosma.data_io.format_io.DataWriter.data_format_code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.format_io.DataWriter.save">
+<em class="property">abstract </em><code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param">volume</em>, <em class="sig-param">file_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/format_io.html#DataWriter.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.format_io.DataWriter.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save volume.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>volume</strong> (<a class="reference internal" href="#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Volume to save.</p></li>
+<li><p><strong>file_path</strong> (<em>str</em>) – File path to save volume to.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.data_io.format_io_utils">
+<span id="dosma-data-io-format-io-utils-module"></span><h2>dosma.data_io.format_io_utils module<a class="headerlink" href="#module-dosma.data_io.format_io_utils" title="Permalink to this headline">¶</a></h2>
+<p>Utils for data I/O.</p>
+<dl class="function">
+<dt id="dosma.data_io.format_io_utils.get_reader">
+<code class="sig-prename descclassname">dosma.data_io.format_io_utils.</code><code class="sig-name descname">get_reader</code><span class="sig-paren">(</span><em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat</em><span class="sig-paren">)</span> &#x2192; dosma.data_io.format_io.DataReader<a class="reference internal" href="_modules/dosma/data_io/format_io_utils.html#get_reader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.format_io_utils.get_reader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a DataReader corresponding to the given data format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data_format</strong> (<a class="reference internal" href="#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Data format to read.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Reader for given format.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dosma.data_io.format_io.DataReader" title="dosma.data_io.format_io.DataReader">DataReader</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.data_io.format_io_utils.get_writer">
+<code class="sig-prename descclassname">dosma.data_io.format_io_utils.</code><code class="sig-name descname">get_writer</code><span class="sig-paren">(</span><em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat</em><span class="sig-paren">)</span> &#x2192; dosma.data_io.format_io.DataWriter<a class="reference internal" href="_modules/dosma/data_io/format_io_utils.html#get_writer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.format_io_utils.get_writer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a DataWriter corresponding to given data format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data_format</strong> (<a class="reference internal" href="#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Data format to write.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Writer for given format.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dosma.data_io.format_io.DataWriter" title="dosma.data_io.format_io.DataWriter">DataWriter</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.data_io.format_io_utils.get_filepath_variations">
+<code class="sig-prename descclassname">dosma.data_io.format_io_utils.</code><code class="sig-name descname">get_filepath_variations</code><span class="sig-paren">(</span><em class="sig-param">file_or_dir_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/format_io_utils.html#get_filepath_variations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.format_io_utils.get_filepath_variations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get file paths using convention for all different image data formats.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_or_dir_path</strong> (<em>str</em>) – File or directory path.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>File paths corresponding to naming conventions of different ImageDataFormats.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.data_io.format_io_utils.convert_image_data_format">
+<code class="sig-prename descclassname">dosma.data_io.format_io_utils.</code><code class="sig-name descname">convert_image_data_format</code><span class="sig-paren">(</span><em class="sig-param">file_or_dir_path: str</em>, <em class="sig-param">new_data_format: dosma.data_io.format_io.ImageDataFormat</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/dosma/data_io/format_io_utils.html#convert_image_data_format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.format_io_utils.convert_image_data_format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change a file or directory name to convention of another data format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_or_dir_path</strong> (<em>str</em>) – File or directory path.</p></li>
+<li><p><strong>new_data_format</strong> (<a class="reference internal" href="#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Data format convention for file/directory name.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>File/directory path based on convention of new data format.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If conversion from current image data format to new image data format not found.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.data_io.format_io_utils.generic_load">
+<code class="sig-prename descclassname">dosma.data_io.format_io_utils.</code><code class="sig-name descname">generic_load</code><span class="sig-paren">(</span><em class="sig-param">file_or_dir_path: str</em>, <em class="sig-param">expected_num_volumes: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/format_io_utils.html#generic_load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.format_io_utils.generic_load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load MedicalVolume(s) from a file or directory without knowing data format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_or_dir_path</strong> (<em>str</em>) – File or directory path.</p></li>
+<li><p><strong>expected_num_volumes</strong> (int, <cite>optional</cite>) – Number of volumes expected. If specified, assert if number of loaded
+volumes != expected num volumes. Defaults to <cite>None</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Volume(s) loaded. If <cite>expected_num_volumes = 1</cite>, returns</dt><dd><p><cite>MedicalVolume</cite>.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><cite>list[MedicalVolume]</cite> or <cite>MedicalVolume</cite></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If multiple file paths corresponding to different ImageDataFormats exist.</p></li>
+<li><p><strong>FileNotFoundError</strong> – If file path or corresponding versions of file path not found.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.data_io.med_volume">
+<span id="dosma-data-io-med-volume-module"></span><h2>dosma.data_io.med_volume module<a class="headerlink" href="#module-dosma.data_io.med_volume" title="Permalink to this headline">¶</a></h2>
+<p>MedicalVolume</p>
+<p>This module defines <cite>MedicalVolume</cite>, which is a wrapper for 3D volumes.</p>
+<dl class="class">
+<dt id="dosma.data_io.med_volume.MedicalVolume">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.data_io.med_volume.</code><code class="sig-name descname">MedicalVolume</code><span class="sig-paren">(</span><em class="sig-param">volume: numpy.ndarray</em>, <em class="sig-param">affine: numpy.ndarray</em>, <em class="sig-param">headers: List[pydicom.dataset.FileDataset] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/med_volume.html#MedicalVolume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.med_volume.MedicalVolume" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Wrapper for 3D medical volumes.</p>
+<dl class="simple">
+<dt>Medical volumes are 3D matrices representing medical data. These volumes have inherent metadata, such as pixel/voxel</dt><dd><p>spacing, global coordinates, rotation information, which can be characterized by an affine matrix.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>volume</strong> (<em>np.ndarray</em>) – 3D volume.</p></li>
+<li><p><strong>affine</strong> (<em>np.ndarray</em>) – 4x4 array corresponding to affine matrix transform in RAS+ coordinates.</p></li>
+<li><p><strong>headers</strong> (<em>list</em><em>[</em><em>pydicom.FileDataset</em><em>]</em>) – Headers for DICOM files.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="dosma.data_io.med_volume.MedicalVolume.affine">
+<em class="property">property </em><code class="sig-name descname">affine</code><a class="headerlink" href="#dosma.data_io.med_volume.MedicalVolume.affine" title="Permalink to this definition">¶</a></dt>
+<dd><p>4x4 affine matrix for volume in current orientation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.med_volume.MedicalVolume.headers">
+<em class="property">property </em><code class="sig-name descname">headers</code><a class="headerlink" href="#dosma.data_io.med_volume.MedicalVolume.headers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Headers for DICOM files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[pydicom.FileDataset]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.med_volume.MedicalVolume.is_identical">
+<code class="sig-name descname">is_identical</code><span class="sig-paren">(</span><em class="sig-param">mv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/med_volume.html#MedicalVolume.is_identical"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.med_volume.MedicalVolume.is_identical" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if another medical volume is identical.</p>
+<p>Two volumes are identical if they have the same pixel_spacing, orientation, scanner_origin, and volume.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mv</strong> (<a class="reference internal" href="#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Volume to compare with.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><cite>True</cite> if identical, <cite>False</cite> otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.med_volume.MedicalVolume.is_same_dimensions">
+<code class="sig-name descname">is_same_dimensions</code><span class="sig-paren">(</span><em class="sig-param">mv</em>, <em class="sig-param">precision: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/med_volume.html#MedicalVolume.is_same_dimensions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.med_volume.MedicalVolume.is_same_dimensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if two volumes have the same dimensions.</p>
+<p>Two volumes have the same dimensions if they have the same pixel_spacing, orientation, and scanner_origin.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mv</strong> (<a class="reference internal" href="#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Volume to compare with.</p></li>
+<li><p><strong>precision</strong> (<cite>int</cite>, optional) – Number of significant figures after the decimal. If not specified, check that
+affine matrices between two volumes are identical. Defaults to <cite>None</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt><cite>True</cite> if pixel spacing, orientation, and scanner origin between two volumes within tolerance, <cite>False</cite></dt><dd><p>otherwise.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>mv</cite> is not a MedicalVolume.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.med_volume.MedicalVolume.match_orientation">
+<code class="sig-name descname">match_orientation</code><span class="sig-paren">(</span><em class="sig-param">mv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/med_volume.html#MedicalVolume.match_orientation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.med_volume.MedicalVolume.match_orientation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reorient another MedicalVolume to orientation specified by self.orientation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mv</strong> (<a class="reference internal" href="#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Volume to reorient.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.med_volume.MedicalVolume.match_orientation_batch">
+<code class="sig-name descname">match_orientation_batch</code><span class="sig-paren">(</span><em class="sig-param">mvs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/med_volume.html#MedicalVolume.match_orientation_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.med_volume.MedicalVolume.match_orientation_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reorient a collection of MedicalVolumes to orientation specified by self.orientation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mvs</strong> (<em>list</em><em>[</em><a class="reference internal" href="#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a><em>]</em>) – Collection of MedicalVolumes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.med_volume.MedicalVolume.orientation">
+<em class="property">property </em><code class="sig-name descname">orientation</code><a class="headerlink" href="#dosma.data_io.med_volume.MedicalVolume.orientation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Image orientation in standard orientation format.</p>
+<p>See orientation.py for more information on conventions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>tuple[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.med_volume.MedicalVolume.pixel_spacing">
+<em class="property">property </em><code class="sig-name descname">pixel_spacing</code><a class="headerlink" href="#dosma.data_io.med_volume.MedicalVolume.pixel_spacing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pixel spacing in order of current orientation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>tuple[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.med_volume.MedicalVolume.reformat">
+<code class="sig-name descname">reformat</code><span class="sig-paren">(</span><em class="sig-param">new_orientation: tuple</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/med_volume.html#MedicalVolume.reformat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.med_volume.MedicalVolume.reformat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reorients volume to a specified orientation.</p>
+<ul class="simple">
+<li><p>Axis transpose and flipping are linear operations and therefore can be treated independently</p></li>
+<li><p>working example: (‘AP’, ‘SI’, ‘LR’) –&gt; (‘RL’, ‘PA’, ‘SI’)</p></li>
+</ul>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt>Transpose volume and RAS orientation to appropriate column in matrix</dt><dd><p>eg. (‘AP’, ‘SI’, ‘LR’) –&gt; (‘LR’, ‘AP’, ‘SI’) - transpose_inds=[2, 0, 1]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Flip volume across corresponding axes</dt><dd><p>eg. (‘LR’, ‘AP’, ‘SI’) –&gt; (‘RL’, ‘PA’, ‘SI’) - flip axes 0,1</p>
+</dd>
+</dl>
+</li>
+</ol>
+<ol class="arabic simple">
+<li><p>Transpose: Switching (transposing) axes in volume is the same as switching columns in affine matrix</p></li>
+<li><dl class="simple">
+<dt>Flipping: Negate each column corresponding to pixel axis to flip (i, j, k) and reestablish origins based on</dt><dd><p>flipped axes</p>
+</dd>
+</dl>
+</li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>new_orientation</strong> (<em>tuple</em>) – New orientation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.med_volume.MedicalVolume.save_volume">
+<code class="sig-name descname">save_volume</code><span class="sig-paren">(</span><em class="sig-param">file_path: str</em>, <em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat = &lt;ImageDataFormat.nifti: 1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/med_volume.html#MedicalVolume.save_volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.med_volume.MedicalVolume.save_volume" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write volumes in specified data format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> (<em>str</em>) – File path to save data. May be modified to follow convention given by the data format in which
+the volume will be saved.</p></li>
+<li><p><strong>data_format</strong> (<a class="reference internal" href="#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Format to save data.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.med_volume.MedicalVolume.scanner_origin">
+<em class="property">property </em><code class="sig-name descname">scanner_origin</code><a class="headerlink" href="#dosma.data_io.med_volume.MedicalVolume.scanner_origin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scanner origin in global RAS+ x,y,z coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>tuple[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.med_volume.MedicalVolume.volume">
+<em class="property">property </em><code class="sig-name descname">volume</code><a class="headerlink" href="#dosma.data_io.med_volume.MedicalVolume.volume" title="Permalink to this definition">¶</a></dt>
+<dd><p>3D numpy array representing volume values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.data_io.nifti_io">
+<span id="dosma-data-io-nifti-io-module"></span><h2>dosma.data_io.nifti_io module<a class="headerlink" href="#module-dosma.data_io.nifti_io" title="Permalink to this headline">¶</a></h2>
+<p>NIfTI I/O.</p>
+<p>This module contains NIfTI input/output helpers.</p>
+<dl class="class">
+<dt id="dosma.data_io.nifti_io.NiftiReader">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.data_io.nifti_io.</code><code class="sig-name descname">NiftiReader</code><a class="reference internal" href="_modules/dosma/data_io/nifti_io.html#NiftiReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.nifti_io.NiftiReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.data_io.format_io.DataReader" title="dosma.data_io.format_io.DataReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.data_io.format_io.DataReader</span></code></a></p>
+<p>A class for reading NIfTI files.</p>
+<dl class="attribute">
+<dt id="dosma.data_io.nifti_io.NiftiReader.data_format_code">
+<code class="sig-name descname">data_format_code</code><em class="property"> = 1</em><a class="headerlink" href="#dosma.data_io.nifti_io.NiftiReader.data_format_code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.nifti_io.NiftiReader.load">
+<code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param">file_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/nifti_io.html#NiftiReader.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.nifti_io.NiftiReader.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load volume from NIfTI file path.</p>
+<p>A NIfTI file should only correspond to one volume.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path to NIfTI file.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Loaded volume.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">MedicalVolume</a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>FileNotFoundError</strong> – If <cite>file_path</cite> not found.</p></li>
+<li><p><strong>ValueError</strong> – If <cite>file_path</cite> does not end in a supported NIfTI extension.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.data_io.nifti_io.NiftiWriter">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.data_io.nifti_io.</code><code class="sig-name descname">NiftiWriter</code><a class="reference internal" href="_modules/dosma/data_io/nifti_io.html#NiftiWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.nifti_io.NiftiWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.data_io.format_io.DataWriter" title="dosma.data_io.format_io.DataWriter"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.data_io.format_io.DataWriter</span></code></a></p>
+<p>A class for writing volumes in NIfTI format.</p>
+<dl class="attribute">
+<dt id="dosma.data_io.nifti_io.NiftiWriter.data_format_code">
+<code class="sig-name descname">data_format_code</code><em class="property"> = 1</em><a class="headerlink" href="#dosma.data_io.nifti_io.NiftiWriter.data_format_code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.nifti_io.NiftiWriter.save">
+<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param">volume: dosma.data_io.med_volume.MedicalVolume</em>, <em class="sig-param">file_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/nifti_io.html#NiftiWriter.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.nifti_io.NiftiWriter.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save volume in NIfTI format,</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>volume</strong> (<a class="reference internal" href="#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Volume to save.</p></li>
+<li><p><strong>file_path</strong> (<em>str</em>) – File path to NIfTI file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>file_path</cite> does not end in a supported NIfTI extension.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.data_io.orientation">
+<span id="dosma-data-io-orientation-module"></span><h2>dosma.data_io.orientation module<a class="headerlink" href="#module-dosma.data_io.orientation" title="Permalink to this headline">¶</a></h2>
+<p>Standardized orientation among different libraries.</p>
+<p>Various libraries have different ways to interpret information read from various image formats (Dicom, NIfTi, etc)
+Here, we standardize the orientation for this framework.</p>
+<p>We indicate how to translate reading/writing orientations from current libraries (Nibabel, PyDicom, etc)</p>
+<div class="section" id="orientation-conventions">
+<h3>Orientation Conventions:<a class="headerlink" href="#orientation-conventions" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>All orientations are in patient voxel coordinates - i.e. (i, j, k) –&gt; voxel at numpy array position [i, j, k]</p></li>
+<li><p>Left: corresponds to patient (not observer) left, RIGHT: corresponds to patient (not observer) right</p></li>
+</ul>
+</div>
+<div class="section" id="standard-orientation-format">
+<h3>Standard Orientation format:<a class="headerlink" href="#standard-orientation-format" title="Permalink to this headline">¶</a></h3>
+<p>All directions point to the increasing direction - i.e. from -x to x
+- “LR”: left to right; “RL”: right to left
+- “PA”: posterior to anterior; “AP”: anterior to posterior
+- “IS”: inferior to superior; “SI”: superior to inferior</p>
+</div>
+<div class="section" id="affine-matrix-format">
+<h3>Affine Matrix format:<a class="headerlink" href="#affine-matrix-format" title="Permalink to this headline">¶</a></h3>
+<p>The affine matrix (A) is formatted in nibabel.affine matrix format following the standard orientation format above
+The affine matrix converts pixel coordinates (i, j, k) into world (NIfTI) coordinates (x, y, z)</p>
+<p>[x, y, z, 1]’ = A * [i, j, k, 1]’</p>
+<p>e.g.:</p>
+<div class="line-block">
+<div class="line">x |       [  0.        ,   0.        ,   1.5       , -61.66970062]     | i |</div>
+<div class="line">y |   =   [ -0.3125    ,   0.        ,   0.        ,  50.85160065]  *  | j |</div>
+<div class="line">z |       [  0.        ,  -0.3125    ,   0.        ,  88.58760071]     | k |</div>
+<div class="line">1 |       [  0.        ,   0.        ,   0.        ,   1.        ]     | 1 |</div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">ivar ~dosma.data_io.orientation.SAGITTAL</dt>
+<dd class="field-odd"><p>Image orientation for sagittal scans.</p>
+</dd>
+<dt class="field-even">vartype ~dosma.data_io.orientation.SAGITTAL</dt>
+<dd class="field-even"><p>tuple[str]</p>
+</dd>
+<dt class="field-odd">ivar ~dosma.data_io.orientation.CORONAL</dt>
+<dd class="field-odd"><p>Image orientation for coronal scans.</p>
+</dd>
+<dt class="field-even">vartype ~dosma.data_io.orientation.CORONAL</dt>
+<dd class="field-even"><p>tuple[str]</p>
+</dd>
+<dt class="field-odd">ivar ~dosma.data_io.orientation.AXIAL</dt>
+<dd class="field-odd"><p>Image orientation for axial scans.</p>
+</dd>
+<dt class="field-even">vartype ~dosma.data_io.orientation.AXIAL</dt>
+<dd class="field-even"><p>tuple[str]</p>
+</dd>
+</dl>
+<dl class="function">
+<dt id="dosma.data_io.orientation.get_transpose_inds">
+<code class="sig-prename descclassname">dosma.data_io.orientation.</code><code class="sig-name descname">get_transpose_inds</code><span class="sig-paren">(</span><em class="sig-param">curr_orientation: tuple</em>, <em class="sig-param">new_orientation: tuple</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/orientation.html#get_transpose_inds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.orientation.get_transpose_inds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get indices for transposing orientation axes to format volume in different plane.</p>
+<p>i.e. sagittal &lt;–&gt; axial, sagittal &lt;–&gt; coronal, coronal &lt;–&gt; axial</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>curr_orientation</strong> (<em>tuple</em><em>[</em><em>str</em><em>]</em>) – Current image orientation.</p></li>
+<li><p><strong>new_orientation</strong> (<em>tuple</em><em>[</em><em>str</em><em>]</em>) – New image orientation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Axes to transpose to change orientation.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.data_io.orientation.get_flip_inds">
+<code class="sig-prename descclassname">dosma.data_io.orientation.</code><code class="sig-name descname">get_flip_inds</code><span class="sig-paren">(</span><em class="sig-param">curr_orientation: tuple</em>, <em class="sig-param">new_orientation: tuple</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/orientation.html#get_flip_inds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.orientation.get_flip_inds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get indices for flipping orientation around axis - i.e. x –&gt; -x, y –&gt; -y, z –&gt; -z.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>curr_orientation</strong> (<em>tuple</em><em>[</em><em>str</em><em>]</em>) – Current image orientation.</p></li>
+<li><p><strong>new_orientation</strong> (<em>tuple</em><em>[</em><em>str</em><em>]</em>) – New image orientation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Axes in volume to flip.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list[int]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If mismatch in orientation indices. To avoid this error, apply transpose prior to flipping.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.data_io.orientation.orientation_nib_to_standard">
+<code class="sig-prename descclassname">dosma.data_io.orientation.</code><code class="sig-name descname">orientation_nib_to_standard</code><span class="sig-paren">(</span><em class="sig-param">nib_orientation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/orientation.html#orientation_nib_to_standard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.orientation.orientation_nib_to_standard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert Nibabel orientation to the standard orientation format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nib_orientation</strong> – a RAS+ tuple orientation used by Nibabel.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Image orientation in the standard orientation format.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.data_io.orientation.orientation_standard_to_nib">
+<code class="sig-prename descclassname">dosma.data_io.orientation.</code><code class="sig-name descname">orientation_standard_to_nib</code><span class="sig-paren">(</span><em class="sig-param">orientation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/orientation.html#orientation_standard_to_nib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.orientation.orientation_standard_to_nib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert standard orientation format to Nibabel orientation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>orientation</strong> – Image orientation in the standard orientation format.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>RAS+ tuple orientation used by Nibabel.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-dosma.data_io">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-dosma.data_io" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="dosma.data_io.DicomReader">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.data_io.</code><code class="sig-name descname">DicomReader</code><a class="reference internal" href="_modules/dosma/data_io/dicom_io.html#DicomReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.DicomReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.data_io.format_io.DataReader" title="dosma.data_io.format_io.DataReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.data_io.format_io.DataReader</span></code></a></p>
+<p>A class for reading DICOM files.</p>
+<dl class="attribute">
+<dt id="dosma.data_io.DicomReader.data_format_code">
+<code class="sig-name descname">data_format_code</code><em class="property"> = 2</em><a class="headerlink" href="#dosma.data_io.DicomReader.data_format_code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.DicomReader.load">
+<code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param">dicom_dir_path: str</em>, <em class="sig-param">group_by: Union[str</em>, <em class="sig-param">tuple] = 'EchoNumbers'</em>, <em class="sig-param">ignore_ext: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/dicom_io.html#DicomReader.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.DicomReader.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load dicoms into <cite>MedicalVolume`s grouped by `group_by</cite> tag.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dicom_dir_path</strong> (<em>str</em>) – Path to directory with dicom files.</p></li>
+<li><p><strong>group_by</strong> (<cite>str</cite> or <cite>tuple</cite>, optional) – DICOM field tag name or tag number used to group dicoms. Defaults
+to <cite>EchoNumbers</cite>. Most DICOM headers encode different echo numbers as volumes acquired at different echo
+times or different phases.</p></li>
+<li><p><strong>ignore_ext</strong> (<cite>bool</cite>, optional) – Ignore extension (<cite>.dcm</cite>) when loading dicoms. Defaults to <cite>False</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Different volumes grouped by the <cite>group_by</cite> DICOM tag.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list[<a class="reference internal" href="#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">MedicalVolume</a>]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>NotADirectoryError</strong> – If <cite>dicom_dir_path</cite> does not exist or is not a directory.</p></li>
+<li><p><strong>FileNotFoundError</strong> – If no dicom files found in directory.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<dl class="simple">
+<dt>This function sorts files using natsort, an intelligent sorting tool. Please verify dicoms are labeled in a</dt><dd><p>sequenced manner (e.g.: dicom1,dicom2,dicom3,…).</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.data_io.DicomWriter">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.data_io.</code><code class="sig-name descname">DicomWriter</code><a class="reference internal" href="_modules/dosma/data_io/dicom_io.html#DicomWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.DicomWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.data_io.format_io.DataWriter" title="dosma.data_io.format_io.DataWriter"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.data_io.format_io.DataWriter</span></code></a></p>
+<p>A class for writing volumes in DICOM format.</p>
+<dl class="attribute">
+<dt id="dosma.data_io.DicomWriter.data_format_code">
+<code class="sig-name descname">data_format_code</code><em class="property"> = 2</em><a class="headerlink" href="#dosma.data_io.DicomWriter.data_format_code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.DicomWriter.save">
+<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param">volume: dosma.data_io.med_volume.MedicalVolume</em>, <em class="sig-param">dir_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/dicom_io.html#DicomWriter.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.DicomWriter.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save <cite>medical volume</cite> in dicom format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>volume</strong> (<a class="reference internal" href="#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Volume to save.</p></li>
+<li><p><strong>dir_path</strong> – Directory path to store dicom files. Dicoms are stored in directories, as multiple files are
+needed to store the volume.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>im</cite> does not have initialized headers. Or if <cite>im</cite> was flipped across any axis. Flipping
+    changes scanner origin, which is currently not handled.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.data_io.ImageDataFormat">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.data_io.</code><code class="sig-name descname">ImageDataFormat</code><a class="reference internal" href="_modules/dosma/data_io/format_io.html#ImageDataFormat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.ImageDataFormat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Enum describing supported data formats for medical volume I/O.</p>
+<dl class="attribute">
+<dt id="dosma.data_io.ImageDataFormat.dicom">
+<code class="sig-name descname">dicom</code><em class="property"> = 2</em><a class="headerlink" href="#dosma.data_io.ImageDataFormat.dicom" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.data_io.ImageDataFormat.get_image_data_format">
+<code class="sig-name descname">get_image_data_format</code><em class="property"> = &lt;bound method ImageDataFormat.get_image_data_format of &lt;enum 'ImageDataFormat'&gt;&gt;</em><a class="reference internal" href="_modules/dosma/data_io/format_io.html#ImageDataFormat.get_image_data_format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.ImageDataFormat.get_image_data_format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.ImageDataFormat.is_filetype">
+<code class="sig-name descname">is_filetype</code><span class="sig-paren">(</span><em class="sig-param">file_path: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/dosma/data_io/format_io.html#ImageDataFormat.is_filetype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.ImageDataFormat.is_filetype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify if file path matches the file type specified by ImageDataFormat.</p>
+<p>This method checks to make sure the extensions are appropriate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if file_path has valid extension, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.data_io.ImageDataFormat.nifti">
+<code class="sig-name descname">nifti</code><em class="property"> = 1</em><a class="headerlink" href="#dosma.data_io.ImageDataFormat.nifti" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.data_io.DataReader">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.data_io.</code><code class="sig-name descname">DataReader</code><a class="reference internal" href="_modules/dosma/data_io/format_io.html#DataReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.DataReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract class for reading medical data.</p>
+<p>Format-specific readers should inherit from this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dosma.data_io.format_io.DataReader.data_format_code" title="dosma.data_io.format_io.DataReader.data_format_code"><strong>data_format_code</strong></a> (<a class="reference internal" href="#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Should be defined by subclasses.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="dosma.data_io.DataReader.data_format_code">
+<code class="sig-name descname">data_format_code</code><em class="property"> = None</em><a class="headerlink" href="#dosma.data_io.DataReader.data_format_code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.DataReader.load">
+<em class="property">abstract </em><code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param">file_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/format_io.html#DataReader.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.DataReader.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load volume.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path to load volume from.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The loaded volume.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">MedicalVolume</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.data_io.DataWriter">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.data_io.</code><code class="sig-name descname">DataWriter</code><a class="reference internal" href="_modules/dosma/data_io/format_io.html#DataWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.DataWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract class for writing medical data.</p>
+<p>Format-specific writers should inherit from this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dosma.data_io.format_io.DataWriter.data_format_code" title="dosma.data_io.format_io.DataWriter.data_format_code"><strong>data_format_code</strong></a> (<a class="reference internal" href="#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Should be defined by subclasses.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="dosma.data_io.DataWriter.data_format_code">
+<code class="sig-name descname">data_format_code</code><em class="property"> = None</em><a class="headerlink" href="#dosma.data_io.DataWriter.data_format_code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.DataWriter.save">
+<em class="property">abstract </em><code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param">volume</em>, <em class="sig-param">file_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/format_io.html#DataWriter.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.DataWriter.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save volume.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>volume</strong> (<a class="reference internal" href="#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Volume to save.</p></li>
+<li><p><strong>file_path</strong> (<em>str</em>) – File path to save volume to.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.data_io.get_reader">
+<code class="sig-prename descclassname">dosma.data_io.</code><code class="sig-name descname">get_reader</code><span class="sig-paren">(</span><em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat</em><span class="sig-paren">)</span> &#x2192; dosma.data_io.format_io.DataReader<a class="reference internal" href="_modules/dosma/data_io/format_io_utils.html#get_reader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.get_reader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a DataReader corresponding to the given data format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data_format</strong> (<a class="reference internal" href="#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Data format to read.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Reader for given format.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dosma.data_io.format_io.DataReader" title="dosma.data_io.format_io.DataReader">DataReader</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.data_io.get_writer">
+<code class="sig-prename descclassname">dosma.data_io.</code><code class="sig-name descname">get_writer</code><span class="sig-paren">(</span><em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat</em><span class="sig-paren">)</span> &#x2192; dosma.data_io.format_io.DataWriter<a class="reference internal" href="_modules/dosma/data_io/format_io_utils.html#get_writer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.get_writer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a DataWriter corresponding to given data format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data_format</strong> (<a class="reference internal" href="#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Data format to write.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Writer for given format.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dosma.data_io.format_io.DataWriter" title="dosma.data_io.format_io.DataWriter">DataWriter</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.data_io.get_filepath_variations">
+<code class="sig-prename descclassname">dosma.data_io.</code><code class="sig-name descname">get_filepath_variations</code><span class="sig-paren">(</span><em class="sig-param">file_or_dir_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/format_io_utils.html#get_filepath_variations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.get_filepath_variations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get file paths using convention for all different image data formats.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_or_dir_path</strong> (<em>str</em>) – File or directory path.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>File paths corresponding to naming conventions of different ImageDataFormats.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.data_io.convert_image_data_format">
+<code class="sig-prename descclassname">dosma.data_io.</code><code class="sig-name descname">convert_image_data_format</code><span class="sig-paren">(</span><em class="sig-param">file_or_dir_path: str</em>, <em class="sig-param">new_data_format: dosma.data_io.format_io.ImageDataFormat</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/dosma/data_io/format_io_utils.html#convert_image_data_format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.convert_image_data_format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change a file or directory name to convention of another data format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_or_dir_path</strong> (<em>str</em>) – File or directory path.</p></li>
+<li><p><strong>new_data_format</strong> (<a class="reference internal" href="#dosma.data_io.format_io.ImageDataFormat" title="dosma.data_io.format_io.ImageDataFormat"><em>ImageDataFormat</em></a>) – Data format convention for file/directory name.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>File/directory path based on convention of new data format.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If conversion from current image data format to new image data format not found.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.data_io.generic_load">
+<code class="sig-prename descclassname">dosma.data_io.</code><code class="sig-name descname">generic_load</code><span class="sig-paren">(</span><em class="sig-param">file_or_dir_path: str</em>, <em class="sig-param">expected_num_volumes: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/format_io_utils.html#generic_load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.generic_load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load MedicalVolume(s) from a file or directory without knowing data format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_or_dir_path</strong> (<em>str</em>) – File or directory path.</p></li>
+<li><p><strong>expected_num_volumes</strong> (int, <cite>optional</cite>) – Number of volumes expected. If specified, assert if number of loaded
+volumes != expected num volumes. Defaults to <cite>None</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Volume(s) loaded. If <cite>expected_num_volumes = 1</cite>, returns</dt><dd><p><cite>MedicalVolume</cite>.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><cite>list[MedicalVolume]</cite> or <cite>MedicalVolume</cite></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If multiple file paths corresponding to different ImageDataFormats exist.</p></li>
+<li><p><strong>FileNotFoundError</strong> – If file path or corresponding versions of file path not found.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.data_io.NiftiReader">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.data_io.</code><code class="sig-name descname">NiftiReader</code><a class="reference internal" href="_modules/dosma/data_io/nifti_io.html#NiftiReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.NiftiReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.data_io.format_io.DataReader" title="dosma.data_io.format_io.DataReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.data_io.format_io.DataReader</span></code></a></p>
+<p>A class for reading NIfTI files.</p>
+<dl class="attribute">
+<dt id="dosma.data_io.NiftiReader.data_format_code">
+<code class="sig-name descname">data_format_code</code><em class="property"> = 1</em><a class="headerlink" href="#dosma.data_io.NiftiReader.data_format_code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.NiftiReader.load">
+<code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param">file_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/nifti_io.html#NiftiReader.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.NiftiReader.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load volume from NIfTI file path.</p>
+<p>A NIfTI file should only correspond to one volume.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path to NIfTI file.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Loaded volume.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">MedicalVolume</a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>FileNotFoundError</strong> – If <cite>file_path</cite> not found.</p></li>
+<li><p><strong>ValueError</strong> – If <cite>file_path</cite> does not end in a supported NIfTI extension.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.data_io.NiftiWriter">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.data_io.</code><code class="sig-name descname">NiftiWriter</code><a class="reference internal" href="_modules/dosma/data_io/nifti_io.html#NiftiWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.NiftiWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.data_io.format_io.DataWriter" title="dosma.data_io.format_io.DataWriter"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.data_io.format_io.DataWriter</span></code></a></p>
+<p>A class for writing volumes in NIfTI format.</p>
+<dl class="attribute">
+<dt id="dosma.data_io.NiftiWriter.data_format_code">
+<code class="sig-name descname">data_format_code</code><em class="property"> = 1</em><a class="headerlink" href="#dosma.data_io.NiftiWriter.data_format_code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.data_io.NiftiWriter.save">
+<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param">volume: dosma.data_io.med_volume.MedicalVolume</em>, <em class="sig-param">file_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/data_io/nifti_io.html#NiftiWriter.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.data_io.NiftiWriter.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save volume in NIfTI format,</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>volume</strong> (<a class="reference internal" href="#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a>) – Volume to save.</p></li>
+<li><p><strong>file_path</strong> (<em>str</em>) – File path to NIfTI file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>file_path</cite> does not end in a supported NIfTI extension.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

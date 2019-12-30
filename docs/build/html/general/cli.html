@@ -1,0 +1,593 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Command Line Documentation &mdash; DOSMA v0.0.10 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DOSMA
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DOSMA</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Command Line Documentation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/general/cli.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="command-line-documentation">
+<span id="cli"></span><h1>Command Line Documentation<a class="headerlink" href="#command-line-documentation" title="Permalink to this headline">¶</a></h1>
+<p>This page is a more exhaustive coverage of running DOSMA from the command line.</p>
+<p>Help menus for different scans and actions are shown. In the code blocks, code under the <code class="docutils literal notranslate"><span class="pre">In</span></code> header is what was
+typed into the terminal window. Text under the <code class="docutils literal notranslate"><span class="pre">Out</span></code> header is the help menu output for that specific module.</p>
+<p>To run the code, <a class="reference internal" href="usage.html#usage-session"><span class="std std-ref">start a new session</span></a>.</p>
+<div class="section" id="basic-menu">
+<h2>Basic Menu<a class="headerlink" href="#basic-menu" title="Permalink to this headline">¶</a></h2>
+<p>When using DOSMA to for the first time on a new series of DICOMs, specify the path to the series
+folder using the <code class="docutils literal notranslate"><span class="pre">--dicom</span></code> flag. Also specify the directory to save DOSMA outputs using <code class="docutils literal notranslate"><span class="pre">--save</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Path to series 007 in subject01 folder.
+$ dosma --dicom subject01/007 --save subject01/data
+</pre></div>
+</div>
+<p>Once, data has been processed for a particular series, you can specify the load path (<code class="docutils literal notranslate"><span class="pre">--load</span></code>)
+to be the save path. If loading and storing the data in the same directory, the save directory (<code class="docutils literal notranslate"><span class="pre">--save</span></code>) doesn’t
+need to be specified:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Loading data for subject01, series 007. Data will be saved in the directory specified by --load.
+$ dosma --load subject01/007 ...
+</pre></div>
+</div>
+<p>In practice, either <code class="docutils literal notranslate"><span class="pre">--dicom</span></code> or <code class="docutils literal notranslate"><span class="pre">--load</span></code> should be specified, not both.</p>
+<p>If doing computationally expensive operations that ar GPU-compatible (automatic segmentation), use the <code class="docutils literal notranslate"><span class="pre">--gpu</span></code> flag to
+specify the GPUs to use. The code below uses GPUs <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ dosma --gpu &quot;0,1&quot;
+</pre></div>
+</div>
+<p>The general help menu is shown below:
+.. code-block:: bash</p>
+<blockquote>
+<div><p>dosma –help</p>
+<dl class="simple">
+<dt>usage: DOSMA [-h] [–debug] [–d [D]] [–l [L]] [–s [S]] [–ignore_ext]</dt><dd><p>[–split_by [G]] [–gpu [G]] [–df [{dicom,nifti}]] [–r2 [T]]
+[–dpi [DPI]]
+[–vf [{png,eps,pdf,jpeg,pgf,ps,raw,rgba,svg,svgz,tiff}]]
+{qdess,cubequant,mapss,knee} …</p>
+</dd>
+</dl>
+<p>A deep-learning powered open source MRI analysis pipeline</p>
+<dl>
+<dt>positional arguments:</dt><dd><dl>
+<dt>{qdess,cubequant,mapss,knee}</dt><dd><blockquote>
+<div><p>sub-command help</p>
+</div></blockquote>
+<p>qdess               analyze qdess sequence
+cubequant           analyze cubequant sequence
+mapss               analyze mapss sequence
+knee                calculate/analyze quantitative data for knee</p>
+</dd>
+</dl>
+</dd>
+<dt>optional arguments:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">--debug</span></kbd></dt>
+<dd><p>use debug mode</p>
+</dd>
+</dl>
+<p>–d [D], –dicom [D]  path to directory storing dicom files
+–l [L], –load [L]   path to data directory to load from
+–s [S], –save [S]   path to data directory to save to. Default: L/D
+–ignore_ext          ignore .dcm extension when loading dicoms. Default: False
+–split_by [G]        override dicom tag to split volumes by (eg. <cite>EchoNumbers</cite>)
+–gpu [G]             gpu id. Default: None
+–df [{dicom,nifti}], –data_format [{dicom,nifti}]</p>
+<blockquote>
+<div><p>format to save medical data</p>
+</div></blockquote>
+<dl class="simple">
+<dt>–r2 [T], –r2_threshold [T]</dt><dd><p>r^2 threshold for goodness of fit. Range [0-1).</p>
+</dd>
+</dl>
+<p>–dpi [DPI]           figure resolution in dots per inch (dpi)
+–vf [{png,eps,pdf,jpeg,pgf,ps,raw,rgba,svg,svgz,tiff}], –visualization_format [{png,eps,pdf,jpeg,pgf,ps,raw,rgba,svg,svgz,tiff}]</p>
+<blockquote>
+<div><p>format to save figures</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>Either <cite>–d</cite> or <cite>—l</cite> must be specified. If both are given, <cite>–d</cite> will be used.</p>
+</div></blockquote>
+</div>
+<div class="section" id="qdess">
+<h2>qDESS<a class="headerlink" href="#qdess" title="Permalink to this headline">¶</a></h2>
+<p>Help menu for qDESS.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>In:
+---------
+dosma qdess --help
+
+Out:
+---------
+usage: DOSMA qdess <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>--fc<span class="o">]</span> <span class="o">[</span>--men<span class="o">]</span> <span class="o">[</span>--tc<span class="o">]</span> <span class="o">[</span>--pc<span class="o">]</span>
+                   <span class="o">{</span>segment,generate_t2_map,t2<span class="o">}</span> ...
+
+optional arguments:
+  -h, --help            show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --fc                  analyze femoral cartilage
+  --men                 analyze meniscus
+  --tc                  analyze tibial cartilage
+  --pc                  analyze patellar cartilage
+
+subcommands:
+  qdess subcommands
+
+  <span class="o">{</span>segment,generate_t2_map,t2<span class="o">}</span>
+    segment              generate automatic segmentation
+    generate_t2_map <span class="o">(</span>t2<span class="o">)</span> generate T2 map
+</pre></div>
+</div>
+<div class="section" id="segmentation">
+<h3>Segmentation<a class="headerlink" href="#segmentation" title="Permalink to this headline">¶</a></h3>
+<p>Automatically segment tissues.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>In:
+---------
+dosma qdess segment --help
+
+Out:
+---------
+usage: DOSMA qdess segment <span class="o">[</span>-h<span class="o">]</span> --weights_dir WEIGHTS_DIR
+                           <span class="o">[</span>--model <span class="o">[{</span>oai-unet2d<span class="o">}]]</span> <span class="o">[</span>--batch_size <span class="o">[</span>B<span class="o">]]</span> <span class="o">[</span>--rms<span class="o">]</span>
+
+optional arguments:
+  -h, --help            show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --weights_dir WEIGHTS_DIR
+                        path to directory with weights
+  --model <span class="o">[{</span>oai-unet2d<span class="o">}]</span>
+                        Model to use <span class="k">for</span> segmentation. Choices: <span class="o">[</span><span class="s1">&#39;oai-unet2d&#39;</span><span class="o">]</span>
+  --batch_size <span class="o">[</span>B<span class="o">]</span>      batch size <span class="k">for</span> inference. Default: <span class="m">16</span>
+  --rms, --use_rms      use root mean square <span class="o">(</span>rms<span class="o">)</span> of two echos <span class="k">for</span>
+                        segmentation. Default: False
+</pre></div>
+</div>
+</div>
+<div class="section" id="t2-estimation">
+<h3>T<sub>2</sub> Estimation<a class="headerlink" href="#t2-estimation" title="Permalink to this headline">¶</a></h3>
+<p>Generate T<sub>2</sub> maps using two echos.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>In:
+---------
+dosma qdess generate_t2_map --help
+
+Out:
+---------
+usage: DOSMA qdess generate_t2_map <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>--suppress_fat<span class="o">]</span> <span class="o">[</span>--suppress_fluid<span class="o">]</span>
+                               <span class="o">[</span>--beta <span class="o">[</span>BETA<span class="o">]]</span> <span class="o">[</span>--gl_area <span class="o">[</span>GL_AREA<span class="o">]]</span>
+                               <span class="o">[</span>--tg <span class="o">[</span>TG<span class="o">]]</span>
+
+optional arguments:
+  -h, --help           show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --suppress_fat       suppress computation on low SNR fat regions. Default:
+                       False
+  --suppress_fluid     suppress computation on fluid regions. Default: False
+  --beta <span class="o">[</span>BETA<span class="o">]</span>        constant <span class="k">for</span> calculating fluid-nulled image
+                       <span class="o">(</span>S1-beta*S2<span class="o">)</span>. Default: <span class="m">1</span>.2
+  --gl_area <span class="o">[</span>GL_AREA<span class="o">]</span>  GL Area. Defaults to value in dicom tag <span class="s1">&#39;0x001910b6&#39;</span>.
+  --tg <span class="o">[</span>TG<span class="o">]</span>            Gradient <span class="nb">time</span> <span class="o">(</span>in microseconds<span class="o">)</span>. Defaults to value in
+                       dicom tag <span class="s1">&#39;0x001910b7&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="cubequant">
+<h2>CubeQuant<a class="headerlink" href="#cubequant" title="Permalink to this headline">¶</a></h2>
+<p>Help menu for CubeQuant.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>In:
+---------
+dosma cubequant --help
+
+Out:
+---------
+usage: DOSMA cubequant <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>--fc<span class="o">]</span> <span class="o">[</span>--men<span class="o">]</span> <span class="o">[</span>--tc<span class="o">]</span> <span class="o">[</span>--pc<span class="o">]</span>
+                       <span class="o">{</span>interregister,generate_t1_rho_map,t1_rho<span class="o">}</span> ...
+
+optional arguments:
+  -h, --help            show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --fc                  analyze femoral cartilage
+  --men                 analyze meniscus
+  --tc                  analyze tibial cartilage
+  --pc                  analyze patellar cartilage
+
+subcommands:
+  cubequant subcommands
+
+  <span class="o">{</span>interregister,generate_t1_rho_map,t1_rho<span class="o">}</span>
+    interregister       register to another scan
+    generate_t1_rho_map <span class="o">(</span>t1_rho<span class="o">)</span>
+                        generate T1-rho map
+</pre></div>
+</div>
+<div class="section" id="interregister">
+<h3>Interregister<a class="headerlink" href="#interregister" title="Permalink to this headline">¶</a></h3>
+<p>Register CubeQuant scan to a target scan. Currently optimized for registering to qDESS target.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>In:
+---------
+dosma cubequant interregister --help
+
+Out:
+---------
+usage: DOSMA cubequant interregister <span class="o">[</span>-h<span class="o">]</span> --tp TARGET_PATH
+                                     <span class="o">[</span>--tm <span class="o">[</span>TARGET_MASK_PATH<span class="o">]]</span>
+
+optional arguments:
+  -h, --help            show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --tp TARGET_PATH, --target TARGET_PATH, --target_path TARGET_PATH
+                        path to target image in nifti format <span class="o">(</span>.nii.gz<span class="o">)</span>
+  --tm <span class="o">[</span>TARGET_MASK_PATH<span class="o">]</span>, --target_mask <span class="o">[</span>TARGET_MASK_PATH<span class="o">]</span>, --target_mask_path <span class="o">[</span>TARGET_MASK_PATH<span class="o">]</span>
+                        path to target mask in nifti format <span class="o">(</span>.nii.gz<span class="o">)</span>.
+                        Default: None
+</pre></div>
+</div>
+</div>
+<div class="section" id="t1rho-estimation">
+<h3>T<sub>1</sub><span class="math notranslate nohighlight">\({\rho}\)</span> Estimation<a class="headerlink" href="#t1rho-estimation" title="Permalink to this headline">¶</a></h3>
+<p>Compute T<sub>1</sub><span class="math notranslate nohighlight">\({\rho}\)</span> map using mono-exponential fitting.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>In:
+---------
+dosma cubequant generate_t1_rho_map --help
+
+Out:
+---------
+usage: DOSMA cubequant generate_t1_rho_map <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>--mask_path <span class="o">[</span>MASK_PATH<span class="o">]]</span>
+
+optional arguments:
+  -h, --help            show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --mask_path <span class="o">[</span>MASK_PATH<span class="o">]</span>
+                        Mask used <span class="k">for</span> fitting <span class="k">select</span> voxels in nifti format
+                        <span class="o">(</span>.nii.gz<span class="o">)</span>. Default: None
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="mapss">
+<h2>MAPSS<a class="headerlink" href="#mapss" title="Permalink to this headline">¶</a></h2>
+<p>Help menu for MAPSS.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>In:
+---------
+dosma mapss --help
+
+Out:
+---------
+usage: DOSMA mapss <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>--fc<span class="o">]</span> <span class="o">[</span>--men<span class="o">]</span> <span class="o">[</span>--tc<span class="o">]</span> <span class="o">[</span>--pc<span class="o">]</span>
+                   <span class="o">{</span>generate_t1_rho_map,t1_rho,generate_t2_map,t2<span class="o">}</span> ...
+
+optional arguments:
+  -h, --help            show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --fc                  analyze femoral cartilage
+  --men                 analyze meniscus
+  --tc                  analyze tibial cartilage
+  --pc                  analyze patellar cartilage
+
+subcommands:
+  mapss subcommands
+
+  <span class="o">{</span>generate_t1_rho_map,t1_rho,generate_t2_map,t2<span class="o">}</span>
+    generate_t1_rho_map <span class="o">(</span>t1_rho<span class="o">)</span>
+                        generate T1-rho map using mono-exponential fitting
+    generate_t2_map <span class="o">(</span>t2<span class="o">)</span>
+                        generate T2 map using mono-exponential fitting
+</pre></div>
+</div>
+<div class="section" id="id1">
+<h3>T<sub>1</sub><span class="math notranslate nohighlight">\({\rho}\)</span> Estimation<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>Compute T<sub>1</sub><span class="math notranslate nohighlight">\({\rho}\)</span> map using mono-exponential fitting.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>In:
+---------
+dosma mapss generate_t1_rho_map --help
+
+Out:
+---------
+usage: DOSMA mapss generate_t1_rho_map <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>--mask <span class="o">[</span>MASK_PATH<span class="o">]]</span>
+
+optional arguments:
+  -h, --help            show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --mask <span class="o">[</span>MASK_PATH<span class="o">]</span>, --mp <span class="o">[</span>MASK_PATH<span class="o">]</span>, --mask_path <span class="o">[</span>MASK_PATH<span class="o">]</span>
+                        mask filepath <span class="o">(</span>.nii.gz<span class="o">)</span> to reduce computational <span class="nb">time</span>
+                        <span class="k">for</span> fitting. Not required <span class="k">if</span> loading data <span class="o">(</span>ie. <span class="sb">`</span>--l<span class="sb">`</span>
+                        flag<span class="o">)</span> <span class="k">for</span> tissue with mask. Default: None
+</pre></div>
+</div>
+</div>
+<div class="section" id="id2">
+<h3>T<sub>2</sub> Estimation<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>Compute T<sub>2</sub> map using mono-exponential fitting.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>In:
+---------
+dosma mapss generate_t2_map --help
+
+Out:
+---------
+usage: DOSMA mapss generate_t2_map <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>--mask <span class="o">[</span>MASK_PATH<span class="o">]]</span>
+
+optional arguments:
+  -h, --help            show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --mask <span class="o">[</span>MASK_PATH<span class="o">]</span>, --mp <span class="o">[</span>MASK_PATH<span class="o">]</span>, --mask_path <span class="o">[</span>MASK_PATH<span class="o">]</span>
+                        mask filepath <span class="o">(</span>.nii.gz<span class="o">)</span> to reduce computational <span class="nb">time</span>
+                        <span class="k">for</span> fitting. Not required <span class="k">if</span> loading data <span class="o">(</span>ie. <span class="sb">`</span>--l<span class="sb">`</span>
+                        flag<span class="o">)</span> <span class="k">for</span> tissue with mask.. Default: None
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="ute-cones">
+<h2>UTE Cones<a class="headerlink" href="#ute-cones" title="Permalink to this headline">¶</a></h2>
+<p>Help menu for UTE Cones.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>In:
+---------
+dosma cubequant --help
+
+Out:
+---------
+usage: DOSMA cones <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>--fc<span class="o">]</span> <span class="o">[</span>--men<span class="o">]</span> <span class="o">[</span>--tc<span class="o">]</span> <span class="o">[</span>--pc<span class="o">]</span>
+                   <span class="o">{</span>interregister,generate_t2_star_map,t2_star<span class="o">}</span> ...
+
+optional arguments:
+  -h, --help            show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --fc                  analyze femoral cartilage
+  --men                 analyze meniscus
+  --tc                  analyze tibial cartilage
+  --pc                  analyze patellar cartilage
+
+subcommands:
+  cones subcommands
+
+  <span class="o">{</span>interregister,generate_t2_star_map,t2_star<span class="o">}</span>
+    interregister       register to another scan
+    generate_t2_star_map <span class="o">(</span>t2_star<span class="o">)</span>
+                        generate T2-star map
+</pre></div>
+</div>
+<div class="section" id="id3">
+<h3>Interregister<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>Register Cones scan to a target scan. Currently optimized for registering to qDESS target.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>In:
+---------
+dosma cones interregister --help
+
+Out:
+---------
+usage: DOSMA cones interregister <span class="o">[</span>-h<span class="o">]</span> --tp TARGET_PATH
+                                     <span class="o">[</span>--tm <span class="o">[</span>TARGET_MASK_PATH<span class="o">]]</span>
+
+optional arguments:
+  -h, --help            show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --tp TARGET_PATH, --target TARGET_PATH, --target_path TARGET_PATH
+                        path to target image in nifti format <span class="o">(</span>.nii.gz<span class="o">)</span>
+  --tm <span class="o">[</span>TARGET_MASK_PATH<span class="o">]</span>, --target_mask <span class="o">[</span>TARGET_MASK_PATH<span class="o">]</span>, --target_mask_path <span class="o">[</span>TARGET_MASK_PATH<span class="o">]</span>
+                        path to target mask in nifti format <span class="o">(</span>.nii.gz<span class="o">)</span>.
+                        Default: None
+</pre></div>
+</div>
+</div>
+<div class="section" id="t2star-estimation">
+<h3>T<sub>2</sub><sup>*</sup> Estimation<a class="headerlink" href="#t2star-estimation" title="Permalink to this headline">¶</a></h3>
+<p>Compute T<sub>2</sub><sup>*</sup> map using mono-exponential fitting.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>In:
+---------
+dosma cones generate_t2_star_map --help
+
+Out:
+---------
+usage: DOSMA cones generate_t2_star_map <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>--mask_path <span class="o">[</span>MASK_PATH<span class="o">]]</span>
+
+optional arguments:
+  -h, --help            show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --mask_path <span class="o">[</span>MASK_PATH<span class="o">]</span>
+                        Mask used <span class="k">for</span> fitting <span class="k">select</span> voxels - in nifti format
+                        <span class="o">(</span>.nii.gz<span class="o">)</span>. Default: None
+</pre></div>
+</div>
+<p>### MSK Knee
+<a href="#id4"><span class="problematic" id="id5">``</span></a>`
+usage: DOSMA knee [-h] [–ml] [–pid [PID]] [–fc] [–men] [–tc] [–t2]</p>
+<blockquote>
+<div><p>[–t1_rho] [–t2_star]</p>
+</div></blockquote>
+<dl>
+<dt>optional arguments:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">--ml</span></kbd></dt>
+<dd><p>defines slices in sagittal direction going from medial -&gt;
+lateral</p>
+</dd>
+</dl>
+<p>–pid [PID]  specify pid
+–fc         analyze femoral cartilage
+–men        analyze meniscus
+–tc         analyze tibial cartilage
+–t2         quantify t2
+–t1_rho     quantify t1_rho
+–t2_star    quantify t2_star</p>
+</dd>
+</dl>
+<p><a href="#id6"><span class="problematic" id="id7">``</span></a><a href="#id8"><span class="problematic" id="id9">`</span></a></p>
+<p>If no quantitative value flag (e.g. <cite>–t2</cite>, <cite>–t1_rho</cite>, <cite>–t2_star</cite>) is specified, all quantitative values will be calculated by default.</p>
+<p>If no tissue flag (e.g. <cite>–fc</cite>) is specified, all tissues will be calculated by default.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

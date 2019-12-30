@@ -1,0 +1,298 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dosma.models.seg_model &mdash; DOSMA v0.0.10 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> DOSMA
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/faq.html">FAQs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">DOSMA</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dosma.models.seg_model</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dosma.models.seg_model</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Abstract classes to wrap Keras model.</span>
+
+<span class="sd">T</span>
+<span class="sd">SegModel: Abstract wrapper for Keras model used for semantic segmentation.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">dosma.data_io.med_volume</span> <span class="kn">import</span> <span class="n">MedicalVolume</span>
+<span class="kn">from</span> <span class="nn">dosma.defaults</span> <span class="kn">import</span> <span class="n">preferences</span>
+
+
+<div class="viewcode-block" id="SegModel"><a class="viewcode-back" href="../../../dosma.models.html#dosma.models.seg_model.SegModel">[docs]</a><span class="k">class</span> <span class="nc">SegModel</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="n">ALIASES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span>  <span class="c1"># each segmentation model must have an alias</span>
+
+    <span class="n">batch_size</span> <span class="o">=</span> <span class="n">preferences</span><span class="o">.</span><span class="n">segmentation_batch_size</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">weights_path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param input_shape: tuple or list of tuples for initializing input(s) into model in format (height, width, channels)</span>
+<span class="sd">        :param weights_path: filepath to weights used to initialize Keras model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seg_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_model</span><span class="p">(</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">weights_path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SegModel.build_model"><a class="viewcode-back" href="../../../dosma.models.html#dosma.models.seg_model.SegModel.build_model">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">weights_path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Builds a segmentation model architecture and loads weights</span>
+
+<span class="sd">        :param input_shape: Input shape of volume</span>
+<span class="sd">        :param weights_path:</span>
+<span class="sd">        :return: a segmentation model that can be used for segmenting tissues (a Keras/TF/PyTorch model)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="SegModel.generate_mask"><a class="viewcode-back" href="../../../dosma.models.html#dosma.models.seg_model.SegModel.generate_mask">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">generate_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">volume</span><span class="p">:</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Segment the MRI volumes</span>
+
+<span class="sd">        :param volume: A Medical Volume (height, width, slices)</span>
+
+<span class="sd">        :return: A Medical volume or list of Medical Volumes with volume as binarized (0,1) uint8 3D numpy array of shape volumes.shape</span>
+
+<span class="sd">        :raise ValueError if volumes is not 3D numpy array</span>
+<span class="sd">        :raise ValueError if tissue is not a string or not in list permitted tissues</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="k">def</span> <span class="nf">__preprocess_volume__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">volume</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Preprocess volume prior to putting as input into segmentation network</span>
+<span class="sd">        :param volume: a numpy array</span>
+<span class="sd">        :return: a preprocessed numpy array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">volume</span>
+
+    <span class="k">def</span> <span class="nf">__postprocess_volume__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">volume</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Post-process logits (probabilities) or binarized mask</span>
+<span class="sd">        :param volume: a numpy array</span>
+<span class="sd">        :return: a postprocessed numpy array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">volume</span></div>
+
+
+<div class="viewcode-block" id="KerasSegModel"><a class="viewcode-back" href="../../../dosma.models.html#dosma.models.seg_model.KerasSegModel">[docs]</a><span class="k">class</span> <span class="nc">KerasSegModel</span><span class="p">(</span><span class="n">SegModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract wrapper for Keras model used for semantic segmentation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="KerasSegModel.build_model"><a class="viewcode-back" href="../../../dosma.models.html#dosma.models.seg_model.KerasSegModel.build_model">[docs]</a>    <span class="k">def</span> <span class="nf">build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">weights_path</span><span class="p">):</span>
+        <span class="n">keras_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__load_keras_model__</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
+        <span class="n">keras_model</span><span class="o">.</span><span class="n">load_weights</span><span class="p">(</span><span class="n">weights_path</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">keras_model</span></div>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">__load_keras_model__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build Keras architecture</span>
+
+<span class="sd">        :param input_shape: tuple or list of tuples for initializing input(s) into Keras model</span>
+
+<span class="sd">        :return: a Keras model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<span class="c1"># ============================ Preprocessing utils ============================</span>
+<span class="n">__VOLUME_DIMENSIONS__</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">__EPSILON__</span> <span class="o">=</span> <span class="mf">1e-8</span>
+
+
+<div class="viewcode-block" id="whiten_volume"><a class="viewcode-back" href="../../../dosma.models.html#dosma.models.seg_model.whiten_volume">[docs]</a><span class="k">def</span> <span class="nf">whiten_volume</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Whiten volumes by mean and std of all pixels</span>
+<span class="sd">    :param x: 3D numpy array (MRI volumes)</span>
+<span class="sd">    :rtype: whitened 3D numpy array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="n">__VOLUME_DIMENSIONS__</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Dimension Error: input has </span><span class="si">%d</span><span class="s2"> dimensions. Expected </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ndims</span><span class="p">,</span> <span class="n">__VOLUME_DIMENSIONS__</span><span class="p">))</span>
+
+    <span class="c1"># Add epsilon to avoid dividing by 0</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">__EPSILON__</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

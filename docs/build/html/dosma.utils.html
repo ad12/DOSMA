@@ -1,0 +1,527 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dosma.utils package &mdash; DOSMA v0.0.10 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DOSMA
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="general/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general/faq.html">FAQs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DOSMA</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>dosma.utils package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/dosma.utils.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dosma-utils-package">
+<h1>dosma.utils package<a class="headerlink" href="#dosma-utils-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-dosma.utils.cmd_line_utils">
+<span id="dosma-utils-cmd-line-utils-module"></span><h2>dosma.utils.cmd_line_utils module<a class="headerlink" href="#module-dosma.utils.cmd_line_utils" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="dosma.utils.cmd_line_utils.ActionWrapper">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.utils.cmd_line_utils.</code><code class="sig-name descname">ActionWrapper</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/cmd_line_utils.html#ActionWrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.cmd_line_utils.ActionWrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Wrapper for actions (methods) that can be executed via command-line.</p>
+<p>Examples include <cite>segment</cite> scans, <cite>interregister</cite> scans, etc.</p>
+<dl class="simple">
+<dt>Actions are instance methods of classes that can be executed via the command line. They are typically associated</dt><dd><p>with different scans.</p>
+</dd>
+<dt>To expose these methods to the command-line interface, we wrap these actions as subparsers. Parameters for the</dt><dd><p>method are arguments of the subparser.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="dosma.utils.cmd_line_utils.ActionWrapper.aliases">
+<em class="property">property </em><code class="sig-name descname">aliases</code><a class="headerlink" href="#dosma.utils.cmd_line_utils.ActionWrapper.aliases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Aliases (other names) for this action.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.utils.cmd_line_utils.ActionWrapper.get_alternative_param_names">
+<code class="sig-name descname">get_alternative_param_names</code><span class="sig-paren">(</span><em class="sig-param">param: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/cmd_line_utils.html#ActionWrapper.get_alternative_param_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.cmd_line_utils.ActionWrapper.get_alternative_param_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get aliases (alternate names) for a parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>param</strong> (<em>str</em>) – Action parameter name.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>If aliases exist for parameter. <cite>None</cite>, otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Optional[list[str]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.utils.cmd_line_utils.ActionWrapper.get_param_help">
+<code class="sig-name descname">get_param_help</code><span class="sig-paren">(</span><em class="sig-param">param: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/cmd_line_utils.html#ActionWrapper.get_param_help"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.cmd_line_utils.ActionWrapper.get_param_help" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get help menu for a parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>param</strong> (<em>str</em>) – Action parameter name.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Help menu for parameter, if initialized. <cite>“”</cite>, otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.utils.cmd_line_utils.ActionWrapper.help">
+<em class="property">property </em><code class="sig-name descname">help</code><a class="headerlink" href="#dosma.utils.cmd_line_utils.ActionWrapper.help" title="Permalink to this definition">¶</a></dt>
+<dd><p>Help menu for this action.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dosma.utils.cmd_line_utils.ActionWrapper.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#dosma.utils.cmd_line_utils.ActionWrapper.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Action name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.utils.fits">
+<span id="dosma-utils-fits-module"></span><h2>dosma.utils.fits module<a class="headerlink" href="#module-dosma.utils.fits" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="dosma.utils.fits.MonoExponentialFit">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.utils.fits.</code><code class="sig-name descname">MonoExponentialFit</code><span class="sig-paren">(</span><em class="sig-param">ts: Sequence[float], subvolumes: List[dosma.data_io.med_volume.MedicalVolume], mask: dosma.data_io.med_volume.MedicalVolume = None, bounds: Tuple[float] = (0, 100.0), tc0: float = 30.0, decimal_precision: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/fits.html#MonoExponentialFit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.fits.MonoExponentialFit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.utils.fits._Fit</span></code></p>
+<p>Fit quantitative  using mono-exponential fit of model <span class="math notranslate nohighlight">\(A*exp(b*t)\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ts</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">array-like</span></code>) – 1D array of times in milliseconds (typically echo times) corresponding to different
+volumes.</p></li>
+<li><p><strong>subvolumes</strong> (<em>list</em><em>[</em><em>MedicalVolumes</em><em>]</em>) – Volumes (in order) corresponding to times in <cite>ts</cite>.</p></li>
+<li><p><strong>mask</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">MedicalVolume</span></code>, optional) – Mask of pixels to fit. If specified, pixels outside of mask region are
+ignored and set to <cite>np.nan</cite>. Speeds fitting time as fewer fits are required. Defaults to <cite>None</cite>.</p></li>
+<li><p><strong>bounds</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple[float,</span> <span class="pre">float]</span></code>, optional) – Upper and lower bound for quantitative values. Values outside
+those bounds will be set to <cite>np.nan</cite>. Defaults to <cite>(0, 100.0)</cite>.</p></li>
+<li><p><strong>tc0</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>, optional) – Initial time constant guess (in milliseconds). Defaults to <cite>30.0</cite>.</p></li>
+<li><p><strong>decimal_precision</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, optional) – Rounding precision after the decimal point. Defaults to <cite>1</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="dosma.utils.fits.MonoExponentialFit.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/fits.html#MonoExponentialFit.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.fits.MonoExponentialFit.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit quantitative values per pixel across multiple volumes.</p>
+<p>Pixels with errors in fitting are set to np.nan.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Quantitative value volume and r-squared goodness of fit volume.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>tuple[<a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">MedicalVolume</a>, <a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">MedicalVolume</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.utils.geometry_utils">
+<span id="dosma-utils-geometry-utils-module"></span><h2>dosma.utils.geometry_utils module<a class="headerlink" href="#module-dosma.utils.geometry_utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="dosma.utils.geometry_utils.circle_fit">
+<code class="sig-prename descclassname">dosma.utils.geometry_utils.</code><code class="sig-name descname">circle_fit</code><span class="sig-paren">(</span><em class="sig-param">x: numpy.ndarray</em>, <em class="sig-param">y: numpy.ndarray</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/geometry_utils.html#circle_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.geometry_utils.circle_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit a circle given (x, y) scatter points in a plane.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>np.ndarray</em>) – x-coordinates of scatter points.</p></li>
+<li><p><strong>y</strong> (<em>np.ndarray</em>) – y-coordinates of scatter points.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Coordinates and radius of circle (center x, center y, radius).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.utils.geometry_utils.cart2pol">
+<code class="sig-prename descclassname">dosma.utils.geometry_utils.</code><code class="sig-name descname">cart2pol</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/geometry_utils.html#cart2pol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.geometry_utils.cart2pol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert cartesian coordinates to polar coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – x-coordinate.</p></li>
+<li><p><strong>y</strong> – y-coordinate.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>radius (rho) and angle (phi).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple[float, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.utils.img_utils">
+<span id="dosma-utils-img-utils-module"></span><h2>dosma.utils.img_utils module<a class="headerlink" href="#module-dosma.utils.img_utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="dosma.utils.img_utils.downsample_slice">
+<code class="sig-prename descclassname">dosma.utils.img_utils.</code><code class="sig-name descname">downsample_slice</code><span class="sig-paren">(</span><em class="sig-param">img_array</em>, <em class="sig-param">ds_factor</em>, <em class="sig-param">is_mask=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/img_utils.html#downsample_slice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.img_utils.downsample_slice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes in a 3D array and then downsamples in the z-direction by a user-specified downsampling factor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img_array</strong> (<em>np.ndarray</em>) – 3D numpy array for now (xres x yres x zres)</p></li>
+<li><p><strong>ds_factor</strong> (<em>int</em>) – Downsampling factor</p></li>
+<li><p><strong>is_mask</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, optional) – If <cite>True</cite>, <cite>img_array</cite> is a mask and will be binarized after downsampling.
+Defaults to <cite>False</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>3D numpy array of dimensions (xres x yres x zres//ds_factor)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_image</span>  <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input_mask</span>   <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output_image</span> <span class="o">=</span> <span class="n">downsample_slice</span><span class="p">(</span><span class="n">input_mask</span><span class="p">,</span> <span class="n">ds_factor</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">is_mask</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output_mask</span>  <span class="o">=</span> <span class="n">downsample_slice</span><span class="p">(</span><span class="n">input_mask</span><span class="p">,</span> <span class="n">ds_factor</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">is_mask</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.utils.img_utils.write_regions">
+<code class="sig-prename descclassname">dosma.utils.img_utils.</code><code class="sig-name descname">write_regions</code><span class="sig-paren">(</span><em class="sig-param">file_path</em>, <em class="sig-param">arr</em>, <em class="sig-param">plt_dict=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/img_utils.html#write_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.img_utils.write_regions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write 2D array to region image where colors correspond to the region.</p>
+<p>All finite values should be &gt;= 1.
+nan/inf value are ignored - written as white.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> (<em>str</em>) – File path to save image.</p></li>
+<li><p><strong>arr</strong> (<em>np.ndarray</em>) – The 2D numpy array to convert to region image. Unique non-zero values correspond to different
+regions. Values that are <cite>0</cite> or <cite>np.nan</cite> will be written as white pixels.</p></li>
+<li><p><strong>plt_dict</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code>, optional) – Dictionary of values to use when plotting with <cite>matplotlib</cite>. Keys are strings
+like <cite>xlabel</cite>, <cite>ylabel</cite>, etc. Use Key <cite>labels</cite> to specify a mapping from unique non-zero values in the array
+to names for the legend.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.utils.io_utils">
+<span id="dosma-utils-io-utils-module"></span><h2>dosma.utils.io_utils module<a class="headerlink" href="#module-dosma.utils.io_utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="dosma.utils.io_utils.mkdirs">
+<code class="sig-prename descclassname">dosma.utils.io_utils.</code><code class="sig-name descname">mkdirs</code><span class="sig-paren">(</span><em class="sig-param">dir_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/io_utils.html#mkdirs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.io_utils.mkdirs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make directory is directory does not exist.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dir_path</strong> (<em>str</em>) – Directory path to make.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>path to directory</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.utils.io_utils.save_pik">
+<code class="sig-prename descclassname">dosma.utils.io_utils.</code><code class="sig-name descname">save_pik</code><span class="sig-paren">(</span><em class="sig-param">file_path: str</em>, <em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/io_utils.html#save_pik"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.io_utils.save_pik" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save data using <cite>pickle</cite>.</p>
+<p>Pickle is not be stable across Python 2/3.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> (<em>str</em>) – File path to save to.</p></li>
+<li><p><strong>data</strong> (<em>Any</em>) – Data to serialize.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.utils.io_utils.load_pik">
+<code class="sig-prename descclassname">dosma.utils.io_utils.</code><code class="sig-name descname">load_pik</code><span class="sig-paren">(</span><em class="sig-param">file_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/io_utils.html#load_pik"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.io_utils.load_pik" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data using <cite>pickle</cite>.</p>
+<p>Should be used with <a class="reference internal" href="#dosma.utils.io_utils.save_pik" title="dosma.utils.io_utils.save_pik"><code class="xref any py py-func docutils literal notranslate"><span class="pre">save_pik</span></code></a>.</p>
+<p>Pickle is not be stable across Python 2/3.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path to load from.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Loaded data.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>FileNotFoundError</strong> – If <cite>file_path</cite> does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.utils.io_utils.save_h5">
+<code class="sig-prename descclassname">dosma.utils.io_utils.</code><code class="sig-name descname">save_h5</code><span class="sig-paren">(</span><em class="sig-param">file_path: str</em>, <em class="sig-param">data_dict: dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/io_utils.html#save_h5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.io_utils.save_h5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save data in H5DF format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> (<em>str</em>) – File path to save to.</p></li>
+<li><p><strong>data_dict</strong> (<em>dict</em>) – Dictionary of data to store. Dictionary can only have depth of 1.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.utils.io_utils.load_h5">
+<code class="sig-prename descclassname">dosma.utils.io_utils.</code><code class="sig-name descname">load_h5</code><span class="sig-paren">(</span><em class="sig-param">file_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/io_utils.html#load_h5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.io_utils.load_h5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data in H5DF format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path to save to.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Loaded data.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>FileNotFoundError</strong> – If <cite>file_path</cite> does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="dosma.utils.io_utils.save_tables">
+<code class="sig-prename descclassname">dosma.utils.io_utils.</code><code class="sig-name descname">save_tables</code><span class="sig-paren">(</span><em class="sig-param">file_path: str, data_frames: Sequence[pandas.core.frame.DataFrame], sheet_names: Sequence[str] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/io_utils.html#save_tables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.io_utils.save_tables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save data in excel tables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> (<em>str</em>) – File path to excel file.</p></li>
+<li><p><strong>data_frames</strong> (<em>Sequence</em><em>[</em><em>pd.DataFrame</em><em>]</em>) – Tables to store to excel file. One table stored per sheet.</p></li>
+<li><p><strong>sheet_names</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence[str]</span></code>, optional) – Sheet names for each data frame.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dosma.utils">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-dosma.utils" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
