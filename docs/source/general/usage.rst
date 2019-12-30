@@ -144,7 +144,7 @@ Analyze patient01 femoral cartilage |T1rho| properties using Cubequant sequence:
 
 
 UTE Cones
-#####
+#########
 Analyze patient01 femoral cartilage |T2star| properties using UTE Cones sequence::
 
     # 1. Register cones volume to first echo of qDESS sequence

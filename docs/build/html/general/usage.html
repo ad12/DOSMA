@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Usage &mdash; DOSMA v0.0.10 documentation</title>
+  <title>Usage &mdash; DOSMA v0.0.11 documentation</title>
   
 
   
@@ -193,6 +193,11 @@ $ dosma --app
 </div>
 </li>
 </ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are using a remote connection, enable X11 port-forwarding to execute Step 4. If it is not enabled, the GUI
+cannot be used for remote connections.</p>
+</div>
 </div>
 <div class="section" id="command-line-terminal">
 <span id="usage-cli"></span><h2>Command-Line (Terminal)<a class="headerlink" href="#command-line-terminal" title="Permalink to this headline">¶</a></h2>
@@ -303,7 +308,7 @@ $ dosma --load research_data/patient01/data --fc --t1_rho
 $ dosma --dicom research_data/patient01/cones --save research_data/patient01/data cones --fc interregister --target_path research_data/patient01/data/dess/echo1.nii.gz --target_mask research_data/patient01/data/fc/fc.nii.gz
 
 # 2. Calculate 3D T2-star map only for femoral cartilage region
-$ dosma --load research_data/patient01/data cubequant --fc t2_star --mask_path research_data/patient01/data/fc/fc.nii.gz
+$ dosma --load research_data/patient01/data cones --fc t2_star --mask_path research_data/patient01/data/fc/fc.nii.gz
 
 # 3. Calculate/visualize T1-rho for femoral cartilage
 $ dosma --load research_data/patient01/data knee --fc --t2_star
