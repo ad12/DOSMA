@@ -9,7 +9,7 @@ We hope that this open-source pipeline will be useful for quick anatomy/patholog
 hub for adding support for analyzing different anatomies and scan sequences.
 
 [Documentation](https://ad12.github.io/DOSMA)
-
+[Questionnaire](https://forms.gle/sprthTC2swyt8dDb6)
 
 ## How to Cite
 ```
