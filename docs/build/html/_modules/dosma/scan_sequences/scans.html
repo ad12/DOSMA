@@ -180,6 +180,8 @@
 <span class="kn">from</span> <span class="nn">dosma.tissues.tissue</span> <span class="kn">import</span> <span class="n">Tissue</span>
 <span class="kn">from</span> <span class="nn">dosma.utils</span> <span class="kn">import</span> <span class="n">io_utils</span>
 
+<span class="kn">import</span> <span class="nn">logging</span>
+
 
 <div class="viewcode-block" id="ScanSequence"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.scans.ScanSequence">[docs]</a><span class="k">class</span> <span class="nc">ScanSequence</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract class for scan sequences and corresponding analysis.</span>
@@ -376,7 +378,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__load_dicom__</span><span class="p">()</span>
         <span class="k">except</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dicom directory </span><span class="si">{}</span><span class="s2"> not found. Will try to load from </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dicom_path</span><span class="p">,</span> <span class="n">base_load_dirpath</span><span class="p">))</span></div>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Dicom directory </span><span class="si">{}</span><span class="s2"> not found. Will try to load from </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dicom_path</span><span class="p">,</span> <span class="n">base_load_dirpath</span><span class="p">))</span></div>
 
     <span class="k">def</span> <span class="nf">__save_dir__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dir_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">create_dir</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns directory path specific to this scan.</span>
@@ -525,7 +527,7 @@
 <span class="sd">            ValueError: If files are not of the name `&lt;INTEGER&gt;.nii.gz` (e.g. `0.nii.gz`, `000.nii.gz`, etc.)</span>
 <span class="sd">                or if no interregistered files found in interregistered_dirpath.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading interregistered files&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading interregistered files&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="s2">&quot;interregistered&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">interregistered_dirpath</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid path for loading </span><span class="si">{}</span><span class="s2"> interregistered files&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">))</span>
 
@@ -622,7 +624,7 @@
         <span class="n">base_image_path</span><span class="p">,</span> <span class="n">base_time_id</span> <span class="o">=</span> <span class="n">base_image_info</span>
 
         <span class="c1"># Register base image to the target image.</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Registering </span><span class="si">%s</span><span class="s2"> (base image)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">base_image_path</span><span class="p">))</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Registering </span><span class="si">%s</span><span class="s2"> (base image)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">base_image_path</span><span class="p">))</span>
         <span class="n">transformation_files</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="n">use_mask_arr</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">]</span>
@@ -669,7 +671,7 @@
 <span class="sd">            str: File path to warped file in NIfTI format.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">filename</span><span class="p">,</span> <span class="n">image_id</span> <span class="o">=</span> <span class="n">image_info</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Applying transform </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Applying transform </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
         <span class="n">warped_file</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">transformation_files</span><span class="p">:</span>
             <span class="n">reg</span> <span class="o">=</span> <span class="n">ApplyWarp</span><span class="p">()</span>

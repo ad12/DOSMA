@@ -3,18 +3,12 @@
 Installation
 ================================================================================
 
-
-.. raw:: html
-
-  This page provides an overview of installing <i>DOSMA</i> as a stand-alone application.
-
+This page provides an overview of installing *DOSMA* as a stand-alone application.
 
 .. note::
 
-   The commands in this documentation are for Linux or Mac OS. If you work on Windows:
-
-   - Substitute ``/`` with ``\``
-   - Use the `Linux bash <https://itsfoss.com/install-bash-on-windows/>`_ provided in Windows 10
+   The commands in this documentation are for Linux or Mac OS. If you work on Windows
+   use the `Linux bash <https://itsfoss.com/install-bash-on-windows/>`_ provided in Windows 10.
 
 
 Anaconda

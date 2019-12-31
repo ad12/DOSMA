@@ -157,6 +157,7 @@
 <span class="c1"># Elastix files</span>
 
 <span class="n">__DIR__</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+<span class="n">__OUT_DIR__</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">__DIR__</span><span class="p">,</span> <span class="s1">&#39;../.dosma/&#39;</span><span class="p">)</span>
 <span class="n">__PATH_TO_ELASTIX_FOLDER__</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">__DIR__</span><span class="p">,</span> <span class="s1">&#39;resources/elastix/params&#39;</span><span class="p">)</span>
 
 <span class="n">ELASTIX_AFFINE_PARAMS_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">__PATH_TO_ELASTIX_FOLDER__</span><span class="p">,</span> <span class="s1">&#39;parameters-affine.txt&#39;</span><span class="p">)</span>
@@ -175,9 +176,12 @@
 
 
 <span class="c1"># Temporary file path</span>
-<span class="n">TEMP_FOLDER_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">__DIR__</span><span class="p">,</span> <span class="s1">&#39;temp&#39;</span><span class="p">)</span>
+<span class="n">TEMP_FOLDER_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">__OUT_DIR__</span><span class="p">,</span> <span class="s1">&#39;temp&#39;</span><span class="p">)</span>
 
 <span class="n">NIPYPE_LOGGING</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span>
+
+<span class="c1"># Log file path</span>
+<span class="n">LOG_FILE_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">__OUT_DIR__</span><span class="p">,</span> <span class="s1">&#39;dosma.log&#39;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="set_debug"><a class="viewcode-back" href="../../dosma.html#dosma.file_constants.set_debug">[docs]</a><span class="k">def</span> <span class="nf">set_debug</span><span class="p">():</span>

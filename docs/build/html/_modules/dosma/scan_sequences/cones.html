@@ -170,6 +170,8 @@
 <span class="kn">from</span> <span class="nn">dosma.utils.cmd_line_utils</span> <span class="kn">import</span> <span class="n">ActionWrapper</span>
 <span class="kn">from</span> <span class="nn">dosma.utils.fits</span> <span class="kn">import</span> <span class="n">MonoExponentialFit</span>
 
+<span class="kn">import</span> <span class="nn">logging</span>
+
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Cones&quot;</span><span class="p">]</span>
 
 <span class="n">__EXPECTED_NUM_ECHO_TIMES__</span> <span class="o">=</span> <span class="mi">4</span>
@@ -226,13 +228,13 @@
 
         <span class="n">temp_interregistered_dirpath</span> <span class="o">=</span> <span class="n">io_utils</span><span class="o">.</span><span class="n">mkdirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_path</span><span class="p">,</span> <span class="s2">&quot;interregistered&quot;</span><span class="p">))</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;==&quot;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Interregistering...&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Target: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target_path</span><span class="p">))</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;==&quot;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Interregistering...&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Target: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target_path</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">target_mask_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Mask: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target_mask_path</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;==&quot;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Mask: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target_mask_path</span><span class="p">))</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;==&quot;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
 
         <span class="n">files_to_warp</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">echo_time_ind</span> <span class="ow">in</span> <span class="n">raw_filepaths</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
