@@ -3,18 +3,12 @@
 Installation
 ================================================================================
 
-
-.. raw:: html
-
-  This page provides an overview of installing <i>DOSMA</i> as a stand-alone application.
-
+This page provides an overview of installing *DOSMA* as a stand-alone application.
 
 .. note::
 
-   The commands in this documentation are for Linux or Mac OS. If you work on Windows:
-
-   - Substitute ``/`` with ``\``
-   - Use the `Linux bash <https://itsfoss.com/install-bash-on-windows/>`_ provided in Windows 10
+   The commands in this documentation are for Linux or Mac OS. If you work on Windows
+   use the `Linux bash <https://itsfoss.com/install-bash-on-windows/>`_ provided in Windows 10.
 
 
 Anaconda
@@ -22,27 +16,31 @@ Anaconda
 Please install the `Anaconda <https://www.anaconda.com/download/>`_ virtual environment manager.
 
 
+.. _install-setup:
+
 Setup
 --------------------------------------------------------------------------------
 The following steps will create an Anaconda environment and a shortcut for running DOSMA from the command-line.
 **Avoid spaces in file paths.**
 
-1. Download the DOSMA `repository <https://github.com/ad12/DOSMA>`_ to a non-temporary location (i.e. not the `Downloads` folder)
-2. Open the DOSMA directory in the Terminal
+1. Download the `latest release <https://github.com/ad12/DOSMA/releases>`_ to a non-temporary location (i.e. not the `Downloads` folder)
+2. Open the project folder in the Terminal
 3. Navigate to ``bin`` folder::
 
     $ cd bin
 
-4. Initialize and run ``setup`` executable::
+4. Initialize ``setup`` executable::
 
     # Initialize executable.
     $ chmod +x setup
 
-    # Run executable. Use '-f' flag to update Anaconda environment.
+5. Run ``setup``::
+
+    # Run executable.
     $ ./setup
 
-5. Close terminal window.
-6. Open browser and complete `DOSMA questionnaire <https://forms.gle/sprthTC2swyt8dDb6>`_.
+6. Close terminal window.
+7. Complete `DOSMA questionnaire <https://forms.gle/sprthTC2swyt8dDb6>`_.
 
 If you want to update your Anaconda environment, run ``./setup -f`` in step 4.
 
@@ -88,7 +86,11 @@ Verification
 
     $ dosma --app
 
-.. note::
 
-    If you are using a remote connection, enable X11 port-forwarding to execute Step 4. If it is not enabled, the GUI
-    cannot be used for remote connections.
+Updating DOSMA
+--------------------------------------------------------------------------------
+To update DOSMA to the latest version, delete the ``DOSMA`` folder and follow the
+instructions in :ref:`Setup <install-setup>`.
+
+To use a specific DOSMA version, download the source code for the desired version
+and follow the setup instructions.

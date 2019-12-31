@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>dosma.msk.knee &mdash; DOSMA v0.0.10 documentation</title>
+  <title>dosma.msk.knee &mdash; DOSMA v0.0.11 documentation</title>
   
 
   
@@ -161,6 +161,8 @@
 <span class="kn">from</span> <span class="nn">dosma.tissues</span> <span class="kn">import</span> <span class="n">FemoralCartilage</span><span class="p">,</span> <span class="n">TibialCartilage</span><span class="p">,</span> <span class="n">Meniscus</span><span class="p">,</span> <span class="n">PatellarCartilage</span>
 <span class="kn">from</span> <span class="nn">dosma.quant_vals</span> <span class="kn">import</span> <span class="n">QuantitativeValueType</span> <span class="k">as</span> <span class="n">QV</span>
 
+<span class="kn">import</span> <span class="nn">logging</span>
+
 <span class="n">KNEE_KEY</span> <span class="o">=</span> <span class="s1">&#39;knee&#39;</span>
 <span class="n">MEDIAL_TO_LATERAL_KEY</span> <span class="o">=</span> <span class="s1">&#39;ml&#39;</span>
 <span class="n">TISSUES_KEY</span> <span class="o">=</span> <span class="s1">&#39;tissues&#39;</span>
@@ -210,7 +212,7 @@
     <span class="n">pid</span> <span class="o">=</span> <span class="n">vargin</span><span class="p">[</span><span class="n">PID_KEY</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">tissues</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">tissues</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Computing for all supported knee tissues...&#39;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Computing for all supported knee tissues...&#39;</span><span class="p">)</span>
         <span class="n">tissues</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">SUPPORTED_TISSUES</span><span class="p">:</span>
             <span class="n">tissues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">())</span>
@@ -222,7 +224,7 @@
             <span class="n">qvs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">qv</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">qvs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Computing for all supported quantitative values...&#39;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Computing for all supported quantitative values...&#39;</span><span class="p">)</span>
         <span class="n">qvs</span> <span class="o">=</span> <span class="n">SUPPORTED_QUANTITATIVE_VALUES</span>
 
     <span class="k">for</span> <span class="n">tissue</span> <span class="ow">in</span> <span class="n">tissues</span><span class="p">:</span>
@@ -230,14 +232,14 @@
         <span class="n">tissue</span><span class="o">.</span><span class="n">medial_to_lateral</span> <span class="o">=</span> <span class="n">medial_to_lateral</span>
         <span class="n">tissue</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">load_path</span><span class="p">)</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;==&#39;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">tissue</span><span class="o">.</span><span class="n">FULL_NAME</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;==&#39;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;==&#39;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">tissue</span><span class="o">.</span><span class="n">FULL_NAME</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;==&#39;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">qv</span> <span class="ow">in</span> <span class="n">qvs</span><span class="p">:</span>
             <span class="c1"># load file</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Analyzing </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">qv</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Analyzing </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">qv</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
             <span class="n">tissue</span><span class="o">.</span><span class="n">calc_quant_vals</span><span class="p">()</span>
 
     <span class="k">for</span> <span class="n">tissue</span> <span class="ow">in</span> <span class="n">tissues</span><span class="p">:</span>

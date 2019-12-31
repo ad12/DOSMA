@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>dosma.scan_sequences.mapss &mdash; DOSMA v0.0.10 documentation</title>
+  <title>dosma.scan_sequences.mapss &mdash; DOSMA v0.0.11 documentation</title>
   
 
   
@@ -171,6 +171,7 @@
 <span class="kn">from</span> <span class="nn">dosma.utils.cmd_line_utils</span> <span class="kn">import</span> <span class="n">ActionWrapper</span>
 <span class="kn">from</span> <span class="nn">dosma.utils.fits</span> <span class="kn">import</span> <span class="n">MonoExponentialFit</span>
 
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Sequence</span>
 
 
@@ -229,10 +230,10 @@
 
         <span class="n">num_echos</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">volumes</span><span class="p">)</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;==&quot;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Intraregistering...&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;==&quot;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;==&quot;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Intraregistering...&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;==&quot;</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
 
         <span class="c1"># temporarily save subvolumes as nifti file</span>
         <span class="n">raw_volumes_base_path</span> <span class="o">=</span> <span class="n">io_utils</span><span class="o">.</span><span class="n">mkdirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_path</span><span class="p">,</span> <span class="s2">&quot;raw&quot;</span><span class="p">))</span>
@@ -261,7 +262,7 @@
                                                                      <span class="s2">&quot;</span><span class="si">{:03d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">echo_index</span><span class="p">)))</span>
             <span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="p">[</span><span class="n">fc</span><span class="o">.</span><span class="n">ELASTIX_AFFINE_PARAMS_FILE</span><span class="p">]</span>
             <span class="n">reg</span><span class="o">.</span><span class="n">terminal_output</span> <span class="o">=</span> <span class="n">fc</span><span class="o">.</span><span class="n">NIPYPE_LOGGING</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Registering </span><span class="si">{}</span><span class="s2"> -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">echo_index</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">target_echo_index</span><span class="p">)))</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Registering </span><span class="si">{}</span><span class="s2"> -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">echo_index</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">target_echo_index</span><span class="p">)))</span>
             <span class="n">tmp</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
             <span class="n">warped_file</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">warped_file</span>

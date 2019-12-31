@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installation &mdash; DOSMA v0.0.10 documentation</title>
+  <title>Installation &mdash; DOSMA v0.0.11 documentation</title>
   
 
   
@@ -91,6 +91,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#verification">Verification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#updating-dosma">Updating DOSMA</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="documentation.html">Documentation</a></li>
@@ -160,41 +161,42 @@
             
   <div class="section" id="installation">
 <span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-This page provides an overview of installing <i>DOSMA</i> as a stand-alone application.<div class="admonition note">
+<p>This page provides an overview of installing <em>DOSMA</em> as a stand-alone application.</p>
+<div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The commands in this documentation are for Linux or Mac OS. If you work on Windows:</p>
-<ul class="simple">
-<li><p>Substitute <code class="docutils literal notranslate"><span class="pre">/</span></code> with <code class="docutils literal notranslate"><span class="pre">\</span></code></p></li>
-<li><p>Use the <a class="reference external" href="https://itsfoss.com/install-bash-on-windows/">Linux bash</a> provided in Windows 10</p></li>
-</ul>
+<p>The commands in this documentation are for Linux or Mac OS. If you work on Windows
+use the <a class="reference external" href="https://itsfoss.com/install-bash-on-windows/">Linux bash</a> provided in Windows 10.</p>
 </div>
 <div class="section" id="anaconda">
 <h2>Anaconda<a class="headerlink" href="#anaconda" title="Permalink to this headline">¶</a></h2>
 <p>Please install the <a class="reference external" href="https://www.anaconda.com/download/">Anaconda</a> virtual environment manager.</p>
 </div>
 <div class="section" id="setup">
-<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
+<span id="install-setup"></span><h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
 <p>The following steps will create an Anaconda environment and a shortcut for running DOSMA from the command-line.
 <strong>Avoid spaces in file paths.</strong></p>
 <ol class="arabic">
-<li><p>Download the DOSMA <a class="reference external" href="https://github.com/ad12/DOSMA">repository</a> to a non-temporary location (i.e. not the <cite>Downloads</cite> folder)</p></li>
-<li><p>Open the DOSMA directory in the Terminal</p></li>
+<li><p>Download the <a class="reference external" href="https://github.com/ad12/DOSMA/releases">latest release</a> to a non-temporary location (i.e. not the <cite>Downloads</cite> folder)</p></li>
+<li><p>Open the project folder in the Terminal</p></li>
 <li><p>Navigate to <code class="docutils literal notranslate"><span class="pre">bin</span></code> folder:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd bin
 </pre></div>
 </div>
 </li>
-<li><p>Initialize and run <code class="docutils literal notranslate"><span class="pre">setup</span></code> executable:</p>
+<li><p>Initialize <code class="docutils literal notranslate"><span class="pre">setup</span></code> executable:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Initialize executable.
 $ chmod +x setup
-
-# Run executable. Use &#39;-f&#39; flag to update Anaconda environment.
+</pre></div>
+</div>
+</li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">setup</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Run executable.
 $ ./setup
 </pre></div>
 </div>
 </li>
 <li><p>Close terminal window.</p></li>
-<li><p>Open browser and complete <a class="reference external" href="https://forms.gle/sprthTC2swyt8dDb6">DOSMA questionnaire</a>.</p></li>
+<li><p>Complete <a class="reference external" href="https://forms.gle/sprthTC2swyt8dDb6">DOSMA questionnaire</a>.</p></li>
 </ol>
 <p>If you want to update your Anaconda environment, run <code class="docutils literal notranslate"><span class="pre">./setup</span> <span class="pre">-f</span></code> in step 4.</p>
 <div class="section" id="segmentation">
@@ -241,11 +243,13 @@ follow the instructions below:</p>
 </div>
 </li>
 </ol>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If you are using a remote connection, enable X11 port-forwarding to execute Step 4. If it is not enabled, the GUI
-cannot be used for remote connections.</p>
 </div>
+<div class="section" id="updating-dosma">
+<h2>Updating DOSMA<a class="headerlink" href="#updating-dosma" title="Permalink to this headline">¶</a></h2>
+<p>To update DOSMA to the latest version, delete the <code class="docutils literal notranslate"><span class="pre">DOSMA</span></code> folder and follow the
+instructions in <a class="reference internal" href="#install-setup"><span class="std std-ref">Setup</span></a>.</p>
+<p>To use a specific DOSMA version, download the source code for the desired version
+and follow the setup instructions.</p>
 </div>
 </div>
 

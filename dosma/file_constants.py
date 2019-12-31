@@ -7,6 +7,7 @@ DEBUG = 0
 # Elastix files
 
 __DIR__ = os.path.dirname(__file__)
+__OUT_DIR__ = os.path.join(__DIR__, '../.dosma/')
 __PATH_TO_ELASTIX_FOLDER__ = os.path.join(__DIR__, 'resources/elastix/params')
 
 ELASTIX_AFFINE_PARAMS_FILE = os.path.join(__PATH_TO_ELASTIX_FOLDER__, 'parameters-affine.txt')
@@ -25,9 +26,12 @@ MAPSS_ELASTIX_RIGID_INTERREGISTER_PARAMS_FILE = os.path.join(__PATH_TO_ELASTIX_F
 
 
 # Temporary file path
-TEMP_FOLDER_PATH = os.path.join(__DIR__, 'temp')
+TEMP_FOLDER_PATH = os.path.join(__OUT_DIR__, 'temp')
 
 NIPYPE_LOGGING = 'none'
+
+# Log file path
+LOG_FILE_PATH = os.path.join(__OUT_DIR__, 'dosma.log')
 
 
 def set_debug():

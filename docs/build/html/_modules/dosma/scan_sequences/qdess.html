@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>dosma.scan_sequences.qdess &mdash; DOSMA v0.0.10 documentation</title>
+  <title>dosma.scan_sequences.qdess &mdash; DOSMA v0.0.11 documentation</title>
   
 
   
@@ -172,6 +172,8 @@
 <span class="kn">from</span> <span class="nn">dosma.utils.cmd_line_utils</span> <span class="kn">import</span> <span class="n">ActionWrapper</span>
 <span class="kn">from</span> <span class="nn">dosma.quant_vals</span> <span class="kn">import</span> <span class="n">T2</span>
 
+<span class="kn">import</span> <span class="nn">logging</span>
+
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;QDess&quot;</span><span class="p">]</span>
 
 
@@ -224,7 +226,7 @@
 <span class="sd">            MedicalVolume: Binary mask for segmented region.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Use first echo for segmentation.</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Segmenting </span><span class="si">{}</span><span class="s2">...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tissue</span><span class="o">.</span><span class="n">FULL_NAME</span><span class="p">))</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Segmenting </span><span class="si">{}</span><span class="s2">...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tissue</span><span class="o">.</span><span class="n">FULL_NAME</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="n">use_rms</span><span class="p">:</span>
             <span class="n">segmentation_volume</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_rms</span><span class="p">()</span>

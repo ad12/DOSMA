@@ -4,9 +4,10 @@ Introduction
 ================================================================================
 DOSMA is an open-source Python library and application for musculoskeletal (MSK) MRI analysis.
 
-In offering support for multiple scan types and tissues, DOSMA is built to streamline rapid multi-scan analysis of MSK
-anatomy. Because DOSMA is abstracted to be a framework, it can be used to write analysis protocols that can be run for
-different combination of scans, reducing overhead of computation.
+In offering support for multiple scan types and tissues, DOSMA is designed to
+streamline rapid multi-scan analysis of MSK anatomy. Because DOSMA is a
+framework, it is built to be flexible enough to write analysis protocols that
+can be run for different combination of prescribed scans.
 
 For example, the analysis workflow for a combination
 of quantitative DESS, CubeQuant (3D fast spin echo), and ultra-short echo time Cones scans for multiple patients
@@ -17,9 +18,9 @@ of quantitative DESS, CubeQuant (3D fast spin echo), and ultra-short echo time C
    :alt: Example workflow for analyzing multiple scans per patient
    :figclass: align-center
 
-   Example workflow for analyzing 1. quantitative DESS (qDESS), a |T2|-weighted sequence,
-   2. CubeQuant, a |T1rho|-weighted sequence, and ultra-short echo time Cones, a |T2star|
-   weighted sequence.
+   Example workflow for analyzing 1. quantitative DESS (qDESS), a |T2|-weighted
+   sequence, 2. CubeQuant, a |T1rho|-weighted sequence, and 3. ultra-short echo
+   time (UTE) Cones, a |T2star| weighted sequence.
 
 Workflow
 --------------------------------------------------------------------------------
@@ -85,4 +86,3 @@ solution for the library (`Issue #39 <https://github.com/ad12/DOSMA/issues/39>`_
 .. |T1| replace:: T\ :sub:`1`
 .. |T1rho| replace:: T\ :sub:`1`:math:`{\rho}`
 .. |T2star| replace:: T\ :sub:`2`:sup:`*`
-

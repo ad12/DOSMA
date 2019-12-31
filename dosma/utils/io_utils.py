@@ -1,9 +1,12 @@
 import os
 import pickle
 
+from time import localtime, strftime
+
 import h5py
 import pandas as pd
 
+import logging
 from typing import Sequence
 
 __all__ = ['mkdirs', 'save_pik', 'load_pik', 'save_h5', 'load_h5', 'save_tables']
@@ -121,3 +124,37 @@ def save_tables(file_path: str, data_frames: Sequence[pd.DataFrame], sheet_names
         df.to_excel(writer, sheet_names[i], index=False)
 
     writer.save()
+
+
+def init_logger(log_file: str, debug: bool=False):
+    """Initialize logger.
+
+    Args:
+        log_file (str): File path to log file.
+        debug (:obj:`bool`, optional): If `True`, debug mode will be enabled for the logger. This means debug statements
+            will also be written to the log file. Defaults to `False`.
+    """
+    level = logging.DEBUG if debug else logging.INFO
+    logging.basicConfig(level=level)
+    log_formatter = logging.Formatter("[%(levelname)-5.5s] %(message)s")
+    root_logger = logging.getLogger()
+
+    if os.path.exists(log_file):
+        mode = 'a'
+    else:
+        mode = 'w'
+
+    mkdirs(os.path.dirname(log_file))
+
+    file_handler = logging.FileHandler(log_file, mode=mode)
+    file_handler.setFormatter(log_formatter)
+    root_logger.addHandler(file_handler)
+
+    logging.captureWarnings(True)
+
+    if mode == 'a':
+        logging.info('\n'*4)
+
+    logging.info('==' * 40)
+    logging.info('Timestamp: %s' % strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    logging.info('\n\n')

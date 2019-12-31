@@ -20,6 +20,8 @@ from dosma.utils import io_utils
 from dosma.utils.cmd_line_utils import ActionWrapper
 from dosma.utils.fits import MonoExponentialFit
 
+import logging
+
 __all__ = ["Cones"]
 
 __EXPECTED_NUM_ECHO_TIMES__ = 4
@@ -76,13 +78,13 @@ class Cones(NonTargetSequence):
 
         temp_interregistered_dirpath = io_utils.mkdirs(os.path.join(self.temp_path, "interregistered"))
 
-        print("")
-        print("==" * 40)
-        print("Interregistering...")
-        print("Target: {}".format(target_path))
+        logging.info("")
+        logging.info("==" * 40)
+        logging.info("Interregistering...")
+        logging.info("Target: {}".format(target_path))
         if target_mask_path is not None:
-            print("Mask: {}".format(target_mask_path))
-        print("==" * 40)
+            logging.info("Mask: {}".format(target_mask_path))
+        logging.info("==" * 40)
 
         files_to_warp = []
         for echo_time_ind in raw_filepaths.keys():

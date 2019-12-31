@@ -5,7 +5,12 @@ This repository hosts an open-source Python library for MRI processing technique
 - relaxation parameter analysis (T1, T1-rho, T2, T2*, etc.)
 - anatomical features (patellar tilt, femoral cartilage thickness, etc.)
 
-We hope that this open-source pipeline will be useful for quick anatomy/pathology analysis from MRI and will serve as a hub for adding support for analyzing different anatomies and scan sequences.
+We hope that this open-source pipeline will be useful for quick anatomy/pathology analysis from MRI and will serve as a 
+hub for adding support for analyzing different anatomies and scan sequences.
+
+[Documentation](https://ad12.github.io/DOSMA)
+
+[Questionnaire](https://forms.gle/sprthTC2swyt8dDb6)
 
 ## How to Cite
 ```

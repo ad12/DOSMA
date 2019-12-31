@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Introduction &mdash; DOSMA v0.0.10 documentation</title>
+  <title>Introduction &mdash; DOSMA v0.0.11 documentation</title>
   
 
   
@@ -165,17 +165,18 @@
   <div class="section" id="introduction">
 <span id="id1"></span><h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
 <p>DOSMA is an open-source Python library and application for musculoskeletal (MSK) MRI analysis.</p>
-<p>In offering support for multiple scan types and tissues, DOSMA is built to streamline rapid multi-scan analysis of MSK
-anatomy. Because DOSMA is abstracted to be a framework, it can be used to write analysis protocols that can be run for
-different combination of scans, reducing overhead of computation.</p>
+<p>In offering support for multiple scan types and tissues, DOSMA is designed to
+streamline rapid multi-scan analysis of MSK anatomy. Because DOSMA is a
+framework, it is built to be flexible enough to write analysis protocols that
+can be run for different combination of prescribed scans.</p>
 <p>For example, the analysis workflow for a combination
 of quantitative DESS, CubeQuant (3D fast spin echo), and ultra-short echo time Cones scans for multiple patients
 (shown below) can be done in 7 lines of code:</p>
 <div class="align-center figure" id="id2">
 <img alt="Example workflow for analyzing multiple scans per patient" src="../_images/workflow.png" />
-<p class="caption"><span class="caption-text">Example workflow for analyzing 1. quantitative DESS (qDESS), a T<sub>2</sub>-weighted sequence,
-2. CubeQuant, a T<sub>1</sub><span class="math notranslate nohighlight">\({\rho}\)</span>-weighted sequence, and ultra-short echo time Cones, a T<sub>2</sub><sup>*</sup>
-weighted sequence.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example workflow for analyzing 1. quantitative DESS (qDESS), a T<sub>2</sub>-weighted
+sequence, 2. CubeQuant, a T<sub>1</sub><span class="math notranslate nohighlight">\({\rho}\)</span>-weighted sequence, and 3. ultra-short echo
+time (UTE) Cones, a T<sub>2</sub><sup>*</sup> weighted sequence.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
 </div>
 <div class="section" id="workflow">
 <h2>Workflow<a class="headerlink" href="#workflow" title="Permalink to this headline">¶</a></h2>

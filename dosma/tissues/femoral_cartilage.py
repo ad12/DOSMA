@@ -27,9 +27,9 @@ from dosma.utils.geometry_utils import circle_fit, cart2pol
 from dosma.quant_vals import QuantitativeValueType
 
 # milliseconds
-BOUNDS = {QuantitativeValueType.T2: 60.0,
+BOUNDS = {QuantitativeValueType.T2: 80.0,
           QuantitativeValueType.T1_RHO: 100.0,
-          QuantitativeValueType.T2_STAR: 50.0}
+          QuantitativeValueType.T2_STAR: 80.0}
 
 THICKNESS_DIVISOR = 0.5  # split between superficial/deep cartilage
 NB_BINS = 72  # number of bins
