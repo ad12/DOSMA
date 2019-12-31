@@ -32,8 +32,11 @@ from dosma.scan_sequences.cube_quant import CubeQuant
 from dosma.scan_sequences.mapss import Mapss
 from dosma.scan_sequences.qdess import QDess
 from dosma.scan_sequences.scans import ScanSequence
-from dosma.tissues.tissue import Tissue
 from dosma.quant_vals import QuantitativeValueType as QV
+from dosma.tissues.tissue import Tissue
+from dosma.utils import io_utils
+
+import logging
 
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
@@ -86,7 +89,7 @@ def parse_tissues(vargin: dict):
 
     # if no tissues are specified, do computation for all supported tissues
     if len(tissues) == 0:
-        print('No tissues specified, computing for all supported tissues...')
+        logging.info('No tissues specified, computing for all supported tissues...')
         tissues = []
         for tissue in knee.SUPPORTED_TISSUES:
             t = tissue()
@@ -101,7 +104,7 @@ def parse_tissues(vargin: dict):
     for tissue in tissues:
         analysis_str += '%s, ' % tissue.FULL_NAME
 
-    print(analysis_str)
+    logging.info(analysis_str)
 
     return tissues
 
@@ -250,7 +253,7 @@ def add_scans(dosma_subparser):
 
 def handle_scan(vargin):
     scan_name = vargin[SCAN_KEY]
-    print('Analyzing %s...' % scan_name)
+    logging.info("Analyzing {}...".format(scan_name))
     scan = None
 
     for p_scan in SUPPORTED_SCAN_TYPES:
@@ -306,6 +309,7 @@ def handle_scan(vargin):
 
     return scan
 
+
 def parse_dicom_tag_splitby(vargin_str):
     if not vargin_str:
         return vargin_str
@@ -315,6 +319,7 @@ def parse_dicom_tag_splitby(vargin_str):
         return parsed_str
     except:
         return vargin_str
+
 
 def parse_args(f_input=None):
     """Parse arguments given through command line (argv)
@@ -370,6 +375,10 @@ def parse_args(f_input=None):
     else:
         args = parser.parse_args()
 
+        # Only initialize logger if called from command line.
+        # If UI is using it, the logger should be initialized by the UI.
+        io_utils.init_logger(fc.LOG_FILE_PATH, args.debug)
+
     vargin = vars(args)
 
     if vargin[DEBUG_KEY]:
@@ -377,8 +386,7 @@ def parse_args(f_input=None):
 
     gpu = vargin[GPU_KEY]
 
-    if fc.DEBUG:
-        print(vargin)
+    logging.debug(vargin)
 
     if gpu is not None:
         os.environ['CUDA_VISIBLE_DEVICES'] = gpu
@@ -411,7 +419,7 @@ def parse_args(f_input=None):
     args.func(vargin)
 
     time_elapsed = (time.time() - start_time)
-    print('Time Elapsed: %0.2f seconds' % (time.time() - start_time))
+    logging.info("Time Elapsed: {:.2f} seconds".format(time.time() - start_time))
 
     return time_elapsed
 

@@ -22,6 +22,8 @@ from dosma.data_io import format_io_utils as fio_utils
 from dosma.data_io.orientation import SAGITTAL, CORONAL, AXIAL
 from dosma.msk import knee
 
+import logging
+
 matplotlib.use("TkAgg")
 LARGE_FONT = ("Verdana", 12)
 
@@ -312,7 +314,7 @@ class DosmaFrame(tk.Frame):
                                                        tissue_str,
                                                        action_str)
 
-            print('CMD LINE INPUT: %s' % str_f)
+            logging.info('CMD LINE INPUT: %s' % str_f)
 
             parse_args(str_f.split())
         except Exception as e:

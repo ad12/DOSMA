@@ -21,6 +21,7 @@ from dosma import quant_vals as qv
 from dosma.utils.cmd_line_utils import ActionWrapper
 from dosma.utils.fits import MonoExponentialFit
 
+import logging
 from typing import List, Sequence
 
 
@@ -79,10 +80,10 @@ class Mapss(TargetSequence):
 
         num_echos = len(volumes)
 
-        print("")
-        print("==" * 40)
-        print("Intraregistering...")
-        print("==" * 40)
+        logging.info("")
+        logging.info("==" * 40)
+        logging.info("Intraregistering...")
+        logging.info("==" * 40)
 
         # temporarily save subvolumes as nifti file
         raw_volumes_base_path = io_utils.mkdirs(os.path.join(self.temp_path, "raw"))
@@ -111,7 +112,7 @@ class Mapss(TargetSequence):
                                                                      "{:03d}".format(echo_index)))
             reg.inputs.parameters = [fc.ELASTIX_AFFINE_PARAMS_FILE]
             reg.terminal_output = fc.NIPYPE_LOGGING
-            print("Registering {} -> {}".format(str(echo_index), str(target_echo_index)))
+            logging.info("Registering {} -> {}".format(str(echo_index), str(target_echo_index)))
             tmp = reg.run()
 
             warped_file = tmp.outputs.warped_file

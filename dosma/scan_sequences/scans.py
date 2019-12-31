@@ -30,6 +30,8 @@ from dosma.models.seg_model import SegModel
 from dosma.tissues.tissue import Tissue
 from dosma.utils import io_utils
 
+import logging
+
 
 class ScanSequence(ABC):
     """Abstract class for scan sequences and corresponding analysis.
@@ -226,7 +228,7 @@ class ScanSequence(ABC):
         try:
             self.__load_dicom__()
         except:
-            print("Dicom directory {} not found. Will try to load from {}".format(self.dicom_path, base_load_dirpath))
+            logging.info("Dicom directory {} not found. Will try to load from {}".format(self.dicom_path, base_load_dirpath))
 
     def __save_dir__(self, dir_path: str, create_dir: bool = True):
         """Returns directory path specific to this scan.
@@ -375,7 +377,7 @@ class NonTargetSequence(ScanSequence):
             ValueError: If files are not of the name `<INTEGER>.nii.gz` (e.g. `0.nii.gz`, `000.nii.gz`, etc.)
                 or if no interregistered files found in interregistered_dirpath.
         """
-        print("Loading interregistered files")
+        logging.info("Loading interregistered files")
         if "interregistered" not in interregistered_dirpath:
             raise ValueError("Invalid path for loading {} interregistered files".format(self.NAME))
 
@@ -472,7 +474,7 @@ class NonTargetSequence(ScanSequence):
         base_image_path, base_time_id = base_image_info
 
         # Register base image to the target image.
-        print("Registering %s (base image)".format(base_image_path))
+        logging.info("Registering %s (base image)".format(base_image_path))
         transformation_files = []
 
         use_mask_arr = [False, True]
@@ -519,7 +521,7 @@ class NonTargetSequence(ScanSequence):
             str: File path to warped file in NIfTI format.
         """
         filename, image_id = image_info
-        print("Applying transform {}".format(filename))
+        logging.info("Applying transform {}".format(filename))
         warped_file = ''
         for f in transformation_files:
             reg = ApplyWarp()

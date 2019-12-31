@@ -16,7 +16,7 @@ from dosma import quant_vals as qv
 from dosma.utils.cmd_line_utils import ActionWrapper
 from dosma.utils.fits import MonoExponentialFit
 
-from typing import List
+import logging
 
 __all__ = ["CubeQuant"]
 
@@ -24,8 +24,8 @@ __EXPECTED_NUM_SPIN_LOCK_TIMES__ = 4
 __R_SQUARED_THRESHOLD__ = 0.9
 __INITIAL_T1_RHO_VAL__ = 70.0
 
-__T1_RHO_LOWER_BOUND__ = 0
-__T1_RHO_UPPER_BOUND__ = 500
+__T1_RHO_LOWER_BOUND__ = 0.0
+__T1_RHO_UPPER_BOUND__ = 500.0
 __T1_RHO_DECIMAL_PRECISION__ = 3
 
 
@@ -54,13 +54,13 @@ class CubeQuant(NonTargetSequence):
 
         temp_interregistered_dirpath = io_utils.mkdirs(os.path.join(self.temp_path, 'interregistered'))
 
-        print("")
-        print("==" * 40)
-        print("Interregistering...")
-        print("Target: {}".format(target_path))
+        logging.info("")
+        logging.info("==" * 40)
+        logging.info("Interregistering...")
+        logging.info("Target: {}".format(target_path))
         if target_mask_path is not None:
-            print("Mask: {}".format(target_mask_path))
-        print("==" * 40)
+            logging.info("Mask: {}".format(target_mask_path))
+        logging.info("==" * 40)
 
         if not target_mask_path:
             parameter_files = [fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE]
@@ -158,10 +158,10 @@ class CubeQuant(NonTargetSequence):
         if subvolumes is None:
             raise TypeError("subvolumes must be dict")
 
-        print("")
-        print("==" * 40)
-        print("Intraregistering...")
-        print("==" * 40)
+        logging.info("")
+        logging.info("==" * 40)
+        logging.info("Intraregistering...")
+        logging.info("==" * 40)
 
         # temporarily save subvolumes as nifti file
         ordered_spin_lock_time_indices = natsorted(list(subvolumes.keys()))
@@ -190,7 +190,7 @@ class CubeQuant(NonTargetSequence):
                                                                      "{:03d}".format(spin_lock_time_index)))
             reg.inputs.parameters = [fc.ELASTIX_AFFINE_PARAMS_FILE]
             reg.terminal_output = fc.NIPYPE_LOGGING
-            print("Registering {} -> {}".format(str(spin_lock_time_index), str(ordered_spin_lock_time_indices[0])))
+            logging.info("Registering {} -> {}".format(str(spin_lock_time_index), str(ordered_spin_lock_time_indices[0])))
             tmp = reg.run()
 
             warped_file = tmp.outputs.warped_file

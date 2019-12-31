@@ -22,6 +22,8 @@ from dosma.tissues.tissue import Tissue
 from dosma.utils.cmd_line_utils import ActionWrapper
 from dosma.quant_vals import T2
 
+import logging
+
 __all__ = ["QDess"]
 
 
@@ -74,7 +76,7 @@ class QDess(TargetSequence):
             MedicalVolume: Binary mask for segmented region.
         """
         # Use first echo for segmentation.
-        print("Segmenting {}...".format(tissue.FULL_NAME))
+        logging.info("Segmenting {}...".format(tissue.FULL_NAME))
 
         if use_rms:
             segmentation_volume = self.calc_rms()

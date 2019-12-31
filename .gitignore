@@ -10,6 +10,7 @@
 # data
 **/dicoms
 **/unittest-data
+**/.dosma
 
 # test data files
 **/temp

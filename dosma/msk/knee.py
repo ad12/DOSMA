@@ -11,6 +11,8 @@ from dosma.defaults import preferences
 from dosma.tissues import FemoralCartilage, TibialCartilage, Meniscus, PatellarCartilage
 from dosma.quant_vals import QuantitativeValueType as QV
 
+import logging
+
 KNEE_KEY = 'knee'
 MEDIAL_TO_LATERAL_KEY = 'ml'
 TISSUES_KEY = 'tissues'
@@ -60,7 +62,7 @@ def handle_knee(vargin):
     pid = vargin[PID_KEY]
 
     if tissues is None or len(tissues) == 0:
-        print('Computing for all supported knee tissues...')
+        logging.info('Computing for all supported knee tissues...')
         tissues = []
         for t in SUPPORTED_TISSUES:
             tissues.append(t())
@@ -72,7 +74,7 @@ def handle_knee(vargin):
             qvs.append(qv)
 
     if len(qvs) == 0:
-        print('Computing for all supported quantitative values...')
+        logging.info('Computing for all supported quantitative values...')
         qvs = SUPPORTED_QUANTITATIVE_VALUES
 
     for tissue in tissues:
@@ -80,14 +82,14 @@ def handle_knee(vargin):
         tissue.medial_to_lateral = medial_to_lateral
         tissue.load_data(load_path)
 
-        print('')
-        print('==' * 40)
-        print(tissue.FULL_NAME)
-        print('==' * 40)
+        logging.info('')
+        logging.info('==' * 40)
+        logging.info(tissue.FULL_NAME)
+        logging.info('==' * 40)
 
         for qv in qvs:
             # load file
-            print('Analyzing %s' % qv.name.lower())
+            logging.info('Analyzing %s' % qv.name.lower())
             tissue.calc_quant_vals()
 
     for tissue in tissues:
