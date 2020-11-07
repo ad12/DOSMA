@@ -28,7 +28,7 @@ __all__ = ["PatellarCartilage"]
 
 class PatellarCartilage(Tissue):
     """Handles analysis and visualization for patellar cartilage."""
-    ID = 2
+    ID = 3
     STR_ID = "pc"
     FULL_NAME = "patellar cartilage"
 

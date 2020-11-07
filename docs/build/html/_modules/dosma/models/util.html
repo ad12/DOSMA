@@ -156,11 +156,13 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">dosma.models.oaiunet2d</span> <span class="kn">import</span> <span class="n">OAIUnet2D</span>
+<span class="kn">from</span> <span class="nn">dosma.models.oaiunet2d</span> <span class="kn">import</span> <span class="n">IWOAIOAIUnet2D</span>
+<span class="kn">from</span> <span class="nn">dosma.models.oaiunet2d</span> <span class="kn">import</span> <span class="n">IWOAIOAIUnet2DNormalized</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;get_model&#39;</span><span class="p">,</span> <span class="s1">&#39;SUPPORTED_MODELS&#39;</span><span class="p">]</span>
 
 <span class="c1"># Network architectures currently supported</span>
-<span class="n">__SUPPORTED_MODELS__</span> <span class="o">=</span> <span class="p">[</span><span class="n">OAIUnet2D</span><span class="p">]</span>
+<span class="n">__SUPPORTED_MODELS__</span> <span class="o">=</span> <span class="p">[</span><span class="n">OAIUnet2D</span><span class="p">,</span> <span class="n">IWOAIOAIUnet2D</span><span class="p">,</span> <span class="n">IWOAIOAIUnet2DNormalized</span><span class="p">]</span>
 
 <span class="c1"># Initialize supported models for the command line</span>
 <span class="n">SUPPORTED_MODELS</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">ALIASES</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">__SUPPORTED_MODELS__</span><span class="p">]</span>

@@ -20,6 +20,8 @@ import ast
 import inspect
 import os
 import time
+from collections import defaultdict
+from typing import Sequence
 
 from dosma import file_constants as fc
 from dosma.defaults import preferences
@@ -124,14 +126,21 @@ def add_segmentation_subparser(parser):
 
 def handle_segmentation(vargin, scan: ScanSequence, tissue: Tissue):
     segment_weights_path = vargin[SEGMENTATION_WEIGHTS_DIR_KEY][0]
-    tissue.find_weights(segment_weights_path)
+    if isinstance(tissue, Sequence):
+        weights = [t.find_weights(segment_weights_path) for t in tissue]
+        assert all(weights_file == weights[0] for weights_file in weights)
+        weights_path = weights[0]
+    else:
+        weights_path = tissue.find_weights(segment_weights_path)
 
     # Load model
     dims = scan.get_dimensions()
     input_shape = (dims[0], dims[1], 1)
-    model = get_model(vargin[SEGMENTATION_MODEL_KEY],
-                      input_shape=input_shape,
-                      weights_path=tissue.weights_file_path)
+    model = get_model(
+        vargin[SEGMENTATION_MODEL_KEY],
+        input_shape=input_shape,
+        weights_path=weights_path,
+    )
     model.batch_size = vargin[SEGMENTATION_BATCH_SIZE_KEY]
 
     return model
@@ -251,7 +260,55 @@ def add_scans(dosma_subparser):
         scan_parser.set_defaults(func=handle_scan)
 
 
+def _find_tissue_groups(vargin, tissues: Sequence[Tissue]):
+    """Finds groups of tissues that can be segmented together.
+
+    Some segmentation models have multiple weight files for different tissues.
+    Many models have one weight file for multiple tissues (i.e. multi-class segmentation).
+
+    This function matches tissues with their corresponding weight file.
+    If multiple tissues share a single weight file, they will map to the same weight file,
+    allowing multiple tissues to be segmented simultaneously.
+
+    This is a temporary fix for segmenting multiple classes.
+    It should not be extended or used as precedence for future development.
+    """
+    if not isinstance(tissues, Sequence):
+        assert isinstance(tissues, Tissue)
+        tissues = [tissues]
+
+    weights_dir = vargin[SEGMENTATION_WEIGHTS_DIR_KEY][0]
+    weights_to_tissues = defaultdict(list)
+    for tissue in tissues:
+        weights_to_tissues[tissue.find_weights(weights_dir)].append(tissue)
+
+    return weights_to_tissues
+
+
+def _build_params(vargin, scan, parameters, tissue):
+    param_dict = {}
+    for param_name in parameters.keys():
+        param = parameters[param_name]
+        param_type = param.annotation
+
+        if param_name == 'self':
+            continue
+
+        if param_type is Tissue:
+            param_dict['tissue'] = tissue
+            continue
+
+        if param_type in CUSTOM_TYPE_TO_HANDLE_DICT:
+            param_dict[param_name] = CUSTOM_TYPE_TO_HANDLE_DICT[param_type](
+                vargin, scan, tissue
+            )
+        else:
+            param_dict[param_name] = parse_basic_type(vargin[param_name], param_type)
+    return param_dict
+
+
 def handle_scan(vargin):
+
     scan_name = vargin[SCAN_KEY]
     logging.info("Analyzing {}...".format(scan_name))
     scan = None
@@ -261,12 +318,15 @@ def handle_scan(vargin):
             scan = p_scan
             break
 
-    scan = scan(dicom_path=vargin[DICOM_KEY], load_path=vargin[LOAD_KEY],
-                ignore_ext=vargin[IGNORE_EXT_KEY],
-                split_by=vargin[SPLIT_BY_KEY] if vargin[SPLIT_BY_KEY] else scan.__DEFAULT_SPLIT_BY__)
+    scan = scan(
+        dicom_path=vargin[DICOM_KEY],
+        load_path=vargin[LOAD_KEY],
+        ignore_ext=vargin[IGNORE_EXT_KEY],
+        split_by=vargin[SPLIT_BY_KEY] if vargin[SPLIT_BY_KEY] else scan.__DEFAULT_SPLIT_BY__,
+    )
 
     tissues = vargin['tissues']
-    scan_action = vargin[SCAN_ACTION_KEY]
+    scan_action = scan_action_str = vargin[SCAN_ACTION_KEY]
 
     p_action = None
     for action, action_wrapper in scan.cmd_line_actions():
@@ -283,25 +343,17 @@ def handle_scan(vargin):
 
     func_signature = inspect.signature(action)
     parameters = func_signature.parameters
-    for tissue in tissues:
-        param_dict = {}
-        for param_name in parameters.keys():
-            param = parameters[param_name]
-            param_type = param.annotation
-
-            if param_name == 'self':
-                continue
-
-            if param_type is Tissue:
-                param_dict['tissue'] = tissue
-                continue
-
-            if param_type in CUSTOM_TYPE_TO_HANDLE_DICT:
-                param_dict[param_name] = CUSTOM_TYPE_TO_HANDLE_DICT[param_type](vargin, scan, tissue)
-            else:
-                param_dict[param_name] = parse_basic_type(vargin[param_name], param_type)
-
-        scan.__getattribute__(action.__name__)(**param_dict)
+    if scan_action_str == "segment":
+        weights_to_tissues = _find_tissue_groups(vargin, tissues)
+        for weights_file, seg_tissues in weights_to_tissues.items():
+            if len(seg_tissues) == 1:
+                seg_tissues = seg_tissues[0]
+            param_dict = _build_params(vargin, scan, parameters, seg_tissues)
+            scan.__getattribute__(action.__name__)(**param_dict)
+    else:
+        for tissue in tissues:
+            param_dict = _build_params(vargin, scan, parameters, tissue)
+            scan.__getattribute__(action.__name__)(**param_dict)
 
     scan.save_data(vargin[SAVE_KEY], data_format=preferences.image_data_format)
     for tissue in tissues:

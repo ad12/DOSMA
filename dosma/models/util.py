@@ -6,11 +6,13 @@ Functions for loading Keras models
 """
 
 from dosma.models.oaiunet2d import OAIUnet2D
+from dosma.models.oaiunet2d import IWOAIOAIUnet2D
+from dosma.models.oaiunet2d import IWOAIOAIUnet2DNormalized
 
 __all__ = ['get_model', 'SUPPORTED_MODELS']
 
 # Network architectures currently supported
-__SUPPORTED_MODELS__ = [OAIUnet2D]
+__SUPPORTED_MODELS__ = [OAIUnet2D, IWOAIOAIUnet2D, IWOAIOAIUnet2DNormalized]
 
 # Initialize supported models for the command line
 SUPPORTED_MODELS = [x.ALIASES[0] for x in __SUPPORTED_MODELS__]

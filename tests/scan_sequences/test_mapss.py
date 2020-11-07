@@ -6,11 +6,13 @@ from dosma.scan_sequences import Mapss
 from dosma.tissues.femoral_cartilage import FemoralCartilage
 from .. import util
 
-SEGMENTATION_WEIGHTS_FOLDER = os.path.join(os.path.dirname(__file__), '../../weights')
+SEGMENTATION_WEIGHTS_FOLDER = os.path.join(os.path.dirname(__file__), '../../weights/oai-unet_2d')
 SEGMENTATION_MODEL = 'oai-unet2d'
 
 # Path to manual segmentation mask
-MANUAL_SEGMENTATION_MASK_PATH = os.path.join(util.get_scan_dirpath(Mapss.NAME), 'misc/fc_manual.nii.gz')
+MANUAL_SEGMENTATION_MASK_PATH = os.path.join(
+    util.get_scan_dirpath(Mapss.NAME), 'misc/fc_manual.nii.gz'
+)
 
 
 class MapssTest(util.ScanTest):
@@ -53,7 +55,7 @@ class MapssTest(util.ScanTest):
                 action)
 
     def test_cmd_line(self):
-        # Generate segmentation mask for femoral cartilage, tibial cartilage, and meniscus via command line
+        # Estimate T1-rho for femoral cartilage.
         cmdline_str = '--d %s --s %s mapss --fc t1_rho --mask %s' % (self.dicom_dirpath, self.data_dirpath,
                                                                      MANUAL_SEGMENTATION_MASK_PATH)
         self.__cmd_line_helper__(cmdline_str)

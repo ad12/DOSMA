@@ -12,6 +12,7 @@ To learn more about what scans and tissues are supported, see the pages below:
 
    scans
    tissues
+   seg_models
 
 For a brief overview of DOSMA command-line practices and examples, see :ref:`Command Line Usage <usage-cli>`.
 For a more in-depth explanation, see the :ref:`CLI Documentation <cli>`.
