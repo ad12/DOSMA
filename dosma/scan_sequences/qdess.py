@@ -7,6 +7,7 @@ Paper:
 import math
 import os
 from copy import deepcopy
+from typing import Sequence
 
 import numpy as np
 from pydicom.tag import Tag
@@ -70,24 +71,36 @@ class QDess(TargetSequence):
         Args:
             model (SegModel): Model to use for segmenting scans.
             tissue (Tissue): The tissue to segment.
-            use_rms (`bool`, optional): Use root-mean-square of echos for segmentation (preferred). Defaults to `False`.
+            use_rms (`bool`, optional): If `True`, use root-mean-square of
+                echos for segmentation (preferred). Defaults to `False`.
 
         Returns:
             MedicalVolume: Binary mask for segmented region.
         """
-        # Use first echo for segmentation.
-        logging.info("Segmenting {}...".format(tissue.FULL_NAME))
+        tissue_names = (
+            ", ".join([t.FULL_NAME for t in tissue])
+            if isinstance(tissue, Sequence) else tissue.FULL_NAME
+        )
+        logging.info(f"Segmenting {tissue_names}...")
 
         if use_rms:
             segmentation_volume = self.calc_rms()
         else:
+            # Use first echo for segmentation.
             segmentation_volume = self.volumes[0]
 
         # Segment tissue and add it to list.
         mask = model.generate_mask(segmentation_volume)
-        tissue.set_mask(mask)
-
-        self.__add_tissue__(tissue)
+        if isinstance(mask, dict):
+            if not isinstance(tissue, Sequence):
+                tissue = [tissue]
+            for abbreviation, tis in zip([t.STR_ID for t in tissue], tissue):
+                tis.set_mask(mask[abbreviation])
+                self.__add_tissue__(tis)
+        else:
+            assert isinstance(tissue, Tissue)
+            tissue.set_mask(mask)
+            self.__add_tissue__(tissue)
 
         return mask
 

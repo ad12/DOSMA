@@ -15,13 +15,12 @@ from dosma.defaults import preferences
 class SegModel(ABC):
     ALIASES = ['']  # each segmentation model must have an alias
 
-    batch_size = preferences.segmentation_batch_size
-
     def __init__(self, input_shape, weights_path):
         """
         :param input_shape: tuple or list of tuples for initializing input(s) into model in format (height, width, channels)
         :param weights_path: filepath to weights used to initialize Keras model
         """
+        self.batch_size = preferences.segmentation_batch_size
         self.seg_model = self.build_model(input_shape, weights_path)
 
     @abstractmethod
@@ -94,13 +93,19 @@ __VOLUME_DIMENSIONS__ = 3
 __EPSILON__ = 1e-8
 
 
-def whiten_volume(x):
-    """Whiten volumes by mean and std of all pixels
-    :param x: 3D numpy array (MRI volumes)
-    :rtype: whitened 3D numpy array
+def whiten_volume(x: np.ndarray, eps: float = 0.):
+    """Whiten volumes by mean and std of all pixels.
+
+    Args:
+        x (ndarray): 3D numpy array (MRI volumes)
+        eps (float, optional): Epsilon to avoid division by 0.
+
+    Returns:
+        ndarray: A numpy array with mean ~ 0 and standard deviation ~ 1
     """
     if len(x.shape) != __VOLUME_DIMENSIONS__:
-        raise ValueError("Dimension Error: input has %d dimensions. Expected %d" % (x.ndims, __VOLUME_DIMENSIONS__))
+        raise ValueError(
+            f"Input has {x.ndims} dimensions. Expected {__VOLUME_DIMENSIONS__}"
+        )
 
-    # Add epsilon to avoid dividing by 0
-    return (x - np.mean(x)) / (np.std(x) + __EPSILON__)
+    return (x - np.mean(x)) / (np.std(x) + eps)

@@ -113,6 +113,10 @@ We assume the folder structure looks something like below:
             ├── mapss (MAPSS dicoms)
         ├── patient03
         ├── weights (segmentation weights)
+            ├── oai_unet2d
+            ├── iwoai-2019-t6
+            ├── iwoai-2019-t6-normalized
+
 
 
 qDESS
@@ -122,8 +126,8 @@ Analyze patient01's femoral cartilage |T2| properties using qDESS sequence*::
     # 1. Calculate 3D T2 map - suppress fat and fluid to reduce noise
     $ dosma --dicom research_data/patient01/dess --save research_data/patient01/data qdess --fc t2 --suppress_fat --suppress_fluid
 
-    # 2. Segment femoral cartilage using root mean square (RMS) of two echo qDESS echos
-    $ dosma --dicom research_data/patient01/dess --save research_data/patient01/data qdess --fc segment --rms --weights_dir unet_weights
+    # 2. Segment femoral cartilage on root mean square (RMS) of two echo qDESS echos using OAI 2D U-Net model.
+    $ dosma --dicom research_data/patient01/dess --save research_data/patient01/data qdess --fc segment --rms --weights_dir weights/oai_unet2d --model oai-unet2d
 
     # 3. Calculate/visualize T2 for femoral cartilage
     $ dosma --load research_data/patient01/data --save research_data/patient01/data knee --fc --t2

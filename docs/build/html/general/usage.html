@@ -37,7 +37,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="FAQs" href="faq.html" />
-    <link rel="prev" title="Tissues" href="tissues.html" /> 
+    <link rel="prev" title="Segmentation Models" href="seg_models.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -271,6 +271,9 @@ data is analyzed. Below are just examples for how they have commonly been used b
         ├── mapss (MAPSS dicoms)
     ├── patient03
     ├── weights (segmentation weights)
+        ├── oai_unet2d
+        ├── iwoai-2019-t6
+        ├── iwoai-2019-t6-normalized
 </pre></div>
 </div>
 <div class="section" id="qdess">
@@ -279,8 +282,8 @@ data is analyzed. Below are just examples for how they have commonly been used b
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span># 1. Calculate 3D T2 map - suppress fat and fluid to reduce noise
 $ dosma --dicom research_data/patient01/dess --save research_data/patient01/data qdess --fc t2 --suppress_fat --suppress_fluid
 
-# 2. Segment femoral cartilage using root mean square (RMS) of two echo qDESS echos
-$ dosma --dicom research_data/patient01/dess --save research_data/patient01/data qdess --fc segment --rms --weights_dir unet_weights
+# 2. Segment femoral cartilage on root mean square (RMS) of two echo qDESS echos using OAI 2D U-Net model.
+$ dosma --dicom research_data/patient01/dess --save research_data/patient01/data qdess --fc segment --rms --weights_dir weights/oai_unet2d --model oai-unet2d
 
 # 3. Calculate/visualize T2 for femoral cartilage
 $ dosma --load research_data/patient01/data --save research_data/patient01/data knee --fc --t2
@@ -346,7 +349,7 @@ $ dosma --load research_data/patient01/data knee --fc --t2_star
         <a href="faq.html" class="btn btn-neutral float-right" title="FAQs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="tissues.html" class="btn btn-neutral float-left" title="Tissues" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="seg_models.html" class="btn btn-neutral float-left" title="Segmentation Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

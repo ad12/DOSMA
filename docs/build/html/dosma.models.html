@@ -194,6 +194,50 @@ Original Github: <a class="reference external" href="https://github.com/akshaysc
 
 </dd></dl>
 
+<dl class="class">
+<dt id="dosma.models.oaiunet2d.IWOAIOAIUnet2D">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.models.oaiunet2d.</code><code class="sig-name descname">IWOAIOAIUnet2D</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#IWOAIOAIUnet2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.oaiunet2d.IWOAIOAIUnet2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.models.oaiunet2d.OAIUnet2D" title="dosma.models.oaiunet2d.OAIUnet2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.models.oaiunet2d.OAIUnet2D</span></code></a></p>
+<p>Model trained by Team 6 in the 2019 IWOAI Segmentation Challenge.</p>
+<p>Paper:</p>
+<p>Desai, et al., “The International Workshop on Osteoarthritis Imaging Knee
+MRI Segmentation Challenge: A Multi-Institute Evaluation and Analysis
+Framework on a Standardized Dataset.” arXiv preprint arXiv:2004.14003
+(2020).</p>
+<dl class="attribute">
+<dt id="dosma.models.oaiunet2d.IWOAIOAIUnet2D.ALIASES">
+<code class="sig-name descname">ALIASES</code><em class="property"> = ['iwoai-2019-t6']</em><a class="headerlink" href="#dosma.models.oaiunet2d.IWOAIOAIUnet2D.ALIASES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.models.oaiunet2d.IWOAIOAIUnet2D.generate_mask">
+<code class="sig-name descname">generate_mask</code><span class="sig-paren">(</span><em class="sig-param">volume: dosma.data_io.med_volume.MedicalVolume</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#IWOAIOAIUnet2D.generate_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.oaiunet2d.IWOAIOAIUnet2D.generate_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Segment the MRI volumes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>volume</strong> – A Medical Volume (height, width, slices)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A Medical volume or list of Medical Volumes with volume as binarized (0,1) uint8 3D numpy array of shape volumes.shape</p>
+</dd>
+</dl>
+<p>:raise ValueError if volumes is not 3D numpy array
+:raise ValueError if tissue is not a string or not in list permitted tissues</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.models.oaiunet2d.IWOAIOAIUnet2DNormalized">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.models.oaiunet2d.</code><code class="sig-name descname">IWOAIOAIUnet2DNormalized</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#IWOAIOAIUnet2DNormalized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.oaiunet2d.IWOAIOAIUnet2DNormalized" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.models.oaiunet2d.IWOAIOAIUnet2D" title="dosma.models.oaiunet2d.IWOAIOAIUnet2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.models.oaiunet2d.IWOAIOAIUnet2D</span></code></a></p>
+<dl class="attribute">
+<dt id="dosma.models.oaiunet2d.IWOAIOAIUnet2DNormalized.ALIASES">
+<code class="sig-name descname">ALIASES</code><em class="property"> = ('iwoai-2019-t6-normalized',)</em><a class="headerlink" href="#dosma.models.oaiunet2d.IWOAIOAIUnet2DNormalized.ALIASES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="module-dosma.models.seg_model">
 <span id="dosma-models-seg-model-module"></span><h2>dosma.models.seg_model module<a class="headerlink" href="#module-dosma.models.seg_model" title="Permalink to this headline">¶</a></h2>
@@ -233,11 +277,6 @@ SegModel: Abstract wrapper for Keras model used for semantic segmentation.</p>
 <code class="sig-name descname">ALIASES</code><em class="property"> = ['']</em><a class="headerlink" href="#dosma.models.seg_model.SegModel.ALIASES" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
-<dt id="dosma.models.seg_model.SegModel.batch_size">
-<code class="sig-name descname">batch_size</code><em class="property"> = 16</em><a class="headerlink" href="#dosma.models.seg_model.SegModel.batch_size" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 <dl class="method">
 <dt id="dosma.models.seg_model.SegModel.build_model">
 <em class="property">abstract </em><code class="sig-name descname">build_model</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/seg_model.html#SegModel.build_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.seg_model.SegModel.build_model" title="Permalink to this definition">¶</a></dt>
@@ -275,10 +314,22 @@ SegModel: Abstract wrapper for Keras model used for semantic segmentation.</p>
 
 <dl class="function">
 <dt id="dosma.models.seg_model.whiten_volume">
-<code class="sig-prename descclassname">dosma.models.seg_model.</code><code class="sig-name descname">whiten_volume</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/seg_model.html#whiten_volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.seg_model.whiten_volume" title="Permalink to this definition">¶</a></dt>
-<dd><p>Whiten volumes by mean and std of all pixels
-:param x: 3D numpy array (MRI volumes)
-:rtype: whitened 3D numpy array</p>
+<code class="sig-prename descclassname">dosma.models.seg_model.</code><code class="sig-name descname">whiten_volume</code><span class="sig-paren">(</span><em class="sig-param">x: numpy.ndarray</em>, <em class="sig-param">eps: float = 0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/seg_model.html#whiten_volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.seg_model.whiten_volume" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whiten volumes by mean and std of all pixels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray</em>) – 3D numpy array (MRI volumes)</p></li>
+<li><p><strong>eps</strong> (<em>float</em><em>, </em><em>optional</em>) – Epsilon to avoid division by 0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A numpy array with mean ~ 0 and standard deviation ~ 1</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -344,6 +395,50 @@ Original Github: <a class="reference external" href="https://github.com/akshaysc
 <dl class="attribute">
 <dt id="dosma.models.OAIUnet2D.sigmoid_threshold">
 <code class="sig-name descname">sigmoid_threshold</code><em class="property"> = 0.5</em><a class="headerlink" href="#dosma.models.OAIUnet2D.sigmoid_threshold" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.models.IWOAIOAIUnet2D">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.models.</code><code class="sig-name descname">IWOAIOAIUnet2D</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#IWOAIOAIUnet2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.IWOAIOAIUnet2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.models.oaiunet2d.OAIUnet2D" title="dosma.models.oaiunet2d.OAIUnet2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.models.oaiunet2d.OAIUnet2D</span></code></a></p>
+<p>Model trained by Team 6 in the 2019 IWOAI Segmentation Challenge.</p>
+<p>Paper:</p>
+<p>Desai, et al., “The International Workshop on Osteoarthritis Imaging Knee
+MRI Segmentation Challenge: A Multi-Institute Evaluation and Analysis
+Framework on a Standardized Dataset.” arXiv preprint arXiv:2004.14003
+(2020).</p>
+<dl class="attribute">
+<dt id="dosma.models.IWOAIOAIUnet2D.ALIASES">
+<code class="sig-name descname">ALIASES</code><em class="property"> = ['iwoai-2019-t6']</em><a class="headerlink" href="#dosma.models.IWOAIOAIUnet2D.ALIASES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dosma.models.IWOAIOAIUnet2D.generate_mask">
+<code class="sig-name descname">generate_mask</code><span class="sig-paren">(</span><em class="sig-param">volume: dosma.data_io.med_volume.MedicalVolume</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#IWOAIOAIUnet2D.generate_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.IWOAIOAIUnet2D.generate_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Segment the MRI volumes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>volume</strong> – A Medical Volume (height, width, slices)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A Medical volume or list of Medical Volumes with volume as binarized (0,1) uint8 3D numpy array of shape volumes.shape</p>
+</dd>
+</dl>
+<p>:raise ValueError if volumes is not 3D numpy array
+:raise ValueError if tissue is not a string or not in list permitted tissues</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dosma.models.IWOAIOAIUnet2DNormalized">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.models.</code><code class="sig-name descname">IWOAIOAIUnet2DNormalized</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#IWOAIOAIUnet2DNormalized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.IWOAIOAIUnet2DNormalized" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dosma.models.oaiunet2d.IWOAIOAIUnet2D" title="dosma.models.oaiunet2d.IWOAIOAIUnet2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.models.oaiunet2d.IWOAIOAIUnet2D</span></code></a></p>
+<dl class="attribute">
+<dt id="dosma.models.IWOAIOAIUnet2DNormalized.ALIASES">
+<code class="sig-name descname">ALIASES</code><em class="property"> = ('iwoai-2019-t6-normalized',)</em><a class="headerlink" href="#dosma.models.IWOAIOAIUnet2DNormalized.ALIASES" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

@@ -165,13 +165,12 @@
 <div class="viewcode-block" id="SegModel"><a class="viewcode-back" href="../../../dosma.models.html#dosma.models.seg_model.SegModel">[docs]</a><span class="k">class</span> <span class="nc">SegModel</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
     <span class="n">ALIASES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span>  <span class="c1"># each segmentation model must have an alias</span>
 
-    <span class="n">batch_size</span> <span class="o">=</span> <span class="n">preferences</span><span class="o">.</span><span class="n">segmentation_batch_size</span>
-
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">weights_path</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param input_shape: tuple or list of tuples for initializing input(s) into model in format (height, width, channels)</span>
 <span class="sd">        :param weights_path: filepath to weights used to initialize Keras model</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">preferences</span><span class="o">.</span><span class="n">segmentation_batch_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seg_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_model</span><span class="p">(</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">weights_path</span><span class="p">)</span>
 
 <div class="viewcode-block" id="SegModel.build_model"><a class="viewcode-back" href="../../../dosma.models.html#dosma.models.seg_model.SegModel.build_model">[docs]</a>    <span class="nd">@abstractmethod</span>
@@ -244,16 +243,22 @@
 <span class="n">__EPSILON__</span> <span class="o">=</span> <span class="mf">1e-8</span>
 
 
-<div class="viewcode-block" id="whiten_volume"><a class="viewcode-back" href="../../../dosma.models.html#dosma.models.seg_model.whiten_volume">[docs]</a><span class="k">def</span> <span class="nf">whiten_volume</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Whiten volumes by mean and std of all pixels</span>
-<span class="sd">    :param x: 3D numpy array (MRI volumes)</span>
-<span class="sd">    :rtype: whitened 3D numpy array</span>
+<div class="viewcode-block" id="whiten_volume"><a class="viewcode-back" href="../../../dosma.models.html#dosma.models.seg_model.whiten_volume">[docs]</a><span class="k">def</span> <span class="nf">whiten_volume</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Whiten volumes by mean and std of all pixels.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x (ndarray): 3D numpy array (MRI volumes)</span>
+<span class="sd">        eps (float, optional): Epsilon to avoid division by 0.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: A numpy array with mean ~ 0 and standard deviation ~ 1</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="n">__VOLUME_DIMENSIONS__</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Dimension Error: input has </span><span class="si">%d</span><span class="s2"> dimensions. Expected </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ndims</span><span class="p">,</span> <span class="n">__VOLUME_DIMENSIONS__</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Input has </span><span class="si">{x.ndims}</span><span class="s2"> dimensions. Expected </span><span class="si">{__VOLUME_DIMENSIONS__}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
 
-    <span class="c1"># Add epsilon to avoid dividing by 0</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">__EPSILON__</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

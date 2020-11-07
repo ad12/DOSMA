@@ -135,7 +135,7 @@ class Tissue(ABC):
         weights_file = None
         for f in files:
             file = os.path.join(weights_dir, f)
-            if os.path.isfile(file) and file.endswith(WEIGHTS_FILE_EXT) and self.STR_ID in file:
+            if os.path.isfile(file) and f.endswith(WEIGHTS_FILE_EXT) and self.STR_ID in f:
                 if weights_file is not None:
                     raise ValueError("There are multiple weights files, please remove duplicates")
                 weights_file = file

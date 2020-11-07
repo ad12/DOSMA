@@ -53,7 +53,9 @@ is supported for knee articular cartilage and meniscus.
 
 If you will be using this functionality, please follow the instructions below.
 
-1. Request access using this `Google form <https://goo.gl/forms/JlxgS3aoUeeUUlVh2>`_.
+1. Request access using this `Google form <https://goo.gl/forms/JlxgS3aoUeeUUlVh2>`
+   and email arjundd (at) <standard Stanford email domain>
+
 2. Save these weights in an accessible location. **Do not rename these files**.
 
 We understand this process may be involved and are actively working on more effective methods to distribute these

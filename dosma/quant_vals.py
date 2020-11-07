@@ -173,16 +173,16 @@ class QuantitativeValue(ABC):
         return qvs
 
     @property
-    @abstractmethod
     def qv_type(self) -> QuantitativeValueType:
         """QuantitativeValueType: quantitative value type."""
-        pass
+        raise NotImplementedError(f"Quantitative value type not implemented for {type(self)}")
 
 
 class T1Rho(QuantitativeValue):
     ID = 1
     NAME = 't1_rho'
 
+    @property
     def qv_type(self):
         return QuantitativeValueType.T1_RHO
 
@@ -191,6 +191,7 @@ class T2(QuantitativeValue):
     ID = 2
     NAME = 't2'
 
+    @property
     def qv_type(self):
         return QuantitativeValueType.T2
 
@@ -199,5 +200,6 @@ class T2Star(QuantitativeValue):
     ID = 3
     NAME = 't2_star'
 
+    @property
     def qv_type(self):
         return QuantitativeValueType.T2_STAR
