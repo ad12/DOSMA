@@ -162,7 +162,7 @@
 </dl>
 <dl class="class">
 <dt id="dosma.models.oaiunet2d.OAIUnet2D">
-<em class="property">class </em><code class="sig-prename descclassname">dosma.models.oaiunet2d.</code><code class="sig-name descname">OAIUnet2D</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#OAIUnet2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.oaiunet2d.OAIUnet2D" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dosma.models.oaiunet2d.</code><code class="sig-name descname">OAIUnet2D</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em>, <em class="sig-param">force_weights=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#OAIUnet2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.oaiunet2d.OAIUnet2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dosma.models.seg_model.KerasSegModel" title="dosma.models.seg_model.KerasSegModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.models.seg_model.KerasSegModel</span></code></a></p>
 <p>Model trained in Chaudhari et al. IWOAI 2018
 Original Github: <a class="reference external" href="https://github.com/akshaysc/msk_segmentation">https://github.com/akshaysc/msk_segmentation</a></p>
@@ -196,7 +196,7 @@ Original Github: <a class="reference external" href="https://github.com/akshaysc
 
 <dl class="class">
 <dt id="dosma.models.oaiunet2d.IWOAIOAIUnet2D">
-<em class="property">class </em><code class="sig-prename descclassname">dosma.models.oaiunet2d.</code><code class="sig-name descname">IWOAIOAIUnet2D</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#IWOAIOAIUnet2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.oaiunet2d.IWOAIOAIUnet2D" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dosma.models.oaiunet2d.</code><code class="sig-name descname">IWOAIOAIUnet2D</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em>, <em class="sig-param">force_weights=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#IWOAIOAIUnet2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.oaiunet2d.IWOAIOAIUnet2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dosma.models.oaiunet2d.OAIUnet2D" title="dosma.models.oaiunet2d.OAIUnet2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.models.oaiunet2d.OAIUnet2D</span></code></a></p>
 <p>Model trained by Team 6 in the 2019 IWOAI Segmentation Challenge.</p>
 <p>Paper:</p>
@@ -229,7 +229,7 @@ Framework on a Standardized Dataset.” arXiv preprint arXiv:2004.14003
 
 <dl class="class">
 <dt id="dosma.models.oaiunet2d.IWOAIOAIUnet2DNormalized">
-<em class="property">class </em><code class="sig-prename descclassname">dosma.models.oaiunet2d.</code><code class="sig-name descname">IWOAIOAIUnet2DNormalized</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#IWOAIOAIUnet2DNormalized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.oaiunet2d.IWOAIOAIUnet2DNormalized" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dosma.models.oaiunet2d.</code><code class="sig-name descname">IWOAIOAIUnet2DNormalized</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em>, <em class="sig-param">force_weights=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#IWOAIOAIUnet2DNormalized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.oaiunet2d.IWOAIOAIUnet2DNormalized" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dosma.models.oaiunet2d.IWOAIOAIUnet2D" title="dosma.models.oaiunet2d.IWOAIOAIUnet2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.models.oaiunet2d.IWOAIOAIUnet2D</span></code></a></p>
 <dl class="attribute">
 <dt id="dosma.models.oaiunet2d.IWOAIOAIUnet2DNormalized.ALIASES">
@@ -246,7 +246,7 @@ Framework on a Standardized Dataset.” arXiv preprint arXiv:2004.14003
 SegModel: Abstract wrapper for Keras model used for semantic segmentation.</p>
 <dl class="class">
 <dt id="dosma.models.seg_model.KerasSegModel">
-<em class="property">class </em><code class="sig-prename descclassname">dosma.models.seg_model.</code><code class="sig-name descname">KerasSegModel</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/seg_model.html#KerasSegModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.seg_model.KerasSegModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dosma.models.seg_model.</code><code class="sig-name descname">KerasSegModel</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em>, <em class="sig-param">force_weights=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/seg_model.html#KerasSegModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.seg_model.KerasSegModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dosma.models.seg_model.SegModel" title="dosma.models.seg_model.SegModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.models.seg_model.SegModel</span></code></a></p>
 <p>Abstract wrapper for Keras model used for semantic segmentation</p>
 <dl class="method">
@@ -270,7 +270,7 @@ SegModel: Abstract wrapper for Keras model used for semantic segmentation.</p>
 
 <dl class="class">
 <dt id="dosma.models.seg_model.SegModel">
-<em class="property">class </em><code class="sig-prename descclassname">dosma.models.seg_model.</code><code class="sig-name descname">SegModel</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/seg_model.html#SegModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.seg_model.SegModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dosma.models.seg_model.</code><code class="sig-name descname">SegModel</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em>, <em class="sig-param">force_weights=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/seg_model.html#SegModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.seg_model.SegModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
 <dl class="attribute">
 <dt id="dosma.models.seg_model.SegModel.ALIASES">
@@ -344,7 +344,7 @@ SegModel: Abstract wrapper for Keras model used for semantic segmentation.</p>
 </dl>
 <dl class="function">
 <dt id="dosma.models.util.get_model">
-<code class="sig-prename descclassname">dosma.models.util.</code><code class="sig-name descname">get_model</code><span class="sig-paren">(</span><em class="sig-param">model_str</em>, <em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/util.html#get_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.util.get_model" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">dosma.models.util.</code><code class="sig-name descname">get_model</code><span class="sig-paren">(</span><em class="sig-param">model_str</em>, <em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/util.html#get_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.util.get_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a Keras model
 :param model_str: model identifier
 :param input_shape: tuple or list of tuples for initializing input(s) into Keras model
@@ -357,7 +357,7 @@ SegModel: Abstract wrapper for Keras model used for semantic segmentation.</p>
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-dosma.models" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="dosma.models.get_model">
-<code class="sig-prename descclassname">dosma.models.</code><code class="sig-name descname">get_model</code><span class="sig-paren">(</span><em class="sig-param">model_str</em>, <em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/util.html#get_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.get_model" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">dosma.models.</code><code class="sig-name descname">get_model</code><span class="sig-paren">(</span><em class="sig-param">model_str</em>, <em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/util.html#get_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.get_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a Keras model
 :param model_str: model identifier
 :param input_shape: tuple or list of tuples for initializing input(s) into Keras model
@@ -367,7 +367,7 @@ SegModel: Abstract wrapper for Keras model used for semantic segmentation.</p>
 
 <dl class="class">
 <dt id="dosma.models.OAIUnet2D">
-<em class="property">class </em><code class="sig-prename descclassname">dosma.models.</code><code class="sig-name descname">OAIUnet2D</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#OAIUnet2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.OAIUnet2D" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dosma.models.</code><code class="sig-name descname">OAIUnet2D</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em>, <em class="sig-param">force_weights=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#OAIUnet2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.OAIUnet2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dosma.models.seg_model.KerasSegModel" title="dosma.models.seg_model.KerasSegModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.models.seg_model.KerasSegModel</span></code></a></p>
 <p>Model trained in Chaudhari et al. IWOAI 2018
 Original Github: <a class="reference external" href="https://github.com/akshaysc/msk_segmentation">https://github.com/akshaysc/msk_segmentation</a></p>
@@ -401,7 +401,7 @@ Original Github: <a class="reference external" href="https://github.com/akshaysc
 
 <dl class="class">
 <dt id="dosma.models.IWOAIOAIUnet2D">
-<em class="property">class </em><code class="sig-prename descclassname">dosma.models.</code><code class="sig-name descname">IWOAIOAIUnet2D</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#IWOAIOAIUnet2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.IWOAIOAIUnet2D" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dosma.models.</code><code class="sig-name descname">IWOAIOAIUnet2D</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em>, <em class="sig-param">force_weights=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#IWOAIOAIUnet2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.IWOAIOAIUnet2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dosma.models.oaiunet2d.OAIUnet2D" title="dosma.models.oaiunet2d.OAIUnet2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.models.oaiunet2d.OAIUnet2D</span></code></a></p>
 <p>Model trained by Team 6 in the 2019 IWOAI Segmentation Challenge.</p>
 <p>Paper:</p>
@@ -434,7 +434,7 @@ Framework on a Standardized Dataset.” arXiv preprint arXiv:2004.14003
 
 <dl class="class">
 <dt id="dosma.models.IWOAIOAIUnet2DNormalized">
-<em class="property">class </em><code class="sig-prename descclassname">dosma.models.</code><code class="sig-name descname">IWOAIOAIUnet2DNormalized</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#IWOAIOAIUnet2DNormalized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.IWOAIOAIUnet2DNormalized" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dosma.models.</code><code class="sig-name descname">IWOAIOAIUnet2DNormalized</code><span class="sig-paren">(</span><em class="sig-param">input_shape</em>, <em class="sig-param">weights_path</em>, <em class="sig-param">force_weights=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/models/oaiunet2d.html#IWOAIOAIUnet2DNormalized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.models.IWOAIOAIUnet2DNormalized" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dosma.models.oaiunet2d.IWOAIOAIUnet2D" title="dosma.models.oaiunet2d.IWOAIOAIUnet2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.models.oaiunet2d.IWOAIOAIUnet2D</span></code></a></p>
 <dl class="attribute">
 <dt id="dosma.models.IWOAIOAIUnet2DNormalized.ALIASES">

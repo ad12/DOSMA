@@ -19,7 +19,7 @@ Please install the `Anaconda <https://www.anaconda.com/download/>`_ virtual envi
 
 .. _install-setup:
 
-Standalone Setup
+Setup
 --------------------------------------------------------------------------------
 The following steps will create an Anaconda environment and a shortcut for running DOSMA from the command-line.
 **Avoid spaces in file paths.**
@@ -45,20 +45,18 @@ The following steps will create an Anaconda environment and a shortcut for runni
 
 If you want to update your Anaconda environment, run ``./setup -f`` in step 4.
 
-pip
---------------------------------------------------------------------------------
-The library can now also be installed via `pip`, although only as a local library.
-We are in the process of hosting DOSMA on `PyPi`.
+pip install
+###########
+The library can now also be installed via ``pip``, although only as a local library.
+We are in the process of hosting DOSMA on PyPi.
 
-To install as a library, navigate to the project folder in the Terminal and run the commands below.
+To install as a library, navigate to the project folder in the Terminal and run the commands below::
 
-```bash
-# Activate your environment
-conda activate dosma_env
+    # Activate your environment
+    $ conda activate dosma_env
 
-# pip install in editable format
-python -m pip install -e ./
-```
+    # pip install in editable format
+    $ python -m pip install -e ./
 
 Segmentation
 ############

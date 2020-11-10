@@ -165,10 +165,11 @@
 <div class="viewcode-block" id="SegModel"><a class="viewcode-back" href="../../../dosma.models.html#dosma.models.seg_model.SegModel">[docs]</a><span class="k">class</span> <span class="nc">SegModel</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
     <span class="n">ALIASES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span>  <span class="c1"># each segmentation model must have an alias</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">weights_path</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">weights_path</span><span class="p">,</span> <span class="n">force_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param input_shape: tuple or list of tuples for initializing input(s) into model in format (height, width, channels)</span>
 <span class="sd">        :param weights_path: filepath to weights used to initialize Keras model</span>
+<span class="sd">        :param force_weights: force load the weights (i.e. don&#39;t do any weight checking)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">preferences</span><span class="o">.</span><span class="n">segmentation_batch_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seg_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_model</span><span class="p">(</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">weights_path</span><span class="p">)</span>
