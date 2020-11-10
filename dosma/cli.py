@@ -27,7 +27,7 @@ from dosma import file_constants as fc
 from dosma.defaults import preferences
 from dosma.models.seg_model import SegModel
 from dosma.models.util import SUPPORTED_MODELS
-from dosma.models.util import get_model
+from dosma.models.util import get_model, model_from_config
 from dosma.msk import knee
 from dosma.scan_sequences.cones import Cones
 from dosma.scan_sequences.cube_quant import CubeQuant
@@ -56,6 +56,7 @@ SCAN_KEY = 'scan'
 SCAN_ACTION_KEY = 'scan_action'
 
 SEGMENTATION_MODEL_KEY = 'model'
+SEGMENTATION_CONFIG_KEY = 'config'
 SEGMENTATION_WEIGHTS_DIR_KEY = 'weights_dir'
 SEGMENTATION_BATCH_SIZE_KEY = 'batch_size'
 
@@ -115,8 +116,9 @@ def add_segmentation_subparser(parser):
     parser.add_argument('--%s' % SEGMENTATION_WEIGHTS_DIR_KEY, type=str, nargs=1,
                         required=True,
                         help='path to directory with weights')
-    parser.add_argument('--%s' % SEGMENTATION_MODEL_KEY, choices=SUPPORTED_MODELS, nargs='?', default=SUPPORTED_MODELS[0],
-                        help='Model to use for segmentation. Choices: %s' % SUPPORTED_MODELS)
+    parser.add_argument('--%s' % SEGMENTATION_MODEL_KEY, choices=SUPPORTED_MODELS, nargs='?', default=None,
+                        help='built-in model to use for segmentation. Choices: %s' % SUPPORTED_MODELS)
+    parser.add_argument('--%s' % SEGMENTATION_CONFIG_KEY, type=str, default=None, help='config file for non-built-in model')
     parser.add_argument('--%s' % SEGMENTATION_BATCH_SIZE_KEY, metavar='B', type=int,
                         default=preferences.segmentation_batch_size, nargs='?',
                         help='batch size for inference. Default: %d' % preferences.segmentation_batch_size)
@@ -125,6 +127,11 @@ def add_segmentation_subparser(parser):
 
 
 def handle_segmentation(vargin, scan: ScanSequence, tissue: Tissue):
+    if not vargin[SEGMENTATION_MODEL_KEY] and not vargin[SEGMENTATION_CONFIG_KEY]:
+        raise ValueError("Either `--{}` or `--{}` must be specified".format(
+            SEGMENTATION_MODEL_KEY, SEGMENTATION_CONFIG_KEY,
+        ))
+
     segment_weights_path = vargin[SEGMENTATION_WEIGHTS_DIR_KEY][0]
     if isinstance(tissue, Sequence):
         weights = [t.find_weights(segment_weights_path) for t in tissue]
@@ -135,12 +142,23 @@ def handle_segmentation(vargin, scan: ScanSequence, tissue: Tissue):
 
     # Load model
     dims = scan.get_dimensions()
+    # TODO: Input shape should be determined by combination of model + scan.
+    # Currently fixed in 2D plane
     input_shape = (dims[0], dims[1], 1)
-    model = get_model(
-        vargin[SEGMENTATION_MODEL_KEY],
-        input_shape=input_shape,
-        weights_path=weights_path,
-    )
+    if vargin[SEGMENTATION_MODEL_KEY]:
+        # Use built-in model
+        model = get_model(
+            vargin[SEGMENTATION_MODEL_KEY],
+            input_shape=input_shape,
+            weights_path=weights_path,
+        )
+    else:
+        # Use config
+        model = model_from_config(
+            vargin[SEGMENTATION_CONFIG_KEY],
+            weights_dir=segment_weights_path,
+            input_shape=input_shape
+        )
     model.batch_size = vargin[SEGMENTATION_BATCH_SIZE_KEY]
 
     return model
