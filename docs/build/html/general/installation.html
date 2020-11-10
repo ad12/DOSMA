@@ -86,6 +86,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#anaconda">Anaconda</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#setup">Setup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pip-install">pip install</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#segmentation">Segmentation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#registration">Registration</a></li>
 </ul>
@@ -161,7 +162,8 @@
             
   <div class="section" id="installation">
 <span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>This page provides an overview of installing <em>DOSMA</em> as a stand-alone application.</p>
+<p>This page provides an overview of installing <em>DOSMA</em> as a stand-alone application
+and as a local Python package using pip.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The commands in this documentation are for Linux or Mac OS. If you work on Windows
@@ -199,6 +201,19 @@ $ ./setup
 <li><p>Complete <a class="reference external" href="https://forms.gle/sprthTC2swyt8dDb6">DOSMA questionnaire</a>.</p></li>
 </ol>
 <p>If you want to update your Anaconda environment, run <code class="docutils literal notranslate"><span class="pre">./setup</span> <span class="pre">-f</span></code> in step 4.</p>
+<div class="section" id="pip-install">
+<h3>pip install<a class="headerlink" href="#pip-install" title="Permalink to this headline">¶</a></h3>
+<p>The library can now also be installed via <code class="docutils literal notranslate"><span class="pre">pip</span></code>, although only as a local library.
+We are in the process of hosting DOSMA on PyPi.</p>
+<p>To install as a library, navigate to the project folder in the Terminal and run the commands below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Activate your environment
+$ conda activate dosma_env
+
+# pip install in editable format
+$ python -m pip install -e ./
+</pre></div>
+</div>
+</div>
 <div class="section" id="segmentation">
 <h3>Segmentation<a class="headerlink" href="#segmentation" title="Permalink to this headline">¶</a></h3>
 <p>DOSMA currently supports automatic deep learning segmentation methods. These methods use pre-trained weights for

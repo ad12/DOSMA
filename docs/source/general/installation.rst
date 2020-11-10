@@ -3,7 +3,8 @@
 Installation
 ================================================================================
 
-This page provides an overview of installing *DOSMA* as a stand-alone application.
+This page provides an overview of installing *DOSMA* as a stand-alone application
+and as a local Python package using pip.
 
 .. note::
 
@@ -44,6 +45,18 @@ The following steps will create an Anaconda environment and a shortcut for runni
 
 If you want to update your Anaconda environment, run ``./setup -f`` in step 4.
 
+pip install
+###########
+The library can now also be installed via ``pip``, although only as a local library.
+We are in the process of hosting DOSMA on PyPi.
+
+To install as a library, navigate to the project folder in the Terminal and run the commands below::
+
+    # Activate your environment
+    $ conda activate dosma_env
+
+    # pip install in editable format
+    $ python -m pip install -e ./
 
 Segmentation
 ############

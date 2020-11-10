@@ -15,10 +15,11 @@ from dosma.defaults import preferences
 class SegModel(ABC):
     ALIASES = ['']  # each segmentation model must have an alias
 
-    def __init__(self, input_shape, weights_path):
+    def __init__(self, input_shape, weights_path, force_weights=False):
         """
         :param input_shape: tuple or list of tuples for initializing input(s) into model in format (height, width, channels)
         :param weights_path: filepath to weights used to initialize Keras model
+        :param force_weights: force load the weights (i.e. don't do any weight checking)
         """
         self.batch_size = preferences.segmentation_batch_size
         self.seg_model = self.build_model(input_shape, weights_path)

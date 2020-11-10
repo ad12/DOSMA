@@ -4,6 +4,10 @@
 # cache files
 **/__pycache__
 **/.pytest_cache
+
+# build files
+*.egg-info
+
 # weights files
 **/weights
 

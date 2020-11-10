@@ -28,7 +28,7 @@ class OAIUnet2D(KerasSegModel):
 
     sigmoid_threshold = 0.5
 
-    def __load_keras_model__(self, input_shape):
+    def __load_keras_model__(self, input_shape, force_weights=False):
         """Generate Unet 2D model
 
         :param input_shape: tuple of input size - format: (height, width, 1)
@@ -163,8 +163,8 @@ class IWOAIOAIUnet2D(OAIUnet2D):
     ALIASES = ['iwoai-2019-t6']
     _WEIGHTS_FILE = "iwoai-2019-unet2d_fc-tc-pc-men_weights.h5"
 
-    def __init__(self, input_shape, weights_path):
-        if not os.path.basename(weights_path) == self._WEIGHTS_FILE:
+    def __init__(self, input_shape, weights_path, force_weights=False):
+        if not force_weights and os.path.basename(weights_path) != self._WEIGHTS_FILE:
             raise ValueError(
                 f"Weights {weights_path} not supported for {type(self)}"
             )
