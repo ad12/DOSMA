@@ -13,6 +13,8 @@ Attributes:
     TOTAL_NUM_ECHOS_KEY (tuple[int]): Hexadecimal encoding of DICOM tag corresponding to number of echos.
 """
 
+import functools
+import multiprocessing as mp
 import os
 from math import log10, ceil
 
@@ -121,10 +123,45 @@ def LPSplus_to_RASplus(headers: List[pydicom.FileDataset]):
     return affine
 
 
+def _write_dicom_file(np_slice: np.ndarray, header: pydicom.FileDataset, file_path: str):
+    """Replace data in header with 2D numpy array and write to `file_path`.
+
+    Args:
+        np_slice (np.ndarray): 2D slice to encode in dicom file.
+        header (pydicom.FileDataset): DICOM header.
+        file_path: File path to write to.
+    """
+    expected_dimensions = header.Rows, header.Columns
+    assert np_slice.shape == expected_dimensions, \
+        "In-plane dimension mismatch - expected shape {}, got {}".format(str(expected_dimensions),
+                                                                            str(np_slice.shape))
+
+    np_slice_bytes = np_slice.tobytes()
+    bit_depth = int(len(np_slice_bytes) / (np_slice.shape[0] * np_slice.shape[1]) * 8)
+    if bit_depth != header.BitsAllocated:
+        np_slice = __update_np_dtype__(np_slice, header.BitsAllocated)
+        np_slice_bytes = np_slice.tobytes()
+        bit_depth = int(len(np_slice_bytes) / (np_slice.shape[0] * np_slice.shape[1]) * 8)
+
+    assert bit_depth == header.BitsAllocated, \
+        "Bit depth mismatch: Expected {:d} got {:d}".format(header.BitsAllocated, bit_depth)
+
+    header.PixelData = np_slice_bytes
+
+    header.save_as(file_path)
+
+
 class DicomReader(DataReader):
     """A class for reading DICOM files.
     """
     data_format_code = ImageDataFormat.dicom
+
+    def __init__(self, num_workers: int = 0):
+        """
+        Args:
+            num_workers (int, optional): Number of workers to use for loading.
+        """
+        self.num_workers = num_workers
 
     def load(self, dicom_dir_path: str, group_by: Union[str, tuple] = 'EchoNumbers', ignore_ext: bool = False):
         """Load dicoms into `MedicalVolume`s grouped by `group_by` tag.
@@ -176,9 +213,13 @@ class DicomReader(DataReader):
 
         dicom_data = {}
 
-        for dicom_filename in lstFilesDCM:
-            # read the file
-            ds = pydicom.read_file(dicom_filename, force=True)
+        if self.num_workers:
+            with mp.Pool(self.num_workers) as p:
+                dicom_slices = p.map(functools.partial(pydicom.read_file, force=True), lstFilesDCM)
+        else:
+            dicom_slices = [pydicom.read_file(fp, force=True) for fp in lstFilesDCM]
+
+        for ds in dicom_slices:
             val_groupby = ds.get(group_by)
             if type(val_groupby) is pydicom.DataElement:
                 val_groupby = val_groupby.value
@@ -212,32 +253,12 @@ class DicomWriter(DataWriter):
     """
     data_format_code = ImageDataFormat.dicom
 
-    def __write_dicom_file__(self, np_slice: np.ndarray, header: pydicom.FileDataset, file_path: str):
-        """Replace data in header with 2D numpy array and write to `file_path`.
-
-        Args:
-            np_slice (np.ndarray): 2D slice to encode in dicom file.
-            header (pydicom.FileDataset): DICOM header.
-            file_path: File path to write to.
+    def __init__(self, num_workers: int = 0):
         """
-        expected_dimensions = header.Rows, header.Columns
-        assert np_slice.shape == expected_dimensions, \
-            "In-plane dimension mismatch - expected shape {}, got {}".format(str(expected_dimensions),
-                                                                             str(np_slice.shape))
-
-        np_slice_bytes = np_slice.tobytes()
-        bit_depth = int(len(np_slice_bytes) / (np_slice.shape[0] * np_slice.shape[1]) * 8)
-        if bit_depth != header.BitsAllocated:
-            np_slice = __update_np_dtype__(np_slice, header.BitsAllocated)
-            np_slice_bytes = np_slice.tobytes()
-            bit_depth = int(len(np_slice_bytes) / (np_slice.shape[0] * np_slice.shape[1]) * 8)
-
-        assert bit_depth == header.BitsAllocated, \
-            "Bit depth mismatch: Expected {:d} got {:d}".format(header.BitsAllocated, bit_depth)
-
-        header.PixelData = np_slice_bytes
-
-        header.save_as(file_path)
+        Args:
+            num_workers (int, optional): Number of workers to use for writing.
+        """
+        self.num_workers = num_workers
 
     def save(self, volume: MedicalVolume, dir_path: str):
         """Save `medical volume` in dicom format.
@@ -279,9 +300,15 @@ class DicomWriter(DataWriter):
         num_slices = len(headers)
         filename_format = "I%0" + str(max(4, ceil(log10(num_slices)))) + "d.dcm"
 
-        for s in range(num_slices):
-            s_filepath = os.path.join(dir_path, filename_format % (s + 1))
-            self.__write_dicom_file__(volume_arr[..., s], headers[s], s_filepath)
+        filepaths = [os.path.join(dir_path, filename_format % (s + 1)) for s in range(num_slices)]
+        if self.num_workers:
+            slices = [volume_arr[..., s] for s in range(num_slices)]
+            with mp.Pool(self.num_workers) as p:
+                out = p.starmap_async(_write_dicom_file, zip(slices, headers, filepaths))
+                out.wait()
+        else:
+            for s in range(num_slices):
+                _write_dicom_file(volume_arr[..., s], headers[s], filepaths[s])
 
         # Reformat image to original orientation (before saving).
         # We do this, because saving should not affect the existing state of any variable.
