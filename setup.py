@@ -60,5 +60,6 @@ setup(
         "seaborn",
         "openpyxl",
         "Pmw",
+        "tqdm>=4.42.0"
     ]
 )

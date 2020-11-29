@@ -254,7 +254,7 @@ class TestDicomIO(unittest.TestCase):
 
             dicom_path = ututils.get_dicoms_path(dp)
             volumes_exp = self.dr.load(dicom_path)
-            volumes = DicomReader(num_workers=4).load(dicom_path)
+            volumes = DicomReader(num_workers=ututils.num_workers()).load(dicom_path)
             assert len(volumes_exp) == len(volumes)
 
             for vol, exp in zip(volumes, volumes_exp):
@@ -275,7 +275,7 @@ class TestDicomIO(unittest.TestCase):
                 out_path = os.path.join(write_path, 'out', 'e%d' % (ind + 1))
 
                 self.dw.save(vol, exp_path)
-                dw = DicomWriter(num_workers=4).save(vol, out_path)
+                DicomWriter(num_workers=ututils.num_workers()).save(vol, out_path)
 
                 expected = self.dr.load(exp_path)[0]
                 out = self.dr.load(out_path)[0]

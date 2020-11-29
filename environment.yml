@@ -34,3 +34,4 @@ dependencies:
   - tensorflow==1.8.0
   - openpyxl==2.5.8
   - Pmw==2.0.1
+  - tqdm>=4.42.0

@@ -99,7 +99,8 @@ class CubeQuant(NonTargetSequence):
             tissue (Tissue): Tissue to generate quantitative value for.
             mask_path (:obj:`str`, optional): File path to mask of ROI to analyze. If specified, only voxels specified
                 by mask will be fit. Speeds up computation. Defaults to `None`.
-            num_workers (int, optional): Number of workers for fitting.
+            num_workers (int, optional): Number of subprocesses to use for fitting.
+                If `0`, will execute on the main thread.
 
         Returns:
             qv.T1Rho: T1-rho fit for tissue.

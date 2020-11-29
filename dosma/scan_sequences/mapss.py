@@ -128,13 +128,15 @@ class Mapss(TargetSequence):
         self.raw_volumes = deepcopy(volumes)
         self.volumes = intraregistered_volumes
 
-    def generate_t1_rho_map(self, tissue: Tissue = None, mask_path: str = None):
+    def generate_t1_rho_map(self, tissue: Tissue = None, mask_path: str = None, num_workers: int = 0):
         """Generate 3D T1-rho map and r-squared fit map using mono-exponential fit across subvolumes acquired at
             different echo times.
 
         Args:
             tissue (Tissue): Tissue to generate quantitative value for.
             mask_path (str): File path to mask of ROI to analyze
+            num_workers (int, optional): Number of subprocesses to use for fitting.
+                If `0`, will execute on the main thread.
 
         Returns:
             qv.T1Rho: T1-rho fit for tissue.
@@ -144,17 +146,19 @@ class Mapss(TargetSequence):
         tc0 = __INITIAL_T1_RHO_VAL__
         decimal_precision = __DECIMAL_PRECISION__
 
-        qv_map = self.__fitting_helper(qv.T1Rho, echo_inds, tissue, bounds, tc0, decimal_precision, mask_path)
+        qv_map = self.__fitting_helper(qv.T1Rho, echo_inds, tissue, bounds, tc0, decimal_precision, mask_path, num_workers)
 
         return qv_map
 
-    def generate_t2_map(self, tissue: Tissue = None, mask_path: str = None):
+    def generate_t2_map(self, tissue: Tissue = None, mask_path: str = None, num_workers: int = 0):
         """Generate 3D T2 map and r-squared fit map using mono-exponential fit across subvolumes acquired at different
             echo times.
 
         Args:
             tissue (Tissue): Tissue to generate quantitative value for.
             mask_path (str): File path to mask of ROI to analyze
+            num_workers (int, optional): Number of subprocesses to use for fitting.
+                If `0`, will execute on the main thread.
 
         Returns:
             qv.T2: T2 fit for tissue.
@@ -164,12 +168,12 @@ class Mapss(TargetSequence):
         tc0 = __INITIAL_T2_VAL__
         decimal_precision = __DECIMAL_PRECISION__
 
-        qv_map = self.__fitting_helper(qv.T2, echo_inds, tissue, bounds, tc0, decimal_precision, mask_path)
+        qv_map = self.__fitting_helper(qv.T2, echo_inds, tissue, bounds, tc0, decimal_precision, mask_path, num_workers)
 
         return qv_map
 
     def __fitting_helper(self, qv_type: QuantitativeValueType, echo_inds: Sequence[int], tissue: Tissue,
-                         bounds, tc0, decimal_precision, mask_path):
+                         bounds, tc0, decimal_precision, mask_path, num_workers):
         echo_info = [(self.echo_times[i], self.volumes[i]) for i in echo_inds]
 
         # sort by echo time
@@ -185,11 +189,14 @@ class Mapss(TargetSequence):
             if tuple(np.unique(mask.volume)) != (0, 1):
                 raise ValueError('mask_filepath must reference binary segmentation volume')
 
-        mef = MonoExponentialFit(xs, ys,
-                                 mask=mask,
-                                 bounds=bounds,
-                                 tc0=tc0,
-                                 decimal_precision=decimal_precision)
+        mef = MonoExponentialFit(
+            xs, ys,
+            mask=mask,
+            bounds=bounds,
+            tc0=tc0,
+            decimal_precision=decimal_precision,
+            num_workers=num_workers
+        )
         qv_map, r2 = mef.fit()
 
         quant_val_map = qv_type(qv_map)
