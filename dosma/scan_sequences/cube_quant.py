@@ -91,7 +91,7 @@ class CubeQuant(NonTargetSequence):
 
         self.subvolumes = subvolumes
 
-    def generate_t1_rho_map(self, tissue: Tissue, mask_path: str = None):
+    def generate_t1_rho_map(self, tissue: Tissue, mask_path: str = None, num_workers: int = 0):
         """Generate 3D T1-rho map and r-squared fit map using mono-exponential fit across subvolumes acquired at
             different spin lock times.
 
@@ -99,6 +99,7 @@ class CubeQuant(NonTargetSequence):
             tissue (Tissue): Tissue to generate quantitative value for.
             mask_path (:obj:`str`, optional): File path to mask of ROI to analyze. If specified, only voxels specified
                 by mask will be fit. Speeds up computation. Defaults to `None`.
+            num_workers (int, optional): Number of workers for fitting.
 
         Returns:
             qv.T1Rho: T1-rho fit for tissue.
@@ -121,11 +122,14 @@ class CubeQuant(NonTargetSequence):
             subvolumes_list.append(self.subvolumes[spin_lock_time_index])
             spin_lock_times.append(self.spin_lock_times[spin_lock_time_index])
 
-        mef = MonoExponentialFit(spin_lock_times, subvolumes_list,
-                                 mask=mask,
-                                 bounds=(__T1_RHO_LOWER_BOUND__, __T1_RHO_UPPER_BOUND__),
-                                 tc0=__INITIAL_T1_RHO_VAL__,
-                                 decimal_precision=__T1_RHO_DECIMAL_PRECISION__)
+        mef = MonoExponentialFit(
+            spin_lock_times, subvolumes_list,
+            mask=mask,
+            bounds=(__T1_RHO_LOWER_BOUND__, __T1_RHO_UPPER_BOUND__),
+            tc0=__INITIAL_T1_RHO_VAL__,
+            decimal_precision=__T1_RHO_DECIMAL_PRECISION__,
+            num_workers=num_workers
+        )
 
         t1rho_map, r2 = mef.fit()
 
@@ -256,13 +260,13 @@ class CubeQuant(NonTargetSequence):
                                                  'target_mask_path': 'path to target mask in nifti format (.nii.gz)'},
                                              alternative_param_names={'target_path': ['tp', 'target'],
                                                                       'target_mask_path': ['tm', 'target_mask']})
-        generate_t1rho_map_action = ActionWrapper(name=cls.generate_t1_rho_map.__name__,
-                                                  help='generate T1-rho map',
-                                                  aliases=['t1_rho'],
-                                                  param_help={
-                                                      'mask_path': 'Mask used for fitting select voxels - '
-                                                                   'in nifti format (.nii.gz)',
-                                                  },
-                                                  )
+        generate_t1rho_map_action = ActionWrapper(
+            name=cls.generate_t1_rho_map.__name__,
+            help='generate T1-rho map',
+            aliases=['t1_rho'],
+            param_help={
+                'mask_path': 'Mask used for fitting select voxels - in nifti format (.nii.gz)',
+            },
+        )
 
         return [(cls.interregister, interregister_action), (cls.generate_t1_rho_map, generate_t1rho_map_action)]
