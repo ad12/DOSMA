@@ -32,13 +32,13 @@ class CubeQuantTest(util.ScanTest):
 
         # run analysis with femoral cartilage, without mask
         tissue = FemoralCartilage()
-        map1 = scan.generate_t1_rho_map(tissue, TARGET_MASK_PATH)
+        map1 = scan.generate_t1_rho_map(tissue, TARGET_MASK_PATH, num_workers=util.num_workers())
         assert map1 is not None, "map should not be None"
 
         # add mask to femoral cartilage and run
         nr = NiftiReader()
         tissue.set_mask(nr.load(TARGET_MASK_PATH))
-        map2 = scan.generate_t1_rho_map(tissue)
+        map2 = scan.generate_t1_rho_map(tissue, num_workers=util.num_workers())
         assert map2 is not None, "map should not be None"
 
         # map1 and map2 should be identical

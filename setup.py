@@ -54,11 +54,12 @@ setup(
         "nipype",
         "opencv-python",
         "pandas",
-        "pydicom",
+        "pydicom==2.0.0",
         "scikit-image",
         "scipy",
         "seaborn",
         "openpyxl",
         "Pmw",
+        "tqdm>=4.42.0"
     ]
 )

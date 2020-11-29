@@ -47,7 +47,7 @@ class MapssTest(util.ScanTest):
 
             nr = NiftiReader()
             tissue.set_mask(nr.load(MANUAL_SEGMENTATION_MASK_PATH))
-            map2 = action(tissue)
+            map2 = action(tissue, num_workers=util.num_workers())
             assert map2 is not None, "%s: map2 should not be None" % str(action)
 
             # map1 and map2 should be identical

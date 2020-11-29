@@ -64,6 +64,11 @@ class TestDicomIO(unittest.TestCase):
         :param h2:
         :return:
         """
+        # try:
+        #     str(h1), str(h2)
+        # except:
+        #     return True
+
         rep = []
         for dataset in (h1, h2):
             lines = str(dataset).split("\n")
@@ -192,8 +197,8 @@ class TestDicomIO(unittest.TestCase):
             volumes = self.dr.load(dicom_path)
 
             # Reorient images
-            o = volumes[
-                0].orientation  # echo 1 and echo 2 have the same orientation, because loaded from the total dicom path
+            # echo 1 and echo 2 have the same orientation, because loaded from the total dicom path
+            o = volumes[0].orientation
 
             # generate random permutations of orientations
             orientations = []
@@ -240,6 +245,42 @@ class TestDicomIO(unittest.TestCase):
                     h2 = e_vol.headers[i]
 
                     assert self.are_equivalent_headers(h1, h2), "headers for echoes %d must be equivalent" % echo_num
+    
+    def test_read_multiple_workers(self):
+        """Test reading/writing from multiple workers."""
+        for dp_ind, dp in enumerate(ututils.SCAN_DIRPATHS):
+            curr_scan = ututils.SCANS[dp_ind]
+            curr_scan_info = ututils.SCANS_INFO[curr_scan]
+
+            dicom_path = ututils.get_dicoms_path(dp)
+            volumes_exp = self.dr.load(dicom_path)
+            volumes = DicomReader(num_workers=ututils.num_workers()).load(dicom_path)
+            assert len(volumes_exp) == len(volumes)
+
+            for vol, exp in zip(volumes, volumes_exp):
+                assert vol.is_identical(exp)
+    
+    def test_write_multiple_workers(self):
+        """Test reading/writing from multiple workers."""
+        for dp_ind, dp in enumerate(ututils.SCAN_DIRPATHS):
+            curr_scan = ututils.SCANS[dp_ind]
+            curr_scan_info = ututils.SCANS_INFO[curr_scan]
+
+            dicom_path = ututils.get_dicoms_path(dp)
+            write_path = ututils.get_write_path(dp, self.data_format)
+            volumes = self.dr.load(dicom_path)
+
+            for ind, vol in enumerate(volumes):
+                exp_path = os.path.join(write_path, 'expected', 'e%d' % (ind + 1))
+                out_path = os.path.join(write_path, 'out', 'e%d' % (ind + 1))
+
+                self.dw.save(vol, exp_path)
+                DicomWriter(num_workers=ututils.num_workers()).save(vol, out_path)
+
+                expected = self.dr.load(exp_path)[0]
+                out = self.dr.load(out_path)[0]
+
+                assert out.is_identical(expected)
 
 
 class TestInterIO(unittest.TestCase):

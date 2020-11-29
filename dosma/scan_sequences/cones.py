@@ -121,7 +121,7 @@ class Cones(NonTargetSequence):
 
         self.subvolumes = subvolumes
 
-    def generate_t2_star_map(self, tissue: Tissue, mask_path: str = None):
+    def generate_t2_star_map(self, tissue: Tissue, mask_path: str = None, num_workers: int = 0):
         """Generate 3D T2-star map and r-squared fit map using mono-exponential fit across subvolumes acquired at
             different echo times.
 
@@ -131,6 +131,8 @@ class Cones(NonTargetSequence):
             tissue (Tissue): Tissue to generate quantitative value for.
             mask_path (:obj:`str`, optional): File path to mask of ROI to analyze. If specified, only voxels specified
                 by mask will be fit. Speeds up computation. Defaults to `None`.
+            num_workers (int, optional): Number of subprocesses to use for fitting.
+                If `0`, will execute on the main thread.
 
         Returns:
             qv.T2Star: T2-star fit for tissue.
@@ -152,12 +154,14 @@ class Cones(NonTargetSequence):
             spin_lock_times.append(echo_time)
             subvolumes_list.append(self.subvolumes[echo_time])
 
-        mef = MonoExponentialFit(spin_lock_times,
-                                 subvolumes_list,
-                                 mask=mask,
-                                 bounds=(__T2_STAR_LOWER_BOUND__, __T2_STAR_UPPER_BOUND__),
-                                 tc0=__INITIAL_T2_STAR_VAL__,
-                                 decimal_precision=__T2_STAR_DECIMAL_PRECISION__)
+        mef = MonoExponentialFit(
+            spin_lock_times, subvolumes_list,
+            mask=mask,
+            bounds=(__T2_STAR_LOWER_BOUND__, __T2_STAR_UPPER_BOUND__),
+            tc0=__INITIAL_T2_STAR_VAL__,
+            decimal_precision=__T2_STAR_DECIMAL_PRECISION__,
+            num_workers=num_workers,
+        )
 
         t2star_map, r2 = mef.fit()
 

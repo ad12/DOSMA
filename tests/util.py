@@ -58,6 +58,10 @@ def get_expected_data_path(fp):
     return os.path.join(fp, 'expected')
 
 
+def num_workers() -> int:
+    return min(8, os.cpu_count())
+
+
 class ScanTest(unittest.TestCase):
     from dosma.scan_sequences.scans import ScanSequence
     SCAN_TYPE = ScanSequence  # override in subclasses
