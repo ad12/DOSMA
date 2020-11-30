@@ -1,5 +1,6 @@
 # project files
 **/.idea
+**/.vscode
 
 # cache files
 **/__pycache__
