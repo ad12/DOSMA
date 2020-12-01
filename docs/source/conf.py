@@ -16,16 +16,27 @@ import sphinx_bootstrap_theme
 import sphinx_rtd_theme
 sys.path.insert(0, os.path.abspath('../..'))
 
+def get_version():
+    init_py_path = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), "../../dosma", "__init__.py"
+    )
+    init_py = open(init_py_path, "r").readlines()
+    version_line = [
+        l.strip() for l in init_py if l.startswith("__version__")  # noqa: E741
+    ][0]
+    version = version_line.split("=")[-1].strip().strip("'\"")
+    return version
+
 
 # -- Project information -----------------------------------------------------
 
-project = 'DOSMA'
-copyright = '2019, Arjun Desai'
+project = 'dosma'
+copyright = '2019-2020, Arjun Desai'
 author = 'Arjun Desai'
 
 # The full version, including alpha/beta/rc tags
-release = 'v0.0.11'
-
+# release = setup.get_version(ignore_nightly=True)
+release = get_version()
 
 # -- General configuration ---------------------------------------------------
 
@@ -42,7 +53,6 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
     'sphinx.ext.napoleon',
-    'sphinx.ext.mathbase',
     'sphinxcontrib.bibtex',
     'sphinx_rtd_theme',
     'sphinx.ext.githubpages',
