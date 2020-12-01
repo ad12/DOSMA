@@ -2,6 +2,7 @@ import os
 import re
 import shutil
 import unittest
+import uuid
 
 import natsort
 
@@ -51,7 +52,7 @@ def get_read_paths(fp, data_format: ImageDataFormat):
 
 
 def get_data_path(fp):
-    return os.path.join(fp, 'data')
+    return os.path.join(fp, f'data-{str(uuid.uuid1())}')
 
 
 def get_expected_data_path(fp):
