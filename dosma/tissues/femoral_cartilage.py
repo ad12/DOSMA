@@ -500,7 +500,7 @@ def _largest_cc(mask):
     """
     # We use asarray to be able to work with masked arrays.
     mask = np.asarray(mask)
-    labels, label_nb = ndimage.label(mask)
+    labels, label_nb = sni.label(mask)
     if not label_nb:
         raise ValueError('No non-zero values: no connected components')
     if label_nb == 1:
