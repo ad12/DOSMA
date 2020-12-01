@@ -460,7 +460,7 @@ def parse_args(f_input=None):
 
     if gpu is not None:
         os.environ['CUDA_VISIBLE_DEVICES'] = gpu
-    if not gpu:
+    elif "CUDA_VISIBLE_DEVICES" not in os.environ:
         os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
     # parse and update preferences

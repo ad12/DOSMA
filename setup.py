@@ -68,6 +68,5 @@ setup(
     ],
     extras_require={
         "dev": ["flake8", "isort", "black==19.3b0", "sphinx", "sphinxcontrib.bibtex"],
-        "ai": ["tensorflow>=1.8.0", "keras>=2.1.6"],
     },
 )
