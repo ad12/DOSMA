@@ -19,16 +19,30 @@ TARGET_MASK_PATH = os.path.join(util.get_scan_dirpath(CubeQuant.NAME), 'misc/fc.
 
 
 class TestRegister(unittest.TestCase):
-    def test_run(self):
+    def test_multiprocessing(self):
         dr = DicomReader(num_workers=util.num_workers())
         cq_dicoms = util.get_dicoms_path(os.path.join(util.UNITTEST_SCANDATA_PATH, CubeQuant.NAME))
         cq = dr.load(cq_dicoms)
-        out_path = os.path.join(fc.TEMP_FOLDER_PATH, "test-register")
-        out, vols = register(
+        data_dir = os.path.join(fc.TEMP_FOLDER_PATH, "test-register-mp")
+
+        out_path = os.path.join(data_dir, "expected")
+        _, expected = register(
             cq[0], cq[1:], fc.ELASTIX_AFFINE_PARAMS_FILE, out_path, 
-            num_workers=util.num_workers(), num_threads=2, return_volumes=True, rtype=tuple
+            num_workers=0, num_threads=2, return_volumes=True, rtype=tuple,
+            show_pbar=True
         )
-        shutil.rmtree(out_path)
+
+        out_path = os.path.join(data_dir, "out")
+        _, out = register(
+            cq[0], cq[1:], fc.ELASTIX_AFFINE_PARAMS_FILE, out_path, 
+            num_workers=util.num_workers(), num_threads=2, return_volumes=True, rtype=tuple,
+            show_pbar=True
+        )
+
+        for vol, exp in zip(out, expected):
+            assert np.allclose(vol.volume, exp.volume)
+
+        shutil.rmtree(data_dir)
 
 
 class TestApplyWarp(unittest.TestCase):    

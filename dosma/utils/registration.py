@@ -9,6 +9,7 @@ from typing import Dict, Sequence, Union
 from nipype.interfaces.elastix import ApplyWarp, Registration
 from nipype.interfaces.elastix.registration import RegistrationOutputSpec
 from tqdm import tqdm
+from tqdm.contrib.concurrent import process_map
 
 from dosma import file_constants as fc
 from dosma.data_io.nifti_io import NiftiWriter, NiftiReader
@@ -50,10 +51,10 @@ def register(
         collate (bool, optional): If `True`, will collate outputs from sequential registration
             into single RegistrationOutputSpec instance. If `sequential=False`, this argument
             is ignored.
-        num_workers (int, optional): Number of workers to use for reading/writing data and f
-            or registration. Note this is not used for registration, which is done via 
-            multiple threads - see `num_threads` for more details.
-        num_threads (int, optional): Number of threads to use for registration. If `None`, defaults to 1.
+        num_workers (int, optional): Number of workers to use for reading/writing data and
+            for registration.
+        num_threads (int, optional): Number of threads to use for registration. Note total number of threads
+            used will be num_workers * num_threads.
         show_pbar (bool, optional): If `True`, show progress bar during registration. Note the progress bar
             will not be shown for intermediate reading/writing.
         return_volumes (bool, optional): If `True`, registered volumes will also be returned.
@@ -115,16 +116,25 @@ def register(
     all_outputs = {}
 
     # Perform registration.
-    out = []
-    for idx, (mvg, mvg_mask) in tqdm(
-        enumerate(zip(moving, moving_masks)), disable=not show_pbar, total=len(moving)
-    ):
-        out_path = os.path.join(output_path, f"moving-{idx}")
-        _out = _elastix_register(
-            target, mvg, parameters, out_path, target_mask, 
-            mvg_mask, sequential, collate, num_threads, **kwargs,
+    reg_out_paths = [os.path.join(output_path, f"moving-{idx}") for idx in range(len(moving))]
+    reg_args = list(zip(moving, moving_masks, reg_out_paths))
+    if num_workers > 0:
+        func = partial(
+            _elastix_register_mp,
+            target=target, parameters=parameters, target_mask=target_mask, 
+            sequential=sequential, collate=collate, num_threads=num_threads, **kwargs
         )
-        out.append(_out)
+        max_workers = min(num_workers, len(reg_args))
+        out = process_map(func, reg_args, max_workers=max_workers, tqdm_class=tqdm, disable=not show_pbar)
+    else:
+        out = []
+        for mvg, mvg_mask, out_path in tqdm(reg_args, disable=not show_pbar):
+            _out = _elastix_register(
+                target, mvg, parameters, out_path, target_mask, 
+                mvg_mask, sequential, collate, num_threads, **kwargs,
+            )
+            out.append(_out)
+
     all_outputs["outputs"] = tuple(out)
 
     # Load volumes.
@@ -134,8 +144,9 @@ def register(
             with mp.Pool(min(num_workers, len(filepaths))) as p:
                 vols = p.map(_read, filepaths)
         else:
+            vols = []
             for fp in filepaths:
-                vols = _read(fp)
+                vols.append(_read(fp))
         all_outputs["volume"] = tuple(vols)
     
     # Clean up.
@@ -285,6 +296,15 @@ def _elastix_register(
         return out
     else:
         return _register(moving, parameters, output_path)
+
+
+def _elastix_register_mp(args, **kwargs):
+    """Reorder arguments for multiprocessing support."""
+    moving, moving_mask, output_path = args
+    return _elastix_register(
+        moving=moving, moving_mask=moving_mask, output_path=output_path, **kwargs
+    )
+
 
 def _write(vol: MedicalVolume, path: str):
     """Extracted out for multiprocessing purposes."""
