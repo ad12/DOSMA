@@ -39,27 +39,35 @@ setup(
     version=get_version(),
     author="Arjun Desai, et al.",
     url="https://ad12.github.io/DOSMA",
-    description="An AI-powered open-source toolbox for medical image analysis",
+    description="An AI-powered open-source medical image analysis toolbox",
     packages=find_packages(exclude=("configs", "tests")),
     python_requires=">=3.6",
     install_requires=[
-        "configparser",
-        "cython",
-        "dicom2nifti",
+        "numpy",
         "h5py",
         "natsort",
         "nested-lookup",
         "nibabel",
-        "nipy",
         "nipype",
-        "opencv-python",
         "pandas",
-        "pydicom==2.0.0",
+        # TODO Issue #57: Remove pydicom upper bound (https://github.com/ad12/DOSMA/issues/57)
+        "pydicom>=1.6.0,<=2.0.0",
         "scikit-image",
         "scipy",
         "seaborn",
         "openpyxl",
         "Pmw",
+        "PyYAML",
         "tqdm>=4.42.0"
-    ]
+    ],
+    license="GNU",
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: GNU License",
+        "Operating System :: OS Independent",
+    ],
+    extras_require={
+        "dev": ["flake8", "isort", "black==19.3b0", "sphinx"],
+        "ai": ["tensorflow>=1.8.0", "keras>=2.1.6"],
+    },
 )

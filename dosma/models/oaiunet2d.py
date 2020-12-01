@@ -6,11 +6,16 @@
 from copy import deepcopy
 import os
 
-import keras.backend as K
 import numpy as np
-from keras.layers import BatchNormalization as BN
-from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, Concatenate
-from keras.models import Model
+
+try:
+    import keras.backend as K
+    from keras.layers import BatchNormalization as BN
+    from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, Concatenate
+    from keras.models import Model
+    _SUPPORTS_KERAS = True
+except ImportError:  # pragma: no-cover
+    _SUPPORTS_KERAS = False  # pragma: no-cover
 
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.data_io.orientation import SAGITTAL
@@ -37,6 +42,11 @@ class OAIUnet2D(KerasSegModel):
 
         :raise ValueError if input_size is not tuple or dimensions of input_size do not match (height, width, 1)
         """
+        if not _SUPPORTS_KERAS:
+            raise ImportError(
+                "`oaiunet2d` segmentation models depend on tensorflow/keras backends. "
+                "Install them with `pip install tensorflow; pip install keras`"
+            )
 
         if type(input_shape) is not tuple or len(input_shape) != 3 or input_shape[2] != 1:
             raise ValueError('input_size must be a tuple of size (height, width, 1)')
