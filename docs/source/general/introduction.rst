@@ -1,5 +1,7 @@
 .. _introduction:
 
+**This guide is still under construction**
+
 Introduction
 ================================================================================
 DOSMA is an open-source Python library and application for musculoskeletal (MSK) MRI analysis.
@@ -29,6 +31,8 @@ DOSMA uses various modules to handle MSK analysis for multiple scan types and ti
 - **Scan** modules declare scan-specific actions (fitting, segmentation, registration, etc).
 - **Tissue** modules handle visualization and analysis optimized for different tissues.
 - **Analysis** modules abstract different methods for performing different actions (different segmentation methods, fitting methods, etc.)
+
+**Note**: DOSMA is still in beta, and APIs are subject to change.
 
 Features
 --------------------------------------------------------------------------------
@@ -77,6 +81,8 @@ a link to those weights and detail the scanning parameters/sequence used to acqu
 
 OS Compatibility
 ^^^^^^^^^^^^^^^^
+**Update**: Windows dependencies have been resolved. DOSMA now supports Mac/Windows/Linux OS.
+
 This library has been optimized for use on Mac/Linux operating systems. We are working on a Windows-specific
 solution for the library (`Issue #39 <https://github.com/ad12/DOSMA/issues/39>`_). In the meantime, the
 `Linux bash <https://itsfoss.com/install-bash-on-windows/>`_ can be used.
