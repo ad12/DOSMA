@@ -34,13 +34,30 @@ def get_version():
     return version
 
 
+def get_resources():
+    """Get the resources files for dosma. To be used with `package_data`.
+
+    All files under 'dosma/resources/{elastix,templates}'.
+    """
+    import pathlib
+
+    files = []
+    # Elastix files
+    for path in pathlib.Path("dosma/resources/elastix").rglob('*.*'):
+        files.append(str(path))
+    for path in pathlib.Path("dosma/resources/templates").rglob('*.*'):
+        files.append(str(path))
+    return [x.split("/", 1)[1] for x in files]
+
+
 setup(
     name="dosma",
     version=get_version(),
-    author="Arjun Desai, et al.",
+    author="Arjun Desai",
     url="https://ad12.github.io/DOSMA",
     description="An AI-powered open-source medical image analysis toolbox",
-    packages=find_packages(exclude=("configs", "tests")),
+    packages=find_packages(exclude=("configs", "tests", "tests.*")),
+    package_data={'dosma': get_resources(),},
     python_requires=">=3.6",
     install_requires=[
         "numpy",
@@ -63,7 +80,7 @@ setup(
     license="GNU",
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GNU License",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
     ],
     extras_require={
