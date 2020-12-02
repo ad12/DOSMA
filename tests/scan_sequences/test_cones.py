@@ -20,10 +20,6 @@ TARGET_MASK_PATH = os.path.join(util.get_scan_dirpath(Cones.NAME), 'misc/fc.nii.
 class ConesTest(util.ScanTest):
     SCAN_TYPE = Cones
 
-    def test_loading(self):
-        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
-        scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
-
     def test_interregister(self):
         """Test Cones interregistration."""
         # Register to first echo of QDess without a mask.
