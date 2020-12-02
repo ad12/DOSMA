@@ -1,0 +1,15 @@
+h5py
+numpy
+natsort
+nested-lookup
+nibabel
+nipype
+pandas
+pydicom>=1.6.0,<=2.0.0
+scikit-image
+scipy
+seaborn
+openpyxl
+Pmw
+PyYAML
+tqdm>=4.42.0

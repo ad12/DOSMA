@@ -6,34 +6,22 @@ from dosma.scan_sequences.qdess import QDess
 from dosma.tissues.femoral_cartilage import FemoralCartilage
 from .. import util
 
-SEGMENTATION_WEIGHTS_FOLDER = os.path.join(os.path.dirname(__file__), '../../weights/oai-unet_2d')
-SEGMENTATION_MODEL = 'oai_unet2d'
+SEGMENTATION_WEIGHTS_FOLDER = os.path.join(os.path.dirname(__file__), '../../weights/iwoai-2019-t6-normalized')
+SEGMENTATION_MODEL = "iwoai-2019-t6-normalized"
 
 
 class QDessTest(util.ScanTest):
     SCAN_TYPE = QDess
 
-    def test_segmentation(self):
-        """Test if batch size makes a difference on the segmentation output"""
-        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
-        tissue = FemoralCartilage()
-        tissue.find_weights(SEGMENTATION_WEIGHTS_FOLDER)
-        dims = scan.get_dimensions()
-        input_shape = (dims[0], dims[1], 1)
-        model = get_model(SEGMENTATION_MODEL,
-                          input_shape=input_shape,
-                          weights_path=tissue.weights_file_path)
-        scan.segment(model, tissue)
-
     def test_segmentation_multiclass(self):
         """Test support for multiclass segmentation."""
         scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
         tissue = FemoralCartilage()
-        tissue.find_weights(os.path.join(os.path.dirname(__file__), '../../weights/iwoai-2019-t6'))
+        tissue.find_weights(SEGMENTATION_WEIGHTS_FOLDER),
         dims = scan.get_dimensions()
         input_shape = (dims[0], dims[1], 1)
         model = get_model(
-            "iwoai-2019-t6",
+            SEGMENTATION_MODEL,
             input_shape=input_shape,
             weights_path=tissue.weights_file_path
         )
@@ -66,7 +54,7 @@ class QDessTest(util.ScanTest):
         cmdline_str = (
             f"--d {self.dicom_dirpath} --s {self.data_dirpath} qdess --fc "
             f"segment --weights_dir {SEGMENTATION_WEIGHTS_FOLDER} "
-            f"--model oai-unet2d --use_rms"
+            f"--model {SEGMENTATION_MODEL} --use_rms"
         )
         self.__cmd_line_helper__(cmdline_str)
 

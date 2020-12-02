@@ -1,0 +1,23 @@
+data:
+  format: 'nifti'
+fitting:
+  r2.threshold: 0.9  # range [0, 1)
+registration:
+  mask:
+    dilation.rate: 9.0
+    dilation.threshold: 0.0001
+segmentation:
+  batch.size: 16
+visualization:
+  matplotlib:
+    rcParams:
+      savefig.dpi: 200
+      font.size: 16
+      savefig.format: 'png'
+      backend: 'Agg'
+  use.vmax: False
+
+testing1:
+  foo: 10
+testing2:
+  foo: 12

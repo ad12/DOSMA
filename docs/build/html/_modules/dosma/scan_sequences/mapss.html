@@ -1,39 +1,40 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>dosma.scan_sequences.mapss &mdash; DOSMA v0.0.11 documentation</title>
+  <title>dosma.scan_sequences.mapss &mdash; dosma 0.0.12 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -49,7 +50,7 @@
           
 
           
-            <a href="../../../index.html" class="icon icon-home"> DOSMA
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> dosma
           
 
           
@@ -72,6 +73,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -90,6 +92,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -99,7 +102,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../../index.html">DOSMA</a>
+          <a href="../../../index.html">dosma</a>
         
       </nav>
 
@@ -128,7 +131,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -278,13 +281,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">raw_volumes</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">volumes</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">volumes</span> <span class="o">=</span> <span class="n">intraregistered_volumes</span>
 
-<div class="viewcode-block" id="Mapss.generate_t1_rho_map"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.mapss.Mapss.generate_t1_rho_map">[docs]</a>    <span class="k">def</span> <span class="nf">generate_t1_rho_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tissue</span><span class="p">:</span> <span class="n">Tissue</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">mask_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Mapss.generate_t1_rho_map"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.mapss.Mapss.generate_t1_rho_map">[docs]</a>    <span class="k">def</span> <span class="nf">generate_t1_rho_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tissue</span><span class="p">:</span> <span class="n">Tissue</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">mask_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">num_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Generate 3D T1-rho map and r-squared fit map using mono-exponential fit across subvolumes acquired at</span>
 <span class="sd">            different echo times.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            tissue (Tissue): Tissue to generate quantitative value for.</span>
 <span class="sd">            mask_path (str): File path to mask of ROI to analyze</span>
+<span class="sd">            num_workers (int, optional): Number of subprocesses to use for fitting.</span>
+<span class="sd">                If `0`, will execute on the main thread.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            qv.T1Rho: T1-rho fit for tissue.</span>
@@ -294,17 +299,19 @@
         <span class="n">tc0</span> <span class="o">=</span> <span class="n">__INITIAL_T1_RHO_VAL__</span>
         <span class="n">decimal_precision</span> <span class="o">=</span> <span class="n">__DECIMAL_PRECISION__</span>
 
-        <span class="n">qv_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__fitting_helper</span><span class="p">(</span><span class="n">qv</span><span class="o">.</span><span class="n">T1Rho</span><span class="p">,</span> <span class="n">echo_inds</span><span class="p">,</span> <span class="n">tissue</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">tc0</span><span class="p">,</span> <span class="n">decimal_precision</span><span class="p">,</span> <span class="n">mask_path</span><span class="p">)</span>
+        <span class="n">qv_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__fitting_helper</span><span class="p">(</span><span class="n">qv</span><span class="o">.</span><span class="n">T1Rho</span><span class="p">,</span> <span class="n">echo_inds</span><span class="p">,</span> <span class="n">tissue</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">tc0</span><span class="p">,</span> <span class="n">decimal_precision</span><span class="p">,</span> <span class="n">mask_path</span><span class="p">,</span> <span class="n">num_workers</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">qv_map</span></div>
 
-<div class="viewcode-block" id="Mapss.generate_t2_map"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.mapss.Mapss.generate_t2_map">[docs]</a>    <span class="k">def</span> <span class="nf">generate_t2_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tissue</span><span class="p">:</span> <span class="n">Tissue</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">mask_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Mapss.generate_t2_map"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.mapss.Mapss.generate_t2_map">[docs]</a>    <span class="k">def</span> <span class="nf">generate_t2_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tissue</span><span class="p">:</span> <span class="n">Tissue</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">mask_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">num_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Generate 3D T2 map and r-squared fit map using mono-exponential fit across subvolumes acquired at different</span>
 <span class="sd">            echo times.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            tissue (Tissue): Tissue to generate quantitative value for.</span>
 <span class="sd">            mask_path (str): File path to mask of ROI to analyze</span>
+<span class="sd">            num_workers (int, optional): Number of subprocesses to use for fitting.</span>
+<span class="sd">                If `0`, will execute on the main thread.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            qv.T2: T2 fit for tissue.</span>
@@ -314,12 +321,12 @@
         <span class="n">tc0</span> <span class="o">=</span> <span class="n">__INITIAL_T2_VAL__</span>
         <span class="n">decimal_precision</span> <span class="o">=</span> <span class="n">__DECIMAL_PRECISION__</span>
 
-        <span class="n">qv_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__fitting_helper</span><span class="p">(</span><span class="n">qv</span><span class="o">.</span><span class="n">T2</span><span class="p">,</span> <span class="n">echo_inds</span><span class="p">,</span> <span class="n">tissue</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">tc0</span><span class="p">,</span> <span class="n">decimal_precision</span><span class="p">,</span> <span class="n">mask_path</span><span class="p">)</span>
+        <span class="n">qv_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__fitting_helper</span><span class="p">(</span><span class="n">qv</span><span class="o">.</span><span class="n">T2</span><span class="p">,</span> <span class="n">echo_inds</span><span class="p">,</span> <span class="n">tissue</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">tc0</span><span class="p">,</span> <span class="n">decimal_precision</span><span class="p">,</span> <span class="n">mask_path</span><span class="p">,</span> <span class="n">num_workers</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">qv_map</span></div>
 
     <span class="k">def</span> <span class="nf">__fitting_helper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qv_type</span><span class="p">:</span> <span class="n">QuantitativeValueType</span><span class="p">,</span> <span class="n">echo_inds</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">tissue</span><span class="p">:</span> <span class="n">Tissue</span><span class="p">,</span>
-                         <span class="n">bounds</span><span class="p">,</span> <span class="n">tc0</span><span class="p">,</span> <span class="n">decimal_precision</span><span class="p">,</span> <span class="n">mask_path</span><span class="p">):</span>
+                         <span class="n">bounds</span><span class="p">,</span> <span class="n">tc0</span><span class="p">,</span> <span class="n">decimal_precision</span><span class="p">,</span> <span class="n">mask_path</span><span class="p">,</span> <span class="n">num_workers</span><span class="p">):</span>
         <span class="n">echo_info</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">echo_times</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">volumes</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">echo_inds</span><span class="p">]</span>
 
         <span class="c1"># sort by echo time</span>
@@ -335,11 +342,14 @@
             <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">volume</span><span class="p">))</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;mask_filepath must reference binary segmentation volume&#39;</span><span class="p">)</span>
 
-        <span class="n">mef</span> <span class="o">=</span> <span class="n">MonoExponentialFit</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span>
-                                 <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
-                                 <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span>
-                                 <span class="n">tc0</span><span class="o">=</span><span class="n">tc0</span><span class="p">,</span>
-                                 <span class="n">decimal_precision</span><span class="o">=</span><span class="n">decimal_precision</span><span class="p">)</span>
+        <span class="n">mef</span> <span class="o">=</span> <span class="n">MonoExponentialFit</span><span class="p">(</span>
+            <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span>
+            <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
+            <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span>
+            <span class="n">tc0</span><span class="o">=</span><span class="n">tc0</span><span class="p">,</span>
+            <span class="n">decimal_precision</span><span class="o">=</span><span class="n">decimal_precision</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span>
+        <span class="p">)</span>
         <span class="n">qv_map</span><span class="p">,</span> <span class="n">r2</span> <span class="o">=</span> <span class="n">mef</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
 
         <span class="n">quant_val_map</span> <span class="o">=</span> <span class="n">qv_type</span><span class="p">(</span><span class="n">qv_map</span><span class="p">)</span>
@@ -429,11 +439,19 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Arjun Desai
+        
+        &copy; Copyright 2019-2020, Arjun Desai
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -444,7 +462,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

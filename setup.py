@@ -34,32 +34,56 @@ def get_version():
     return version
 
 
+def get_resources():
+    """Get the resources files for dosma. To be used with `package_data`.
+
+    All files under 'dosma/resources/{elastix,templates}'.
+    """
+    import pathlib
+
+    files = []
+    # Elastix files
+    for path in pathlib.Path("dosma/resources/elastix").rglob('*.*'):
+        files.append(str(path))
+    for path in pathlib.Path("dosma/resources/templates").rglob('*.*'):
+        files.append(str(path))
+    return [x.split("/", 1)[1] for x in files]
+
+
 setup(
     name="dosma",
     version=get_version(),
-    author="Arjun Desai, et al.",
+    author="Arjun Desai",
     url="https://ad12.github.io/DOSMA",
-    description="An AI-powered open-source toolbox for medical image analysis",
-    packages=find_packages(exclude=("configs", "tests")),
+    description="An AI-powered open-source medical image analysis toolbox",
+    packages=find_packages(exclude=("configs", "tests", "tests.*")),
+    package_data={'dosma': get_resources(),},
     python_requires=">=3.6",
     install_requires=[
-        "configparser",
-        "cython",
-        "dicom2nifti",
+        "numpy",
         "h5py",
         "natsort",
         "nested-lookup",
         "nibabel",
-        "nipy",
         "nipype",
-        "opencv-python",
         "pandas",
-        "pydicom==2.0.0",
+        # TODO Issue #57: Remove pydicom upper bound (https://github.com/ad12/DOSMA/issues/57)
+        "pydicom>=1.6.0,<=2.0.0",
         "scikit-image",
         "scipy",
         "seaborn",
         "openpyxl",
         "Pmw",
+        "PyYAML",
         "tqdm>=4.42.0"
-    ]
+    ],
+    license="GNU",
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Operating System :: OS Independent",
+    ],
+    extras_require={
+        "dev": ["flake8", "isort", "black==19.3b0", "sphinx", "sphinxcontrib.bibtex"],
+    },
 )

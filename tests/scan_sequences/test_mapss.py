@@ -6,8 +6,8 @@ from dosma.scan_sequences import Mapss
 from dosma.tissues.femoral_cartilage import FemoralCartilage
 from .. import util
 
-SEGMENTATION_WEIGHTS_FOLDER = os.path.join(os.path.dirname(__file__), '../../weights/oai-unet_2d')
-SEGMENTATION_MODEL = 'oai-unet2d'
+SEGMENTATION_WEIGHTS_FOLDER = os.path.join(os.path.dirname(__file__), '../../weights/iwoai-2019-t6-normalized')
+SEGMENTATION_MODEL = "iwoai-2019-t6-normalized"
 
 # Path to manual segmentation mask
 MANUAL_SEGMENTATION_MASK_PATH = os.path.join(

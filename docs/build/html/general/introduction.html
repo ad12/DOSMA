@@ -1,39 +1,40 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Introduction &mdash; DOSMA v0.0.11 documentation</title>
+  <title>Introduction &mdash; dosma 0.0.12 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Installation" href="installation.html" />
@@ -51,7 +52,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home"> DOSMA
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> dosma
           
 
           
@@ -74,6 +75,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -91,7 +93,6 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#disclaimers">Disclaimers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#using-deep-learning">Using Deep Learning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#os-compatibility">OS Compatibility</a></li>
 </ul>
 </li>
 </ul>
@@ -105,6 +106,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -114,7 +116,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">DOSMA</a>
+          <a href="../index.html">dosma</a>
         
       </nav>
 
@@ -143,7 +145,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Introduction</li>
     
@@ -162,8 +164,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="introduction">
-<span id="id1"></span><h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+  <p id="introduction"><strong>This guide is still under construction</strong></p>
+<div class="section" id="id1">
+<h1>Introduction<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p>DOSMA is an open-source Python library and application for musculoskeletal (MSK) MRI analysis.</p>
 <p>In offering support for multiple scan types and tissues, DOSMA is designed to
 streamline rapid multi-scan analysis of MSK anatomy. Because DOSMA is a
@@ -186,6 +189,7 @@ time (UTE) Cones, a T<sub>2</sub><sup>*</sup> weighted sequence.</span><a class=
 <li><p><strong>Tissue</strong> modules handle visualization and analysis optimized for different tissues.</p></li>
 <li><p><strong>Analysis</strong> modules abstract different methods for performing different actions (different segmentation methods, fitting methods, etc.)</p></li>
 </ul>
+<p><strong>Note</strong>: DOSMA is still in beta, and APIs are subject to change.</p>
 </div>
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
@@ -225,12 +229,6 @@ acquired using different scan types.</p>
 <p>If you do train weights for any deep learning task that you would want to include as part of this repo, please provide
 a link to those weights and detail the scanning parameters/sequence used to acquire those images.</p>
 </div>
-<div class="section" id="os-compatibility">
-<h3>OS Compatibility<a class="headerlink" href="#os-compatibility" title="Permalink to this headline">¶</a></h3>
-<p>This library has been optimized for use on Mac/Linux operating systems. We are working on a Windows-specific
-solution for the library (<a class="reference external" href="https://github.com/ad12/DOSMA/issues/39">Issue #39</a>). In the meantime, the
-<a class="reference external" href="https://itsfoss.com/install-bash-on-windows/">Linux bash</a> can be used.</p>
-</div>
 </div>
 </div>
 
@@ -254,11 +252,19 @@ solution for the library (<a class="reference external" href="https://github.com
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Arjun Desai
+        
+        &copy; Copyright 2019-2020, Arjun Desai
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -269,7 +275,6 @@ solution for the library (<a class="reference external" href="https://github.com
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {
