@@ -1,18 +1,15 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>dosma package &mdash; dosma 0.0.12 documentation</title>
+  <title>dosma package &mdash; dosma 0.0.12.dev1 documentation</title>
   
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
 
   
   
@@ -20,21 +17,23 @@
   
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 </head>
@@ -50,7 +49,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home" alt="Documentation Home"> dosma
+            <a href="index.html" class="icon icon-home"> dosma
           
 
           
@@ -73,7 +72,6 @@
           
         </div>
 
-        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -92,7 +90,6 @@
             
           
         </div>
-        
       </div>
     </nav>
 
@@ -131,7 +128,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><a href="index.html">Docs</a> &raquo;</li>
         
       <li>dosma package</li>
     
@@ -231,7 +228,7 @@
 <div class="section" id="module-dosma.file_constants">
 <span id="dosma-file-constants-module"></span><h2>dosma.file_constants module<a class="headerlink" href="#module-dosma.file_constants" title="Permalink to this headline">¶</a></h2>
 <p>Basic file constants to be shared with program</p>
-<dl class="py function">
+<dl class="function">
 <dt id="dosma.file_constants.set_debug">
 <code class="sig-prename descclassname">dosma.file_constants.</code><code class="sig-name descname">set_debug</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/file_constants.html#set_debug"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.file_constants.set_debug" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -239,9 +236,32 @@
 </div>
 <div class="section" id="module-dosma.quant_vals">
 <span id="dosma-quant-vals-module"></span><h2>dosma.quant_vals module<a class="headerlink" href="#module-dosma.quant_vals" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
+<dl class="class">
+<dt id="dosma.quant_vals.QuantitativeValueType">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.quant_vals.</code><code class="sig-name descname">QuantitativeValueType</code><a class="reference internal" href="_modules/dosma/quant_vals.html#QuantitativeValueType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.QuantitativeValueType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Enum of types of quantitative values that can be analyzed.</p>
+<p>For more information on quantitative parameters, see <a class="reference internal" href="#dosma.quant_vals.QuantitativeValue" title="dosma.quant_vals.QuantitativeValue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QuantitativeValue</span></code></a>.</p>
+<dl class="attribute">
+<dt id="dosma.quant_vals.QuantitativeValueType.T1_RHO">
+<code class="sig-name descname">T1_RHO</code><em class="property"> = 1</em><a class="headerlink" href="#dosma.quant_vals.QuantitativeValueType.T1_RHO" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.quant_vals.QuantitativeValueType.T2">
+<code class="sig-name descname">T2</code><em class="property"> = 2</em><a class="headerlink" href="#dosma.quant_vals.QuantitativeValueType.T2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dosma.quant_vals.QuantitativeValueType.T2_STAR">
+<code class="sig-name descname">T2_STAR</code><em class="property"> = 3</em><a class="headerlink" href="#dosma.quant_vals.QuantitativeValueType.T2_STAR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="dosma.quant_vals.QuantitativeValue">
-<em class="property">class </em><code class="sig-prename descclassname">dosma.quant_vals.</code><code class="sig-name descname">QuantitativeValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">volumetric_map</span><span class="p">:</span> <span class="n"><a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">dosma.data_io.med_volume.MedicalVolume</a></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#QuantitativeValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.QuantitativeValue" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dosma.quant_vals.</code><code class="sig-name descname">QuantitativeValue</code><span class="sig-paren">(</span><em class="sig-param">volumetric_map: dosma.data_io.med_volume.MedicalVolume = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#QuantitativeValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.QuantitativeValue" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
 <p>This class handles tracking volumes associated with different quantitative values.</p>
 <dl class="simple">
@@ -266,19 +286,19 @@ pixel-wise r-squared, or error bounds, etc.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="dosma.quant_vals.QuantitativeValue.ID">
 <code class="sig-name descname">ID</code><em class="property"> = 0</em><a class="headerlink" href="#dosma.quant_vals.QuantitativeValue.ID" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="dosma.quant_vals.QuantitativeValue.NAME">
 <code class="sig-name descname">NAME</code><em class="property"> = ''</em><a class="headerlink" href="#dosma.quant_vals.QuantitativeValue.NAME" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="dosma.quant_vals.QuantitativeValue.add_additional_volume">
-<code class="sig-name descname">add_additional_volume</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">volume</span><span class="p">:</span> <span class="n"><a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">dosma.data_io.med_volume.MedicalVolume</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#QuantitativeValue.add_additional_volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.QuantitativeValue.add_additional_volume" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_additional_volume</code><span class="sig-paren">(</span><em class="sig-param">name: str</em>, <em class="sig-param">volume: dosma.data_io.med_volume.MedicalVolume</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#QuantitativeValue.add_additional_volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.QuantitativeValue.add_additional_volume" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add volume that corresponds to quantitative value.</p>
 <dl class="simple">
 <dt>Additional volumes are typically volumes associated with the goodness of fit of the value. For example, a volume</dt><dd><p>could be r-squared values per voxel, or error bounds, etc.</p>
@@ -295,9 +315,9 @@ pixel-wise r-squared, or error bounds, etc.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="dosma.quant_vals.QuantitativeValue.get_qv">
-<em class="property">static </em><code class="sig-name descname">get_qv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">qv_id</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#QuantitativeValue.get_qv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.QuantitativeValue.get_qv" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">get_qv</code><span class="sig-paren">(</span><em class="sig-param">qv_id: Union[int, str]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#QuantitativeValue.get_qv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.QuantitativeValue.get_qv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find QuantitativeValue enum using id or name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -315,9 +335,9 @@ pixel-wise r-squared, or error bounds, etc.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="dosma.quant_vals.QuantitativeValue.load_data">
-<code class="sig-name descname">load_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dir_path</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#QuantitativeValue.load_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.QuantitativeValue.load_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">load_data</code><span class="sig-paren">(</span><em class="sig-param">dir_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#QuantitativeValue.load_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.QuantitativeValue.load_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load data from disk.</p>
 <p>Data will be loaded from folder ‘<cite>dir_path</cite>/<cite>self.NAME</cite>’.</p>
 <p>Currently, additional volumes are not reloaded.</p>
@@ -328,9 +348,9 @@ pixel-wise r-squared, or error bounds, etc.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="dosma.quant_vals.QuantitativeValue.load_qvs">
-<em class="property">static </em><code class="sig-name descname">load_qvs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dir_path</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#QuantitativeValue.load_qvs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.QuantitativeValue.load_qvs" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">load_qvs</code><span class="sig-paren">(</span><em class="sig-param">dir_path: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#QuantitativeValue.load_qvs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.QuantitativeValue.load_qvs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load all quantitative values from directory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -345,7 +365,7 @@ pixel-wise r-squared, or error bounds, etc.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="dosma.quant_vals.QuantitativeValue.qv_type">
 <em class="property">property </em><code class="sig-name descname">qv_type</code><a class="headerlink" href="#dosma.quant_vals.QuantitativeValue.qv_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>quantitative value type.</p>
@@ -356,7 +376,7 @@ pixel-wise r-squared, or error bounds, etc.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="dosma.quant_vals.QuantitativeValue.save_data">
 <code class="sig-name descname">save_data</code><span class="sig-paren">(</span><em class="sig-param">dir_path: str</em>, <em class="sig-param">data_format: dosma.data_io.format_io.ImageDataFormat = &lt;ImageDataFormat.nifti: 1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#QuantitativeValue.save_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.QuantitativeValue.save_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save data to disk.</p>
@@ -372,9 +392,9 @@ pixel-wise r-squared, or error bounds, etc.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="dosma.quant_vals.QuantitativeValue.save_qvs">
-<em class="property">static </em><code class="sig-name descname">save_qvs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dir_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">qvs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#QuantitativeValue.save_qvs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.QuantitativeValue.save_qvs" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">save_qvs</code><span class="sig-paren">(</span><em class="sig-param">dir_path: str</em>, <em class="sig-param">qvs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#QuantitativeValue.save_qvs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.QuantitativeValue.save_qvs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save all quantitative values from directory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -388,44 +408,21 @@ pixel-wise r-squared, or error bounds, etc.</p></li>
 
 </dd></dl>
 
-<dl class="py class">
-<dt id="dosma.quant_vals.QuantitativeValueType">
-<em class="property">class </em><code class="sig-prename descclassname">dosma.quant_vals.</code><code class="sig-name descname">QuantitativeValueType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#QuantitativeValueType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.QuantitativeValueType" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
-<p>Enum of types of quantitative values that can be analyzed.</p>
-<p>For more information on quantitative parameters, see <a class="reference internal" href="#dosma.quant_vals.QuantitativeValue" title="dosma.quant_vals.QuantitativeValue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QuantitativeValue</span></code></a>.</p>
-<dl class="py attribute">
-<dt id="dosma.quant_vals.QuantitativeValueType.T1_RHO">
-<code class="sig-name descname">T1_RHO</code><em class="property"> = 1</em><a class="headerlink" href="#dosma.quant_vals.QuantitativeValueType.T1_RHO" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="dosma.quant_vals.QuantitativeValueType.T2">
-<code class="sig-name descname">T2</code><em class="property"> = 2</em><a class="headerlink" href="#dosma.quant_vals.QuantitativeValueType.T2" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="dosma.quant_vals.QuantitativeValueType.T2_STAR">
-<code class="sig-name descname">T2_STAR</code><em class="property"> = 3</em><a class="headerlink" href="#dosma.quant_vals.QuantitativeValueType.T2_STAR" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
+<dl class="class">
 <dt id="dosma.quant_vals.T1Rho">
-<em class="property">class </em><code class="sig-prename descclassname">dosma.quant_vals.</code><code class="sig-name descname">T1Rho</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">volumetric_map</span><span class="p">:</span> <span class="n"><a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">dosma.data_io.med_volume.MedicalVolume</a></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#T1Rho"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.T1Rho" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dosma.quant_vals.</code><code class="sig-name descname">T1Rho</code><span class="sig-paren">(</span><em class="sig-param">volumetric_map: dosma.data_io.med_volume.MedicalVolume = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#T1Rho"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.T1Rho" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dosma.quant_vals.QuantitativeValue" title="dosma.quant_vals.QuantitativeValue"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.quant_vals.QuantitativeValue</span></code></a></p>
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="dosma.quant_vals.T1Rho.ID">
 <code class="sig-name descname">ID</code><em class="property"> = 1</em><a class="headerlink" href="#dosma.quant_vals.T1Rho.ID" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="dosma.quant_vals.T1Rho.NAME">
 <code class="sig-name descname">NAME</code><em class="property"> = 't1_rho'</em><a class="headerlink" href="#dosma.quant_vals.T1Rho.NAME" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="dosma.quant_vals.T1Rho.qv_type">
 <em class="property">property </em><code class="sig-name descname">qv_type</code><a class="headerlink" href="#dosma.quant_vals.T1Rho.qv_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>quantitative value type.</p>
@@ -438,21 +435,21 @@ pixel-wise r-squared, or error bounds, etc.</p></li>
 
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="dosma.quant_vals.T2">
-<em class="property">class </em><code class="sig-prename descclassname">dosma.quant_vals.</code><code class="sig-name descname">T2</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">volumetric_map</span><span class="p">:</span> <span class="n"><a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">dosma.data_io.med_volume.MedicalVolume</a></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#T2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.T2" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dosma.quant_vals.</code><code class="sig-name descname">T2</code><span class="sig-paren">(</span><em class="sig-param">volumetric_map: dosma.data_io.med_volume.MedicalVolume = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#T2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.T2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dosma.quant_vals.QuantitativeValue" title="dosma.quant_vals.QuantitativeValue"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.quant_vals.QuantitativeValue</span></code></a></p>
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="dosma.quant_vals.T2.ID">
 <code class="sig-name descname">ID</code><em class="property"> = 2</em><a class="headerlink" href="#dosma.quant_vals.T2.ID" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="dosma.quant_vals.T2.NAME">
 <code class="sig-name descname">NAME</code><em class="property"> = 't2'</em><a class="headerlink" href="#dosma.quant_vals.T2.NAME" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="dosma.quant_vals.T2.qv_type">
 <em class="property">property </em><code class="sig-name descname">qv_type</code><a class="headerlink" href="#dosma.quant_vals.T2.qv_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>quantitative value type.</p>
@@ -465,21 +462,21 @@ pixel-wise r-squared, or error bounds, etc.</p></li>
 
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="dosma.quant_vals.T2Star">
-<em class="property">class </em><code class="sig-prename descclassname">dosma.quant_vals.</code><code class="sig-name descname">T2Star</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">volumetric_map</span><span class="p">:</span> <span class="n"><a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">dosma.data_io.med_volume.MedicalVolume</a></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#T2Star"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.T2Star" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dosma.quant_vals.</code><code class="sig-name descname">T2Star</code><span class="sig-paren">(</span><em class="sig-param">volumetric_map: dosma.data_io.med_volume.MedicalVolume = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/quant_vals.html#T2Star"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.quant_vals.T2Star" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#dosma.quant_vals.QuantitativeValue" title="dosma.quant_vals.QuantitativeValue"><code class="xref py py-class docutils literal notranslate"><span class="pre">dosma.quant_vals.QuantitativeValue</span></code></a></p>
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="dosma.quant_vals.T2Star.ID">
 <code class="sig-name descname">ID</code><em class="property"> = 3</em><a class="headerlink" href="#dosma.quant_vals.T2Star.ID" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="dosma.quant_vals.T2Star.NAME">
 <code class="sig-name descname">NAME</code><em class="property"> = 't2_star'</em><a class="headerlink" href="#dosma.quant_vals.T2Star.NAME" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="dosma.quant_vals.T2Star.qv_type">
 <em class="property">property </em><code class="sig-name descname">qv_type</code><a class="headerlink" href="#dosma.quant_vals.T2Star.qv_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>quantitative value type.</p>
@@ -510,19 +507,11 @@ pixel-wise r-squared, or error bounds, etc.</p></li>
 
   <div role="contentinfo">
     <p>
-        
         &copy; Copyright 2019-2020, Arjun Desai
 
     </p>
   </div>
-    
-    
-    
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -533,6 +522,7 @@ pixel-wise r-squared, or error bounds, etc.</p></li>
 
   </div>
   
+
 
   <script type="text/javascript">
       jQuery(function () {

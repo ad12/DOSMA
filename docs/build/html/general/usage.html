@@ -1,18 +1,15 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Usage &mdash; dosma 0.0.12 documentation</title>
+  <title>Usage &mdash; dosma 0.0.12.dev1 documentation</title>
   
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
 
   
   
@@ -20,21 +17,23 @@
   
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="FAQs" href="faq.html" />
@@ -52,7 +51,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> dosma
+            <a href="../index.html" class="icon icon-home"> dosma
           
 
           
@@ -75,7 +74,6 @@
           
         </div>
 
-        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -111,7 +109,6 @@
             
           
         </div>
-        
       </div>
     </nav>
 
@@ -150,7 +147,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><a href="../index.html">Docs</a> &raquo;</li>
         
       <li>Usage</li>
     
@@ -188,10 +185,10 @@ worked as expected.</p>
 </li>
 <li><p>Run DOSMA:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Run DOSMA from command line.
-$ dosma &lt;ARGS...&gt;
+$ python -m dosma.cli &lt;ARGS...&gt;
 
 # Or run DOSMA as a user interface (UI).
-$ dosma --app
+$ python -m dosma.app
 </pre></div>
 </div>
 </li>
@@ -210,7 +207,7 @@ perl, etc.), DOSMA has a command-line interface.</p>
 <p>The DOSMA command-line parser hierarchy funnels from scan type to action. Scan types are specified first and are
 followed by the action to execute and corresponding arguments. For example, the code below computes T<sub>2</sub> for femoral
 cartilage (fc) and patellar cartilage (pc) from qDESS scans:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ dosma --dicom subject01/dicoms/qdess --save subject01/data qdess --fc --pc generate_t2_map
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m dosma.cli --dicom subject01/dicoms/qdess --save subject01/data qdess --fc --pc generate_t2_map
 </pre></div>
 </div>
 <p>A more exhaustive coverage of supported actions and analyses for different scans are available in the <a class="reference internal" href="cli.html#cli"><span class="std std-ref">command line documentation</span></a></p>
@@ -218,7 +215,7 @@ cartilage (fc) and patellar cartilage (pc) from qDESS scans:</p>
 <h3>Scans<a class="headerlink" href="#scans" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="scans.html#scans"><span class="std std-ref">Scans</span></a> and corresponding actions are specified as subparsers. For example, the code below is the skeleton
 for segmenting tissues in qDESS scans:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ dosma qdess segment ....
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m dosma.cli qdess segment ....
 </pre></div>
 </div>
 </div>
@@ -228,7 +225,7 @@ for segmenting tissues in qDESS scans:</p>
 For example, <code class="docutils literal notranslate"><span class="pre">...</span> <span class="pre">qdess</span> <span class="pre">--fc</span> <span class="pre">...</span></code> would be performing a qDESS-specific action on femoral cartilage.</p>
 <p>To analyze multiple tissues, add additional flags. For example, the argument below
 generates a T<sub>2</sub> map for both femoral and patellar cartilage:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ dosma --dicom subject01/dicoms/qdess --save subject01/data qdess --fc --pc generate_t2_map
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m dosma.cli --dicom subject01/dicoms/qdess --save subject01/data qdess --fc --pc generate_t2_map
 </pre></div>
 </div>
 </div>
@@ -237,22 +234,22 @@ generates a T<sub>2</sub> map for both femoral and patellar cartilage:</p>
 <p>DOSMA also has a command-line subparser for creating visualizations and analyze quantitative values for tissues.
 This subparser is identified by the anatomical region being analyzed.</p>
 <p>DOSMA currently supports knee-related analyses. To run the analysis on T<sub>2</sub> for femoral cartilage and tibial cartilage, use the following skeleton:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ dosma --load subject01/data knee --fc --tc --t2
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m dosma.cli --load subject01/data knee --fc --tc --t2
 </pre></div>
 </div>
 </div>
 <div class="section" id="help">
 <h3>Help<a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h3>
-<p>To get more information, start a new session and run <code class="docutils literal notranslate"><span class="pre">dosma</span> <span class="pre">--help</span></code>. To get the help menu of subparsers, add the
+<p>To get more information, start a new session and run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">dosma.cli</span> <span class="pre">--help</span></code>. To get the help menu of subparsers, add the
 subparser name to the help menu:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Print high-level help menu for DOSMA.
-$ dosma --help
+$ python -m dosma.cli --help
 
 # Print help menu for qDESS scan.
-$ dosma qdess --help
+$ python -m dosma.cli qdess --help
 
 # Print help menu for qDESS segmentation.
-$ dosma qdess segment --help
+$ python -m dosma.cli qdess segment --help
 </pre></div>
 </div>
 </div>
@@ -283,13 +280,13 @@ data is analyzed. Below are just examples for how they have commonly been used b
 <h4>qDESS<a class="headerlink" href="#qdess" title="Permalink to this headline">¶</a></h4>
 <p>Analyze patient01’s femoral cartilage T<sub>2</sub> properties using qDESS sequence*:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span># 1. Calculate 3D T2 map - suppress fat and fluid to reduce noise
-$ dosma --dicom research_data/patient01/dess --save research_data/patient01/data qdess --fc t2 --suppress_fat --suppress_fluid
+$ python -m dosma.cli --dicom research_data/patient01/dess --save research_data/patient01/data qdess --fc t2 --suppress_fat --suppress_fluid
 
 # 2. Segment femoral cartilage on root mean square (RMS) of two echo qDESS echos using OAI 2D U-Net model.
-$ dosma --dicom research_data/patient01/dess --save research_data/patient01/data qdess --fc segment --rms --weights_dir weights/oai_unet2d --model oai-unet2d
+$ python -m dosma.cli --dicom research_data/patient01/dess --save research_data/patient01/data qdess --fc segment --rms --weights_dir weights/oai_unet2d --model oai-unet2d
 
 # 3. Calculate/visualize T2 for femoral cartilage
-$ dosma --load research_data/patient01/data --save research_data/patient01/data knee --fc --t2
+$ python -m dosma.cli --load research_data/patient01/data --save research_data/patient01/data knee --fc --t2
 </pre></div>
 </div>
 </div>
@@ -297,13 +294,13 @@ $ dosma --load research_data/patient01/data --save research_data/patient01/data 
 <h4>CubeQuant<a class="headerlink" href="#cubequant" title="Permalink to this headline">¶</a></h4>
 <p>Analyze patient01 femoral cartilage T<sub>1</sub><span class="math notranslate nohighlight">\({\rho}\)</span> properties using Cubequant sequence:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span># 1. Register cubequant volume to first echo of qDESS sequence
-$ dosma --dicom research_data/patient01/cubequant --save research_data/patient01/data cubequant --fc interregister --target_path research_data/patient01/data/dess/echo1.nii.gz --target_mask research_data/patient01/data/fc/fc.nii.gz
+$ python -m dosma.cli --dicom research_data/patient01/cubequant --save research_data/patient01/data cubequant --fc interregister --target_path research_data/patient01/data/dess/echo1.nii.gz --target_mask research_data/patient01/data/fc/fc.nii.gz
 
 # 2. Calculate 3D T1-rho map only for femoral cartilage region
-$ dosma --load research_data/patient01/data cubequant --fc t1_rho  --mask_path research_data/patient01/data/fc/fc.nii.gz
+$ python -m dosma.cli --load research_data/patient01/data cubequant --fc t1_rho  --mask_path research_data/patient01/data/fc/fc.nii.gz
 
 # 3. Calculate/visualize T1-rho for femoral cartilage
-$ dosma --load research_data/patient01/data --fc --t1_rho
+$ python -m dosma.cli --load research_data/patient01/data --fc --t1_rho
 </pre></div>
 </div>
 </div>
@@ -311,13 +308,13 @@ $ dosma --load research_data/patient01/data --fc --t1_rho
 <h4>UTE Cones<a class="headerlink" href="#ute-cones" title="Permalink to this headline">¶</a></h4>
 <p>Analyze patient01 femoral cartilage T<sub>2</sub><sup>*</sup> properties using UTE Cones sequence:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span># 1. Register cones volume to first echo of qDESS sequence
-$ dosma --dicom research_data/patient01/cones --save research_data/patient01/data cones --fc interregister --target_path research_data/patient01/data/dess/echo1.nii.gz --target_mask research_data/patient01/data/fc/fc.nii.gz
+$ python -m dosma.cli --dicom research_data/patient01/cones --save research_data/patient01/data cones --fc interregister --target_path research_data/patient01/data/dess/echo1.nii.gz --target_mask research_data/patient01/data/fc/fc.nii.gz
 
 # 2. Calculate 3D T2-star map only for femoral cartilage region
-$ dosma --load research_data/patient01/data cones --fc t2_star --mask_path research_data/patient01/data/fc/fc.nii.gz
+$ python -m dosma.cli --load research_data/patient01/data cones --fc t2_star --mask_path research_data/patient01/data/fc/fc.nii.gz
 
 # 3. Calculate/visualize T1-rho for femoral cartilage
-$ dosma --load research_data/patient01/data knee --fc --t2_star
+$ python -m dosma.cli --load research_data/patient01/data knee --fc --t2_star
 </pre></div>
 </div>
 </div>
@@ -325,15 +322,15 @@ $ dosma --load research_data/patient01/data knee --fc --t2_star
 <h4>MAPSS<a class="headerlink" href="#mapss" title="Permalink to this headline">¶</a></h4>
 <p>Analyze patient02 femoral cartilage T<sub>1</sub><span class="math notranslate nohighlight">\({\rho}\)</span> and T<sub>2</sub> properties using MAPSS sequence:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span># 1. Fit T1-rho for whole volume
-$ dosma --dicom research_data/patient02/mapss --save research_data/patient02/data mapss --fc t1_rho
+$ python -m dosma.cli --dicom research_data/patient02/mapss --save research_data/patient02/data mapss --fc t1_rho
 
 # 2. Fit T2 for whole volume
-$ dosma --dicom research_data/patient02/mapss --save research_data/patient02/data mapss --fc t2
+$ python -m dosma.cli --dicom research_data/patient02/mapss --save research_data/patient02/data mapss --fc t2
 
 # 3. Manually segment femoral cartilage and store in appropriate folders.
 
 # 4. Calculate/visualize T1-rho and T2 for femoral cartilage
-$ dosma --load research_data/patient01/data knee --fc --t2_star
+$ python -m dosma.cli --load research_data/patient01/data knee --fc --t2_star
 </pre></div>
 </div>
 </div>
@@ -361,19 +358,11 @@ $ dosma --load research_data/patient01/data knee --fc --t2_star
 
   <div role="contentinfo">
     <p>
-        
         &copy; Copyright 2019-2020, Arjun Desai
 
     </p>
   </div>
-    
-    
-    
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -384,6 +373,7 @@ $ dosma --load research_data/patient01/data knee --fc --t2_star
 
   </div>
   
+
 
   <script type="text/javascript">
       jQuery(function () {
