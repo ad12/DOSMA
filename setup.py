@@ -43,7 +43,7 @@ def get_resources():
 
     files = []
     # Elastix files
-    for path in pathlib.Path("dosma/resources/elastix").rglob('*.*'):
+    for path in pathlib.Path("dosma/resources/elastix/params").rglob('*.*'):
         files.append(str(path))
     for path in pathlib.Path("dosma/resources/templates").rglob('*.*'):
         files.append(str(path))

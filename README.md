@@ -1,16 +1,36 @@
-# DOSMA: Deep Open-Source MRI Analysis
+# DOSMA: Deep Open-Source Medical Image Analysis
 
-This repository hosts an open-source Python library for MRI processing techniques. This includes, but is not limited to:
-- image processing tasks (denoising, super-resolution, segmentation, etc.)
-- relaxation parameter analysis (T1, T1-rho, T2, T2*, etc.)
-- anatomical features (patellar tilt, femoral cartilage thickness, etc.)
+DOSMA is an AI-powered Python library for medical image analysis. This includes, but is not limited to:
+- image processing (denoising, super-resolution, registration, segmentation, etc.)
+- quantitative fitting and image analysis
+- anatomical visualization and analysis (patellar tilt, femoral cartilage thickness, etc.)
 
-We hope that this open-source pipeline will be useful for quick anatomy/pathology analysis from MRI and will serve as a 
-hub for adding support for analyzing different anatomies and scan sequences.
+We hope that this open-source pipeline will be useful for quick anatomy/pathology analysis from MRI and will serve as a hub for adding support for analyzing different anatomies and scan sequences.
 
-[Documentation](https://ad12.github.io/DOSMA)
+[Documentation](https://ad12.github.io/DOSMA) | [Questionnaire](https://forms.gle/sprthTC2swyt8dDb6)
 
-[Questionnaire](https://forms.gle/sprthTC2swyt8dDb6)
+## Installation
+DOSMA requires Python 3.6+. The core module depends on numpy, nibabel, nipype,
+pandas, pydicom, scikit-image, scipy, PyYAML, and tqdm.
+
+Additional AI features can be unlocked by installing tensorflow and keras. To
+enable built-in registration functionality, download [elastix](https://elastix.lumc.nl/download.php).
+Details can be found in the [setup documentation](https://ad12.github.io/DOSMA/build/html/general/installation.html#setup).
+
+To install DOSMA, run:
+
+```bash
+pip install dosma
+```
+
+If you would like to contribute to DOSMA, we recommend you clone the repository and
+install DOSMA with `pip` in editable mode.
+
+```bash
+git clone git@github.com:ad12/DOSMA.git
+cd DOSMA
+pip install -e '.[dev]'
+```
 
 ## How to Cite
 ```

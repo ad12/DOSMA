@@ -1,18 +1,15 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installation &mdash; dosma 0.0.12 documentation</title>
+  <title>Installation &mdash; dosma 0.0.12.dev1 documentation</title>
   
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
 
   
   
@@ -20,21 +17,23 @@
   
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Documentation" href="documentation.html" />
@@ -52,7 +51,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> dosma
+            <a href="../index.html" class="icon icon-home"> dosma
           
 
           
@@ -75,7 +74,6 @@
           
         </div>
 
-        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -88,7 +86,6 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#anaconda">Anaconda</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#setup">Setup</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#pip-install">pip install</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#segmentation">Segmentation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#registration">Registration</a></li>
 </ul>
@@ -105,7 +102,6 @@
             
           
         </div>
-        
       </div>
     </nav>
 
@@ -144,7 +140,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><a href="../index.html">Docs</a> &raquo;</li>
         
       <li>Installation</li>
     
@@ -165,58 +161,30 @@
             
   <div class="section" id="installation">
 <span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>This page provides an overview of installing <em>DOSMA</em> as a stand-alone application
-and as a local Python package using pip.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The commands in this documentation are for Linux or Mac OS. If you work on Windows
-use the <a class="reference external" href="https://itsfoss.com/install-bash-on-windows/">Linux bash</a> provided in Windows 10.</p>
-</div>
+<p>This page provides a step-by-step overview of creating a virtual environment,
+installing DOSMA via <cite>pip</cite>, and verifying the install.</p>
 <div class="section" id="anaconda">
 <h2>Anaconda<a class="headerlink" href="#anaconda" title="Permalink to this headline">¶</a></h2>
 <p>Please install the <a class="reference external" href="https://www.anaconda.com/download/">Anaconda</a> virtual environment manager.</p>
 </div>
 <div class="section" id="setup">
 <span id="install-setup"></span><h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
-<p>The following steps will create an Anaconda environment and a shortcut for running DOSMA from the command-line.
-<strong>Avoid spaces in file paths.</strong></p>
+<p>The following steps will create an Anaconda environment (<cite>dosma_env</cite>).</p>
 <ol class="arabic">
-<li><p>Download the <a class="reference external" href="https://github.com/ad12/DOSMA/releases">latest release</a> to a non-temporary location (i.e. not the <cite>Downloads</cite> folder)</p></li>
-<li><p>Open the project folder in the Terminal</p></li>
-<li><p>Navigate to <code class="docutils literal notranslate"><span class="pre">bin</span></code> folder:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd bin
+<li><p>Open a Terminal/Shell window</p></li>
+<li><p>Create the <cite>dosma_env</cite> environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ conda create -n dosma_env python=3.7
 </pre></div>
 </div>
 </li>
-<li><p>Initialize <code class="docutils literal notranslate"><span class="pre">setup</span></code> executable:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Initialize executable.
-$ chmod +x setup
+<li><p>Install dosma via pip:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install dosma
 </pre></div>
 </div>
 </li>
-<li><p>Run <code class="docutils literal notranslate"><span class="pre">setup</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Run executable.
-$ ./setup
-</pre></div>
-</div>
-</li>
-<li><p>Close terminal window.</p></li>
-<li><p>Complete <a class="reference external" href="https://forms.gle/sprthTC2swyt8dDb6">DOSMA questionnaire</a>.</p></li>
+<li><p>Complete the <a class="reference external" href="https://forms.gle/sprthTC2swyt8dDb6">DOSMA questionnaire</a>.</p></li>
 </ol>
-<p>If you want to update your Anaconda environment, run <code class="docutils literal notranslate"><span class="pre">./setup</span> <span class="pre">-f</span></code> in step 4.</p>
-<div class="section" id="pip-install">
-<h3>pip install<a class="headerlink" href="#pip-install" title="Permalink to this headline">¶</a></h3>
-<p>The library can now also be installed via <code class="docutils literal notranslate"><span class="pre">pip</span></code>, although only as a local library.
-We are in the process of hosting DOSMA on PyPi.</p>
-<p>To install as a library, navigate to the project folder in the Terminal and run the commands below:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Activate your environment
-$ conda activate dosma_env
-
-# pip install in editable format
-$ python -m pip install -e ./
-</pre></div>
-</div>
-</div>
+<p>If you want to update your dosma version, run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">--upgrade</span> <span class="pre">dosma</span></code>.</p>
 <div class="section" id="segmentation">
 <h3>Segmentation<a class="headerlink" href="#segmentation" title="Permalink to this headline">¶</a></h3>
 <p>DOSMA currently supports automatic deep learning segmentation methods. These methods use pre-trained weights for
@@ -238,8 +206,18 @@ follow the instructions below:</p>
 <ol class="arabic simple">
 <li><p>Download <a class="reference external" href="http://elastix.isi.uu.nl/download.php">elastix</a></p></li>
 <li><p>Follow instructions on adding elastix/transformix to your system path</p></li>
-<li><p>Copy (not move) the file <code class="docutils literal notranslate"><span class="pre">libANNlib.dylib</span></code> to the DOSMA project folder downloaded earlier.</p></li>
 </ol>
+<p>If you are using a MacOS system, you may run into path issues with elastix (see
+<a class="reference external" href="https://github.com/almarklein/pyelastix/issues/9">this discussion</a>). To fix
+this, we can use the <cite>dosma.utils.registration.symlink_elastix</cite> to create
+appropriate symbolic links to files causing issues.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ conda activate dosma_env; python
+&gt;&gt;&gt; from dosma.utils.registration import symlink_elastix
+&gt;&gt;&gt; symlink_elastix()
+</pre></div>
+</div>
+<p>Note you will need to run this every time you update elastix/transformix paths
+on your machine.</p>
 </div>
 </div>
 <div class="section" id="verification">
@@ -251,13 +229,13 @@ follow the instructions below:</p>
 </pre></div>
 </div>
 </li>
-<li><p>Run DOSMA from the command-line. You should see a help menu output:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ dosma --help
+<li><p>Run DOSMA from the command-line (cli). You should see a help menu output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m dosma.cli --help
 </pre></div>
 </div>
 </li>
-<li><p>Run DOSMA as an UI application. You should see a UI window pop-up:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ dosma --app
+<li><p>Run DOSMA as an UI application (app). You should see a UI window pop-up:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m dosma.app
 </pre></div>
 </div>
 </li>
@@ -265,10 +243,14 @@ follow the instructions below:</p>
 </div>
 <div class="section" id="updating-dosma">
 <h2>Updating DOSMA<a class="headerlink" href="#updating-dosma" title="Permalink to this headline">¶</a></h2>
-<p>To update DOSMA to the latest version, delete the <code class="docutils literal notranslate"><span class="pre">DOSMA</span></code> folder and follow the
-instructions in <a class="reference internal" href="#install-setup"><span class="std std-ref">Setup</span></a>.</p>
-<p>To use a specific DOSMA version, download the source code for the desired version
-and follow the setup instructions.</p>
+<p>If you have used an earlier stand-alone of DOSMA (v0.0.11 or earlier), you may
+already have a <cite>dosma_env</cite> virtual environment. Please delete this environment
+and reinstall follows steps in setup <a class="reference internal" href="#install-setup"><span class="std std-ref">Setup</span></a>.</p>
+<p>For those (v0.0.12 or later) having installed dosma via <cite>pip</cite>, you can update
+dosma using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install --upgrade dosma
+</pre></div>
+</div>
 </div>
 </div>
 
@@ -292,19 +274,11 @@ and follow the setup instructions.</p>
 
   <div role="contentinfo">
     <p>
-        
         &copy; Copyright 2019-2020, Arjun Desai
 
     </p>
   </div>
-    
-    
-    
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -315,6 +289,7 @@ and follow the setup instructions.</p>
 
   </div>
   
+
 
   <script type="text/javascript">
       jQuery(function () {

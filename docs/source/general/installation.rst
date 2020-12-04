@@ -3,13 +3,8 @@
 Installation
 ================================================================================
 
-This page provides an overview of installing *DOSMA* as a stand-alone application
-and as a local Python package using pip.
-
-.. note::
-
-   The commands in this documentation are for Linux or Mac OS. If you work on Windows
-   use the `Linux bash <https://itsfoss.com/install-bash-on-windows/>`_ provided in Windows 10.
+This page provides a step-by-step overview of creating a virtual environment,
+installing DOSMA via `pip`, and verifying the install.
 
 
 Anaconda
@@ -21,42 +16,21 @@ Please install the `Anaconda <https://www.anaconda.com/download/>`_ virtual envi
 
 Setup
 --------------------------------------------------------------------------------
-The following steps will create an Anaconda environment and a shortcut for running DOSMA from the command-line.
-**Avoid spaces in file paths.**
+The following steps will create an Anaconda environment (`dosma_env`).
 
-1. Download the `latest release <https://github.com/ad12/DOSMA/releases>`_ to a non-temporary location (i.e. not the `Downloads` folder)
-2. Open the project folder in the Terminal
-3. Navigate to ``bin`` folder::
+1. Open a Terminal/Shell window
+2. Create the `dosma_env` environment::
 
-    $ cd bin
+    $ conda create -n dosma_env python=3.7
 
-4. Initialize ``setup`` executable::
+3. Install dosma via pip::
 
-    # Initialize executable.
-    $ chmod +x setup
+    $ pip install dosma
 
-5. Run ``setup``::
+4. Complete the `DOSMA questionnaire <https://forms.gle/sprthTC2swyt8dDb6>`_.
 
-    # Run executable.
-    $ ./setup
+If you want to update your dosma version, run ``pip install --upgrade dosma``.
 
-6. Close terminal window.
-7. Complete `DOSMA questionnaire <https://forms.gle/sprthTC2swyt8dDb6>`_.
-
-If you want to update your Anaconda environment, run ``./setup -f`` in step 4.
-
-pip install
-###########
-The library can now also be installed via ``pip``, although only as a local library.
-We are in the process of hosting DOSMA on PyPi.
-
-To install as a library, navigate to the project folder in the Terminal and run the commands below::
-
-    # Activate your environment
-    $ conda activate dosma_env
-
-    # pip install in editable format
-    $ python -m pip install -e ./
 
 Segmentation
 ############
@@ -82,7 +56,18 @@ follow the instructions below:
 
 1. Download `elastix <http://elastix.isi.uu.nl/download.php>`_
 2. Follow instructions on adding elastix/transformix to your system path
-3. Copy (not move) the file ``libANNlib.dylib`` to the DOSMA project folder downloaded earlier.
+
+If you are using a MacOS system, you may run into path issues with elastix (see
+`this discussion <https://github.com/almarklein/pyelastix/issues/9>`_). To fix
+this, we can use the `dosma.utils.registration.symlink_elastix` to create
+appropriate symbolic links to files causing issues.::
+
+    $ conda activate dosma_env; python
+    >>> from dosma.utils.registration import symlink_elastix
+    >>> symlink_elastix()
+
+Note you will need to run this every time you update elastix/transformix paths
+on your machine.
 
 .. _install-verification:
 
@@ -93,19 +78,22 @@ Verification
 
     $ conda activate dosma_env
 
-3. Run DOSMA from the command-line. You should see a help menu output::
+3. Run DOSMA from the command-line (cli). You should see a help menu output::
 
-    $ dosma --help
+    $ python -m dosma.cli --help
 
-4. Run DOSMA as an UI application. You should see a UI window pop-up::
+4. Run DOSMA as an UI application (app). You should see a UI window pop-up::
 
-    $ dosma --app
+    $ python -m dosma.app
 
 
 Updating DOSMA
 --------------------------------------------------------------------------------
-To update DOSMA to the latest version, delete the ``DOSMA`` folder and follow the
-instructions in :ref:`Setup <install-setup>`.
+If you have used an earlier stand-alone of DOSMA (v0.0.11 or earlier), you may
+already have a `dosma_env` virtual environment. Please delete this environment
+and reinstall follows steps in setup :ref:`Setup <install-setup>`.
 
-To use a specific DOSMA version, download the source code for the desired version
-and follow the setup instructions.
+For those (v0.0.12 or later) having installed dosma via `pip`, you can update
+dosma using::
+
+    $ pip install --upgrade dosma
