@@ -1,8 +1,11 @@
 import itertools
 import multiprocessing as mp
 import os
+import platform
 import shutil
+import subprocess
 import uuid
+import warnings
 from functools import partial
 from typing import Dict, Sequence, Union
 
@@ -202,18 +205,22 @@ def apply_warp(
         raise ValueError("`output_path` must be specified when `rtype=str`")
     if not output_path:
         output_path = os.path.join(fc.TEMP_FOLDER_PATH, f"apply_warp-{str(uuid.uuid1())}")
+    output_path = os.path.abspath(output_path)
     os.makedirs(output_path, exist_ok=True)
 
     if not transform:
         transform = out_registration.transform
-    elif not isinstance(transform, Sequence):
+    elif isinstance(transform, str):
         transform = [transform]
+    transform = [os.path.abspath(t) for t in transform]
 
     mv_filepath = os.path.join(output_path, "moving.nii.gz")
     if isinstance(moving, MedicalVolume):
         NiftiWriter().save(moving, mv_filepath)
         moving = mv_filepath
     
+    transformix_path = _local_exe("transformix")
+    cwd = _local_lib_dir()
     for tf in tqdm(transform, disable=not show_pbar):
         reg = ApplyWarp()
         reg.inputs.moving_image = moving
@@ -221,7 +228,7 @@ def apply_warp(
         reg.inputs.output_path = output_path
         reg.terminal_output = fc.NIPYPE_LOGGING
         reg.inputs.num_threads = num_threads
-        reg_output = reg.run()
+        reg_output = reg.run(cwd=cwd)
 
         moving = reg_output.outputs.warped_file
 
@@ -238,6 +245,73 @@ def apply_warp(
     return out
 
 
+def symlink_elastix(path: str = None, lib_only: bool = True, force: bool = False):
+    """Symlinks elastix/transformix files to the dosma library.
+    
+    Args:
+        path (str, optional): Path to elastix folder. This folder should
+            contain two folders `bin` and `lib`. If `None`, determined
+            using `which elastix`. This will overwrite existing linked
+            files. path cannot be automatically determined on Windows.
+        lib_only (bool, optional): If `True`, only links contents of `lib`
+            folder.
+        force (bool, optional): If `True`, unlinks existing files before relinking.
+            Note this operation is not atomic.
+
+    Note:
+        Setting elastix paths this way is not recommended unless you
+        are using a MacOS (Darwin) platform, where there are known
+        path issues with elastix (https://github.com/almarklein/pyelastix/issues/9).
+        For linux and windows machines, using the setup described in the elastix
+        guide is sufficient.
+    """
+    system = platform.system().lower()
+    assert system in ["windows", "darwin", "linux"]
+    if system != "darwin":
+        warnings.warn(
+            f"Symlinking elastix/transformix paths not recommended for {system} machines"
+        )
+
+    if path is None:
+        if system == "windows":
+            raise ValueError("`path` cannot be determined automatically on Windows")
+        try:
+            out = subprocess.check_output(["which", "elastix"]).decode('ascii').strip('\n')
+            path = os.path.dirname(os.path.dirname(out))
+        except subprocess.CalledProcessError:
+            raise ValueError(
+                "Path to `elastix` not intialized. "
+                "Use `export PATH=/path/to/elastix/folder:$PATH`"
+            )
+    assert os.path.isdir(path), path  # must be a directory
+
+    dirs = {"lib": [x for x in os.listdir(os.path.join(path, "lib")) if x.startswith("libANNlib")]}
+    if not lib_only:
+        dirs["bin"] = ["elastix", "transformix"]
+
+    for dirname, files in dirs.items():
+        for file in files:
+            src = os.path.join(path, dirname, file)
+            tgt = os.path.join(fc._DOSMA_ELASTIX_FOLDER, file)
+            if os.path.exists(tgt):
+                if force:
+                    os.remove(tgt)
+                else:
+                    raise FileExistsError(
+                        f"File {tgt} exists. "
+                        f"Use `unlink_elastix` or `force` to unlink the file."
+                    )
+            os.symlink(src, tgt)
+
+
+def unlink_elastix():
+    """Unlinks all elastix/transformix files in the dosma library."""
+    for x in os.listdir(fc._DOSMA_ELASTIX_FOLDER):
+        x = os.path.join(fc._DOSMA_ELASTIX_FOLDER, x)
+        if os.path.islink(x):
+            os.remove(x)
+
+
 def _elastix_register(
     target: str, moving: str, parameters: Sequence[str], output_path: str,
     target_mask: str = None, moving_mask: str=None, sequential=False, collate=True,
@@ -249,23 +323,30 @@ def _elastix_register(
         if _use_mask is None:
             _use_mask = target_mask is not None or moving_mask is not None
 
+        _output_path = os.path.abspath(_output_path)
         os.makedirs(_output_path, exist_ok=True)
+
+        elastix_path = _local_exe("elastix")
+        cwd = _local_lib_dir()
+
         reg = Registration()
-        reg.inputs.fixed_image = target
-        reg.inputs.moving_image = _moving
-        reg.inputs.parameters = _parameters
-        reg.inputs.output_path = _output_path
+        if elastix_path:
+            reg._cmd = elastix_path
+        reg.inputs.fixed_image = os.path.abspath(target)
+        reg.inputs.moving_image = os.path.abspath(_moving)
+        reg.inputs.parameters = [os.path.abspath(p) for p in _parameters]
+        reg.inputs.output_path = os.path.abspath(_output_path)
         reg.terminal_output = fc.NIPYPE_LOGGING
         if num_threads:
             reg.inputs.num_threads = num_threads
         if _use_mask and target_mask is not None:
-            reg.inputs.fixed_mask = target_mask
+            reg.inputs.fixed_mask = os.path.abspath(target_mask)
         if _use_mask and moving_mask is not None:
-            reg.inputs.target_mask = moving_mask
+            reg.inputs.target_mask = os.path.abspath(moving_mask)
         for k, v in kwargs.items():
             setattr(reg.inputs, k, v)
-        
-        return reg.run().outputs
+
+        return reg.run(cwd=cwd).outputs
     
     def _collate_outputs(_outs):
         """Concatenates fields that are sequential and takes final output for fields that are not."""
@@ -313,3 +394,18 @@ def _write(vol: MedicalVolume, path: str):
 
 def _read(path: str):
     return NiftiReader().load(path)
+
+
+def _local_exe(exe):
+    """Returns path to local executable if exists, else None."""
+    assert exe in ["elastix", "transformix"]
+    dosma_path = os.path.join(fc._DOSMA_ELASTIX_FOLDER, exe)
+    if os.path.isfile(dosma_path):
+        return os.path.abspath(dosma_path)
+
+
+def _local_lib_dir():
+    """Returns path to directory with local lib file if exists, else None."""
+    files = [x for x in os.listdir(fc._DOSMA_ELASTIX_FOLDER) if x.startswith("libANNlib")]
+    if len(files) > 0:
+        return fc._DOSMA_ELASTIX_FOLDER
