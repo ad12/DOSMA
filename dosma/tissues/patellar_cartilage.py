@@ -81,33 +81,41 @@ class PatellarCartilage(Tissue):
         return total, superficial, deep
 
     def split_regions(self, base_map):
-        """Split patellar cartilage into deep/superficial regions"""
+        """Split patellar cartilage into deep/superficial regions.
+
+        For patellar cartilage, the superficial/deep transition occurs in
+        the anterior/posterior (A/P) direction. The boundary is determined
+        for each non-zero 1D column spanning independently by the local
+        center-of-mass (COM).
+        
+        Args:
+            base_map (ndarray): Binary 3D mask with orientation (SI, AP, ML/LM).
+                If `self.medial_to_lateral`, last dimension should be ML.
+        """
         if np.sum(base_map) == 0:
             warnings.warn('No mask for `%s` was found.' % self.FULL_NAME)
 
         self.regions_mask = self.__2d_split_regions(base_map)
 
     def __2d_split_regions(self, base_map):
-        """Split patellar cartilage into deep/superficial regions per sagittal slice
+        """Split patellar cartilage into deep/superficial regions.
 
-        Left = Superficial, Right = deep
-        For patellar cartilage, the superficial-->deep transition happens in the anterior-->posterior direction
+        Args:
+            base_map (ndarray): Binary 3D mask with orientation (SI, AP, ML/LM).
+                If `self.medial_to_lateral`, last dimension should be ML.
 
         TODO (arjundd): refactor to make region map a Medical Volume
         """
-        region_mask_sup_deep = np.zeros(base_map.shape)
-
-        for s in range(base_map.shape[-1]):
-            c_slice = base_map[..., s]
-            if np.sum(c_slice) == 0:
-                ds_split = 0
-            else:
-                center_of_mass = sni.measurements.center_of_mass(c_slice)
-                ds_split = int(center_of_mass[1])
-            com_deep_superficial = ds_split
-            region_mask_sup_deep[:, :com_deep_superficial, s] = self._REGION_SUPERFICIAL_KEY
-            region_mask_sup_deep[:, com_deep_superficial:, s] = self._REGION_DEEP_KEY
-
+        locs = base_map.sum(axis=1).nonzero()
+        voxels = base_map[locs[0], :, locs[1]]
+        com_sup_inf = np.asarray([
+            int(np.ceil(sni.measurements.center_of_mass(voxels[i, :])[0]))
+            for i in range(voxels.shape[0])
+        ])
+        region_mask_sup_deep = np.full(base_map.shape, self._REGION_DEEP_KEY)
+        for i in range(len(com_sup_inf)):
+            region_mask_sup_deep[locs[0][i], :com_sup_inf[i], locs[1][i]] = self._REGION_SUPERFICIAL_KEY
+        
         return region_mask_sup_deep[..., np.newaxis]
 
     def __calc_quant_vals__(self, quant_map, map_type):
