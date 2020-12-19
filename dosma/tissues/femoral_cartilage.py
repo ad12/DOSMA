@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 import scipy.ndimage as sni
 
-from dosma.tissues.tissue import Tissue
+from dosma.tissues.tissue import Tissue, largest_cc
 
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.data_io.med_volume import MedicalVolume
@@ -362,7 +362,7 @@ class FemoralCartilage(Tissue):
         Args:
             mask (MedicalVolume): Binary mask of segmented tissue.
         """
-        msk = np.asarray(_largest_cc(mask.volume), dtype=np.uint8)
+        msk = np.asarray(largest_cc(mask.volume), dtype=np.uint8)
         mask_copy = deepcopy(mask)
         mask_copy.volume = msk
 
@@ -482,30 +482,3 @@ class FemoralCartilage(Tissue):
         ml_division_unrolled[np.isnan(unrolled_total)] = np.nan
 
         return acp_division_unrolled, ml_division_unrolled
-
-
-def _largest_cc(mask):
-    """ Return the largest connected component of a 3D mask array.
-    Parameters
-    -----------
-    mask: 3D boolean array
-          3D array indicating a mask.
-    Returns
-    --------
-    mask: 3D boolean array
-          3D array indicating a mask, with only one connected component.
-
-    Adapted from nipy (https://github.com/nipy/nipy/blob/master/nipy/labs/mask.py)
-    due to dependency issues.
-    """
-    # We use asarray to be able to work with masked arrays.
-    mask = np.asarray(mask)
-    labels, label_nb = sni.label(mask)
-    if not label_nb:
-        raise ValueError('No non-zero values: no connected components')
-    if label_nb == 1:
-        return mask.astype(np.bool)
-    label_count = np.bincount(labels.ravel().astype(np.int))
-    # discard 0 the 0 label
-    label_count[0] = 0
-    return labels == label_count.argmax()

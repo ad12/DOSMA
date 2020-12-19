@@ -39,7 +39,8 @@ class TibialCartilage(Tissue):
     # Coronal Keys
     _ANTERIOR_KEY = 0
     _POSTERIOR_KEY = 1
-    _CORONAL_KEYS = [_ANTERIOR_KEY, _POSTERIOR_KEY]
+    _CENTRAL_KEY = 2
+    _CORONAL_KEYS = [_ANTERIOR_KEY, _CENTRAL_KEY, _POSTERIOR_KEY]
 
     # Saggital Keys
     _MEDIAL_KEY = 0
@@ -77,23 +78,75 @@ class TibialCartilage(Tissue):
         return total, superior, inferior
 
     def split_regions(self, base_map):
-        center_of_mass = sni.measurements.center_of_mass(base_map)  # zero indexed
+        """Generate subregions for tibial cartilage.
 
-        com_sup_inf = int(np.ceil(center_of_mass[0]))
-        com_ant_post = int(np.ceil(center_of_mass[1]))
+        Tibial cartilage is split into subregions along the 3 major axes:
+        superior/inferior (S/I), anterior/posterior (A/P), medial/lateral (M/L). 
+        M/L plateaus are computed with respect to the center of mass (COM)
+        in the sagittal direction. A/C/P divisions are computed independently for each
+        plateau using thirds of the distance between the minimum/maximum pixel in the A/P direction.
+        S/I divisions are computed based on local COM for each 1D column with
+        tissues in the S/I direction.
+
+        The output is stored in `self.regions_mask`.
+
+        Note:
+            Previously, COM was used to split A/P subregions. However, COM is not as robust
+            to split the data into 3 subregions. We use the method described in the reference
+            below: A/C/P are split by thirds of the distance between the minimum/maximum pixel
+            in the A/P direction. Note the minimum/maximum pixel method may not be a robust if
+            there are a sufficient number of erroneous pixels. We do not sufficiently correct
+            for erroneous pixels.
+
+        Args:
+            base_map (ndarray): Binary 3D mask with orientation (SI, AP, ML/LM).
+                If `self.medial_to_lateral`, last dimension should be ML.
+
+        References:
+            Black, MS et al. Detecting Early Changes in ACL-Reconstructed Knees:
+            Cluster Analysis of T2 Relaxation Times from 3 Months to 18 Months Post-Surgery.
+            28th Annual Meeting of ISMRM, Sydney, Australia 2020.
+        """
+        center_of_mass = sni.measurements.center_of_mass(base_map)  # zero indexed
         com_med_lat = int(np.ceil(center_of_mass[2]))
 
-        region_mask_sup_inf = np.zeros(base_map.shape)
-        region_mask_sup_inf[:com_sup_inf, :, :] = self._SUPERIOR_KEY
-        region_mask_sup_inf[com_sup_inf:, :, :] = self._INFERIOR_KEY
-
-        region_mask_ant_post = np.zeros(base_map.shape)
-        region_mask_ant_post[:, :com_ant_post, :] = self._ANTERIOR_KEY
-        region_mask_ant_post[:, com_ant_post:, :] = self._POSTERIOR_KEY
-
+        # M/L
         region_mask_med_lat = np.zeros(base_map.shape)
         region_mask_med_lat[:, :, :com_med_lat] = self._MEDIAL_KEY if self.medial_to_lateral else self._LATERAL_KEY
         region_mask_med_lat[:, :, com_med_lat:] = self._LATERAL_KEY if self.medial_to_lateral else self._MEDIAL_KEY
+
+        # S/I
+        locs = base_map.sum(axis=0).nonzero()
+        voxels = base_map[:, locs[0], locs[1]]
+        com_sup_inf = np.asarray([
+            int(np.ceil(sni.measurements.center_of_mass(voxels[:,i])[0]))
+            for i in range(voxels.shape[1])
+        ])
+        region_mask_sup_inf = np.full(base_map.shape, self._INFERIOR_KEY)
+        for i in range(len(com_sup_inf)):
+            region_mask_sup_inf[:com_sup_inf[i], locs[0][i], locs[1][i]] = self._SUPERIOR_KEY
+
+        # A/C/P
+        region_mask_ant_post = np.zeros(base_map.shape)
+        for plateau in [slice(0, com_med_lat), slice(com_med_lat, None)]:
+            cum_ap = np.nonzero(base_map[..., plateau].sum(axis=(0,2)))[0]
+            min_ap = np.min(cum_ap)
+            ap_range = np.max(cum_ap) - min_ap
+            thresh1, thresh2 = (
+                int(np.ceil(min_ap + 1/3 * ap_range)),
+                int(np.ceil(min_ap + 2/3 * ap_range))
+            )
+            region_mask_ant_post[:, :thresh1, plateau] = self._ANTERIOR_KEY
+            region_mask_ant_post[:, thresh1:thresh2, plateau] = self._CENTRAL_KEY
+            region_mask_ant_post[:, thresh2:, plateau] = self._POSTERIOR_KEY
+
+        # # A/P
+        # region_mask_ant_post = np.zeros(base_map.shape)
+        # for plateau in [slice(0, com_med_lat), slice(com_med_lat, None)]:
+        #     com = sni.measurements.center_of_mass(base_map[..., plateau])
+        #     com_ant_post = int(np.ceil(com[1]))
+        #     region_mask_ant_post[:, :com_ant_post, plateau] = self._ANTERIOR_KEY
+        #     region_mask_ant_post[:, com_ant_post:, plateau] = self._POSTERIOR_KEY
 
         self.regions_mask = np.stack([region_mask_sup_inf, region_mask_ant_post, region_mask_med_lat], axis=-1)
 
@@ -115,7 +168,7 @@ class TibialCartilage(Tissue):
 
         axial_names = ['superior', 'inferior', 'total']
         coronal_names = ['medial', 'lateral']
-        sagittal_names = ['anterior', 'posterior']
+        sagittal_names = ['anterior', 'posterior', 'central']
 
         pd_header = ['Subject', 'Location', 'Side', 'Region', 'Mean', 'Std', 'Median']
         pd_list = []
@@ -129,7 +182,7 @@ class TibialCartilage(Tissue):
                 axial_map = axial_region_mask == axial
 
             for coronal in [self._MEDIAL_KEY, self._LATERAL_KEY]:
-                for sagittal in [self._ANTERIOR_KEY, self._POSTERIOR_KEY]:
+                for sagittal in [self._ANTERIOR_KEY, self._POSTERIOR_KEY, self._CENTRAL_KEY]:
                     curr_region_mask = quant_map_volume * (coronal_region_mask == coronal) * (
                             sagittal_region_mask == sagittal) * axial_map
                     curr_region_mask[curr_region_mask == 0] = np.nan
