@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import pandas as pd
+import scipy.ndimage as sni
 
 from dosma.data_io import format_io_utils as fio_utils
 from dosma.data_io.format_io import ImageDataFormat
@@ -284,3 +285,38 @@ class Tissue(ABC):
             axs.append((v_min, v_max))
 
         return axs
+
+
+def largest_cc(mask, num=1):
+    """ Return the largest `num` connected component(s) of a 3D mask array.
+
+    Args:
+        mask (np.ndarray): 3D mask array (`np.bool` or `np.[u]int`).
+        num (int, optional): Maximum number of connected components to keep.
+
+    Returns:
+        mask (np.ndarray): 3D mask array with `num` connected components.
+
+
+    Note:
+        Adapted from nipy (https://github.com/nipy/nipy/blob/master/nipy/labs/mask.py)
+        due to dependency issues.
+    """
+    # We use asarray to be able to work with masked arrays.
+    mask = np.asarray(mask)
+    labels, label_nb = sni.label(mask)
+    if not label_nb:
+        raise ValueError('No non-zero values: no connected components')
+    if label_nb == 1:
+        return mask.astype(np.bool)
+    label_count = np.bincount(labels.ravel().astype(np.int))
+    # discard 0 the 0 label
+    label_count[0] = 0
+
+    # Split num=1 case for speed.
+    if num == 1:
+        return labels == label_count.argmax()
+    else:
+        # 1) discard 0 the 0 label and 2) descending order
+        order = np.argsort(label_count)[1:][::-1]
+        return np.isin(labels, order[:num])
