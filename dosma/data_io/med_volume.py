@@ -2,6 +2,7 @@
 
 This module defines `MedicalVolume`, which is a wrapper for 3D volumes.
 """
+from copy import deepcopy
 
 import nibabel as nib
 import numpy as np
@@ -200,6 +201,22 @@ class MedicalVolume(object):
         """
         for mv in mvs:
             self.match_orientation(mv)
+
+    def clone(self, headers=True):
+        """Clones the medical volume.
+
+        Args:
+            headers (bool, optional): If `True`, clone headers.
+                If `False`, headers have shared memory.
+
+        Returns:
+            mv (MedicalVolume): A cloned MedicalVolume.
+        """
+        return MedicalVolume(
+            self.volume.copy(),
+            self.affine.copy(),
+            headers=deepcopy(self._headers) if headers else self._headers,
+        )
 
     @property
     def volume(self):
