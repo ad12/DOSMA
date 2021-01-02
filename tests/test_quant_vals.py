@@ -39,6 +39,18 @@ class TestT2(unittest.TestCase):
         assert metrics["Region"].tolist() == ["label_1", "label_2", "label_3", "label_4", "total"], metrics["Region"].tolist()
         assert metrics["# Voxels"].tolist() == [250, 250, 250, 0, 750], metrics["# Voxels"].tolist()
 
+        metrics = t2.to_metrics(mask, bounds=(10, 40), closed="neither")
+        assert metrics["Region"].tolist() == ["label_1", "label_2", "label_3", "label_4", "total"], metrics["Region"].tolist()
+        assert metrics["# Voxels"].tolist() == [0, 250, 250, 0, 500], metrics["# Voxels"].tolist()
+
+        metrics = t2.to_metrics(mask, bounds=(10, 40), closed="both")
+        assert metrics["Region"].tolist() == ["label_1", "label_2", "label_3", "label_4", "total"], metrics["Region"].tolist()
+        assert metrics["# Voxels"].tolist() == [250, 250, 250, 250, 1000], metrics["# Voxels"].tolist()
+
+        metrics = t2.to_metrics(mask, bounds=(10, 40), closed="left")
+        assert metrics["Region"].tolist() == ["label_1", "label_2", "label_3", "label_4", "total"], metrics["Region"].tolist()
+        assert metrics["# Voxels"].tolist() == [250, 250, 250, 0, 750], metrics["# Voxels"].tolist()
+
         vol_zero = np.copy(vol)
         vol_zero[:5, :5, :] = 0
         mask_zero = MedicalVolume(vol_zero, self._AFFINE)
@@ -58,7 +70,7 @@ class TestT2(unittest.TestCase):
         qv_vol_zero = np.copy(qv_vol)
         qv_vol_zero[:5, :5, :] = 0
         t2_zero = T2(MedicalVolume(qv_vol_zero, self._AFFINE))
-        metrics = t2_zero.to_metrics(mask)
+        metrics = t2_zero.to_metrics(mask, bounds=(0, np.inf))
         assert metrics["Region"].tolist() == ["label_1", "label_2", "label_3", "label_4", "total"], metrics["Region"].tolist()
         assert metrics["# Voxels"].tolist() == [0, 250, 250, 250, 750], metrics["# Voxels"].tolist()
 

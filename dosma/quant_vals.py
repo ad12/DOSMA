@@ -128,12 +128,14 @@ class QuantitativeValue(ABC):
         self,
         mask: MedicalVolume = None,
         labels: Dict[int, str] = None,
-        bounds: Union[float, Tuple[float, float]]=None,
+        bounds: Tuple[float, float] = None,
+        closed: str = "right",
     ) -> pd.DataFrame:
         """Compute scalar metrics for quantitative values.
 
         Metrics include mean, median, standard deviation, and number of voxels.
-        Valid voxels are defined as finite values voxels within the `bounds` argument.
+        Valid voxels are defined as finite valued voxels within the interval 
+        `bounds` (if specified).
 
         Args:
             mask (MedicalVolume, optional): Label mask. Labels should be unsigned ints (uint).
@@ -142,9 +144,12 @@ class QuantitativeValue(ABC):
                 If not specified, metrics will be calculated over all valid voxels.
             labels (Dict[int, str], optional): Mapping from label to label name.
                 If specified, only labels in this argument will be computed.
-            bounds (float or Tuple[float, float], optional): The upper or `[lower, upper]` bounds (both inclusive)
-                for computing metrics. If single value is specified, it is taken as the upper bound. By default,
-                the bounds are the open-interval `(0, inf)`.
+            bounds (float or Tuple[float, float], optional): The left/right bounds
+                for computing metrics. By default, the bounds are the
+                open-interval `(-inf, inf)`.
+            closed (str, optional): If `bounds` specified, whether the bounds are closed
+                on the left-side, right-side, both or neither.
+                One of {'right', 'left', 'both', 'neither'}.
         
         Returns:
             metrics (pd.DataFrame): Metrics for quantitative value. Columns include:
@@ -152,18 +157,18 @@ class QuantitativeValue(ABC):
                 * "Mean" (float): Average quantitative value in a region.
                 * "Median" (float): Median quantitative value in a region.
                 * "Std" (float): Standard deviation of quantitative value in a region.
-                * "#Voxels" (int): The number of valid voxels in the region.
+                * "# Voxels" (int): The number of valid voxels in the region.
         """
         volume = self.volumetric_map.volume
-        if bounds is None:
-            valid_mask = (volume > 0)
-        elif isinstance(bounds, (int, float)):
-            valid_mask = (volume > 0) & (volume <= bounds)
-        else:
-            assert len(bounds) == 2, len(bounds)  # Expected lower,upper bound
+        valid_mask = np.isfinite(volume)
+        if bounds:
+            assert len(bounds) == 2, len(bounds)  # Expected (left,right) bound
             lb, ub = bounds[0], bounds[1]
-            assert lb < ub, f"lower:{lb}, upper: {ub}"  # Expected lower bound < upper bound
-            valid_mask = (volume >= lb) * (volume <= ub)
+            assert lb <= ub, f"lower:{lb}, upper: {ub}"  # Expected left bound <= right bound
+            assert closed in ("right", "left", "both", "neither"), closed
+            lb_mask = volume >= lb if closed in ("left", "both") else volume > lb
+            ub_mask = volume <= ub if closed in ("right", "both") else volume < ub
+            valid_mask &= lb_mask & ub_mask
 
         if mask is not None:
             mask = mask.clone(headers=False)
