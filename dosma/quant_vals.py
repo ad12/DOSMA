@@ -1,13 +1,16 @@
 import os
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from enum import Enum
+from typing import Dict, Sequence, Tuple, Union
+
+import numpy as np
+import pandas as pd
 
 from dosma.data_io import format_io_utils as fio_utils
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.defaults import preferences
-
-from typing import Sequence, Union
 
 __all__ = ['QuantitativeValueType', 'QuantitativeValue', 'T1Rho', 'T2', 'T2Star']
 
@@ -120,6 +123,79 @@ class QuantitativeValue(ABC):
         if not isinstance(volume, MedicalVolume):
             raise TypeError("`volumes` must be of type MedicalVolume")
         self.additional_volumes[name] = volume
+    
+    def to_metrics(
+        self,
+        mask: MedicalVolume = None,
+        labels: Dict[int, str] = None,
+        bounds: Tuple[float, float] = None,
+        closed: str = "right",
+    ) -> pd.DataFrame:
+        """Compute scalar metrics for quantitative values.
+
+        Metrics include mean, median, standard deviation, and number of voxels.
+        Valid voxels are defined as finite valued voxels within the interval 
+        `bounds` (if specified).
+
+        Args:
+            mask (MedicalVolume, optional): Label mask. Labels should be unsigned ints (uint).
+                Metrics will be computed for each non-zero label(s).
+                If `labels` specified, metrics computed only for keys in `labels` dictionary.
+                If not specified, metrics will be calculated over all valid voxels.
+            labels (Dict[int, str], optional): Mapping from label to label name.
+                If specified, only labels in this argument will be computed.
+            bounds (float or Tuple[float, float], optional): The left/right bounds
+                for computing metrics. By default, the bounds are the
+                open-interval `(-inf, inf)`.
+            closed (str, optional): If `bounds` specified, whether the bounds are closed
+                on the left-side, right-side, both or neither.
+                One of {'right', 'left', 'both', 'neither'}.
+        
+        Returns:
+            metrics (pd.DataFrame): Metrics for quantitative value. Columns include:
+                * "Region" (str): The label name.
+                * "Mean" (float): Average quantitative value in a region.
+                * "Median" (float): Median quantitative value in a region.
+                * "Std" (float): Standard deviation of quantitative value in a region.
+                * "# Voxels" (int): The number of valid voxels in the region.
+        """
+        volume = self.volumetric_map.volume
+        valid_mask = np.isfinite(volume)
+        if bounds:
+            assert len(bounds) == 2, len(bounds)  # Expected (left,right) bound
+            lb, ub = bounds[0], bounds[1]
+            assert lb <= ub, f"lower:{lb}, upper: {ub}"  # Expected left bound <= right bound
+            assert closed in ("right", "left", "both", "neither"), closed
+            lb_mask = volume >= lb if closed in ("left", "both") else volume > lb
+            ub_mask = volume <= ub if closed in ("right", "both") else volume < ub
+            valid_mask &= lb_mask & ub_mask
+
+        if mask is not None:
+            mask = mask.clone(headers=False)
+            mask.reformat(self.volumetric_map.orientation)
+            mask = mask.volume
+
+            if labels is None:
+                unique_vals = [x for x in np.unique(mask) if x > 0]
+                labels = {int(i): f"label_{int(i)}" for i in unique_vals}
+            labels.update({-1: "total"})
+        else:
+            labels = {-2: "total"}
+
+        metrics = defaultdict(list)
+        for label, name in labels.items():
+            if label == -2: qv_region_vals = volume[valid_mask]  # Entire volume.
+            elif label == -1: qv_region_vals = volume[np.isin(mask, list(labels.keys())) & valid_mask]  # noqa
+            else: qv_region_vals = volume[(mask == label) & valid_mask]
+            num_voxels = np.prod(qv_region_vals.shape)
+
+            metrics["Region"].append(name)
+            metrics["Mean"].append(np.nanmean(qv_region_vals))
+            metrics["Std"].append(np.nanstd(qv_region_vals))
+            metrics["Median"].append(np.nanmedian(qv_region_vals))
+            metrics["# Voxels"].append(num_voxels)
+
+        return pd.DataFrame(metrics)
 
     @staticmethod
     def get_qv(qv_id: Union[int, str]):

@@ -61,7 +61,7 @@ setup(
     python_requires=">=3.6",
     install_requires=[
         "numpy",
-        "h5py",
+        "h5py<3.0.0",
         "natsort",
         "nested-lookup",
         "nibabel",

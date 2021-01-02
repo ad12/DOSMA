@@ -1,11 +1,3 @@
-"""Analysis for femoral cartilage.
-
-Attributes:
-    BOUNDS (dict): Upper bounds for quantitative values.
-    THICKNESS_DIVISOR (float): Threshold for split between superficial/deep cartilage.
-    NB_BINS (int): Number of bins to split 360 degrees. `dtheta= 360/NB_BINS`.
-"""
-
 import os
 import warnings
 from copy import deepcopy
@@ -29,14 +21,6 @@ from dosma.quant_vals import QuantitativeValueType
 BOUNDS = {QuantitativeValueType.T2: 80.0,
           QuantitativeValueType.T1_RHO: 100.0,
           QuantitativeValueType.T2_STAR: 80.0}
-
-THICKNESS_DIVISOR = 0.5  # split between superficial/deep cartilage
-NB_BINS = 72  # number of bins
-DTHETA = 360 / NB_BINS  # theta intervals for bins (in degrees)
-
-# Theta range: [-270, 90)
-THETA_MIN = -270
-THETA_MAX = 90
 
 __all__ = ['FemoralCartilage']
 
@@ -94,7 +78,13 @@ class FemoralCartilage(Tissue):
 
         self.medial_to_lateral = medial_to_lateral
 
-    def split_regions(self, base_map: np.ndarray):
+    def split_regions(
+        self,
+        base_map: np.ndarray,
+        thickness_divisor=0.5,
+        num_bins=72,
+        theta=(-270, 90)
+    ):
         """Split volume into anatomical regions.
 
         Pixels corresponding to femoral cartilage are divided across 3 planes:
@@ -110,6 +100,9 @@ class FemoralCartilage(Tissue):
         Returns:
             np.ndarray: 4D numpy array (region, height, width, depth). Saved in variable `self.regions`.
         """
+        dtheta = 360 / num_bins
+        theta_min, theta_max = tuple(theta)
+
         mask = self.__mask__.volume
 
         mask = mask * np.nan_to_num(base_map)
@@ -129,19 +122,19 @@ class FemoralCartilage(Tissue):
         rho, theta = cart2pol(xv - xc_fit, yc_fit - yv)
         theta = (theta >= 90) * (theta - 360) + (theta < 90) * theta  # range: [-270, 90)
 
-        assert (np.min(theta) >= THETA_MIN) and (np.max(theta) < THETA_MAX), \
-            "Expected Theta range is [{:d}, {:d}) degrees. Received min: {:d} max: {:d})".format(THETA_MIN, THETA_MAX,
+        assert (np.min(theta) >= theta_min) and (np.max(theta) < theta_max), \
+            "Expected Theta range is [{:d}, {:d}) degrees. Received min: {:d} max: {:d})".format(theta_min, theta_max,
                                                                                                  np.min(theta),
                                                                                                  np.max(theta))
 
-        theta_bins = np.floor((theta - THETA_MIN) / DTHETA)
+        theta_bins = np.floor((theta - theta_min) / dtheta)
 
         # STEP 3: COMPUTE THRESHOLD RADII
         rhos_threshold_volume = np.zeros(mask.shape)
         for curr_slice in range(num_slices):
             mask_slice = mask[..., curr_slice]
 
-            for curr_bin in range(NB_BINS):
+            for curr_bin in range(num_bins):
                 rhos_valid = rho[np.logical_and(mask_slice > 0, theta_bins == curr_bin)]
                 if len(rhos_valid) == 0:
                     continue
@@ -149,7 +142,7 @@ class FemoralCartilage(Tissue):
                 rho_min = np.min(rhos_valid)
                 rho_max = np.max(rhos_valid)
 
-                rho_threshold = THICKNESS_DIVISOR * (rho_max - rho_min) + rho_min
+                rho_threshold = thickness_divisor * (rho_max - rho_min) + rho_min
                 rhos_threshold_volume[theta_bins == curr_bin, curr_slice] = rho_threshold
 
         regions_volume = np.asarray(np.zeros(mask.shape), dtype=np.uint16)
@@ -185,7 +178,7 @@ class FemoralCartilage(Tissue):
 
         regions_volume += ds_volume
         ml_boundary = int(np.ceil(com_slicewise))
-        acp_boundary = [int(np.floor((-105 - THETA_MIN) / DTHETA)), int(np.floor((-75 - THETA_MIN) / DTHETA))]
+        acp_boundary = [int(np.floor((-105 - theta_min) / dtheta)), int(np.floor((-75 - theta_min) / dtheta))]
 
         return regions_volume, theta_bins, ml_boundary, acp_boundary
 
@@ -207,6 +200,8 @@ class FemoralCartilage(Tissue):
                 2. Superficial unrolled cartilage (slices, degrees) - superficial layer
                 3. Deep unrolled cartilage (slices, degrees) - deep layer
         """
+        num_bins = len(np.unique(theta_bins))
+
         mask = self.__mask__.volume
 
         if qv_map.shape != mask.shape:
@@ -227,9 +222,9 @@ class FemoralCartilage(Tissue):
 
         # regions_mask = self.regions_mask
 
-        Unrolled_Cartilage = np.zeros([NB_BINS, num_slices])
-        Sup_layer = np.zeros([NB_BINS, num_slices])
-        Deep_layer = np.zeros([NB_BINS, num_slices])
+        Unrolled_Cartilage = np.zeros([num_bins, num_slices])
+        Sup_layer = np.zeros([num_bins, num_slices])
+        Deep_layer = np.zeros([num_bins, num_slices])
 
         for slice_ind in range(num_slices):
             qv_slice = qv_map[..., slice_ind]
@@ -239,7 +234,7 @@ class FemoralCartilage(Tissue):
             if np.sum(np.isnan(qv_slice)) == qv_slice.shape[0] * qv_slice.shape[1]:
                 continue
 
-            for curr_bin in range(NB_BINS):
+            for curr_bin in range(num_bins):
                 qv_bin = qv_slice[theta_bins == curr_bin]
                 if np.sum(np.isnan(qv_bin)) == len(qv_bin):
                     continue

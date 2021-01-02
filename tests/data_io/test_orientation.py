@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 
-from . import util as ututils
+from .. import util as ututils
 
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.data_io.med_volume import MedicalVolume
