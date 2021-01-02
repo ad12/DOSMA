@@ -15,8 +15,8 @@ class FileConstants(unittest.TestCase):
 
         dn, on = fc.DEBUG, fc.NIPYPE_LOGGING
 
-        assert do == 0
-        assert dn == 1
+        assert do == 0, do
+        assert dn == 1, dn
 
-        assert oo == 'none'
-        assert on == 'stream'
+        assert oo == 'file_stderr', oo
+        assert on == 'stream', on
