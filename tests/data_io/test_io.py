@@ -154,6 +154,23 @@ class TestDicomIO(unittest.TestCase):
 
                     assert self.are_equivalent_headers(h1, h2), "headers for echos %d must be equivalent" % echo_number
 
+    def test_dicom_reader_files(self):
+        """Test reading dicoms provided as list of files."""
+        for ind, dp in enumerate(ututils.SCAN_DIRPATHS):
+            curr_scan = ututils.SCANS[ind]
+            multi_echo_read_paths = ututils.get_read_paths(dp, self.data_format)
+            dicom_path = ututils.get_dicoms_path(dp)
+            expected = self.dr.load(dicom_path)
+            volumes = self.dr.load([
+                os.path.join(dicom_path, x) for x in os.listdir(dicom_path)
+                if not x.startswith(".") and x.endswith(".dcm")
+            ])
+
+            assert len(expected) == len(volumes)
+            for v, e in zip(volumes, expected):
+                assert v.is_identical(e)
+                assert all(self.are_equivalent_headers(h1, h2) for h1, h2 in zip(v.headers, e.headers))
+
     def test_dicom_writer(self):
         for dp_ind, dp in enumerate(ututils.SCAN_DIRPATHS):
             curr_scan = ututils.SCANS[dp_ind]
