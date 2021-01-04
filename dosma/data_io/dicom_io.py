@@ -101,11 +101,20 @@ def LPSplus_to_RASplus(headers: List[pydicom.FileDataset]):
     j_vec = j_vec * in_plane_pixel_spacing[1]
 
     # Determine vector for through-plane pixel direction (k).
-    # 1. Normalize k_vector by magnitude.
-    # 2. Multiply by magnitude given by SpacingBetweenSlices field.
+    # Compute difference in patient position between consecutive headers.
+    # This is the preferred method to determine the k vector.
+    # If single header, take cross product between i/j vectors.
     # These actions are done to avoid rounding errors that might result from float subtraction.
-    k_vec = np.asarray(headers[1].ImagePositionPatient).astype(np.float64) - np.asarray(
-        headers[0].ImagePositionPatient).astype(np.float64)
+    if len(headers) > 1:
+        k_vec = np.asarray(headers[1].ImagePositionPatient).astype(np.float64) - np.asarray(
+            headers[0].ImagePositionPatient).astype(np.float64)
+    else:
+        i_norm = 1 / np.linalg.norm(i_vec) * i_vec
+        j_norm = 1 / np.linalg.norm(j_vec) * j_vec
+        k_norm = np.cross(i_norm, j_norm)
+        k_vec = k_norm / np.linalg.norm(k_norm) * headers[0].SliceThickness
+        if hasattr(headers[0], "SpacingBetweenSlices") and headers[0].SpacingBetweenSlices < 0:
+            k_vec *= -1
     k_vec = np.round(k_vec, AFFINE_DECIMAL_PRECISION)
 
     orientation[:3, :3] = np.stack([j_vec, i_vec, k_vec], axis=1)
@@ -212,7 +221,7 @@ class DicomReader(DataReader):
                     if is_file and match_ext and not is_hidden_file:
                         lstFilesDCM.append(os.path.join(path, f))
             elif os.path.isfile(path):
-                raise ValueError("Single dicom files not currently supported")
+                lstFilesDCM = [path]
             else:
                 raise IOError(f"No directory or file found - {path}")
         else:
