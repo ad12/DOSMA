@@ -184,6 +184,9 @@ class TestDicomIO(unittest.TestCase):
         expected = pydicom.read_file(dcm_file, force=True)
         vol = self.dr.load(dcm_file)[0]
 
+        assert vol.volume.ndim == 3
+        assert vol.volume.shape == expected.pixel_array.shape + (1,)
+
         spacing_expected = [expected.PixelSpacing[0], expected.PixelSpacing[1], expected.SliceThickness]
         spacing = [np.linalg.norm(vol.affine[:3, i]) for i in range(3)]
         assert np.allclose(spacing, spacing_expected), f"{spacing} == {spacing_expected}"

@@ -184,7 +184,7 @@ class DicomReader(DataReader):
         are ignored. Files are sorted in alphabetical order.
 
         Args:
-            path (`str(s)`): Directory with dicom files or dicom files.
+            path (`str(s)`): Directory with dicom files or dicom file(s).
             group_by (`str` or `tuple`, optional): DICOM field tag name or tag number
                 used to group dicoms. Defaults to `EchoNumbers`. Most DICOM headers
                 encode different echo numbers as volumes acquired at different echo
