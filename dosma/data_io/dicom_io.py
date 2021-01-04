@@ -17,6 +17,7 @@ import functools
 import multiprocessing as mp
 import os
 from math import log10, ceil
+from typing import List, Sequence, Union
 
 import nibabel as nib
 import numpy as np
@@ -29,7 +30,6 @@ from dosma.data_io.med_volume import MedicalVolume
 from dosma.defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 from dosma.utils import io_utils
 
-from typing import List, Union
 
 __all__ = ["DicomReader", "DicomWriter"]
 
@@ -101,11 +101,20 @@ def LPSplus_to_RASplus(headers: List[pydicom.FileDataset]):
     j_vec = j_vec * in_plane_pixel_spacing[1]
 
     # Determine vector for through-plane pixel direction (k).
-    # 1. Normalize k_vector by magnitude.
-    # 2. Multiply by magnitude given by SpacingBetweenSlices field.
+    # Compute difference in patient position between consecutive headers.
+    # This is the preferred method to determine the k vector.
+    # If single header, take cross product between i/j vectors.
     # These actions are done to avoid rounding errors that might result from float subtraction.
-    k_vec = np.asarray(headers[1].ImagePositionPatient).astype(np.float64) - np.asarray(
-        headers[0].ImagePositionPatient).astype(np.float64)
+    if len(headers) > 1:
+        k_vec = np.asarray(headers[1].ImagePositionPatient).astype(np.float64) - np.asarray(
+            headers[0].ImagePositionPatient).astype(np.float64)
+    else:
+        i_norm = 1 / np.linalg.norm(i_vec) * i_vec
+        j_norm = 1 / np.linalg.norm(j_vec) * j_vec
+        k_norm = np.cross(i_norm, j_norm)
+        k_vec = k_norm / np.linalg.norm(k_norm) * headers[0].SliceThickness
+        if hasattr(headers[0], "SpacingBetweenSlices") and headers[0].SpacingBetweenSlices < 0:
+            k_vec *= -1
     k_vec = np.round(k_vec, AFFINE_DECIMAL_PRECISION)
 
     orientation[:3, :3] = np.stack([j_vec, i_vec, k_vec], axis=1)
@@ -163,47 +172,71 @@ class DicomReader(DataReader):
         """
         self.num_workers = num_workers
 
-    def load(self, dicom_dir_path: str, group_by: Union[str, tuple] = 'EchoNumbers', ignore_ext: bool = False):
+    def load(
+        self,
+        path: Union[str, Sequence[str]],
+        group_by: Union[str, tuple] = 'EchoNumbers',
+        ignore_ext: bool = False,
+    ):
         """Load dicoms into `MedicalVolume`s grouped by `group_by` tag.
 
+        When loading files from a directory, all hidden files (files starting with ".")
+        are ignored. Files are sorted in alphabetical order.
+
         Args:
-            dicom_dir_path (str): Path to directory with dicom files.
-            group_by (`str` or `tuple`, optional): DICOM field tag name or tag number used to group dicoms. Defaults
-                to `EchoNumbers`. Most DICOM headers encode different echo numbers as volumes acquired at different echo
+            path (`str(s)`): Directory with dicom files or dicom file(s).
+            group_by (`str` or `tuple`, optional): DICOM field tag name or tag number
+                used to group dicoms. Defaults to `EchoNumbers`. Most DICOM headers
+                encode different echo numbers as volumes acquired at different echo
                 times or different phases.
-            ignore_ext (`bool`, optional): Ignore extension (`.dcm`) when loading dicoms. Defaults to `False`.
+            ignore_ext (`bool`, optional): If `True`, ignore extension (`.dcm`)
+                when loading dicoms from directory. Defaults to `False`.
 
         Returns:
             list[MedicalVolume]: Different volumes grouped by the `group_by` DICOM tag.
 
         Raises:
-            NotADirectoryError: If `dicom_dir_path` does not exist or is not a directory.
-            FileNotFoundError: If no dicom files found in directory.
+            ValueError: If `group_by` not specified or if single dicom file specified.
+            IOError: If directory or dicom file(s) specified by `path` do not exist.
+            FileNotFoundError: If no valid dicom files found.
 
         Note:
             This function sorts files using natsort, an intelligent sorting tool. Please verify dicoms are labeled in a
                 sequenced manner (e.g.: dicom1,dicom2,dicom3,...).
         """
-        if not os.path.isdir(dicom_dir_path):
-            raise NotADirectoryError("Directory {} does not exist".format(dicom_dir_path))
-
         if not group_by:
             raise ValueError("`group_by` must be specified, even if there are not multiple volumes encoded in dicoms")
 
-        possible_files = os.listdir(dicom_dir_path)
-
-        lstFilesDCM = []
-        for f in possible_files:
-            # If ignore extension, don't look for '.dcm' extension.
-            match_ext = ignore_ext or (not ignore_ext and self.data_format_code.is_filetype(f))
-            is_file = os.path.isfile(os.path.join(dicom_dir_path, f))
-            is_hidden_file = f.startswith('.')
-            if is_file and match_ext and not is_hidden_file:
-                lstFilesDCM.append(os.path.join(dicom_dir_path, f))
+        if isinstance(path, str):
+            if os.path.isdir(path):
+                possible_files = os.listdir(path)
+                lstFilesDCM = []
+                for f in possible_files:
+                    # If ignore extension, don't look for '.dcm' extension.
+                    match_ext = ignore_ext or (
+                        not ignore_ext and self.data_format_code.is_filetype(f)
+                    )
+                    is_file = os.path.isfile(os.path.join(path, f))
+                    is_hidden_file = f.startswith('.')
+                    if is_file and match_ext and not is_hidden_file:
+                        lstFilesDCM.append(os.path.join(path, f))
+            elif os.path.isfile(path):
+                lstFilesDCM = [path]
+            else:
+                raise IOError(f"No directory or file found - {path}")
+        else:
+            not_files = [x for x in path if not os.path.isfile(x)]
+            if len(not_files) > 0:
+                raise IOError(
+                    "Files not found:\n{}".format(
+                        "".join("\t{}\n".format(x) for x in not_files)
+                    )
+                )
+            lstFilesDCM = path
 
         lstFilesDCM = natsorted(lstFilesDCM)
         if len(lstFilesDCM) == 0:
-            raise FileNotFoundError("No files found in directory {}".format(dicom_dir_path))
+            raise FileNotFoundError("No valid dicom files found in {}".format(path))
 
         # Check if dicom file has the group_by element specified
         temp_dicom = pydicom.read_file(lstFilesDCM[0], force=True)
