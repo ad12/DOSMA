@@ -23,6 +23,8 @@ import nibabel as nib
 import numpy as np
 import pydicom
 from natsort import natsorted
+from tqdm import tqdm
+from tqdm.contrib.concurrent import process_map
 
 from dosma.data_io import orientation as stdo
 from dosma.data_io.format_io import DataReader, DataWriter, ImageDataFormat
@@ -165,12 +167,13 @@ class DicomReader(DataReader):
     """
     data_format_code = ImageDataFormat.dicom
 
-    def __init__(self, num_workers: int = 0):
+    def __init__(self, num_workers: int = 0, verbose: bool = False):
         """
         Args:
             num_workers (int, optional): Number of workers to use for loading.
         """
         self.num_workers = num_workers
+        self.verbose = verbose
 
     def load(
         self,
@@ -247,10 +250,14 @@ class DicomReader(DataReader):
         dicom_data = {}
 
         if self.num_workers:
-            with mp.Pool(self.num_workers) as p:
-                dicom_slices = p.map(functools.partial(pydicom.read_file, force=True), lstFilesDCM)
+            fn = functools.partial(pydicom.read_file, force=True)
+            if self.verbose:
+                dicom_slices = process_map(fn, lstFilesDCM, max_workers=self.num_workers)
+            else:
+                with mp.Pool(self.num_workers) as p:
+                    dicom_slices = p.map(fn, lstFilesDCM)
         else:
-            dicom_slices = [pydicom.read_file(fp, force=True) for fp in lstFilesDCM]
+            dicom_slices = [pydicom.read_file(fp, force=True) for fp in tqdm(lstFilesDCM, disable=not self.verbose)]
 
         for ds in dicom_slices:
             val_groupby = ds.get(group_by)
@@ -286,20 +293,24 @@ class DicomWriter(DataWriter):
     """
     data_format_code = ImageDataFormat.dicom
 
-    def __init__(self, num_workers: int = 0):
+    def __init__(self, num_workers: int = 0, verbose: bool = False):
         """
         Args:
             num_workers (int, optional): Number of workers to use for writing.
         """
         self.num_workers = num_workers
+        self.verbose = verbose
 
-    def save(self, volume: MedicalVolume, dir_path: str):
+    def save(self, volume: MedicalVolume, dir_path: str, fname_fmt: str = None):
         """Save `medical volume` in dicom format.
 
         Args:
             volume (MedicalVolume): Volume to save.
-            dir_path: Directory path to store dicom files. Dicoms are stored in directories, as multiple files are
-                needed to store the volume.
+            dir_path: Directory path to store dicom files. Dicoms are stored in directories,
+                as multiple files are needed to store the volume.
+            fname_fmt (str, optional): Formatting string for filenames. Must contain ``%d``,
+                which correspopnds to slice number. Defaults to 
+                ``"I%0{max(4, ceil(log10(num_slices)))}d.dcm"`` (e.g. ``"I0001.dcm"``).
 
         Raises:
             ValueError: If `im` does not have initialized headers. Or if `im` was flipped across any axis. Flipping
@@ -331,16 +342,22 @@ class DicomWriter(DataWriter):
         dir_path = io_utils.mkdirs(dir_path)
 
         num_slices = len(headers)
-        filename_format = "I%0" + str(max(4, ceil(log10(num_slices)))) + "d.dcm"
+        if not fname_fmt:
+            filename_format = "I%0" + str(max(4, ceil(log10(num_slices)))) + "d.dcm"
+        else:
+            filename_format = fname_fmt
 
         filepaths = [os.path.join(dir_path, filename_format % (s + 1)) for s in range(num_slices)]
         if self.num_workers:
             slices = [volume_arr[..., s] for s in range(num_slices)]
-            with mp.Pool(self.num_workers) as p:
-                out = p.starmap_async(_write_dicom_file, zip(slices, headers, filepaths))
-                out.wait()
+            if self.verbose:
+                process_map(_write_dicom_file, slices, headers, filepaths)
+            else:
+                with mp.Pool(self.num_workers) as p:
+                    out = p.starmap_async(_write_dicom_file, zip(slices, headers, filepaths))
+                    out.wait()
         else:
-            for s in range(num_slices):
+            for s in tqdm(range(num_slices), disable=not self.verbose):
                 _write_dicom_file(volume_arr[..., s], headers[s], filepaths[s])
 
         # Reformat image to original orientation (before saving).
