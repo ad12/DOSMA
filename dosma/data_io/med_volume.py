@@ -3,17 +3,19 @@
 This module defines `MedicalVolume`, which is a wrapper for 3D volumes.
 """
 from copy import deepcopy
+from typing import List
 
 import nibabel as nib
 import numpy as np
-
 import pydicom
 
 from dosma.data_io import orientation as stdo
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
+from dosma.utils import env
 
-from typing import List
+if env.sitk_available():
+    import SimpleITK as sitk
 
 __all__ = ["MedicalVolume"]
 
@@ -218,6 +220,35 @@ class MedicalVolume(object):
             headers=deepcopy(self._headers) if headers else self._headers,
         )
 
+    def to_sitk(self):
+        """Converts to SimpleITK Image.
+
+        Note:
+            Header information is not currently copied.
+        
+        Returns:
+            SimpleITK.Image
+        """
+        if not env.sitk_available():
+            raise ImportError("SimpleITK is not installed. Install it with `pip install simpleitk`")
+
+        arr = self.volume
+        arr = np.transpose(arr, range(arr.ndim)[::-1])
+
+        affine = self.affine.copy()
+        affine[:2] = -affine[:2]  # RAS+ -> LPS+
+
+        origin = tuple(affine[:3, 3])
+        spacing = self.pixel_spacing
+        direction = affine[:3, :3] / np.asarray(spacing)
+
+        img = sitk.GetImageFromArray(arr)
+        img.SetOrigin(origin)
+        img.SetSpacing(spacing)
+        img.SetDirection(tuple(direction.flatten()))
+
+        return img
+
     @property
     def volume(self):
         """np.ndarray: 3D numpy array representing volume values."""
@@ -271,3 +302,38 @@ class MedicalVolume(object):
     def affine(self):
         """np.ndarray: 4x4 affine matrix for volume in current orientation."""
         return self._affine
+
+    @classmethod
+    def from_sitk(cls, image, copy=False) -> "MedicalVolume":
+        """Constructs MedicalVolume from SimpleITK.Image.
+        
+        Note:
+            Metadata information is not copied.
+
+        Args:
+            image (SimpleITK.Image): The image.
+            copy (bool, optional): If ``True``, copies array.
+        
+        Returns:
+            MedicalVolume
+        """
+        if not env.sitk_available():
+            raise ImportError("SimpleITK is not installed. Install it with `pip install simpleitk`")
+
+        if copy:
+            arr = sitk.GetArrayFromImage(image)
+        else:
+            arr = sitk.GetArrayViewFromImage(image)
+        arr = np.transpose(arr, range(arr.ndim)[::-1])
+
+        origin = image.GetOrigin()
+        spacing = image.GetSpacing()
+        direction = np.asarray(image.GetDirection()).reshape(-1, 3)
+
+        affine = np.zeros((4, 4))
+        affine[:3, :3] = direction * np.asarray(spacing)
+        affine[:3, 3] = origin
+        affine[:2] = -affine[:2]  # LPS+ -> RAS+
+        affine[3, 3] = 1
+
+        return cls(arr, affine)
