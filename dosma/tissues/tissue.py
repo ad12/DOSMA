@@ -104,7 +104,7 @@ class Tissue(ABC):
         if self.__mask__ is None:
             raise ValueError("Please initialize mask for {}".format(self.FULL_NAME))
 
-        quant_map.reformat(self.__mask__.orientation)
+        quant_map.reformat(self.__mask__.orientation, inplace=True)
         pass
 
     def __store_quant_vals__(self, quant_map: MedicalVolume, quant_df: pd.DataFrame, map_type: QuantitativeValueType):
@@ -230,7 +230,7 @@ class Tissue(ABC):
             mask (MedicalVolume): Binary mask of segmented tissue.
         """
         assert type(mask) is MedicalVolume, "mask for tissue must be of type MedicalVolume"
-        mask.reformat(SAGITTAL)
+        mask.reformat(SAGITTAL, inplace=True)
         self.__mask__ = mask
 
     def get_mask(self):

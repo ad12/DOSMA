@@ -129,7 +129,7 @@ class OAIUnet2D(KerasSegModel):
         vol_copy = deepcopy(volume)
 
         # reorient to the sagittal plane
-        vol_copy.reformat(SAGITTAL)
+        vol_copy.reformat(SAGITTAL, inplace=True)
 
         vol = vol_copy.volume
         vol = self.__preprocess_volume__(vol)
@@ -150,7 +150,7 @@ class OAIUnet2D(KerasSegModel):
         vol_copy.volume = mask
 
         # reorient to match with original volume
-        vol_copy.reformat(volume.orientation)
+        vol_copy.reformat(volume.orientation, inplace=True)
 
         return vol_copy
 
@@ -268,7 +268,7 @@ class IWOAIOAIUnet2D(OAIUnet2D):
         vol_copy = deepcopy(volume)
 
         # reorient to the sagittal plane
-        vol_copy.reformat(SAGITTAL)
+        vol_copy.reformat(SAGITTAL, inplace=True)
 
         vol = vol_copy.volume
         vol = self.__preprocess_volume__(vol)
@@ -292,7 +292,7 @@ class IWOAIOAIUnet2D(OAIUnet2D):
             vol_cp.volume = mask[..., i]
 
             # reorient to match with original volume
-            vol_cp.reformat(volume.orientation)
+            vol_cp.reformat(volume.orientation, inplace=True)
             vols[category] = vol_cp
 
         return vols

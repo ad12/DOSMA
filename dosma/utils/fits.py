@@ -62,20 +62,16 @@ class MonoExponentialFit(_Fit):
             raise ValueError("`len(ts)`={:d}, but `len(subvolumes)`={:d}".format(len(ts), len(subvolumes)))
         self.ts = ts
 
+        orientation = subvolumes[0].orientation
+        subvolumes = [sv.reformat(orientation) for sv in subvolumes]
         self.subvolumes = subvolumes
 
         if mask and not isinstance(mask, MedicalVolume):
             raise TypeError("`mask` must be a MedicalVolume")
-        self.mask = mask
+        self.mask = mask.reformat(orientation)
+
         self.verbose = verbose
         self.num_workers = num_workers
-
-        orientation = self.subvolumes[0].orientation
-        for sv in self.subvolumes[1:]:
-            sv.reformat(orientation)
-
-        if self.mask:
-            self.mask.reformat(orientation)
 
         if len(bounds) != 2:
             raise ValueError("`bounds` should provide lower/upper bound in format (lb, ub)")

@@ -4,7 +4,7 @@ This module defines `MedicalVolume`, which is a wrapper for 3D volumes.
 """
 import warnings
 from copy import deepcopy
-from typing import List
+from typing import List, Sequence
 
 import nibabel as nib
 import numpy as np
@@ -39,8 +39,8 @@ class MedicalVolume(object):
 
     2D images are also supported when viewed trivial 3D volumes with shape ``(H, W, 1)``.
 
-    Many operations are in-place and modify the instance directly. To allow
-    chaining operations, these operations return ``self``.
+    Many operations are in-place and modify the instance directly (e.g. `reformat(inplace=True)`).
+    To allow chaining operations, operations that are in-place return ``self``.
 
     Args:
         volume (np.ndarray): 3D volume.
@@ -69,11 +69,10 @@ class MedicalVolume(object):
 
         writer.save(self, file_path)
 
-    def reformat(self, new_orientation: tuple) -> "MedicalVolume":
-        """Reorients volume in-place to a specified orientation.
+    def reformat(self, new_orientation: Sequence, inplace: bool = False) -> "MedicalVolume":
+        """Reorients volume to a specified orientation.
 
-        The volume array (``self.volume``) is flipped and transposed in-place
-        if possible.
+        Flipping and transposing the volume array (``self.volume``) returns a view if possible.
 
         Reorientation method:
         ---------------------
@@ -91,15 +90,17 @@ class MedicalVolume(object):
                      flipped axes
 
         Args:
-            new_orientation (tuple): New orientation.
+            new_orientation (Sequence): New orientation.
+            inplace (bool, optional): If `True`, do operation in-place and return ``self``.
 
         Returns:
-            MedicalVolume: ``self``
+            MedicalVolume: The reformatted volume. If ``inplace=True``, returns ``self``.
         """
-        # Check if new_orientation is the same as current orientation
-        assert type(new_orientation) is tuple, "Orientation must be a tuple"
+        new_orientation = tuple(new_orientation)
         if new_orientation == self.orientation:
-            return
+            if inplace:
+                return self
+            return self._partial_clone(volume=self._volume)
 
         temp_orientation = self.orientation
         temp_affine = np.array(self._affine)
@@ -138,25 +139,30 @@ class MedicalVolume(object):
         temp_affine[:3, 3] = b_origin
         temp_affine[temp_affine == 0] = 0  # get rid of negative 0s
 
-        self._affine = temp_affine
+        if inplace:
+            self._affine = temp_affine
+            self._volume = volume
+            mv = self
+        else:
+            mv = self._partial_clone(volume=volume, affine=temp_affine)
 
-        assert self.orientation == new_orientation, "Orientation mismatch: Expected: %s. Got %s" % (
-            str(self.orientation),
-            str(new_orientation))
-        self._volume = volume
-        return self
+        assert mv.orientation == new_orientation, (
+            f"Orientation mismatch: Expected: {self.orientation}. Got {new_orientation}"
+        )
+        return mv
 
-    def reformat_as(self, other) -> "MedicalVolume":
+    def reformat_as(self, other, inplace: bool = False) -> "MedicalVolume":
         """Reformat this to the same orientation as ``other``.
-        Equivalent to ``self.reformat(other.orientation)``.
+        Equivalent to ``self.reformat(other.orientation, inplace)``.
 
         Args:
             other (MedicalVolume): The result volume has the same orientation as ``other``.
+            inplace (bool, optional): If `True`, do operation in-place and return ``self``.
 
         Returns:
-            MedicalVolume: ``self``
+            MedicalVolume: The reformatted volume. If ``inplace=True``, returns ``self``.
         """
-        return self.reformat(other.orientation)
+        return self.reformat(other.orientation, inplace=inplace)
 
     def is_identical(self, mv):
         """Check if another medical volume is identical.
@@ -250,13 +256,13 @@ class MedicalVolume(object):
         """
         warnings.warn(
             "`match_orientation` is deprecated and will be removed in v0.1. "
-            "Use `mv.reformat_as(self)` instead.",
+            "Use `mv.reformat_as(self, inplace=True)` instead.",
             DeprecationWarning
         )
-        if type(mv) != type(self):
-            raise TypeError("'mv' must be of type {}".format(str(type(self))))
+        if not isinstance(mv, MedicalVolume):
+            raise TypeError("`mv` must be a MedicalVolume.")
 
-        mv.reformat(self.orientation)
+        mv.reformat(self.orientation, inplace=True)
 
     def match_orientation_batch(self, mvs):
         """Reorient a collection of MedicalVolumes to orientation specified by self.orientation.
@@ -266,7 +272,7 @@ class MedicalVolume(object):
         """
         warnings.warn(
             "`match_orientation_batch` is deprecated and will be removed in v0.1. "
-            "Use `[x.reformat_as(self) for x in mvs]` instead.",
+            "Use `[x.reformat_as(self, inplace=True) for x in mvs]` instead.",
             DeprecationWarning
         )
         for mv in mvs:

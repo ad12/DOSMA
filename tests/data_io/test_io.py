@@ -245,7 +245,7 @@ class TestDicomIO(unittest.TestCase):
                 o_new = tuple(o_new)
                 orientations.append(o_new)
 
-                volumes[i].reformat(o_new)
+                volumes[i].reformat(o_new, inplace=True)
                 self.dw.save(volumes[i], os.path.join(write_path, 'e%d' % (i + 1)))
 
                 # orientations should be preserved after saving
@@ -254,13 +254,13 @@ class TestDicomIO(unittest.TestCase):
             # Currently saving dicom flipped axis (i.e. changing scanner origin) is not supported
             # check to make sure error is raised
             o3 = (o[0][::-1], o[1], o[2])
-            volumes[0].reformat(o3)
+            volumes[0].reformat(o3, inplace=True)
             with self.assertRaises(ValueError):
                 self.dw.save(volumes[0], ututils.TEMP_PATH)
 
             # reformat with dicom-specific orientation (o) to compare to loaded echos
             for vol in volumes:
-                vol.reformat(o)
+                vol.reformat(o, inplace=True)
 
             # Load echos from write (save) path
             load_echos_paths = [os.path.join(write_path, 'e%d' % (i + 1)) for i in range(len(volumes))]
@@ -347,7 +347,7 @@ class TestInterIO(unittest.TestCase):
 
                 nifti_vol = self.nr.load(nfp)
                 dicom_vol = self.dr.load(dfp)[0]
-                dicom_vol.reformat(nifti_vol.orientation)
+                dicom_vol.reformat(nifti_vol.orientation, inplace=True)
 
                 # assert nifti_vol.is_same_dimensions(dicom_vol)
                 assert (nifti_vol.volume == dicom_vol.volume).all()
@@ -376,7 +376,7 @@ class TestInterIO(unittest.TestCase):
                     "Orientations of multiple dicom volumes loaded from single folder should be identical"
 
             for v in gt_nifti_vols:
-                v.reformat(o)
+                v.reformat(o, inplace=True)
 
             for i in range(len(dicom_loaded_vols)):
                 dcm_vol = dicom_loaded_vols[i]

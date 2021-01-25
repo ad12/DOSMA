@@ -333,7 +333,7 @@ class DicomWriter(DataWriter):
         # Store original orientation so we can undo the dicom-specific reformatting.
         original_orientation = volume.orientation
 
-        volume.reformat(orientation)
+        volume = volume.reformat(orientation)
         volume_arr = volume.volume
         assert volume_arr.shape[2] == len(headers), \
             "Dimension mismatch - {:d} slices but {:d} headers".format(volume_arr.shape[-1], len(headers))
@@ -359,7 +359,3 @@ class DicomWriter(DataWriter):
         else:
             for s in tqdm(range(num_slices), disable=not self.verbose):
                 _write_dicom_file(volume_arr[..., s], headers[s], filepaths[s])
-
-        # Reformat image to original orientation (before saving).
-        # We do this, because saving should not affect the existing state of any variable.
-        volume.reformat(original_orientation)

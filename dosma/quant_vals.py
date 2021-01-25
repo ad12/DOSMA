@@ -171,8 +171,7 @@ class QuantitativeValue(ABC):
             valid_mask &= lb_mask & ub_mask
 
         if mask is not None:
-            mask = mask.clone(headers=False)
-            mask.reformat(self.volumetric_map.orientation)
+            mask = mask.reformat(self.volumetric_map.orientation)
             mask = mask.volume
 
             if labels is None:

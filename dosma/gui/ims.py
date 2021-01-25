@@ -501,7 +501,7 @@ class PageThree(tk.Frame):
             return
 
         mask = self.load_volume("Load mask")
-        mask.reformat(self.im.orientation)
+        mask.reformat(self.im.orientation, inplace=True)
         try:
             self.__verify_mask_size(self.im.volume, mask.volume)
         except Exception as e:
@@ -520,11 +520,11 @@ class PageThree(tk.Frame):
 
     def im_update(self):
         orientation = self.orientation
-        self.im.reformat(orientation)
+        self.im.reformat(orientation, inplace=True)
         im = self.im.volume
         im = im / np.max(im)
         if self.mask:
-            self.mask.reformat(orientation)
+            self.mask.reformat(orientation, inplace=True)
             label_image = label(self.mask.volume)
             im = self.__labeltorgb_3d__(im, label_image, 0.3)
 
