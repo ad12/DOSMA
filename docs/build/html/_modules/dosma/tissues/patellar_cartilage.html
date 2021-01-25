@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>dosma.tissues.patellar_cartilage &mdash; dosma 0.0.12.dev1 documentation</title>
+  <title>dosma.tissues.patellar_cartilage &mdash; dosma 0.0.12.dev2 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -72,6 +75,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -82,6 +86,7 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/user_guide.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/documentation.html">Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/faq.html">FAQs</a></li>
@@ -90,6 +95,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -124,11 +130,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -154,6 +162,7 @@
 <span class="sd">    BOUNDS (dict): Upper bounds for quantitative values.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 
@@ -162,7 +171,7 @@
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">scipy.ndimage</span> <span class="k">as</span> <span class="nn">sni</span>
 
-<span class="kn">from</span> <span class="nn">dosma.tissues.tissue</span> <span class="kn">import</span> <span class="n">Tissue</span>
+<span class="kn">from</span> <span class="nn">dosma.tissues.tissue</span> <span class="kn">import</span> <span class="n">Tissue</span><span class="p">,</span> <span class="n">largest_cc</span>
 
 <span class="kn">from</span> <span class="nn">dosma.defaults</span> <span class="kn">import</span> <span class="n">preferences</span>
 <span class="kn">from</span> <span class="nn">dosma.utils</span> <span class="kn">import</span> <span class="n">io_utils</span>
@@ -176,7 +185,7 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PatellarCartilage&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="PatellarCartilage"><a class="viewcode-back" href="../../../dosma.tissues.html#dosma.tissues.patellar_cartilage.PatellarCartilage">[docs]</a><span class="k">class</span> <span class="nc">PatellarCartilage</span><span class="p">(</span><span class="n">Tissue</span><span class="p">):</span>
+<div class="viewcode-block" id="PatellarCartilage"><a class="viewcode-back" href="../../../general/generate/dosma.tissues.PatellarCartilage.html#dosma.tissues.patellar_cartilage.PatellarCartilage">[docs]</a><span class="k">class</span> <span class="nc">PatellarCartilage</span><span class="p">(</span><span class="n">Tissue</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Handles analysis and visualization for patellar cartilage.&quot;&quot;&quot;</span>
     <span class="n">ID</span> <span class="o">=</span> <span class="mi">3</span>
     <span class="n">STR_ID</span> <span class="o">=</span> <span class="s2">&quot;pc&quot;</span>
@@ -198,10 +207,10 @@
     <span class="n">_REGION_SUPERFICIAL_KEY</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">_TOTAL_AXIAL_KEY</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">weights_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">medial_to_lateral</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="PatellarCartilage.__init__"><a class="viewcode-back" href="../../../general/generate/dosma.tissues.PatellarCartilage.html#dosma.tissues.patellar_cartilage.PatellarCartilage.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">weights_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">medial_to_lateral</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">weights_dir</span><span class="o">=</span><span class="n">weights_dir</span><span class="p">,</span> <span class="n">medial_to_lateral</span><span class="o">=</span><span class="n">medial_to_lateral</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">regions_mask</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regions_mask</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="PatellarCartilage.unroll_coronal"><a class="viewcode-back" href="../../../dosma.tissues.html#dosma.tissues.patellar_cartilage.PatellarCartilage.unroll_coronal">[docs]</a>    <span class="k">def</span> <span class="nf">unroll_coronal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quant_map</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Unroll patellar cartilage in the coronal direction.</span>
@@ -231,34 +240,41 @@
         <span class="k">return</span> <span class="n">total</span><span class="p">,</span> <span class="n">superficial</span><span class="p">,</span> <span class="n">deep</span></div>
 
 <div class="viewcode-block" id="PatellarCartilage.split_regions"><a class="viewcode-back" href="../../../dosma.tissues.html#dosma.tissues.patellar_cartilage.PatellarCartilage.split_regions">[docs]</a>    <span class="k">def</span> <span class="nf">split_regions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_map</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Split patellar cartilage into deep/superficial regions&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Split patellar cartilage into deep/superficial regions.</span>
+
+<span class="sd">        For patellar cartilage, the superficial/deep transition occurs in</span>
+<span class="sd">        the anterior/posterior (A/P) direction. The boundary is determined</span>
+<span class="sd">        for each non-zero 1D column spanning independently by the local</span>
+<span class="sd">        center-of-mass (COM). The medial/lateral (M/L) plane is computed</span>
+<span class="sd">        using the global COM.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            base_map (ndarray): Binary 3D mask with orientation (SI, AP, ML/LM).</span>
+<span class="sd">                If `self.medial_to_lateral`, last dimension should be ML.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">base_map</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;No mask for `</span><span class="si">%s</span><span class="s1">` was found.&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">FULL_NAME</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">regions_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__2d_split_regions</span><span class="p">(</span><span class="n">base_map</span><span class="p">)</span></div>
+        <span class="c1"># Superficial/Deep (A/P)</span>
+        <span class="n">locs</span> <span class="o">=</span> <span class="n">base_map</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span>
+        <span class="n">voxels</span> <span class="o">=</span> <span class="n">base_map</span><span class="p">[</span><span class="n">locs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">locs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">com_sup_inf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">sni</span><span class="o">.</span><span class="n">measurements</span><span class="o">.</span><span class="n">center_of_mass</span><span class="p">(</span><span class="n">voxels</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">voxels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="p">])</span>
+        <span class="n">region_mask_sup_deep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">base_map</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_REGION_DEEP_KEY</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">com_sup_inf</span><span class="p">)):</span>
+            <span class="n">region_mask_sup_deep</span><span class="p">[</span><span class="n">locs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="p">:</span><span class="n">com_sup_inf</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">locs</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_REGION_SUPERFICIAL_KEY</span>
 
-    <span class="k">def</span> <span class="nf">__2d_split_regions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_map</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Split patellar cartilage into deep/superficial regions per sagittal slice</span>
+        <span class="c1"># M/L</span>
+        <span class="n">cum_ml</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">base_map</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># midpoint_ml = int(np.ceil((np.min(cum_ml) + np.max(cum_ml)) / 2))</span>
+        <span class="n">midpoint_ml</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">sni</span><span class="o">.</span><span class="n">measurements</span><span class="o">.</span><span class="n">center_of_mass</span><span class="p">(</span><span class="n">base_map</span><span class="p">)[</span><span class="mi">2</span><span class="p">]))</span>
+        <span class="n">region_mask_med_lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">base_map</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_LATERAL_KEY</span><span class="p">)</span>
+        <span class="n">medial_span</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">midpoint_ml</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">medial_to_lateral</span> <span class="k">else</span> <span class="nb">slice</span><span class="p">(</span><span class="n">midpoint_ml</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">region_mask_med_lat</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">medial_span</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_MEDIAL_KEY</span>
 
-<span class="sd">        Left = Superficial, Right = deep</span>
-<span class="sd">        For patellar cartilage, the superficial--&gt;deep transition happens in the anterior--&gt;posterior direction</span>
-
-<span class="sd">        TODO (arjundd): refactor to make region map a Medical Volume</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">region_mask_sup_deep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">base_map</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">base_map</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
-            <span class="n">c_slice</span> <span class="o">=</span> <span class="n">base_map</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">s</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">c_slice</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">ds_split</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">center_of_mass</span> <span class="o">=</span> <span class="n">sni</span><span class="o">.</span><span class="n">measurements</span><span class="o">.</span><span class="n">center_of_mass</span><span class="p">(</span><span class="n">c_slice</span><span class="p">)</span>
-                <span class="n">ds_split</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">center_of_mass</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-            <span class="n">com_deep_superficial</span> <span class="o">=</span> <span class="n">ds_split</span>
-            <span class="n">region_mask_sup_deep</span><span class="p">[:,</span> <span class="p">:</span><span class="n">com_deep_superficial</span><span class="p">,</span> <span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_REGION_SUPERFICIAL_KEY</span>
-            <span class="n">region_mask_sup_deep</span><span class="p">[:,</span> <span class="n">com_deep_superficial</span><span class="p">:,</span> <span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_REGION_DEEP_KEY</span>
-
-        <span class="k">return</span> <span class="n">region_mask_sup_deep</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regions_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">region_mask_sup_deep</span><span class="p">,</span> <span class="n">region_mask_med_lat</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">__calc_quant_vals__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quant_map</span><span class="p">,</span> <span class="n">map_type</span><span class="p">):</span>
         <span class="n">subject_pid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pid</span>
@@ -272,13 +288,19 @@
         <span class="n">quant_map_volume</span> <span class="o">=</span> <span class="n">mask</span> <span class="o">*</span> <span class="n">quant_map_volume</span>
 
         <span class="n">deep_superficial_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions_mask</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">med_lat_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions_mask</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
 
         <span class="n">axial_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;superficial&#39;</span><span class="p">,</span> <span class="s1">&#39;deep&#39;</span><span class="p">,</span> <span class="s1">&#39;total&#39;</span><span class="p">]</span>
+        <span class="n">sagittal_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;medial&#39;</span><span class="p">,</span> <span class="s1">&#39;lateral&#39;</span><span class="p">]</span>
 
-        <span class="n">pd_header</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Subject&#39;</span><span class="p">,</span> <span class="s1">&#39;Location&#39;</span><span class="p">,</span> <span class="s1">&#39;Mean&#39;</span><span class="p">,</span> <span class="s1">&#39;Std&#39;</span><span class="p">,</span> <span class="s1">&#39;Median&#39;</span><span class="p">]</span>
+        <span class="n">pd_header</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Subject&#39;</span><span class="p">,</span> <span class="s1">&#39;Location&#39;</span><span class="p">,</span> <span class="s1">&#39;Condyle&#39;</span><span class="p">,</span> <span class="s1">&#39;Mean&#39;</span><span class="p">,</span> <span class="s1">&#39;Std&#39;</span><span class="p">,</span> <span class="s1">&#39;Median&#39;</span><span class="p">]</span>
         <span class="n">pd_list</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">axial</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_REGION_SUPERFICIAL_KEY</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_REGION_DEEP_KEY</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_TOTAL_AXIAL_KEY</span><span class="p">]:</span>
+        <span class="n">regions</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span>
+            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_REGION_SUPERFICIAL_KEY</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_REGION_DEEP_KEY</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_TOTAL_AXIAL_KEY</span><span class="p">],</span>
+            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_MEDIAL_KEY</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_LATERAL_KEY</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">axial</span><span class="p">,</span> <span class="n">sagittal</span> <span class="ow">in</span> <span class="n">regions</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">axial</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_TOTAL_AXIAL_KEY</span><span class="p">:</span>
                 <span class="n">axial_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">deep_superficial_map</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_REGION_SUPERFICIAL_KEY</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">+</span> \
                             <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">deep_superficial_map</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_REGION_DEEP_KEY</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
@@ -286,7 +308,9 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">axial_map</span> <span class="o">=</span> <span class="n">deep_superficial_map</span> <span class="o">==</span> <span class="n">axial</span>
 
-            <span class="n">curr_region_mask</span> <span class="o">=</span> <span class="n">quant_map_volume</span> <span class="o">*</span> <span class="n">axial_map</span>
+            <span class="n">sagittal_map</span> <span class="o">=</span> <span class="n">med_lat_map</span> <span class="o">==</span> <span class="n">sagittal</span>
+
+            <span class="n">curr_region_mask</span> <span class="o">=</span> <span class="n">quant_map_volume</span> <span class="o">*</span> <span class="n">axial_map</span> <span class="o">*</span> <span class="n">sagittal_map</span>
             <span class="n">curr_region_mask</span><span class="p">[</span><span class="n">curr_region_mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
             <span class="c1"># discard all values that are 0</span>
@@ -294,7 +318,7 @@
             <span class="n">c_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">curr_region_mask</span><span class="p">)</span>
             <span class="n">c_median</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">curr_region_mask</span><span class="p">)</span>
 
-            <span class="n">row_info</span> <span class="o">=</span> <span class="p">[</span><span class="n">subject_pid</span><span class="p">,</span> <span class="n">axial_names</span><span class="p">[</span><span class="n">axial</span><span class="p">],</span> <span class="n">c_mean</span><span class="p">,</span> <span class="n">c_std</span><span class="p">,</span> <span class="n">c_median</span><span class="p">]</span>
+            <span class="n">row_info</span> <span class="o">=</span> <span class="p">[</span><span class="n">subject_pid</span><span class="p">,</span> <span class="n">axial_names</span><span class="p">[</span><span class="n">axial</span><span class="p">],</span> <span class="n">sagittal_names</span><span class="p">[</span><span class="n">sagittal</span><span class="p">],</span> <span class="n">c_mean</span><span class="p">,</span> <span class="n">c_std</span><span class="p">,</span> <span class="n">c_median</span><span class="p">]</span>
 
             <span class="n">pd_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row_info</span><span class="p">)</span>
 
@@ -313,7 +337,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">__store_quant_vals__</span><span class="p">(</span><span class="n">maps</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">map_type</span><span class="p">)</span>
 
 <div class="viewcode-block" id="PatellarCartilage.set_mask"><a class="viewcode-back" href="../../../dosma.tissues.html#dosma.tissues.patellar_cartilage.PatellarCartilage.set_mask">[docs]</a>    <span class="k">def</span> <span class="nf">set_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+        <span class="n">msk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">largest_cc</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">volume</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
         <span class="n">mask_copy</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="n">mask_copy</span><span class="o">.</span><span class="n">volume</span> <span class="o">=</span> <span class="n">msk</span>
+
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_mask</span><span class="p">(</span><span class="n">mask_copy</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">split_regions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__mask__</span><span class="o">.</span><span class="n">volume</span><span class="p">)</span></div>
@@ -387,20 +414,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019-2020, Arjun Desai
+        &#169; Copyright 2019-2020, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -408,7 +440,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

@@ -29,10 +29,22 @@ __all__ = ["QDess"]
 
 
 class QDess(TargetSequence):
-    """Handles analysis for qDESS scan sequence.
+    """qDESS MRI sequence.
 
-    qDESS consists of two echos (S1, S2).
+    Quantitative double echo in steady state (qDESS) is a high-resolution scan that consists
+    of two echos (S1, S2) that has shown high efficacy for analytic :math:`T_2` mapping.
+    Because of its high resolution, qDESS has been shown to be a good candidate for automatic
+    segmentation.
+
+    DOSMA supports both automatic segmentation and analytical T2 solving for qDESS scans.
+    Automated segmentation uses pre-trained convolutional neural networks (CNNs).
+
+    References:
+        B Sveinsson, AS Chaudhari, GE Gold, BA Hargreaves. A simple analytic method
+        for estimating :math:`T_2` in the knee from DESS. Magnetic Resonance in Medicine,
+        38:63-70 (2017). `[link] <https://www.ncbi.nlm.nih.gov/pubmed/28017730>`_
     """
+
     NAME = "qdess"
 
     # DESS DICOM header keys
@@ -109,18 +121,17 @@ class QDess(TargetSequence):
                         gl_area: float = None, tg: float = None):
         """Generate 3D T2 map.
 
-        Method is detailed in this `paper <https://www.ncbi.nlm.nih.gov/pubmed/28017730>`_.
-
         Args:
             tissue (Tissue): Tissue to generate T2 map for.
-            suppress_fat (`bool`, optional): Suppress fat region in T2 computation. Helps reduce noise.
-            suppress_fluid (`bool`, optional): Suppress fluid region in T2 computation. Fluid-nulled image is calculated
-                as `S1 - beta*S2`.
+            suppress_fat (`bool`, optional): Suppress fat region in T2 computation.
+                Can help reduce noise.
+            suppress_fluid (`bool`, optional): Suppress fluid region in T2 computation.
+                Fluid-nulled image is calculated as ``S1 - beta*S2``.
             beta (`float`, optional): Beta value used for suppressing fluid. Defaults to 1.2.
-            gl_area (`float`, optional): GL Area. Required if not provided in the dicom. Defaults to value in dicom
-                tag '0x001910b6'.
-            tg: tg value (in microseconds). Required if not provided in the dicom. Defaults to value in dicom tag
-                '0x001910b7'.
+            gl_area (`float`, optional): GL Area. Required if not provided in the dicom.
+                Defaults to value in dicom tag '0x001910b6'.
+            tg (`float`, optional): tg value (in microseconds). Required if not provided in the
+                dicom. Defaults to value in dicom tag '0x001910b7'.
 
         Returns:
             qv.T2: T2 fit for tissue.

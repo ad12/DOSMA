@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>dosma.scan_sequences.qdess &mdash; dosma 0.0.12.dev1 documentation</title>
+  <title>dosma.scan_sequences.qdess &mdash; dosma 0.0.12.dev2 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -72,6 +75,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -82,6 +86,7 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/user_guide.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/documentation.html">Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/faq.html">FAQs</a></li>
@@ -90,6 +95,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -124,11 +130,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -178,11 +186,23 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;QDess&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="QDess"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.qdess.QDess">[docs]</a><span class="k">class</span> <span class="nc">QDess</span><span class="p">(</span><span class="n">TargetSequence</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Handles analysis for qDESS scan sequence.</span>
+<div class="viewcode-block" id="QDess"><a class="viewcode-back" href="../../../general/generated/dosma.scan_sequences.QDess.html#dosma.scan_sequences.qdess.QDess">[docs]</a><span class="k">class</span> <span class="nc">QDess</span><span class="p">(</span><span class="n">TargetSequence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;qDESS MRI sequence.</span>
 
-<span class="sd">    qDESS consists of two echos (S1, S2).</span>
+<span class="sd">    Quantitative double echo in steady state (qDESS) is a high-resolution scan that consists</span>
+<span class="sd">    of two echos (S1, S2) that has shown high efficacy for analytic :math:`T_2` mapping.</span>
+<span class="sd">    Because of its high resolution, qDESS has been shown to be a good candidate for automatic</span>
+<span class="sd">    segmentation.</span>
+
+<span class="sd">    DOSMA supports both automatic segmentation and analytical T2 solving for qDESS scans.</span>
+<span class="sd">    Automated segmentation uses pre-trained convolutional neural networks (CNNs).</span>
+
+<span class="sd">    References:</span>
+<span class="sd">        B Sveinsson, AS Chaudhari, GE Gold, BA Hargreaves. A simple analytic method</span>
+<span class="sd">        for estimating :math:`T_2` in the knee from DESS. Magnetic Resonance in Medicine,</span>
+<span class="sd">        38:63-70 (2017). `[link] &lt;https://www.ncbi.nlm.nih.gov/pubmed/28017730&gt;`_</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">NAME</span> <span class="o">=</span> <span class="s2">&quot;qdess&quot;</span>
 
     <span class="c1"># DESS DICOM header keys</span>
@@ -199,8 +219,8 @@
     <span class="n">__T2_UPPER_BOUND__</span> <span class="o">=</span> <span class="mi">100</span>
     <span class="n">__T2_DECIMAL_PRECISION__</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># 0.1 ms</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dicom_path</span><span class="p">,</span> <span class="n">load_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dicom_path</span><span class="o">=</span><span class="n">dicom_path</span><span class="p">,</span> <span class="n">load_path</span><span class="o">=</span><span class="n">load_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="viewcode-block" id="QDess.__init__"><a class="viewcode-back" href="../../../general/generated/dosma.scan_sequences.QDess.html#dosma.scan_sequences.qdess.QDess.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dicom_path</span><span class="p">,</span> <span class="n">load_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dicom_path</span><span class="o">=</span><span class="n">dicom_path</span><span class="p">,</span> <span class="n">load_path</span><span class="o">=</span><span class="n">load_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">__validate_scan__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Validate that the dicoms are of qDESS sequence.</span>
@@ -231,7 +251,7 @@
             <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">FULL_NAME</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tissue</span><span class="p">])</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tissue</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span> <span class="k">else</span> <span class="n">tissue</span><span class="o">.</span><span class="n">FULL_NAME</span>
         <span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Segmenting </span><span class="si">{tissue_names}</span><span class="s2">...&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Segmenting </span><span class="si">{</span><span class="n">tissue_names</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">use_rms</span><span class="p">:</span>
             <span class="n">segmentation_volume</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_rms</span><span class="p">()</span>
@@ -259,18 +279,17 @@
                         <span class="n">gl_area</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tg</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Generate 3D T2 map.</span>
 
-<span class="sd">        Method is detailed in this `paper &lt;https://www.ncbi.nlm.nih.gov/pubmed/28017730&gt;`_.</span>
-
 <span class="sd">        Args:</span>
 <span class="sd">            tissue (Tissue): Tissue to generate T2 map for.</span>
-<span class="sd">            suppress_fat (`bool`, optional): Suppress fat region in T2 computation. Helps reduce noise.</span>
-<span class="sd">            suppress_fluid (`bool`, optional): Suppress fluid region in T2 computation. Fluid-nulled image is calculated</span>
-<span class="sd">                as `S1 - beta*S2`.</span>
+<span class="sd">            suppress_fat (`bool`, optional): Suppress fat region in T2 computation.</span>
+<span class="sd">                Can help reduce noise.</span>
+<span class="sd">            suppress_fluid (`bool`, optional): Suppress fluid region in T2 computation.</span>
+<span class="sd">                Fluid-nulled image is calculated as ``S1 - beta*S2``.</span>
 <span class="sd">            beta (`float`, optional): Beta value used for suppressing fluid. Defaults to 1.2.</span>
-<span class="sd">            gl_area (`float`, optional): GL Area. Required if not provided in the dicom. Defaults to value in dicom</span>
-<span class="sd">                tag &#39;0x001910b6&#39;.</span>
-<span class="sd">            tg: tg value (in microseconds). Required if not provided in the dicom. Defaults to value in dicom tag</span>
-<span class="sd">                &#39;0x001910b7&#39;.</span>
+<span class="sd">            gl_area (`float`, optional): GL Area. Required if not provided in the dicom.</span>
+<span class="sd">                Defaults to value in dicom tag &#39;0x001910b6&#39;.</span>
+<span class="sd">            tg (`float`, optional): tg value (in microseconds). Required if not provided in the</span>
+<span class="sd">                dicom. Defaults to value in dicom tag &#39;0x001910b7&#39;.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            qv.T2: T2 fit for tissue.</span>
@@ -449,20 +468,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019-2020, Arjun Desai
+        &#169; Copyright 2019-2020, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -470,7 +494,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

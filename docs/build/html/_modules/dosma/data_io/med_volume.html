@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>dosma.data_io.med_volume &mdash; dosma 0.0.12.dev1 documentation</title>
+  <title>dosma.data_io.med_volume &mdash; dosma 0.0.12.dev2 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -72,6 +75,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -82,6 +86,7 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/user_guide.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/documentation.html">Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/faq.html">FAQs</a></li>
@@ -90,6 +95,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -124,11 +130,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -152,26 +160,45 @@
 
 <span class="sd">This module defines `MedicalVolume`, which is a wrapper for 3D volumes.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nib</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-
 <span class="kn">import</span> <span class="nn">pydicom</span>
 
 <span class="kn">from</span> <span class="nn">dosma.data_io</span> <span class="kn">import</span> <span class="n">orientation</span> <span class="k">as</span> <span class="n">stdo</span>
 <span class="kn">from</span> <span class="nn">dosma.data_io.format_io</span> <span class="kn">import</span> <span class="n">ImageDataFormat</span>
 <span class="kn">from</span> <span class="nn">dosma.defaults</span> <span class="kn">import</span> <span class="n">SCANNER_ORIGIN_DECIMAL_PRECISION</span>
+<span class="kn">from</span> <span class="nn">dosma.utils</span> <span class="kn">import</span> <span class="n">env</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">sitk_available</span><span class="p">():</span>
+    <span class="kn">import</span> <span class="nn">SimpleITK</span> <span class="k">as</span> <span class="nn">sitk</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;MedicalVolume&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="MedicalVolume"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume">[docs]</a><span class="k">class</span> <span class="nc">MedicalVolume</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Wrapper for 3D medical volumes.</span>
+    <span class="sd">&quot;&quot;&quot;The class for medical images.</span>
 
-<span class="sd">    Medical volumes are 3D matrices representing medical data. These volumes have inherent metadata, such as pixel/voxel</span>
-<span class="sd">        spacing, global coordinates, rotation information, which can be characterized by an affine matrix.</span>
+<span class="sd">    Medical volumes are 3D matrices representing medical data. These volumes have inherent</span>
+<span class="sd">    metadata, such as pixel/voxel spacing, global coordinates, rotation information, all of</span>
+<span class="sd">    which can be characterized by an affine matrix following the RAS+ coordinate system.</span>
+
+<span class="sd">    Standard math and boolean operations are supported with other ``MedicalVolume`` objects,</span>
+<span class="sd">    numpy arrays (following standard broadcasting), and scalars. Boolean operations are performed</span>
+<span class="sd">    elementwise, resulting in a volume with shape as ``self.volume.shape``.</span>
+<span class="sd">    If performing operations between ``MedicalVolume`` objects, both objects must have</span>
+<span class="sd">    the same shape and affine matrix (spacing, direction, and origin). Header information</span>
+<span class="sd">    is not deep copied when performing these operations to reduce computational and memory</span>
+<span class="sd">    overhead. The affine matrix (``self.affine``) is copied as it is lightweight and</span>
+<span class="sd">    often modified.</span>
+
+<span class="sd">    2D images are also supported when viewed trivial 3D volumes with shape ``(H, W, 1)``.</span>
+
+<span class="sd">    Many operations are in-place and modify the instance directly (e.g. `reformat(inplace=True)`).</span>
+<span class="sd">    To allow chaining operations, operations that are in-place return ``self``.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        volume (np.ndarray): 3D volume.</span>
@@ -200,8 +227,10 @@
 
         <span class="n">writer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MedicalVolume.reformat"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume.reformat">[docs]</a>    <span class="k">def</span> <span class="nf">reformat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_orientation</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>
+<div class="viewcode-block" id="MedicalVolume.reformat"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume.reformat">[docs]</a>    <span class="k">def</span> <span class="nf">reformat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_orientation</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MedicalVolume&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Reorients volume to a specified orientation.</span>
+
+<span class="sd">        Flipping and transposing the volume array (``self.volume``) returns a view if possible.</span>
 
 <span class="sd">        Reorientation method:</span>
 <span class="sd">        ---------------------</span>
@@ -219,12 +248,17 @@
 <span class="sd">                     flipped axes</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            new_orientation (tuple): New orientation.</span>
+<span class="sd">            new_orientation (Sequence): New orientation.</span>
+<span class="sd">            inplace (bool, optional): If `True`, do operation in-place and return ``self``.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MedicalVolume: The reformatted volume. If ``inplace=True``, returns ``self``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Check if new_orientation is the same as current orientation</span>
-        <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">new_orientation</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">,</span> <span class="s2">&quot;Orientation must be a tuple&quot;</span>
+        <span class="n">new_orientation</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">new_orientation</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">new_orientation</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">orientation</span><span class="p">:</span>
-            <span class="k">return</span>
+            <span class="k">if</span> <span class="n">inplace</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_clone</span><span class="p">(</span><span class="n">volume</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="p">)</span>
 
         <span class="n">temp_orientation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">orientation</span>
         <span class="n">temp_affine</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_affine</span><span class="p">)</span>
@@ -263,12 +297,30 @@
         <span class="n">temp_affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">b_origin</span>
         <span class="n">temp_affine</span><span class="p">[</span><span class="n">temp_affine</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># get rid of negative 0s</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_affine</span> <span class="o">=</span> <span class="n">temp_affine</span>
+        <span class="k">if</span> <span class="n">inplace</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_affine</span> <span class="o">=</span> <span class="n">temp_affine</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span> <span class="o">=</span> <span class="n">volume</span>
+            <span class="n">mv</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_clone</span><span class="p">(</span><span class="n">volume</span><span class="o">=</span><span class="n">volume</span><span class="p">,</span> <span class="n">affine</span><span class="o">=</span><span class="n">temp_affine</span><span class="p">)</span>
 
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">orientation</span> <span class="o">==</span> <span class="n">new_orientation</span><span class="p">,</span> <span class="s2">&quot;Orientation mismatch: Expected: </span><span class="si">%s</span><span class="s2">. Got </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orientation</span><span class="p">),</span>
-            <span class="nb">str</span><span class="p">(</span><span class="n">new_orientation</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span> <span class="o">=</span> <span class="n">volume</span></div>
+        <span class="k">assert</span> <span class="n">mv</span><span class="o">.</span><span class="n">orientation</span> <span class="o">==</span> <span class="n">new_orientation</span><span class="p">,</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Orientation mismatch: Expected: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">orientation</span><span class="si">}</span><span class="s2">. Got </span><span class="si">{</span><span class="n">new_orientation</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">mv</span></div>
+
+<div class="viewcode-block" id="MedicalVolume.reformat_as"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume.reformat_as">[docs]</a>    <span class="k">def</span> <span class="nf">reformat_as</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MedicalVolume&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reformat this to the same orientation as ``other``.</span>
+<span class="sd">        Equivalent to ``self.reformat(other.orientation, inplace)``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other (MedicalVolume): The result volume has the same orientation as ``other``.</span>
+<span class="sd">            inplace (bool, optional): If `True`, do operation in-place and return ``self``.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MedicalVolume: The reformatted volume. If ``inplace=True``, returns ``self``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">orientation</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="n">inplace</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MedicalVolume.is_identical"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume.is_identical">[docs]</a>    <span class="k">def</span> <span class="nf">is_identical</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Check if another medical volume is identical.</span>
@@ -281,8 +333,8 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: `True` if identical, `False` otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">mv</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;type(mv) must be </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mv</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;`mv` must be a MedicalVolume.&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">mv</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">mv</span><span class="o">.</span><span class="n">volume</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">volume</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span></div>
 
@@ -307,29 +359,52 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">mv</span><span class="o">.</span><span class="n">affine</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">affine</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
 
-<div class="viewcode-block" id="MedicalVolume.is_same_dimensions"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume.is_same_dimensions">[docs]</a>    <span class="k">def</span> <span class="nf">is_same_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mv</span><span class="p">,</span> <span class="n">precision</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MedicalVolume.is_same_dimensions"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume.is_same_dimensions">[docs]</a>    <span class="k">def</span> <span class="nf">is_same_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mv</span><span class="p">,</span> <span class="n">precision</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Check if two volumes have the same dimensions.</span>
 
 <span class="sd">        Two volumes have the same dimensions if they have the same pixel_spacing, orientation, and scanner_origin.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            mv (MedicalVolume): Volume to compare with.</span>
-<span class="sd">            precision (`int`, optional): Number of significant figures after the decimal. If not specified, check that</span>
-<span class="sd">                affine matrices between two volumes are identical. Defaults to `None`.</span>
+<span class="sd">            precision (`int`, optional): Number of significant figures after the decimal.</span>
+<span class="sd">                If not specified, check that affine matrices between two volumes are identical.</span>
+<span class="sd">                Defaults to `None`.</span>
+<span class="sd">            err (bool, optional): If `True` and volumes do not have same dimensions,</span>
+<span class="sd">                raise descriptive ValueError.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: `True` if pixel spacing, orientation, and scanner origin between two volumes within tolerance, `False`</span>
 <span class="sd">                otherwise.</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            TypeError: If `mv` is not a MedicalVolume.</span>
+<span class="sd">            TypeError: If ``mv`` is not a MedicalVolume.</span>
+<span class="sd">            ValueError: If ``err=True`` and two volumes do not have same dimensions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">mv</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;mv&#39; must be of type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mv</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;`mv` must be a MedicalVolume.&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__allclose_spacing</span><span class="p">(</span><span class="n">mv</span><span class="p">,</span> <span class="n">precision</span><span class="p">)</span> \
-               <span class="ow">and</span> <span class="n">mv</span><span class="o">.</span><span class="n">orientation</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">orientation</span> \
-               <span class="ow">and</span> <span class="n">mv</span><span class="o">.</span><span class="n">volume</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">volume</span><span class="o">.</span><span class="n">shape</span></div>
+        <span class="n">is_close_spacing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__allclose_spacing</span><span class="p">(</span><span class="n">mv</span><span class="p">,</span> <span class="n">precision</span><span class="p">)</span>
+        <span class="n">is_same_orientation</span> <span class="o">=</span> <span class="n">mv</span><span class="o">.</span><span class="n">orientation</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">orientation</span>
+        <span class="n">is_same_shape</span> <span class="o">=</span> <span class="n">mv</span><span class="o">.</span><span class="n">volume</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">volume</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">is_close_spacing</span> <span class="ow">and</span> <span class="n">is_same_orientation</span> <span class="ow">and</span> <span class="n">is_same_shape</span>
+
+        <span class="k">if</span> <span class="n">err</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">out</span><span class="p">:</span>
+            <span class="n">tol_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; (tol: 1e-</span><span class="si">{</span><span class="n">precision</span><span class="si">}</span><span class="s2">)&quot;</span> <span class="k">if</span> <span class="n">precision</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_close_spacing</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Affine matrices not equal</span><span class="si">{}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">tol_str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_affine</span><span class="p">,</span> <span class="n">mv</span><span class="o">.</span><span class="n">_affine</span><span class="p">,</span>
+                <span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_same_orientation</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Orientations not equal: </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">orientation</span><span class="p">,</span> <span class="n">mv</span><span class="o">.</span><span class="n">orientation</span><span class="p">,</span>
+                <span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_same_shape</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shapes not equal: </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">mv</span><span class="o">.</span><span class="n">_volume</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                <span class="p">))</span>
+            <span class="k">assert</span> <span class="kc">False</span>  <span class="c1"># should not reach here</span>
+
+        <span class="k">return</span> <span class="n">out</span></div>
 
 <div class="viewcode-block" id="MedicalVolume.match_orientation"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume.match_orientation">[docs]</a>    <span class="k">def</span> <span class="nf">match_orientation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Reorient another MedicalVolume to orientation specified by self.orientation.</span>
@@ -337,10 +412,15 @@
 <span class="sd">        Args:</span>
 <span class="sd">            mv (MedicalVolume): Volume to reorient.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">mv</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;mv&#39; must be of type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))))</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;`match_orientation` is deprecated and will be removed in v0.1. &quot;</span>
+            <span class="s2">&quot;Use `mv.reformat_as(self, inplace=True)` instead.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mv</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;`mv` must be a MedicalVolume.&quot;</span><span class="p">)</span>
 
-        <span class="n">mv</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orientation</span><span class="p">)</span></div>
+        <span class="n">mv</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orientation</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MedicalVolume.match_orientation_batch"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume.match_orientation_batch">[docs]</a>    <span class="k">def</span> <span class="nf">match_orientation_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mvs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Reorient a collection of MedicalVolumes to orientation specified by self.orientation.</span>
@@ -348,8 +428,58 @@
 <span class="sd">        Args:</span>
 <span class="sd">            mvs (list[MedicalVolume]): Collection of MedicalVolumes.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;`match_orientation_batch` is deprecated and will be removed in v0.1. &quot;</span>
+            <span class="s2">&quot;Use `[x.reformat_as(self, inplace=True) for x in mvs]` instead.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span>
+        <span class="p">)</span>
         <span class="k">for</span> <span class="n">mv</span> <span class="ow">in</span> <span class="n">mvs</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">match_orientation</span><span class="p">(</span><span class="n">mv</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MedicalVolume.clone"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume.clone">[docs]</a>    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clones the medical volume.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            headers (bool, optional): If `True`, clone headers.</span>
+<span class="sd">                If `False`, headers have shared memory.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            mv (MedicalVolume): A cloned MedicalVolume.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">MedicalVolume</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">volume</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">affine</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="n">headers</span><span class="o">=</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">)</span> <span class="k">if</span> <span class="n">headers</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="MedicalVolume.to_sitk"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume.to_sitk">[docs]</a>    <span class="k">def</span> <span class="nf">to_sitk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Converts to SimpleITK Image.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            Header information is not currently copied.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            SimpleITK.Image</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">sitk_available</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;SimpleITK is not installed. Install it with `pip install simpleitk`&quot;</span><span class="p">)</span>
+
+        <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">volume</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">ndim</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">affine</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">affine</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">affine</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">affine</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># RAS+ -&gt; LPS+</span>
+
+        <span class="n">origin</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+        <span class="n">spacing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_spacing</span>
+        <span class="n">direction</span> <span class="o">=</span> <span class="n">affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spacing</span><span class="p">)</span>
+
+        <span class="n">img</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">GetImageFromArray</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="n">img</span><span class="o">.</span><span class="n">SetOrigin</span><span class="p">(</span><span class="n">origin</span><span class="p">)</span>
+        <span class="n">img</span><span class="o">.</span><span class="n">SetSpacing</span><span class="p">(</span><span class="n">spacing</span><span class="p">)</span>
+        <span class="n">img</span><span class="o">.</span><span class="n">SetDirection</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">direction</span><span class="o">.</span><span class="n">flatten</span><span class="p">()))</span>
+
+        <span class="k">return</span> <span class="n">img</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">volume</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -403,27 +533,202 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">affine</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;np.ndarray: 4x4 affine matrix for volume in current orientation.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_affine</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_affine</span>
+
+<div class="viewcode-block" id="MedicalVolume.from_sitk"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume.from_sitk">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_sitk</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MedicalVolume&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Constructs MedicalVolume from SimpleITK.Image.</span>
+<span class="sd">        </span>
+<span class="sd">        Note:</span>
+<span class="sd">            Metadata information is not copied.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            image (SimpleITK.Image): The image.</span>
+<span class="sd">            copy (bool, optional): If ``True``, copies array.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            MedicalVolume</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">sitk_available</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;SimpleITK is not installed. Install it with `pip install simpleitk`&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">copy</span><span class="p">:</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">GetArrayFromImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">GetArrayViewFromImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">ndim</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">origin</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">GetOrigin</span><span class="p">()</span>
+        <span class="n">spacing</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">GetSpacing</span><span class="p">()</span>
+        <span class="n">direction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">GetDirection</span><span class="p">())</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">affine</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+        <span class="n">affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">direction</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spacing</span><span class="p">)</span>
+        <span class="n">affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">origin</span>
+        <span class="n">affine</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">affine</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># LPS+ -&gt; RAS+</span>
+        <span class="n">affine</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">affine</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_partial_clone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MedicalVolume&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Copies constructor information from ``self`` if not available in ``kwargs``.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;volume&quot;</span><span class="p">,</span> <span class="s2">&quot;affine&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">&quot;headers&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;headers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span>
+        <span class="k">return</span> <span class="n">MedicalVolume</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="n">volume</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="o">.</span><span class="fm">__add__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_clone</span><span class="p">(</span><span class="n">volume</span><span class="o">=</span><span class="n">volume</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__floordiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="n">volume</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="o">.</span><span class="fm">__floordiv__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_clone</span><span class="p">(</span><span class="n">volume</span><span class="o">=</span><span class="n">volume</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="n">volume</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="o">.</span><span class="fm">__mul__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_clone</span><span class="p">(</span><span class="n">volume</span><span class="o">=</span><span class="n">volume</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="n">volume</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="o">.</span><span class="fm">__pow__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_clone</span><span class="p">(</span><span class="n">volume</span><span class="o">=</span><span class="n">volume</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="n">volume</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="o">.</span><span class="fm">__sub__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_clone</span><span class="p">(</span><span class="n">volume</span><span class="o">=</span><span class="n">volume</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="n">volume</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="o">.</span><span class="fm">__truediv__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_clone</span><span class="p">(</span><span class="n">volume</span><span class="o">=</span><span class="n">volume</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="o">.</span><span class="fm">__iadd__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__ifloordiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="o">.</span><span class="fm">__ifloordiv__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__imul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="o">.</span><span class="fm">__imul__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__ipow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="o">.</span><span class="fm">__ipow__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__isub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="o">.</span><span class="fm">__isub__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__itruediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="o">.</span><span class="fm">__itruediv__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="n">volume</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_volume</span> <span class="o">!=</span> <span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_clone</span><span class="p">(</span><span class="n">volume</span><span class="o">=</span><span class="n">volume</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="n">volume</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_volume</span> <span class="o">==</span> <span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_clone</span><span class="p">(</span><span class="n">volume</span><span class="o">=</span><span class="n">volume</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="n">volume</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_volume</span> <span class="o">&gt;=</span> <span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_clone</span><span class="p">(</span><span class="n">volume</span><span class="o">=</span><span class="n">volume</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="n">volume</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_volume</span> <span class="o">&gt;</span> <span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_clone</span><span class="p">(</span><span class="n">volume</span><span class="o">=</span><span class="n">volume</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="n">volume</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_volume</span> <span class="o">&lt;=</span> <span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_clone</span><span class="p">(</span><span class="n">volume</span><span class="o">=</span><span class="n">volume</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">volume</span>
+        <span class="n">volume</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_volume</span> <span class="o">&lt;</span> <span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_clone</span><span class="p">(</span><span class="n">volume</span><span class="o">=</span><span class="n">volume</span><span class="p">)</span></div>
 </pre></div>
 
            </div>
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019-2020, Arjun Desai
+        &#169; Copyright 2019-2020, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -431,7 +736,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

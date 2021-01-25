@@ -22,7 +22,7 @@ __all__ = ["MedicalVolume"]
 
 
 class MedicalVolume(object):
-    """Wrapper for 3D medical volumes.
+    """The class for medical images.
 
     Medical volumes are 3D matrices representing medical data. These volumes have inherent
     metadata, such as pixel/voxel spacing, global coordinates, rotation information, all of

@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>dosma.models.oaiunet2d &mdash; dosma 0.0.12.dev1 documentation</title>
+  <title>dosma.models.oaiunet2d &mdash; dosma 0.0.12.dev2 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -72,6 +75,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -82,6 +86,7 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/user_guide.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/documentation.html">Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/faq.html">FAQs</a></li>
@@ -90,6 +95,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -124,11 +130,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -174,9 +182,9 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;OAIUnet2D&quot;</span><span class="p">,</span> <span class="s2">&quot;IWOAIOAIUnet2D&quot;</span><span class="p">,</span> <span class="s2">&quot;IWOAIOAIUnet2DNormalized&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="OAIUnet2D"><a class="viewcode-back" href="../../../dosma.models.html#dosma.models.oaiunet2d.OAIUnet2D">[docs]</a><span class="k">class</span> <span class="nc">OAIUnet2D</span><span class="p">(</span><span class="n">KerasSegModel</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Model trained in Chaudhari et al. IWOAI 2018</span>
+<div class="viewcode-block" id="OAIUnet2D"><a class="viewcode-back" href="../../../general/generate/dosma.models.OAIUnet2D.html#dosma.models.oaiunet2d.OAIUnet2D">[docs]</a><span class="k">class</span> <span class="nc">OAIUnet2D</span><span class="p">(</span><span class="n">KerasSegModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Model trained in Chaudhari et al. IWOAI 2018</span>
+
 <span class="sd">    Original Github: https://github.com/akshaysc/msk_segmentation</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ALIASES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;oai-unet2d&#39;</span><span class="p">,</span> <span class="s1">&#39;oai_unet2d&#39;</span><span class="p">]</span>
@@ -279,7 +287,7 @@
         <span class="n">vol_copy</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">volume</span><span class="p">)</span>
 
         <span class="c1"># reorient to the sagittal plane</span>
-        <span class="n">vol_copy</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="n">SAGITTAL</span><span class="p">)</span>
+        <span class="n">vol_copy</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="n">SAGITTAL</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">vol</span> <span class="o">=</span> <span class="n">vol_copy</span><span class="o">.</span><span class="n">volume</span>
         <span class="n">vol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__preprocess_volume__</span><span class="p">(</span><span class="n">vol</span><span class="p">)</span>
@@ -300,7 +308,7 @@
         <span class="n">vol_copy</span><span class="o">.</span><span class="n">volume</span> <span class="o">=</span> <span class="n">mask</span>
 
         <span class="c1"># reorient to match with original volume</span>
-        <span class="n">vol_copy</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="n">volume</span><span class="o">.</span><span class="n">orientation</span><span class="p">)</span>
+        <span class="n">vol_copy</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="n">volume</span><span class="o">.</span><span class="n">orientation</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">vol_copy</span></div>
 
@@ -309,26 +317,25 @@
         <span class="k">return</span> <span class="n">whiten_volume</span><span class="p">(</span><span class="n">volume</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="IWOAIOAIUnet2D"><a class="viewcode-back" href="../../../dosma.models.html#dosma.models.oaiunet2d.IWOAIOAIUnet2D">[docs]</a><span class="k">class</span> <span class="nc">IWOAIOAIUnet2D</span><span class="p">(</span><span class="n">OAIUnet2D</span><span class="p">):</span>
+<div class="viewcode-block" id="IWOAIOAIUnet2D"><a class="viewcode-back" href="../../../general/generate/dosma.models.IWOAIOAIUnet2D.html#dosma.models.oaiunet2d.IWOAIOAIUnet2D">[docs]</a><span class="k">class</span> <span class="nc">IWOAIOAIUnet2D</span><span class="p">(</span><span class="n">OAIUnet2D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Model trained by Team 6 in the 2019 IWOAI Segmentation Challenge.</span>
 
-<span class="sd">    Paper:</span>
-
-<span class="sd">    Desai, et al., &quot;The International Workshop on Osteoarthritis Imaging Knee</span>
-<span class="sd">    MRI Segmentation Challenge: A Multi-Institute Evaluation and Analysis</span>
-<span class="sd">    Framework on a Standardized Dataset.&quot; arXiv preprint arXiv:2004.14003</span>
-<span class="sd">    (2020).</span>
+<span class="sd">    References:</span>
+<span class="sd">        Desai, et al., &quot;The International Workshop on Osteoarthritis Imaging Knee</span>
+<span class="sd">        MRI Segmentation Challenge: A Multi-Institute Evaluation and Analysis</span>
+<span class="sd">        Framework on a Standardized Dataset.&quot; arXiv preprint arXiv:2004.14003</span>
+<span class="sd">        (2020). `[link] &lt;https://arxiv.org/abs/2004.14003&gt;`_</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ALIASES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;iwoai-2019-t6&#39;</span><span class="p">]</span>
     <span class="n">_WEIGHTS_FILE</span> <span class="o">=</span> <span class="s2">&quot;iwoai-2019-unet2d_fc-tc-pc-men_weights.h5&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">weights_path</span><span class="p">,</span> <span class="n">force_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="IWOAIOAIUnet2D.__init__"><a class="viewcode-back" href="../../../general/generate/dosma.models.IWOAIOAIUnet2D.html#dosma.models.oaiunet2d.IWOAIOAIUnet2D.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">weights_path</span><span class="p">,</span> <span class="n">force_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">force_weights</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">weights_path</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_WEIGHTS_FILE</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Weights </span><span class="si">{weights_path}</span><span class="s2"> not supported for {type(self)}&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Weights </span><span class="si">{</span><span class="n">weights_path</span><span class="si">}</span><span class="s2"> not supported for </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">weights_path</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">weights_path</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">__load_keras_model__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
         <span class="k">if</span> <span class="p">(</span>
@@ -418,7 +425,7 @@
         <span class="n">vol_copy</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">volume</span><span class="p">)</span>
 
         <span class="c1"># reorient to the sagittal plane</span>
-        <span class="n">vol_copy</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="n">SAGITTAL</span><span class="p">)</span>
+        <span class="n">vol_copy</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="n">SAGITTAL</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">vol</span> <span class="o">=</span> <span class="n">vol_copy</span><span class="o">.</span><span class="n">volume</span>
         <span class="n">vol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__preprocess_volume__</span><span class="p">(</span><span class="n">vol</span><span class="p">)</span>
@@ -442,7 +449,7 @@
             <span class="n">vol_cp</span><span class="o">.</span><span class="n">volume</span> <span class="o">=</span> <span class="n">mask</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
 
             <span class="c1"># reorient to match with original volume</span>
-            <span class="n">vol_cp</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="n">volume</span><span class="o">.</span><span class="n">orientation</span><span class="p">)</span>
+            <span class="n">vol_cp</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="n">volume</span><span class="o">.</span><span class="n">orientation</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">vols</span><span class="p">[</span><span class="n">category</span><span class="p">]</span> <span class="o">=</span> <span class="n">vol_cp</span>
 
         <span class="k">return</span> <span class="n">vols</span></div>
@@ -451,21 +458,24 @@
         <span class="k">return</span> <span class="n">volume</span></div>
 
 
-<div class="viewcode-block" id="IWOAIOAIUnet2DNormalized"><a class="viewcode-back" href="../../../dosma.models.html#dosma.models.oaiunet2d.IWOAIOAIUnet2DNormalized">[docs]</a><span class="k">class</span> <span class="nc">IWOAIOAIUnet2DNormalized</span><span class="p">(</span><span class="n">IWOAIOAIUnet2D</span><span class="p">):</span>
+<div class="viewcode-block" id="IWOAIOAIUnet2DNormalized"><a class="viewcode-back" href="../../../general/generate/dosma.models.IWOAIOAIUnet2DNormalized.html#dosma.models.oaiunet2d.IWOAIOAIUnet2DNormalized">[docs]</a><span class="k">class</span> <span class="nc">IWOAIOAIUnet2DNormalized</span><span class="p">(</span><span class="n">IWOAIOAIUnet2D</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extension of model trained by Team 6 in the 2019 IWOAI Segmentation</span>
+<span class="sd">    Challenge (with normalization).</span>
+
+<span class="sd">    This model uses the same architecture as :class:`IWOAIOAIUnet2D`,</span>
+<span class="sd">    but pre-processes the input data by zero-mean, unit-std normalization.</span>
+
+<span class="sd">    References:</span>
+<span class="sd">        Desai, et al., &quot;The International Workshop on Osteoarthritis Imaging Knee</span>
+<span class="sd">        MRI Segmentation Challenge: A Multi-Institute Evaluation and Analysis</span>
+<span class="sd">        Framework on a Standardized Dataset.&quot; arXiv preprint arXiv:2004.14003</span>
+<span class="sd">        (2020).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">ALIASES</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;iwoai-2019-t6-normalized&#39;</span><span class="p">,)</span>
     <span class="n">_WEIGHTS_FILE</span> <span class="o">=</span> <span class="s2">&quot;iwoai-2019-unet2d-normalized_fc-tc-pc-men_weights.h5&quot;</span>
 
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Extension of model trained by Team 6 in the 2019 IWOAI Segmentation Challenge.</span>
-<span class="sd">    This model pre-processes the data by zero-mean, unit-std normalization.</span>
-
-<span class="sd">    Paper:</span>
-
-<span class="sd">    Desai, et al., &quot;The International Workshop on Osteoarthritis Imaging Knee</span>
-<span class="sd">    MRI Segmentation Challenge: A Multi-Institute Evaluation and Analysis</span>
-<span class="sd">    Framework on a Standardized Dataset.&quot; arXiv preprint arXiv:2004.14003</span>
-<span class="sd">    (2020).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__preprocess_volume__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">volume</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">whiten_volume</span><span class="p">(</span><span class="n">volume</span><span class="p">)</span></div>
 </pre></div>
@@ -474,20 +484,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019-2020, Arjun Desai
+        &#169; Copyright 2019-2020, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -495,7 +510,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

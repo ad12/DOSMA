@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>dosma.data_io.orientation &mdash; dosma 0.0.12.dev1 documentation</title>
+  <title>dosma.data_io.orientation &mdash; dosma 0.0.12.dev2 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -72,6 +75,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -82,6 +86,7 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/user_guide.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/documentation.html">Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/faq.html">FAQs</a></li>
@@ -90,6 +95,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -124,11 +130,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -148,43 +156,60 @@
            <div itemprop="articleBody">
             
   <h1>Source code for dosma.data_io.orientation</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Standardized orientation among different libraries.</span>
+<span></span><span class="sd">&quot;&quot;&quot;Standardized orientation convention and utilities.</span>
 
-<span class="sd">Various libraries have different ways to interpret information read from various image formats (Dicom, NIfTi, etc)</span>
-<span class="sd">Here, we standardize the orientation for this framework.</span>
+<span class="sd">Medical image orientation convention is library and image format (DICOM, NIfTI, etc.)</span>
+<span class="sd">dependent and is often difficult to interpret. This makes it challenging to intelligently</span>
+<span class="sd">and rapidly reformat images.</span>
 
-<span class="sd">We indicate how to translate reading/writing orientations from current libraries (Nibabel, PyDicom, etc)</span>
+<span class="sd">We adopt a easily interpretable orientation representation</span>
+<span class="sd">for the dimensions and define utilities to convert between different orientation formats</span>
+<span class="sd">from current libraries (Nibabel, PyDicom, ITK, etc).</span>
 
-<span class="sd">Orientation Conventions:</span>
-<span class="sd">-------------------------</span>
-<span class="sd">- All orientations are in patient voxel coordinates - i.e. (i, j, k) --&gt; voxel at numpy array position [i, j, k]</span>
-<span class="sd">- Left: corresponds to patient (not observer) left, RIGHT: corresponds to patient (not observer) right</span>
+<span class="sd">Orientations are represented by string axis codes:</span>
 
-<span class="sd">Standard Orientation format:</span>
-<span class="sd">----------------------------</span>
-<span class="sd">All directions point to the increasing direction - i.e. from -x to x</span>
-<span class="sd">- &quot;LR&quot;: left to right; &quot;RL&quot;: right to left</span>
-<span class="sd">- &quot;PA&quot;: posterior to anterior; &quot;AP&quot;: anterior to posterior</span>
-<span class="sd">- &quot;IS&quot;: inferior to superior; &quot;SI&quot;: superior to inferior</span>
+<span class="sd">- ``&quot;LR&quot;``: left to right; ``&quot;RL&quot;``: right to left</span>
+<span class="sd">- ``&quot;PA&quot;``: posterior to anterior; ``&quot;AP&quot;``: anterior to posterior</span>
+<span class="sd">- ``&quot;IS&quot;``: inferior to superior; ``&quot;SI&quot;``: superior to inferior</span>
 
-<span class="sd">Affine Matrix format:</span>
-<span class="sd">---------------------</span>
-<span class="sd">The affine matrix (A) is formatted in nibabel.affine matrix format following the standard orientation format above</span>
-<span class="sd">The affine matrix converts pixel coordinates (i, j, k) into world (NIfTI) coordinates (x, y, z)</span>
+<span class="sd">A :class:`MedicalVolume` object with orientation ``(&quot;SI&quot;, &quot;AP&quot;, &quot;LR&quot;)`` has an</span>
+<span class="sd">array where the first dimension spans superior -&gt; inferior, the second dimension</span>
+<span class="sd">spans anterior -&gt; posterior, and the third dimension spans left -&gt; right. Voxel</span>
+<span class="sd">at (i,j,k) index ``(0,0,0)`` would be the (superior, anterior, left) corner.</span>
 
-<span class="sd">[x, y, z, 1]&#39; = A * [i, j, k, 1]&#39;</span>
+<span class="sd">In many cases, images are not acquired in the standard plane convention, but rather</span>
+<span class="sd">in a rotated frame. In this case, the orientations correspond to the closest axis</span>
+<span class="sd">the a particular dimension.</span>
 
-<span class="sd">e.g.:</span>
+<span class="sd">Two general conventions are followed:</span>
 
-<span class="sd">| x |       [  0.        ,   0.        ,   1.5       , -61.66970062]     | i |</span>
-<span class="sd">| y |   =   [ -0.3125    ,   0.        ,   0.        ,  50.85160065]  *  | j |</span>
-<span class="sd">| z |       [  0.        ,  -0.3125    ,   0.        ,  88.58760071]     | k |</span>
-<span class="sd">| 1 |       [  0.        ,   0.        ,   0.        ,   1.        ]     | 1 |</span>
+<span class="sd">- All orientations are in patient voxel coordinates. Image data from (i, j, k)</span>
+<span class="sd">  corresponds to the voxel at array position ``arr[i,j,k]``.</span>
+<span class="sd">- Left: corresponds to patient (not observer) left,</span>
+<span class="sd">  right: corresponds to patient (not observer) right.</span>
 
-<span class="sd">Attributes:</span>
-<span class="sd">    SAGITTAL (tuple[str]): Image orientation for sagittal scans.</span>
-<span class="sd">    CORONAL (tuple[str]): Image orientation for coronal scans.</span>
-<span class="sd">    AXIAL (tuple[str]): Image orientation for axial scans.</span>
+<span class="sd">We adopt the RAS+ standard (as defined by NIfTI) for orienting our images. </span>
+<span class="sd">The ``+`` in RAS+ indicates that all directions point to the increasing direction.</span>
+<span class="sd">i.e. from -x to x:.</span>
+
+<span class="sd">Image spacing, direction, and global origin are represented by a 4x4 affine matrix (:math:`A`) and</span>
+<span class="sd">is identical to the nibabel affine matrix (see `nibabel &lt;https://nipy.org/nibabel/coordinate_systems.html&gt;`_).</span>
+<span class="sd">The affine matrix converts pixel coordinates (i, j, k) into world (NIfTI) coordinates (x, y, z).</span>
+
+<span class="sd">.. math::</span>
+
+<span class="sd">    \\begin{bmatrix} x\\\\y\\\\z\\\\1\\end{bmatrix} = A \\begin{bmatrix} i\\\\j\\\\k\\\\1\\end{bmatrix}</span>
+<span class="sd">    </span>
+
+<span class="sd">For example,</span>
+
+<span class="sd">.. math::</span>
+
+<span class="sd">    \\begin{bmatrix} x\\\\y\\\\z\\\\1 \\end{bmatrix} = </span>
+<span class="sd">    \\begin{bmatrix} 0 &amp; 0 &amp; 1.5 &amp; -61.6697\\\\-0.3125 &amp; 0 &amp; 0 &amp; 50.8516\\\\0 &amp; -0.3125 &amp; 0 &amp; 88.5876\\\\0 &amp; 0 &amp; 0 &amp; 1 \\end{bmatrix}</span>
+<span class="sd">    \\begin{bmatrix} i\\\\j\\\\k\\\\1\\end{bmatrix}</span>
+
+<span class="sd">For details on how the affine matrix is used for reformatting see :class:`dosma.data_io.MedicalVolume`.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;get_transpose_inds&quot;</span><span class="p">,</span> <span class="s2">&quot;get_flip_inds&quot;</span><span class="p">,</span> <span class="s2">&quot;orientation_nib_to_standard&quot;</span><span class="p">,</span> <span class="s2">&quot;orientation_standard_to_nib&quot;</span><span class="p">,</span>
@@ -226,9 +251,12 @@
 
 
 <div class="viewcode-block" id="get_transpose_inds"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.orientation.get_transpose_inds">[docs]</a><span class="k">def</span> <span class="nf">get_transpose_inds</span><span class="p">(</span><span class="n">curr_orientation</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">new_orientation</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get indices for transposing orientation axes to format volume in different plane.</span>
+    <span class="sd">&quot;&quot;&quot;Get indices for reordering planes from ``curr_orientation`` to ``new_orientation``.</span>
 
-<span class="sd">    i.e. sagittal &lt;--&gt; axial, sagittal &lt;--&gt; coronal, coronal &lt;--&gt; axial</span>
+<span class="sd">    Only permuted order of reformatting the image planes is returned.</span>
+<span class="sd">    For example, ``(&quot;SI&quot;, &quot;AP&quot;, &quot;LR&quot;)`` and ``(&quot;IS&quot;, &quot;PA&quot;, &quot;RL&quot;)`` will have no permuted</span>
+<span class="sd">    indices because &quot;SI&quot;/&quot;IS&quot;, &quot;AP&quot;/&quot;PA&quot; and &quot;RL&quot;/&quot;LR&quot; each correspond to the same</span>
+<span class="sd">    plane.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        curr_orientation (tuple[str]): Current image orientation.</span>
@@ -236,6 +264,12 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tuple[int]: Axes to transpose to change orientation.</span>
+<span class="sd">    </span>
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; get_transpose_inds((&quot;SI&quot;, &quot;AP&quot;, &quot;LR&quot;), (&quot;AP&quot;, &quot;SI&quot;, &quot;LR&quot;))</span>
+<span class="sd">        (1,0,2)</span>
+<span class="sd">        &gt;&gt;&gt; get_transpose_inds((&quot;SI&quot;, &quot;AP&quot;, &quot;LR&quot;), (&quot;IS&quot;, &quot;PA&quot;, &quot;RL&quot;))</span>
+<span class="sd">        (0,1,2)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">__check_orientation__</span><span class="p">(</span><span class="n">curr_orientation</span><span class="p">)</span>
     <span class="n">__check_orientation__</span><span class="p">(</span><span class="n">new_orientation</span><span class="p">)</span>
@@ -252,17 +286,22 @@
 
 
 <div class="viewcode-block" id="get_flip_inds"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.orientation.get_flip_inds">[docs]</a><span class="k">def</span> <span class="nf">get_flip_inds</span><span class="p">(</span><span class="n">curr_orientation</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">new_orientation</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get indices for flipping orientation around axis - i.e. x --&gt; -x, y --&gt; -y, z --&gt; -z.</span>
+    <span class="sd">&quot;&quot;&quot;Get indices to flip from ``curr_orientation`` to ``new_orientation``.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        curr_orientation (tuple[str]): Current image orientation.</span>
 <span class="sd">        new_orientation (tuple[str]): New image orientation.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        list[int]: Axes in volume to flip.</span>
+<span class="sd">        list[int]: Axes to flip.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        ValueError: If mismatch in orientation indices. To avoid this error, apply transpose prior to flipping.</span>
+<span class="sd">        ValueError: If mismatch in orientation indices. To avoid this error,</span>
+<span class="sd">            use :func:`get_transpose_inds` prior to flipping.</span>
+<span class="sd">    </span>
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; get_transpose_inds((&quot;SI&quot;, &quot;AP&quot;, &quot;LR&quot;), (&quot;IS&quot;, &quot;AP&quot;, &quot;RL&quot;))</span>
+<span class="sd">        [0, 2]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">__check_orientation__</span><span class="p">(</span><span class="n">curr_orientation</span><span class="p">)</span>
     <span class="n">__check_orientation__</span><span class="p">(</span><span class="n">new_orientation</span><span class="p">)</span>
@@ -288,13 +327,17 @@
 
 
 <div class="viewcode-block" id="orientation_nib_to_standard"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.orientation.orientation_nib_to_standard">[docs]</a><span class="k">def</span> <span class="nf">orientation_nib_to_standard</span><span class="p">(</span><span class="n">nib_orientation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Convert Nibabel orientation to the standard orientation format.</span>
+    <span class="sd">&quot;&quot;&quot;Convert Nibabel orientation to the standard dosma orientation format.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        nib_orientation: a RAS+ tuple orientation used by Nibabel.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tuple[str]: Image orientation in the standard orientation format.</span>
+<span class="sd">    </span>
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; orientation_nib_to_standard((&quot;R&quot;, &quot;A&quot;, &quot;S&quot;))</span>
+<span class="sd">        (&quot;LR&quot;, &quot;PA&quot;, &quot;IS&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">orientation</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">symb</span> <span class="ow">in</span> <span class="n">nib_orientation</span><span class="p">:</span>
@@ -303,13 +346,17 @@
 
 
 <div class="viewcode-block" id="orientation_standard_to_nib"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.orientation.orientation_standard_to_nib">[docs]</a><span class="k">def</span> <span class="nf">orientation_standard_to_nib</span><span class="p">(</span><span class="n">orientation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Convert standard orientation format to Nibabel orientation.</span>
+    <span class="sd">&quot;&quot;&quot;Convert standard dosma orientation format to Nibabel orientation.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        orientation: Image orientation in the standard orientation format.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tuple[str]: RAS+ tuple orientation used by Nibabel.</span>
+<span class="sd">    </span>
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; orientation_nib_to_standard((&quot;LR&quot;, &quot;PA&quot;, &quot;IS&quot;))</span>
+<span class="sd">        (&quot;R&quot;, &quot;A&quot;, &quot;S&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">nib_orientation</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">symb</span> <span class="ow">in</span> <span class="n">orientation</span><span class="p">:</span>
@@ -321,20 +368,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019-2020, Arjun Desai
+        &#169; Copyright 2019-2020, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -342,7 +394,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

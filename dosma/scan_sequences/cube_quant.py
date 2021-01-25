@@ -30,6 +30,18 @@ __T1_RHO_DECIMAL_PRECISION__ = 3
 
 
 class CubeQuant(NonTargetSequence):
+    """CubeQuant MRI sequence.
+
+    Cubequant is a 3D fast-spin-echo (FSE) :math:`T_{1\\rho}`-weighted sequence.
+    Acquisitions between spin-locks are susceptible to motion, and as a result,
+    volumes within the scan have to be registered to each other (i.e. intra-registered).
+    Intra-registration across different spin-locks is done by default upon construction.
+
+    Moreover, CubeQuant scans often have lower resolution to increase SNR in practice.
+    Because of the low-resolution, these scans are often registered to higher resolution
+    target scans. This can be done using :meth:`CubeQuant.interregister`.
+    """
+
     NAME = "cubequant"
 
     def __init__(self, dicom_path=None, load_path=None, **kwargs):

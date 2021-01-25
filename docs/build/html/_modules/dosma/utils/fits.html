@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>dosma.utils.fits &mdash; dosma 0.0.12.dev1 documentation</title>
+  <title>dosma.utils.fits &mdash; dosma 0.0.12.dev2 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -72,6 +75,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -82,6 +86,7 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/user_guide.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/documentation.html">Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/faq.html">FAQs</a></li>
@@ -90,6 +95,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -124,11 +130,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -185,7 +193,7 @@
 
 
 <div class="viewcode-block" id="MonoExponentialFit"><a class="viewcode-back" href="../../../dosma.utils.html#dosma.utils.fits.MonoExponentialFit">[docs]</a><span class="k">class</span> <span class="nc">MonoExponentialFit</span><span class="p">(</span><span class="n">_Fit</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Fit quantitative  using mono-exponential fit of model :math:`A*exp(b*t)`.</span>
+    <span class="sd">&quot;&quot;&quot;Fit quantitative values using mono-exponential fit of model :math:`a*exp(t/tc)`.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        ts (:obj:`array-like`): 1D array of times in milliseconds (typically echo times) corresponding to different</span>
@@ -212,20 +220,16 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`len(ts)`=</span><span class="si">{:d}</span><span class="s2">, but `len(subvolumes)`=</span><span class="si">{:d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ts</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">subvolumes</span><span class="p">)))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ts</span> <span class="o">=</span> <span class="n">ts</span>
 
+        <span class="n">orientation</span> <span class="o">=</span> <span class="n">subvolumes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">orientation</span>
+        <span class="n">subvolumes</span> <span class="o">=</span> <span class="p">[</span><span class="n">sv</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="n">orientation</span><span class="p">)</span> <span class="k">for</span> <span class="n">sv</span> <span class="ow">in</span> <span class="n">subvolumes</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subvolumes</span> <span class="o">=</span> <span class="n">subvolumes</span>
 
         <span class="k">if</span> <span class="n">mask</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;`mask` must be a MedicalVolume&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="n">orientation</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">=</span> <span class="n">num_workers</span>
-
-        <span class="n">orientation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subvolumes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">orientation</span>
-        <span class="k">for</span> <span class="n">sv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">subvolumes</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
-            <span class="n">sv</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="n">orientation</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">reformat</span><span class="p">(</span><span class="n">orientation</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`bounds` should provide lower/upper bound in format (lb, ub)&quot;</span><span class="p">)</span>
@@ -296,7 +300,10 @@
     <span class="n">ftol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span> <span class="n">show_pbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Use non-linear least squares to fit a function ``func`` to data.</span>
+
+<span class="sd">    Uses :func:`scipy.optimize.curve_fit` backbone.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        func (callable): The model function, f(x, ...). It must take the independent variable </span>
 <span class="sd">            as the first argument and the parameters to fit as separate remaining arguments.</span>
@@ -466,20 +473,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019-2020, Arjun Desai
+        &#169; Copyright 2019-2020, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -487,7 +499,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

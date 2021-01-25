@@ -1,8 +1,8 @@
 .. _scans:
 
-Scans
+Scans (dosma.scan_sequences)
 ================================================================================
-DOSMA currently supports 4 scan types:
+DOSMA currently supports 4 MRI scan types:
 
 1. Quantitative DESS (qDESS)
 2. CubeQuant
@@ -14,6 +14,17 @@ Each scan implements a subset of the following actions:
 1. **Segment** tissues from scan
 2. **Interregister** to register between lower resolution (moving) and higher resolution (target) scans
 3. **Quantitative fitting** for voxel-wise parameter maps.
+
+.. automodule::
+   dosma.scan_sequences
+
+.. autosummary::
+   :nosignatures:
+
+   dosma.scan_sequences.QDess
+   dosma.scan_sequences.CubeQuant
+   dosma.scan_sequences.Mapss
+   dosma.scan_sequences.Cones
 
 Below we briefly discuss the different scan types and associated actions.
 

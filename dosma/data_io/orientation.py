@@ -1,40 +1,57 @@
-"""Standardized orientation among different libraries.
+"""Standardized orientation convention and utilities.
 
-Various libraries have different ways to interpret information read from various image formats (Dicom, NIfTi, etc)
-Here, we standardize the orientation for this framework.
+Medical image orientation convention is library and image format (DICOM, NIfTI, etc.)
+dependent and is often difficult to interpret. This makes it challenging to intelligently
+and rapidly reformat images.
 
-We indicate how to translate reading/writing orientations from current libraries (Nibabel, PyDicom, etc)
+We adopt a easily interpretable orientation representation
+for the dimensions and define utilities to convert between different orientation formats
+from current libraries (Nibabel, PyDicom, ITK, etc).
 
-Orientation Conventions:
--------------------------
-- All orientations are in patient voxel coordinates - i.e. (i, j, k) --> voxel at numpy array position [i, j, k]
-- Left: corresponds to patient (not observer) left, RIGHT: corresponds to patient (not observer) right
+Orientations are represented by string axis codes:
 
-Standard Orientation format:
-----------------------------
-All directions point to the increasing direction - i.e. from -x to x
-- "LR": left to right; "RL": right to left
-- "PA": posterior to anterior; "AP": anterior to posterior
-- "IS": inferior to superior; "SI": superior to inferior
+- ``"LR"``: left to right; ``"RL"``: right to left
+- ``"PA"``: posterior to anterior; ``"AP"``: anterior to posterior
+- ``"IS"``: inferior to superior; ``"SI"``: superior to inferior
 
-Affine Matrix format:
----------------------
-The affine matrix (A) is formatted in nibabel.affine matrix format following the standard orientation format above
-The affine matrix converts pixel coordinates (i, j, k) into world (NIfTI) coordinates (x, y, z)
+A :class:`MedicalVolume` object with orientation ``("SI", "AP", "LR")`` has an
+array where the first dimension spans superior -> inferior, the second dimension
+spans anterior -> posterior, and the third dimension spans left -> right. Voxel
+at (i,j,k) index ``(0,0,0)`` would be the (superior, anterior, left) corner.
 
-[x, y, z, 1]' = A * [i, j, k, 1]'
+In many cases, images are not acquired in the standard plane convention, but rather
+in a rotated frame. In this case, the orientations correspond to the closest axis
+the a particular dimension.
 
-e.g.:
+Two general conventions are followed:
 
-| x |       [  0.        ,   0.        ,   1.5       , -61.66970062]     | i |
-| y |   =   [ -0.3125    ,   0.        ,   0.        ,  50.85160065]  *  | j |
-| z |       [  0.        ,  -0.3125    ,   0.        ,  88.58760071]     | k |
-| 1 |       [  0.        ,   0.        ,   0.        ,   1.        ]     | 1 |
+- All orientations are in patient voxel coordinates. Image data from (i, j, k)
+  corresponds to the voxel at array position ``arr[i,j,k]``.
+- Left: corresponds to patient (not observer) left,
+  right: corresponds to patient (not observer) right.
 
-Attributes:
-    SAGITTAL (tuple[str]): Image orientation for sagittal scans.
-    CORONAL (tuple[str]): Image orientation for coronal scans.
-    AXIAL (tuple[str]): Image orientation for axial scans.
+We adopt the RAS+ standard (as defined by NIfTI) for orienting our images. 
+The ``+`` in RAS+ indicates that all directions point to the increasing direction.
+i.e. from -x to x:.
+
+Image spacing, direction, and global origin are represented by a 4x4 affine matrix (:math:`A`) and
+is identical to the nibabel affine matrix (see `nibabel <https://nipy.org/nibabel/coordinate_systems.html>`_).
+The affine matrix converts pixel coordinates (i, j, k) into world (NIfTI) coordinates (x, y, z).
+
+.. math::
+
+    \\begin{bmatrix} x\\\\y\\\\z\\\\1\\end{bmatrix} = A \\begin{bmatrix} i\\\\j\\\\k\\\\1\\end{bmatrix}
+
+
+For example,
+
+.. math::
+
+    \\begin{bmatrix} x\\\\y\\\\z\\\\1 \\end{bmatrix} =
+    \\begin{bmatrix} 0 & 0 & 1.5 & -61.6697\\\\-0.3125 & 0 & 0 & 50.8516\\\\0 & -0.3125 & 0 & 88.5876\\\\0 & 0 & 0 & 1 \\end{bmatrix}
+    \\begin{bmatrix} i\\\\j\\\\k\\\\1\\end{bmatrix}
+
+For details on how the affine matrix is used for reformatting see :class:`dosma.data_io.MedicalVolume`.
 """
 
 __all__ = ["get_transpose_inds", "get_flip_inds", "orientation_nib_to_standard", "orientation_standard_to_nib",
@@ -76,9 +93,12 @@ def __check_orientation__(orientation: tuple):
 
 
 def get_transpose_inds(curr_orientation: tuple, new_orientation: tuple):
-    """Get indices for transposing orientation axes to format volume in different plane.
+    """Get indices for reordering planes from ``curr_orientation`` to ``new_orientation``.
 
-    i.e. sagittal <--> axial, sagittal <--> coronal, coronal <--> axial
+    Only permuted order of reformatting the image planes is returned.
+    For example, ``("SI", "AP", "LR")`` and ``("IS", "PA", "RL")`` will have no permuted
+    indices because "SI"/"IS", "AP"/"PA" and "RL"/"LR" each correspond to the same
+    plane.
 
     Args:
         curr_orientation (tuple[str]): Current image orientation.
@@ -86,6 +106,12 @@ def get_transpose_inds(curr_orientation: tuple, new_orientation: tuple):
 
     Returns:
         tuple[int]: Axes to transpose to change orientation.
+
+    Examples:
+        >>> get_transpose_inds(("SI", "AP", "LR"), ("AP", "SI", "LR"))
+        (1,0,2)
+        >>> get_transpose_inds(("SI", "AP", "LR"), ("IS", "PA", "RL"))
+        (0,1,2)
     """
     __check_orientation__(curr_orientation)
     __check_orientation__(new_orientation)
@@ -102,17 +128,22 @@ def get_transpose_inds(curr_orientation: tuple, new_orientation: tuple):
 
 
 def get_flip_inds(curr_orientation: tuple, new_orientation: tuple):
-    """Get indices for flipping orientation around axis - i.e. x --> -x, y --> -y, z --> -z.
+    """Get indices to flip from ``curr_orientation`` to ``new_orientation``.
 
     Args:
         curr_orientation (tuple[str]): Current image orientation.
         new_orientation (tuple[str]): New image orientation.
 
     Returns:
-        list[int]: Axes in volume to flip.
+        list[int]: Axes to flip.
 
     Raises:
-        ValueError: If mismatch in orientation indices. To avoid this error, apply transpose prior to flipping.
+        ValueError: If mismatch in orientation indices. To avoid this error,
+            use :func:`get_transpose_inds` prior to flipping.
+
+    Examples:
+        >>> get_transpose_inds(("SI", "AP", "LR"), ("IS", "AP", "RL"))
+        [0, 2]
     """
     __check_orientation__(curr_orientation)
     __check_orientation__(new_orientation)
@@ -138,13 +169,17 @@ __nib_to_standard_orientation_map__ = {'R': 'LR', 'L': 'RL',
 
 
 def orientation_nib_to_standard(nib_orientation):
-    """Convert Nibabel orientation to the standard orientation format.
+    """Convert Nibabel orientation to the standard dosma orientation format.
 
     Args:
         nib_orientation: a RAS+ tuple orientation used by Nibabel.
 
     Returns:
         tuple[str]: Image orientation in the standard orientation format.
+
+    Examples:
+        >>> orientation_nib_to_standard(("R", "A", "S"))
+        ("LR", "PA", "IS")
     """
     orientation = []
     for symb in nib_orientation:
@@ -153,13 +188,17 @@ def orientation_nib_to_standard(nib_orientation):
 
 
 def orientation_standard_to_nib(orientation):
-    """Convert standard orientation format to Nibabel orientation.
+    """Convert standard dosma orientation format to Nibabel orientation.
 
     Args:
         orientation: Image orientation in the standard orientation format.
 
     Returns:
         tuple[str]: RAS+ tuple orientation used by Nibabel.
+
+    Examples:
+        >>> orientation_nib_to_standard(("LR", "PA", "IS"))
+        ("R", "A", "S")
     """
     nib_orientation = []
     for symb in orientation:

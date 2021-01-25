@@ -1,6 +1,6 @@
 .. _tissues:
 
-Tissues
+Tissues (dosma.tissues)
 ================================================================================
 This page details the different tissues that are supported by DOSMA and briefly
 explains the methods used for analysis and visualization.
@@ -19,6 +19,17 @@ DOSMA currently supports 4 tissues:
 Different tissues have different quantitative profiles, visualization methods, and
 analysis techniques. The modules for the supported tissues implement and use these
 differences for analysis of each tissue.
+
+.. automodule::
+   dosma.tissues
+
+.. autosummary::
+   :nosignatures:
+
+   dosma.tissues.FemoralCartilage
+   dosma.tissues.TibialCartilage
+   dosma.tissues.PatellarCartilage
+   dosma.tissues.Meniscus
 
 Femoral Cartilage
 ---------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 .. _seg_models:
 
-Segmentation Models
+Segmentation Models (dosma.models)
 ================================================================================
 DOSMA currently supports pre-trained models for segmenting, each described in detail below.
 Model aliases are string fields used to distinguish/specify particular models in DOSMA (command-line
@@ -8,6 +8,16 @@ argument :code:`--model`).
 
 All models are open-sourced under the GNU General Public License v3.0 license.
 If you use these models, please reference both DOSMA and the original work.
+
+.. automodule::
+   dosma.models
+
+.. autosummary::
+   :nosignatures:
+
+   dosma.models.OAIUnet2D
+   dosma.models.IWOAIOAIUnet2D
+   dosma.models.IWOAIOAIUnet2DNormalized
 
 
 OAI 2D U-Net

@@ -13,6 +13,7 @@ DOSMA is an open-source Python library and application for musculoskeletal (MSK)
 
    general/introduction
    general/installation
+   general/user_guide
    general/documentation
    general/usage
    general/faq

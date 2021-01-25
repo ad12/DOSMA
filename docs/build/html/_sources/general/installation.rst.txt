@@ -48,6 +48,7 @@ If you will be using this functionality, please follow the instructions below.
 We understand this process may be involved and are actively working on more effective methods to distribute these
 weights.
 
+.. _install-setup-registration:
 
 Registration
 ############

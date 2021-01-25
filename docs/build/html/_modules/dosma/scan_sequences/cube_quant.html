@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>dosma.scan_sequences.cube_quant &mdash; dosma 0.0.12.dev1 documentation</title>
+  <title>dosma.scan_sequences.cube_quant &mdash; dosma 0.0.12.dev2 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -72,6 +75,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -82,6 +86,7 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../general/user_guide.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/documentation.html">Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../general/faq.html">FAQs</a></li>
@@ -90,6 +95,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -124,11 +130,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -179,10 +187,22 @@
 <span class="n">__T1_RHO_DECIMAL_PRECISION__</span> <span class="o">=</span> <span class="mi">3</span>
 
 
-<div class="viewcode-block" id="CubeQuant"><a class="viewcode-back" href="../../../dosma.scan_sequences.html#dosma.scan_sequences.cube_quant.CubeQuant">[docs]</a><span class="k">class</span> <span class="nc">CubeQuant</span><span class="p">(</span><span class="n">NonTargetSequence</span><span class="p">):</span>
+<div class="viewcode-block" id="CubeQuant"><a class="viewcode-back" href="../../../general/generated/dosma.scan_sequences.CubeQuant.html#dosma.scan_sequences.cube_quant.CubeQuant">[docs]</a><span class="k">class</span> <span class="nc">CubeQuant</span><span class="p">(</span><span class="n">NonTargetSequence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;CubeQuant MRI sequence.</span>
+
+<span class="sd">    Cubequant is a 3D fast-spin-echo (FSE) :math:`T_{1\\rho}`-weighted sequence.</span>
+<span class="sd">    Acquisitions between spin-locks are susceptible to motion, and as a result,</span>
+<span class="sd">    volumes within the scan have to be registered to each other (i.e. intra-registered).</span>
+<span class="sd">    Intra-registration across different spin-locks is done by default upon construction.</span>
+
+<span class="sd">    Moreover, CubeQuant scans often have lower resolution to increase SNR in practice.</span>
+<span class="sd">    Because of the low-resolution, these scans are often registered to higher resolution</span>
+<span class="sd">    target scans. This can be done using :meth:`CubeQuant.interregister`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">NAME</span> <span class="o">=</span> <span class="s2">&quot;cubequant&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dicom_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">load_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="CubeQuant.__init__"><a class="viewcode-back" href="../../../general/generated/dosma.scan_sequences.CubeQuant.html#dosma.scan_sequences.cube_quant.CubeQuant.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dicom_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">load_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subvolumes</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">spin_lock_times</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">intraregistered_data</span> <span class="o">=</span> <span class="kc">None</span>
@@ -193,7 +213,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">intraregistered_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__intraregister__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subvolumes</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subvolumes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either dicom_path or load_path must be specified&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either dicom_path or load_path must be specified&quot;</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">__validate_scan__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">True</span>
@@ -427,20 +447,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019-2020, Arjun Desai
+        &#169; Copyright 2019-2020, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -448,7 +473,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

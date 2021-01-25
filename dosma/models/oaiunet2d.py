@@ -25,8 +25,8 @@ __all__ = ["OAIUnet2D", "IWOAIOAIUnet2D", "IWOAIOAIUnet2DNormalized"]
 
 
 class OAIUnet2D(KerasSegModel):
-    """
-    Model trained in Chaudhari et al. IWOAI 2018
+    """Model trained in Chaudhari et al. IWOAI 2018
+
     Original Github: https://github.com/akshaysc/msk_segmentation
     """
     ALIASES = ['oai-unet2d', 'oai_unet2d']
@@ -163,12 +163,11 @@ class IWOAIOAIUnet2D(OAIUnet2D):
     """
     Model trained by Team 6 in the 2019 IWOAI Segmentation Challenge.
 
-    Paper:
-
-    Desai, et al., "The International Workshop on Osteoarthritis Imaging Knee
-    MRI Segmentation Challenge: A Multi-Institute Evaluation and Analysis
-    Framework on a Standardized Dataset." arXiv preprint arXiv:2004.14003
-    (2020).
+    References:
+        Desai, et al., "The International Workshop on Osteoarthritis Imaging Knee
+        MRI Segmentation Challenge: A Multi-Institute Evaluation and Analysis
+        Framework on a Standardized Dataset." arXiv preprint arXiv:2004.14003
+        (2020). `[link] <https://arxiv.org/abs/2004.14003>`_
     """
     ALIASES = ['iwoai-2019-t6']
     _WEIGHTS_FILE = "iwoai-2019-unet2d_fc-tc-pc-men_weights.h5"
@@ -302,19 +301,22 @@ class IWOAIOAIUnet2D(OAIUnet2D):
 
 
 class IWOAIOAIUnet2DNormalized(IWOAIOAIUnet2D):
+    """
+    Extension of model trained by Team 6 in the 2019 IWOAI Segmentation
+    Challenge (with normalization).
+
+    This model uses the same architecture as :class:`IWOAIOAIUnet2D`,
+    but pre-processes the input data by zero-mean, unit-std normalization.
+
+    References:
+        Desai, et al., "The International Workshop on Osteoarthritis Imaging Knee
+        MRI Segmentation Challenge: A Multi-Institute Evaluation and Analysis
+        Framework on a Standardized Dataset." arXiv preprint arXiv:2004.14003
+        (2020).
+    """
+
     ALIASES = ('iwoai-2019-t6-normalized',)
     _WEIGHTS_FILE = "iwoai-2019-unet2d-normalized_fc-tc-pc-men_weights.h5"
 
-    """
-    Extension of model trained by Team 6 in the 2019 IWOAI Segmentation Challenge.
-    This model pre-processes the data by zero-mean, unit-std normalization.
-
-    Paper:
-
-    Desai, et al., "The International Workshop on Osteoarthritis Imaging Knee
-    MRI Segmentation Challenge: A Multi-Institute Evaluation and Analysis
-    Framework on a Standardized Dataset." arXiv preprint arXiv:2004.14003
-    (2020).
-    """
     def __preprocess_volume__(self, volume: np.ndarray):
         return whiten_volume(volume)

@@ -34,7 +34,13 @@ __T2_STAR_DECIMAL_PRECISION__ = 3
 
 
 class Cones(NonTargetSequence):
-    """Handles analysis for Cones scan sequence."""
+    """UTE-Cones MRI sequence.
+
+    Ultra-short echo time cones (UTE-Cones) is a :math:`T_2^*`-weighted sequence.
+    In practice, many of these scans are low resolution and are ofter interregistered
+    with higher-resolution scans. This can be done with :meth:`Cones.interregister`.
+    """
+
     NAME = "cones"
 
     def __init__(self, dicom_path=None, load_path=None, **kwargs):

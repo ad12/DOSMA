@@ -41,6 +41,23 @@ __all__ = ["Mapss"]
 
 
 class Mapss(TargetSequence):
+    """MAPSS MRI sequence.
+
+    Magnetization‐prepared angle‐modulated partitioned k‐space spoiled gradient echo snapshots
+    (3D MAPSS) is a spoiled gradient (SPGR) sequence that reduce specific absorption rate (SAR),
+    increase SNR, and reduce the extent of retrospective correction of contaminating T1 effects.
+
+    The MAPSS sequence can be used to estimate both T1𝜌 and T2 quantitative values.
+    MAPSS scans must also be intra-registered to ensure alignment between all volumes
+    acquired at different echos and spin-lock times. Intra-registration is performed
+    automatically upon construction. :math:`T_2` and :`T_{1\\rho}` fitting is also supported.
+
+    References:
+        X Li, ET Han, RF Busse, S Majumdar. In vivo t1ρ mapping in
+        cartilage using 3d magnetization-prepared angle-modulated partitioned k-space spoiled
+        gradient echo snapshots (3d mapss). Magnetic Resonance in Medicine, 59(2):298–307 (2008).
+    """
+
     NAME = "mapss"
 
     def __init__(self, dicom_path=None, load_path=None, **kwargs):

@@ -35,7 +35,7 @@ class _Fit(ABC):
 
 
 class MonoExponentialFit(_Fit):
-    """Fit quantitative  using mono-exponential fit of model :math:`A*exp(b*t)`.
+    """Fit quantitative values using mono-exponential fit of model :math:`a*exp(t/tc)`.
 
     Args:
         ts (:obj:`array-like`): 1D array of times in milliseconds (typically echo times) corresponding to different
@@ -142,7 +142,10 @@ def curve_fit(
     ftol=1e-5, eps=1e-8, show_pbar=False, num_workers=0, 
     **kwargs,
 ):
-    """
+    """Use non-linear least squares to fit a function ``func`` to data.
+
+    Uses :func:`scipy.optimize.curve_fit` backbone.
+
     Args:
         func (callable): The model function, f(x, ...). It must take the independent variable 
             as the first argument and the parameters to fit as separate remaining arguments.
