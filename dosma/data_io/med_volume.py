@@ -2,6 +2,7 @@
 
 This module defines `MedicalVolume`, which is a wrapper for 3D volumes.
 """
+import warnings
 from copy import deepcopy
 from typing import List
 
@@ -23,8 +24,22 @@ __all__ = ["MedicalVolume"]
 class MedicalVolume(object):
     """Wrapper for 3D medical volumes.
 
-    Medical volumes are 3D matrices representing medical data. These volumes have inherent metadata, such as pixel/voxel
-        spacing, global coordinates, rotation information, which can be characterized by an affine matrix.
+    Medical volumes are 3D matrices representing medical data. These volumes have inherent
+    metadata, such as pixel/voxel spacing, global coordinates, rotation information, all of
+    which can be characterized by an affine matrix following the RAS+ coordinate system.
+
+    Standard math operations (add, subtract, multiply, divide, power) are supported with other
+    ``MedicalVolume`` objects, numpy arrays (following standard broadcasting), and scalars.
+    If performing operations between ``MedicalVolume`` objects, both objects must have
+    the same shape and affine matrix (spacing, direction, and origin). Header information
+    is not deep copied when performing these operations to reduce computational and memory
+    overhead. The affine matrix (``self.affine``) is copied as it is lightweight and
+    often modified.
+
+    2D images are also supported when viewed trivial 3D volumes with shape ``(H, W, 1)``.
+
+    Many operations are in-place and modify the instance directly. To allow
+    chaining operations, these operations return ``self``.
 
     Args:
         volume (np.ndarray): 3D volume.
@@ -53,8 +68,11 @@ class MedicalVolume(object):
 
         writer.save(self, file_path)
 
-    def reformat(self, new_orientation: tuple):
-        """Reorients volume to a specified orientation.
+    def reformat(self, new_orientation: tuple) -> "MedicalVolume":
+        """Reorients volume in-place to a specified orientation.
+
+        The volume array (``self.volume``) is flipped and transposed in-place
+        if possible.
 
         Reorientation method:
         ---------------------
@@ -73,6 +91,9 @@ class MedicalVolume(object):
 
         Args:
             new_orientation (tuple): New orientation.
+
+        Returns:
+            MedicalVolume: ``self``
         """
         # Check if new_orientation is the same as current orientation
         assert type(new_orientation) is tuple, "Orientation must be a tuple"
@@ -122,6 +143,19 @@ class MedicalVolume(object):
             str(self.orientation),
             str(new_orientation))
         self._volume = volume
+        return self
+
+    def reformat_as(self, other) -> "MedicalVolume":
+        """Reformat this to the same orientation as ``other``.
+        Equivalent to ``self.reformat(other.orientation)``.
+
+        Args:
+            other (MedicalVolume): The result volume has the same orientation as ``other``.
+
+        Returns:
+            MedicalVolume: ``self``
+        """
+        return self.reformat(other.orientation)
 
     def is_identical(self, mv):
         """Check if another medical volume is identical.
@@ -160,29 +194,52 @@ class MedicalVolume(object):
         else:
             return (mv.affine == self.affine).all()
 
-    def is_same_dimensions(self, mv, precision: int = None):
+    def is_same_dimensions(self, mv, precision: int = None, err: bool = False):
         """Check if two volumes have the same dimensions.
 
         Two volumes have the same dimensions if they have the same pixel_spacing, orientation, and scanner_origin.
 
         Args:
             mv (MedicalVolume): Volume to compare with.
-            precision (`int`, optional): Number of significant figures after the decimal. If not specified, check that
-                affine matrices between two volumes are identical. Defaults to `None`.
+            precision (`int`, optional): Number of significant figures after the decimal.
+                If not specified, check that affine matrices between two volumes are identical.
+                Defaults to `None`.
+            err (bool, optional): If `True` and volumes do not have same dimensions,
+                raise descriptive ValueError.
 
         Returns:
             bool: `True` if pixel spacing, orientation, and scanner origin between two volumes within tolerance, `False`
                 otherwise.
 
         Raises:
-            TypeError: If `mv` is not a MedicalVolume.
+            TypeError: If ``mv`` is not a MedicalVolume.
+            ValueError: If ``err=True`` and two volumes do not have same dimensions.
         """
-        if type(mv) != type(self):
-            raise TypeError("'mv' must be of type {}".format(str(type(self))))
+        if not isinstance(mv, MedicalVolume):
+            raise TypeError("`mv` must be a MedicalVolume.")
 
-        return self.__allclose_spacing(mv, precision) \
-               and mv.orientation == self.orientation \
-               and mv.volume.shape == self.volume.shape
+        is_close_spacing = self.__allclose_spacing(mv, precision)
+        is_same_orientation = mv.orientation == self.orientation
+        is_same_shape = mv.volume.shape == self.volume.shape
+        out = is_close_spacing and is_same_orientation and is_same_shape
+
+        if err and not out:
+            tol_str = f" (tol: 1e-{precision})" if precision else ""
+            if not is_close_spacing:
+                raise ValueError("Affine matrices not equal{}:\n{}\n{}".format(
+                    tol_str, self._affine, mv._affine,
+                ))
+            if not is_same_orientation:
+                raise ValueError("Orientations not equal: {}, {}".format(
+                    self.orientation, mv.orientation,
+                ))
+            if not is_same_shape:
+                raise ValueError("Shapes not equal: {}, {}".format(
+                    self._volume.shape, mv._volume.shape,
+                ))
+            assert False  # should not reach here
+
+        return out
 
     def match_orientation(self, mv):
         """Reorient another MedicalVolume to orientation specified by self.orientation.
@@ -190,6 +247,11 @@ class MedicalVolume(object):
         Args:
             mv (MedicalVolume): Volume to reorient.
         """
+        warnings.warn(
+            "`match_orientation` is deprecated and will be removed in v0.1. "
+            "Use `mv.reformat_as(self)` instead.",
+            DeprecationWarning
+        )
         if type(mv) != type(self):
             raise TypeError("'mv' must be of type {}".format(str(type(self))))
 
@@ -201,6 +263,11 @@ class MedicalVolume(object):
         Args:
             mvs (list[MedicalVolume]): Collection of MedicalVolumes.
         """
+        warnings.warn(
+            "`match_orientation_batch` is deprecated and will be removed in v0.1. "
+            "Use `[x.reformat_as(self) for x in mvs]` instead.",
+            DeprecationWarning
+        )
         for mv in mvs:
             self.match_orientation(mv)
 
@@ -337,3 +404,96 @@ class MedicalVolume(object):
         affine[3, 3] = 1
 
         return cls(arr, affine)
+
+    def _partial_clone(self, **kwargs) -> "MedicalVolume":
+        """Copies constructor information from ``self`` if not available in ``kwargs``."""
+        for k in ("volume", "affine"):
+            if k not in kwargs:
+                kwargs[k] = getattr(self, f"_{k}").copy()
+        if "headers" not in kwargs:
+            kwargs["headers"] = self._headers
+        return MedicalVolume(**kwargs)
+
+    def __add__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        volume = self._volume.__add__(other)
+        return self._partial_clone(volume=volume)
+
+    def __floordiv__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        volume = self._volume.__floordiv__(other)
+        return self._partial_clone(volume=volume)
+
+    def __mul__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        volume = self._volume.__mul__(other)
+        return self._partial_clone(volume=volume)
+
+    def __pow__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        volume = self._volume.__pow__(other)
+        return self._partial_clone(volume=volume)
+
+    def __sub__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        volume = self._volume.__sub__(other)
+        return self._partial_clone(volume=volume)
+
+    def __truediv__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        volume = self._volume.__truediv__(other)
+        return self._partial_clone(volume=volume)
+
+    def __iadd__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        self._volume.__iadd__(other)
+        return self
+
+    def __ifloordiv__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        self._volume.__ifloordiv__(other)
+        return self
+
+    def __imul__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        self._volume.__imul__(other)
+        return self
+
+    def __ipow__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        self._volume.__ipow__(other)
+        return self
+
+    def __isub__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        self._volume.__isub__(other)
+        return self
+
+    def __itruediv__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        self._volume.__itruediv__(other)
+        return self
