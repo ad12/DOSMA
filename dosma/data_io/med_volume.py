@@ -28,8 +28,9 @@ class MedicalVolume(object):
     metadata, such as pixel/voxel spacing, global coordinates, rotation information, all of
     which can be characterized by an affine matrix following the RAS+ coordinate system.
 
-    Standard math operations (add, subtract, multiply, divide, power) are supported with other
-    ``MedicalVolume`` objects, numpy arrays (following standard broadcasting), and scalars.
+    Standard math and boolean operations are supported with other ``MedicalVolume`` objects,
+    numpy arrays (following standard broadcasting), and scalars. Boolean operations are performed
+    elementwise, resulting in a volume with shape as ``self.volume.shape``.
     If performing operations between ``MedicalVolume`` objects, both objects must have
     the same shape and affine matrix (spacing, direction, and origin). Header information
     is not deep copied when performing these operations to reduce computational and memory
@@ -168,8 +169,8 @@ class MedicalVolume(object):
         Returns:
             bool: `True` if identical, `False` otherwise.
         """
-        if type(mv) != type(self):
-            raise TypeError('type(mv) must be %s' % str(type(self)))
+        if not isinstance(mv, MedicalVolume):
+            raise TypeError("`mv` must be a MedicalVolume.")
 
         return self.is_same_dimensions(mv) and (mv.volume == self.volume).all()
 
@@ -497,3 +498,45 @@ class MedicalVolume(object):
             other = other.volume
         self._volume.__itruediv__(other)
         return self
+
+    def __ne__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        volume = (self._volume != other).astype(np.uint8)
+        return self._partial_clone(volume=volume)
+
+    def __eq__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        volume = (self._volume == other).astype(np.uint8)
+        return self._partial_clone(volume=volume)
+
+    def __ge__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        volume = (self._volume >= other).astype(np.uint8)
+        return self._partial_clone(volume=volume)
+
+    def __gt__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        volume = (self._volume > other).astype(np.uint8)
+        return self._partial_clone(volume=volume)
+
+    def __le__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        volume = (self._volume <= other).astype(np.uint8)
+        return self._partial_clone(volume=volume)
+
+    def __lt__(self, other):
+        if isinstance(other, MedicalVolume):
+            assert self.is_same_dimensions(other, err=True)
+            other = other.volume
+        volume = (self._volume < other).astype(np.uint8)
+        return self._partial_clone(volume=volume)

@@ -126,6 +126,17 @@ class TestMedicalVolume(unittest.TestCase):
         with self.assertRaises(ValueError):
             mv3 + mv2
 
+    def test_comparison(self):
+        mv1 = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
+        mv2 = MedicalVolume(2 * np.ones((10,20,30)), self._AFFINE)
+
+        assert np.all((mv1 == mv1.clone()).volume)
+        assert np.all((mv1 != mv2).volume)
+        assert np.all((mv1 < mv2).volume)
+        assert np.all((mv1 <= mv2).volume)
+        assert np.all((mv2 > mv1).volume)
+        assert np.all((mv2 >= mv1).volume)
+
 
 if __name__ == "__main__":
     unittest.main()
