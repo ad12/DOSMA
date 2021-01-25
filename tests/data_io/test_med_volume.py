@@ -23,9 +23,24 @@ class TestMedicalVolume(unittest.TestCase):
     def test_reformat(self):
         mv = MedicalVolume(np.random.rand(10,20,30), self._AFFINE)
         new_orientation = tuple(x[::-1] for x in mv.orientation[::-1])
+
         mv2 = mv.reformat(new_orientation)
         assert mv2.orientation == new_orientation
-        assert id(mv) == id(mv2)
+        assert id(mv2) != id(mv)
+        assert np.shares_memory(mv2._volume, mv._volume)
+
+        mv2 = mv.reformat(new_orientation, inplace=True)
+        assert mv2.orientation == new_orientation
+        assert id(mv2) == id(mv)
+        assert np.shares_memory(mv2._volume, mv._volume)
+
+        mv2 = mv.reformat(mv.orientation)
+        assert id(mv2) != id(mv)
+        assert np.shares_memory(mv2._volume, mv._volume)
+
+        mv2 = mv.reformat(mv.orientation, inplace=True)
+        assert id(mv2) == id(mv)
+        assert np.shares_memory(mv2._volume, mv._volume)
 
     def test_reformat_as(self):
         mv = MedicalVolume(np.random.rand(10,20,30), self._AFFINE)

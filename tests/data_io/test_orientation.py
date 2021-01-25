@@ -33,10 +33,10 @@ class TestOrientation(unittest.TestCase):
 
         for o in orientations:
             # Reorient to some orientation
-            mv.reformat(o)
+            mv.reformat(o, inplace=True)
 
             # Reorient to original orientation
-            mv.reformat(o_base)
+            mv.reformat(o_base, inplace=True)
 
             assert mv.orientation == o_base, "Orientation mismatch: Expected %s, got %s" % (str(o_base),
                                                                                             str(mv.orientation))
