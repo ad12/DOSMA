@@ -1,4 +1,5 @@
 import os
+import shutil
 import unittest
 
 import numpy as np
@@ -19,6 +20,17 @@ class TestMedicalVolume(unittest.TestCase):
         [-0.3125, 0., 0., 47.0233],
         [0., 0., 0., 1.]
     ])  # ('SI', 'AP', 'LR')
+
+    _TEMP_PATH = os.path.join(ututils.TEMP_PATH, __name__)
+
+    @classmethod
+    def setUpClass(cls):
+        os.makedirs(cls._TEMP_PATH, exist_ok=True)
+
+    @classmethod
+    def tearDownCls(cls):
+        if os.path.isdir(cls._TEMP_PATH):
+            shutil.rmtree(cls._TEMP_PATH)
 
     def test_reformat(self):
         mv = MedicalVolume(np.random.rand(10,20,30), self._AFFINE)
@@ -41,6 +53,9 @@ class TestMedicalVolume(unittest.TestCase):
         mv2 = mv.reformat(mv.orientation, inplace=True)
         assert id(mv2) == id(mv)
         assert np.shares_memory(mv2._volume, mv._volume)
+
+        mv2 = mv.reformat(new_orientation).reformat(mv.orientation)
+        assert mv2.is_identical(mv)
 
     def test_reformat_as(self):
         mv = MedicalVolume(np.random.rand(10,20,30), self._AFFINE)
@@ -72,10 +87,16 @@ class TestMedicalVolume(unittest.TestCase):
         img = mv.to_sitk()
 
         assert np.allclose(sitk.GetArrayViewFromImage(img), sitk.GetArrayViewFromImage(expected))
+        assert img.GetSize() == mv.shape
         assert np.allclose(img.GetOrigin(), expected.GetOrigin())
         assert img.GetSpacing() == img.GetSpacing()
         assert img.GetDirection() == expected.GetDirection()
-    
+
+        mv = MedicalVolume(np.zeros((10,20,1,3)), affine=self._AFFINE)
+        img = mv.to_sitk(vdim=-1)
+        assert np.all(sitk.GetArrayViewFromImage(img) == 0)
+        assert img.GetSize() == (10,20,1)
+
     def test_from_sitk(self):
         filepath = ututils.get_read_paths(ututils.get_scan_dirpath("qdess"), ImageDataFormat.nifti)[0]
         nr = NiftiReader()
@@ -85,8 +106,13 @@ class TestMedicalVolume(unittest.TestCase):
         mv = MedicalVolume.from_sitk(img)
 
         assert np.allclose(mv.affine, expected.affine)
-        assert mv.volume.shape == expected.volume.shape
+        assert mv.shape == expected.shape
         assert np.all(mv.volume == expected.volume)
+
+        img = sitk.Image([10, 20, 1], sitk.sitkVectorFloat32, 3)
+        mv = MedicalVolume.from_sitk(img)
+        assert np.all(mv.volume == 0)
+        assert mv.shape == (10, 20, 1, 3)
 
     def test_math(self):
         mv1 = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
@@ -162,16 +188,36 @@ class TestMedicalVolume(unittest.TestCase):
         mv = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
         mv[:5,...] = 2
         assert np.all(mv._volume[:5,...] == 2) & np.all(mv._volume[5:,...] == 1)
-        assert np.all(mv[:5,...] == 2)
+        assert np.all(mv[:5,...].volume == 2)
 
         mv = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
         mv2 = mv[:5,...].clone()
         mv2 = 2
         mv[:5,...] = mv2
         assert np.all(mv._volume[:5,...] == 2) & np.all(mv._volume[5:,...] == 1)
-        assert np.all(mv[:5,...] == 2)
+        assert np.all(mv[:5,...].volume == 2)
 
-        mv = MedicalVolume(np.ones((10,20,30,4)), self._AFFINE)
+    def test_4d(self):
+        vol = np.stack([np.ones((10,20,30)), 2*np.ones((10,20,30))], axis=-1)
+        mv = MedicalVolume(vol, self._AFFINE)
+        assert mv.orientation == ("SI", "AP", "LR")
+        assert mv.shape == (10, 20, 30, 2)
+
+        assert np.all(mv[..., 0].volume == 1)
+        assert np.all(mv[..., 1].volume == 2)
+
+        ornt = ("AP", "IS", "RL")
+        mv2 = mv.reformat(ornt)
+        mv2.orientation == ornt
+        assert mv2.shape == (20,10,30,2)
+
+        mv2 = mv.reformat(ornt).reformat(mv.orientation)
+        assert mv2.is_identical(mv)
+
+        fp = os.path.join(self._TEMP_PATH, "test_4d.nii.gz")
+        mv.save_volume(fp)
+        mv2 = NiftiReader().load(fp)
+        assert mv2.is_identical(mv)
 
 
 if __name__ == "__main__":

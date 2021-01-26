@@ -22,14 +22,6 @@ if env.sitk_available():
 __all__ = ["MedicalVolume"]
 
 
-class _SpatialFirstSlicer(_SpatialFirstSlicerNib):
-    def __init__(self, img):
-        self.img = img
-    
-    def __getitem__(self, slicer):
-        raise NotImplementedError("Slicing should be done by `MedicalVolume`")
-
-
 class MedicalVolume(object):
     """The class for medical images.
 
@@ -115,8 +107,9 @@ class MedicalVolume(object):
         temp_affine = np.array(self._affine)
 
         transpose_inds = stdo.get_transpose_inds(temp_orientation, new_orientation)
+        all_transpose_inds = transpose_inds + tuple(range(3, self._volume.ndim))
 
-        volume = np.transpose(self.volume, transpose_inds)
+        volume = np.transpose(self.volume, all_transpose_inds)
         for i in range(len(transpose_inds)):
             temp_affine[..., i] = self._affine[..., transpose_inds[i]]
 
@@ -139,7 +132,7 @@ class MedicalVolume(object):
             b_vecs[:, i] *= phi[i]
 
         # get number of pixels to shift by on each axis (should be 0 when not flipping - i.e. phi<0 mask)
-        vol_shape_vec = ((np.asarray(volume.shape) - 1) * (phi < 0).astype(np.float32)).transpose()
+        vol_shape_vec = ((np.asarray(volume.shape[:3]) - 1) * (phi < 0).astype(np.float32)).transpose()
         b_origin = np.round(a_origin.flatten() - np.matmul(b_vecs, vol_shape_vec).flatten(),
                             SCANNER_ORIGIN_DECIMAL_PRECISION)
 
@@ -303,8 +296,15 @@ class MedicalVolume(object):
             headers=deepcopy(self._headers) if headers else self._headers,
         )
 
-    def to_sitk(self):
+    def to_sitk(self, vdim: int = None):
         """Converts to SimpleITK Image.
+
+        SimpleITK Image objects support vector pixel types, which are represented
+        as an extra dimension in numpy arrays. The vector dimension can be specified
+        with ``vdim``.
+
+        Args:
+            vdim (int, optional): The vector dimension.
 
         Note:
             Header information is not currently copied.
@@ -316,7 +316,15 @@ class MedicalVolume(object):
             raise ImportError("SimpleITK is not installed. Install it with `pip install simpleitk`")
 
         arr = self.volume
-        arr = np.transpose(arr, range(arr.ndim)[::-1])
+        ndim = arr.ndim
+
+        if vdim is not None:
+            if vdim < 0:
+                vdim = ndim + vdim
+            axes = tuple(i for i in range(ndim) if i != vdim)[::-1] + (vdim,)
+        else:
+            axes = range(ndim)[::-1]
+        arr = np.transpose(arr, axes)
 
         affine = self.affine.copy()
         affine[:2] = -affine[:2]  # RAS+ -> LPS+
@@ -325,7 +333,7 @@ class MedicalVolume(object):
         spacing = self.pixel_spacing
         direction = affine[:3, :3] / np.asarray(spacing)
 
-        img = sitk.GetImageFromArray(arr)
+        img = sitk.GetImageFromArray(arr, isVector=vdim is not None)
         img.SetOrigin(origin)
         img.SetSpacing(spacing)
         img.SetDirection(tuple(direction.flatten()))
@@ -345,7 +353,8 @@ class MedicalVolume(object):
 
         However, external setting of the volume to a different shape array is not allowed.
         """
-        assert value.ndim == 3, "Volume must be 3D"
+        if value.ndim != self._volume.ndim:
+            raise ValueError("New volume must be same as current volume")
 
         if self._volume.shape != value.shape:
             self._headers = None
@@ -407,11 +416,21 @@ class MedicalVolume(object):
         if not env.sitk_available():
             raise ImportError("SimpleITK is not installed. Install it with `pip install simpleitk`")
 
+        if len(image.GetSize()) < 3:
+            raise ValueError("`image` must be 3D.")
+        is_vector_image = image.GetNumberOfComponentsPerPixel() > 1
+
         if copy:
             arr = sitk.GetArrayFromImage(image)
         else:
             arr = sitk.GetArrayViewFromImage(image)
-        arr = np.transpose(arr, range(arr.ndim)[::-1])
+
+        ndim = arr.ndim
+        if is_vector_image:
+            axes = tuple(range(ndim)[-2::-1]) + (ndim - 1,)
+        else:
+            axes = range(ndim)[::-1]
+        arr = np.transpose(arr, axes)
 
         origin = image.GetOrigin()
         spacing = image.GetSpacing()
@@ -581,3 +600,11 @@ class MedicalVolume(object):
             other = other.volume
         volume = (self._volume < other).astype(np.uint8)
         return self._partial_clone(volume=volume)
+
+
+class _SpatialFirstSlicer(_SpatialFirstSlicerNib):
+    def __init__(self, img):
+        self.img = img
+
+    def __getitem__(self, slicer):
+        raise NotImplementedError("Slicing should be done by `MedicalVolume`")
