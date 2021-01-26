@@ -152,6 +152,27 @@ class TestMedicalVolume(unittest.TestCase):
         assert np.all((mv2 > mv1).volume)
         assert np.all((mv2 >= mv1).volume)
 
+    def test_slice(self):
+        mv = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
+        with self.assertRaises(IndexError):
+            mv[4]
+        mv_slice = mv[4:5]
+        assert mv_slice.shape == (1,20,30)
+
+        mv = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
+        mv[:5,...] = 2
+        assert np.all(mv._volume[:5,...] == 2) & np.all(mv._volume[5:,...] == 1)
+        assert np.all(mv[:5,...] == 2)
+
+        mv = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
+        mv2 = mv[:5,...].clone()
+        mv2 = 2
+        mv[:5,...] = mv2
+        assert np.all(mv._volume[:5,...] == 2) & np.all(mv._volume[5:,...] == 1)
+        assert np.all(mv[:5,...] == 2)
+
+        mv = MedicalVolume(np.ones((10,20,30,4)), self._AFFINE)
+
 
 if __name__ == "__main__":
     unittest.main()

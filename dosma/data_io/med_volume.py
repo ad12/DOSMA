@@ -9,6 +9,7 @@ from typing import List, Sequence
 import nibabel as nib
 import numpy as np
 import pydicom
+from nibabel.spatialimages import SpatialFirstSlicer as _SpatialFirstSlicerNib
 
 from dosma.data_io import orientation as stdo
 from dosma.data_io.format_io import ImageDataFormat
@@ -19,6 +20,14 @@ if env.sitk_available():
     import SimpleITK as sitk
 
 __all__ = ["MedicalVolume"]
+
+
+class _SpatialFirstSlicer(_SpatialFirstSlicerNib):
+    def __init__(self, img):
+        self.img = img
+    
+    def __getitem__(self, slicer):
+        raise NotImplementedError("Slicing should be done by `MedicalVolume`")
 
 
 class MedicalVolume(object):
@@ -377,6 +386,10 @@ class MedicalVolume(object):
         """np.ndarray: 4x4 affine matrix for volume in current orientation."""
         return self._affine
 
+    @property
+    def shape(self):
+        return self._volume.shape
+
     @classmethod
     def from_sitk(cls, image, copy=False) -> "MedicalVolume":
         """Constructs MedicalVolume from SimpleITK.Image.
@@ -420,6 +433,28 @@ class MedicalVolume(object):
         if "headers" not in kwargs:
             kwargs["headers"] = self._headers
         return MedicalVolume(**kwargs)
+
+    def __getitem__(self, _slice):
+        slicer = _SpatialFirstSlicer(self)
+        try:
+            _slice = slicer.check_slicing(_slice)
+        except ValueError as err:
+            raise IndexError(*err.args)
+
+        volume = self._volume[_slice]
+        if any(dim == 0 for dim in volume.shape):
+            raise IndexError("Empty slice requested")
+
+        affine = slicer.slice_affine(_slice)
+        # slicing data makes headers invalid
+        return self._partial_clone(volume=volume, affine=affine, headers=None)
+    
+    def __setitem__(self, _slice, value):
+        if isinstance(value, MedicalVolume):
+            image = self[_slice]
+            assert self.is_same_dimensions(value, err=True)
+            value = value._volume
+        self._volume[_slice] = value
 
     def __add__(self, other):
         if isinstance(other, MedicalVolume):
