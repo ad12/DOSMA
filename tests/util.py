@@ -8,6 +8,7 @@ import natsort
 
 from dosma.cli import SUPPORTED_SCAN_TYPES, parse_args
 from dosma.data_io.format_io import ImageDataFormat
+from dosma.utils import env
 from dosma.utils import io_utils
 
 UNITTEST_DATA_PATH = os.path.join(os.path.dirname(__file__), '../unittest-data/')
@@ -61,6 +62,21 @@ def get_expected_data_path(fp):
 
 def num_workers() -> int:
     return min(8, os.cpu_count())
+
+
+def requires_packages(*packages):
+    """
+    Decorator for functions that should only execute when
+    all packages defined by *args are supported.
+    """
+    def _decorator(func):
+        def _wrapper(*args, **kwargs):
+            if all([env._package_available(x) for x in packages]):
+                func(*args, **kwargs)
+
+        return _wrapper
+  
+    return _decorator 
 
 
 class ScanTest(unittest.TestCase):

@@ -9,6 +9,7 @@ from dosma.data_io.med_volume import MedicalVolume
 from dosma.data_io.dicom_io import DicomReader
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.data_io.nifti_io import NiftiReader
+from dosma.utils.device import Device
 
 from .. import util as ututils
 
@@ -218,6 +219,39 @@ class TestMedicalVolume(unittest.TestCase):
         mv.save_volume(fp)
         mv2 = NiftiReader().load(fp)
         assert mv2.is_identical(mv)
+
+    @ututils.requires_packages("cupy")
+    def test_device(self):
+        import cupy as cp
+
+        mv = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
+        mv_gpu = mv.to(Device(0))
+
+        assert mv_gpu.device == Device(0)
+        assert isinstance(mv_gpu.volume, cp.ndarray)
+        assert isinstance(mv_gpu.affine, np.ndarray)
+
+        assert mv_gpu.is_same_dimensions(mv)
+
+        assert cp.all((mv_gpu + 1).volume == 2)
+        assert cp.all((mv_gpu - 1).volume == 0)
+        assert cp.all((mv_gpu * 2).volume == 2)
+        assert cp.all((mv_gpu / 2).volume == 0.5)
+        assert cp.all((mv_gpu > 0).volume)
+        assert cp.all((mv_gpu >= 0).volume)
+        assert cp.all((mv_gpu < 2).volume)
+        assert cp.all((mv_gpu <= 2).volume)
+
+        ornt = tuple(x[::-1] for x in mv_gpu.orientation[::-1])
+        mv2 = mv_gpu.reformat(ornt)
+        assert mv2.orientation == ornt
+
+        mv_cpu = mv_gpu.cpu()
+        assert mv_cpu.device == Device(-1)
+        assert mv_cpu.is_identical(mv)
+
+        with self.assertRaises(RuntimeError):
+            mv_gpu.save_volume(os.path.join(self._TEMP_PATH, "test_device.nii.gz"))
 
 
 if __name__ == "__main__":

@@ -144,6 +144,7 @@ class QDess(TargetSequence):
         if self.volumes is None or self.ref_dicom is None:
             raise ValueError('volumes and ref_dicom fields must be initialized')
 
+        xp = self.volumes[0].device.xp
         ref_dicom = self.ref_dicom
 
         r, c, num_slices = self.volumes[0].volume.shape
@@ -176,30 +177,30 @@ class QDess(TargetSequence):
         c1 = (TR - Tg / 3) * (math.pow(dkL, 2)) * self.__D__
 
         # T2 fit
-        mask = np.ones([r, c, num_slices])
+        mask = xp.ones([r, c, num_slices])
 
         ratio = mask * echo_2 / echo_1
-        ratio = np.nan_to_num(ratio)
+        ratio = xp.nan_to_num(ratio)
 
         # have to divide division into steps to avoid overflow error
-        t2map = (-2000 * (TR - TE) / (np.log(abs(ratio) / k) + c1))
+        t2map = (-2000 * (TR - TE) / (xp.log(abs(ratio) / k) + c1))
 
-        t2map = np.nan_to_num(t2map)
+        t2map = xp.nan_to_num(t2map)
 
         # Filter calculated T2 values that are below 0ms and over 100ms
-        t2map[t2map <= self.__T2_LOWER_BOUND__] = np.nan
-        t2map = np.nan_to_num(t2map)
-        t2map[t2map > self.__T2_UPPER_BOUND__] = np.nan
-        t2map = np.nan_to_num(t2map)
+        t2map[t2map <= self.__T2_LOWER_BOUND__] = xp.nan
+        t2map = xp.nan_to_num(t2map)
+        t2map[t2map > self.__T2_UPPER_BOUND__] = xp.nan
+        t2map = xp.nan_to_num(t2map)
 
-        t2map = np.around(t2map, self.__T2_DECIMAL_PRECISION__)
+        t2map = xp.around(t2map, self.__T2_DECIMAL_PRECISION__)
 
         if suppress_fat:
-            t2map = t2map * (echo_1 > 0.15 * np.max(echo_1))
+            t2map = t2map * (echo_1 > 0.15 * xp.max(echo_1))
 
         if suppress_fluid:
             vol_null_fluid = echo_1 - beta * echo_2
-            t2map = t2map * (vol_null_fluid > 0.1 * np.max(vol_null_fluid))
+            t2map = t2map * (vol_null_fluid > 0.1 * xp.max(vol_null_fluid))
 
         t2_map_wrapped = MedicalVolume(t2map,
                                        affine=subvolumes[0].affine,
@@ -261,21 +262,23 @@ class QDess(TargetSequence):
         Returns:
             MedicalVolume: Volume with RMS of two echos.
         """
+        xp = self.volumes[0].device.xp
+
         if self.volumes is None:
             raise ValueError('Volumes must be initialized')
 
         assert len(self.volumes) == 2, "2 Echos expected"
 
-        echo1 = np.asarray(self.volumes[0].volume, dtype=np.float64)
-        echo2 = np.asarray(self.volumes[1].volume, dtype=np.float64)
+        echo1 = xp.asarray(self.volumes[0].volume, dtype=xp.float64)
+        echo2 = xp.asarray(self.volumes[1].volume, dtype=xp.float64)
 
-        assert (~np.iscomplex(echo1)).all() and (~np.iscomplex(echo2)).all()
+        assert (~xp.iscomplex(echo1)).all() and (~xp.iscomplex(echo2)).all()
 
         sq_sum = echo1 ** 2 + echo2 ** 2
 
         assert (sq_sum >= 0).all()
 
-        rms = np.sqrt(echo1 ** 2 + echo2 ** 2)
+        rms = xp.sqrt(echo1 ** 2 + echo2 ** 2)
 
         mv = deepcopy(self.volumes[0])
         mv.volume = rms
