@@ -167,6 +167,7 @@
 <span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nib</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pydicom</span>
+<span class="kn">from</span> <span class="nn">nibabel.spatialimages</span> <span class="kn">import</span> <span class="n">SpatialFirstSlicer</span> <span class="k">as</span> <span class="n">_SpatialFirstSlicerNib</span>
 
 <span class="kn">from</span> <span class="nn">dosma.data_io</span> <span class="kn">import</span> <span class="n">orientation</span> <span class="k">as</span> <span class="n">stdo</span>
 <span class="kn">from</span> <span class="nn">dosma.data_io.format_io</span> <span class="kn">import</span> <span class="n">ImageDataFormat</span>
@@ -177,6 +178,14 @@
     <span class="kn">import</span> <span class="nn">SimpleITK</span> <span class="k">as</span> <span class="nn">sitk</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;MedicalVolume&quot;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">_SpatialFirstSlicer</span><span class="p">(</span><span class="n">_SpatialFirstSlicerNib</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">=</span> <span class="n">img</span>
+    
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slicer</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Slicing should be done by `MedicalVolume`&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="MedicalVolume"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume">[docs]</a><span class="k">class</span> <span class="nc">MedicalVolume</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -535,6 +544,10 @@
         <span class="sd">&quot;&quot;&quot;np.ndarray: 4x4 affine matrix for volume in current orientation.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_affine</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="o">.</span><span class="n">shape</span>
+
 <div class="viewcode-block" id="MedicalVolume.from_sitk"><a class="viewcode-back" href="../../../dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume.from_sitk">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_sitk</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MedicalVolume&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Constructs MedicalVolume from SimpleITK.Image.</span>
@@ -578,6 +591,28 @@
         <span class="k">if</span> <span class="s2">&quot;headers&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;headers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span>
         <span class="k">return</span> <span class="n">MedicalVolume</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_slice</span><span class="p">):</span>
+        <span class="n">slicer</span> <span class="o">=</span> <span class="n">_SpatialFirstSlicer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_slice</span> <span class="o">=</span> <span class="n">slicer</span><span class="o">.</span><span class="n">check_slicing</span><span class="p">(</span><span class="n">_slice</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="o">*</span><span class="n">err</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="n">volume</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="p">[</span><span class="n">_slice</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">dim</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">volume</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Empty slice requested&quot;</span><span class="p">)</span>
+
+        <span class="n">affine</span> <span class="o">=</span> <span class="n">slicer</span><span class="o">.</span><span class="n">slice_affine</span><span class="p">(</span><span class="n">_slice</span><span class="p">)</span>
+        <span class="c1"># slicing data makes headers invalid</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_clone</span><span class="p">(</span><span class="n">volume</span><span class="o">=</span><span class="n">volume</span><span class="p">,</span> <span class="n">affine</span><span class="o">=</span><span class="n">affine</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_slice</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">_slice</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_same_dimensions</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">_volume</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="p">[</span><span class="n">_slice</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MedicalVolume</span><span class="p">):</span>

@@ -1,0 +1,267 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>dosma.scan_sequences.CubeQuant &mdash; dosma 0.0.12.dev2 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> dosma
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQs</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">dosma</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>dosma.scan_sequences.CubeQuant</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dosma-scan-sequences-cubequant">
+<h1>dosma.scan_sequences.CubeQuant<a class="headerlink" href="#dosma-scan-sequences-cubequant" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="dosma.scan_sequences.CubeQuant">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.scan_sequences.</code><code class="sig-name descname">CubeQuant</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dicom_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">load_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/dosma/scan_sequences/cube_quant.html#CubeQuant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.CubeQuant" title="Permalink to this definition">¶</a></dt>
+<dd><p>CubeQuant MRI sequence.</p>
+<p>Cubequant is a 3D fast-spin-echo (FSE) <span class="math notranslate nohighlight">\(T_{1\rho}\)</span>-weighted sequence.
+Acquisitions between spin-locks are susceptible to motion, and as a result,
+volumes within the scan have to be registered to each other (i.e. intra-registered).
+Intra-registration across different spin-locks is done by default upon construction.</p>
+<p>Moreover, CubeQuant scans often have lower resolution to increase SNR in practice.
+Because of the low-resolution, these scans are often registered to higher resolution
+target scans. This can be done using <a class="reference internal" href="../../dosma.scan_sequences.html#dosma.scan_sequences.CubeQuant.interregister" title="dosma.scan_sequences.CubeQuant.interregister"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CubeQuant.interregister()</span></code></a>.</p>
+<dl class="py method">
+<dt id="dosma.scan_sequences.CubeQuant.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dicom_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">load_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/dosma/scan_sequences/cube_quant.html#CubeQuant.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.scan_sequences.CubeQuant.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dosma.scan_sequences.CubeQuant.__init__" title="dosma.scan_sequences.CubeQuant.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([dicom_path, load_path])</p></td>
+<td><p>Initialize self.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../../dosma.scan_sequences.html#dosma.scan_sequences.CubeQuant.cmd_line_actions" title="dosma.scan_sequences.CubeQuant.cmd_line_actions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cmd_line_actions</span></code></a>()</p></td>
+<td><p>Provide command line information (such as name, help strings, etc) as list of dictionary.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../dosma.scan_sequences.html#dosma.scan_sequences.CubeQuant.generate_t1_rho_map" title="dosma.scan_sequences.CubeQuant.generate_t1_rho_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_t1_rho_map</span></code></a>(tissue[, mask_path, …])</p></td>
+<td><p>Generate 3D T1-rho map and r-squared fit map using mono-exponential fit across subvolumes acquired at</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_dimensions</span></code>()</p></td>
+<td><p>Get shape of volumes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../dosma.scan_sequences.html#dosma.scan_sequences.CubeQuant.interregister" title="dosma.scan_sequences.CubeQuant.interregister"><code class="xref py py-obj docutils literal notranslate"><span class="pre">interregister</span></code></a>(target_path[, target_mask_path])</p></td>
+<td><p>Register this scan to the target scan - save as parameter in scan (volumes, subvolumes, etc).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../../dosma.scan_sequences.html#dosma.scan_sequences.CubeQuant.load_data" title="dosma.scan_sequences.CubeQuant.load_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_data</span></code></a>(base_load_dirpath)</p></td>
+<td><p>Load data from disk.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../dosma.scan_sequences.html#dosma.scan_sequences.CubeQuant.save_data" title="dosma.scan_sequences.CubeQuant.save_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_data</span></code></a>(base_save_dirpath[, data_format])</p></td>
+<td><p>Save data to disk.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../dosma.scan_sequences.html#dosma.scan_sequences.CubeQuant.NAME" title="dosma.scan_sequences.CubeQuant.NAME"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NAME</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019-2020, Arjun Desai.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

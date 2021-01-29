@@ -1,0 +1,296 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>dosma.tissues.FemoralCartilage &mdash; dosma 0.0.12.dev2 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> dosma
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQs</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">dosma</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>dosma.tissues.FemoralCartilage</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dosma-tissues-femoralcartilage">
+<h1>dosma.tissues.FemoralCartilage<a class="headerlink" href="#dosma-tissues-femoralcartilage" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="dosma.tissues.FemoralCartilage">
+<em class="property">class </em><code class="sig-prename descclassname">dosma.tissues.</code><code class="sig-name descname">FemoralCartilage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">weights_dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">medial_to_lateral</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/dosma/tissues/femoral_cartilage.html#FemoralCartilage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.FemoralCartilage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles analysis and visualization for femoral cartilage.</p>
+<p>This class extends functionality from <cite>Tissue</cite>.</p>
+<p>For visualization, the femoral cartilage is unrolled onto a 2D plane using angular binning [1].</p>
+<dl class="simple">
+<dt>[1] Monu UD, Jordan CD, Samuelson BL, Hargreaves BA, Gold GE, McWalter EJ. “Cluster analysis of quantitative MRI T2</dt><dd><p>and T1ρ relaxation times of cartilage identifies differences between healthy and ACL-injured individuals at 3T.”
+Osteoarthritis and cartilage 2017;25(4):513-520.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="dosma.tissues.FemoralCartilage.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">weights_dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">medial_to_lateral</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/dosma/tissues/femoral_cartilage.html#FemoralCartilage.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.tissues.FemoralCartilage.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dosma.tissues.FemoralCartilage.__init__" title="dosma.tissues.FemoralCartilage.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([weights_dir, medial_to_lateral])</p></td>
+<td><p>Initialize self.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_quantitative_value</span></code>(qv_new)</p></td>
+<td><p>Add quantitative value to the tissue.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_quant_vals</span></code>()</p></td>
+<td><p>Calculate quantitative values for pixels corresponding to the tissue.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_weights</span></code>(weights_dir)</p></td>
+<td><p>Search for weights file in weights directory.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_mask</span></code>()</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">returns</dt>
+<dd class="field-odd"><p>Binary mask of segmented tissue.</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_data</span></code>(load_dir_path)</p></td>
+<td><p>Load data for tissue.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../dosma.tissues.html#dosma.tissues.FemoralCartilage.save_data" title="dosma.tissues.FemoralCartilage.save_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_data</span></code></a>(save_dirpath[, data_format])</p></td>
+<td><p>Save data for tissue.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../../dosma.tissues.html#dosma.tissues.FemoralCartilage.set_mask" title="dosma.tissues.FemoralCartilage.set_mask"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_mask</span></code></a>(mask)</p></td>
+<td><p>Set mask for tissue.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../dosma.tissues.html#dosma.tissues.FemoralCartilage.split_regions" title="dosma.tissues.FemoralCartilage.split_regions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_regions</span></code></a>(base_map[, thickness_divisor, …])</p></td>
+<td><p>Split volume into anatomical regions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../../dosma.tissues.html#dosma.tissues.FemoralCartilage.unroll" title="dosma.tissues.FemoralCartilage.unroll"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unroll</span></code></a>(qv_map, regions_mask, theta_bins)</p></td>
+<td><p>Unroll femoral cartilage 3D quantitative value (qv) maps to 2D for visualization.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../dosma.tissues.html#dosma.tissues.FemoralCartilage.ACP_BOUNDARY" title="dosma.tissues.FemoralCartilage.ACP_BOUNDARY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ACP_BOUNDARY</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../../dosma.tissues.html#dosma.tissues.FemoralCartilage.FULL_NAME" title="dosma.tissues.FemoralCartilage.FULL_NAME"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FULL_NAME</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../dosma.tissues.html#dosma.tissues.FemoralCartilage.ID" title="dosma.tissues.FemoralCartilage.ID"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ID</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../../dosma.tissues.html#dosma.tissues.FemoralCartilage.ML_BOUNDARY" title="dosma.tissues.FemoralCartilage.ML_BOUNDARY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ML_BOUNDARY</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../dosma.tissues.html#dosma.tissues.FemoralCartilage.STR_ID" title="dosma.tissues.FemoralCartilage.STR_ID"><code class="xref py py-obj docutils literal notranslate"><span class="pre">STR_ID</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../../dosma.tissues.html#dosma.tissues.FemoralCartilage.T1_EXPECTED" title="dosma.tissues.FemoralCartilage.T1_EXPECTED"><code class="xref py py-obj docutils literal notranslate"><span class="pre">T1_EXPECTED</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019-2020, Arjun Desai.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -44,6 +44,13 @@ dosma.utils.io\_utils module
    :undoc-members:
    :show-inheritance:
 
+dosma.utils.registration module
+-----------------------
+
+.. automodule:: dosma.utils.registration
+   :members:
+   :undoc-members:
+
 
 Module contents
 ---------------

@@ -18,6 +18,8 @@ from dosma import file_constants as fc
 from dosma.data_io.nifti_io import NiftiWriter, NiftiReader
 from dosma.data_io.med_volume import MedicalVolume
 
+__all__ = ["register", "apply_warp", "symlink_elastix", "unlink_elastix"]
+
 MedVolOrPath = Union[MedicalVolume, str]
 
 

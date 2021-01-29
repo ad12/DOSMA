@@ -173,7 +173,7 @@
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;MonoExponentialFit&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;MonoExponentialFit&quot;</span><span class="p">,</span> <span class="s2">&quot;curve_fit&quot;</span><span class="p">,</span> <span class="s2">&quot;monoexponential&quot;</span><span class="p">,</span> <span class="s2">&quot;biexponential&quot;</span><span class="p">]</span>
 
 
 <span class="k">class</span> <span class="nc">_Fit</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
@@ -295,7 +295,7 @@
 
 <span class="n">__EPSILON__</span> <span class="o">=</span> <span class="mf">1e-8</span>
 
-<span class="k">def</span> <span class="nf">curve_fit</span><span class="p">(</span>
+<div class="viewcode-block" id="curve_fit"><a class="viewcode-back" href="../../../dosma.utils.html#dosma.utils.fits.curve_fit">[docs]</a><span class="k">def</span> <span class="nf">curve_fit</span><span class="p">(</span>
     <span class="n">func</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">maxfev</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> 
     <span class="n">ftol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span> <span class="n">show_pbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
@@ -366,7 +366,7 @@
                 <span class="n">data</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">fitter</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
         <span class="n">popts</span><span class="p">,</span> <span class="n">r_squared</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
     
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">popts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">r_squared</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">popts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">r_squared</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">_curve_fit</span><span class="p">(</span>
@@ -400,14 +400,14 @@
     <span class="k">return</span> <span class="n">popt_</span><span class="p">,</span> <span class="n">r2_</span>
 
 
-<span class="k">def</span> <span class="nf">monoexponential</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<div class="viewcode-block" id="monoexponential"><a class="viewcode-back" href="../../../dosma.utils.html#dosma.utils.fits.monoexponential">[docs]</a><span class="k">def</span> <span class="nf">monoexponential</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Function: :math:`f(x) = a * e^{b*x}`.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">biexponential</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a1</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">b2</span><span class="p">):</span>
+<div class="viewcode-block" id="biexponential"><a class="viewcode-back" href="../../../dosma.utils.html#dosma.utils.fits.biexponential">[docs]</a><span class="k">def</span> <span class="nf">biexponential</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a1</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">b2</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Function: :math:`f(x) = a1*e^{b1*x} + a2*e^{b2*x}`.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">a1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">b1</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">a2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">b2</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">a1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">b1</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">a2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">b2</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">__fit_mono_exp__</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>

@@ -199,13 +199,13 @@
 <span class="sd">.. math::</span>
 
 <span class="sd">    \\begin{bmatrix} x\\\\y\\\\z\\\\1\\end{bmatrix} = A \\begin{bmatrix} i\\\\j\\\\k\\\\1\\end{bmatrix}</span>
-<span class="sd">    </span>
+
 
 <span class="sd">For example,</span>
 
 <span class="sd">.. math::</span>
 
-<span class="sd">    \\begin{bmatrix} x\\\\y\\\\z\\\\1 \\end{bmatrix} = </span>
+<span class="sd">    \\begin{bmatrix} x\\\\y\\\\z\\\\1 \\end{bmatrix} =</span>
 <span class="sd">    \\begin{bmatrix} 0 &amp; 0 &amp; 1.5 &amp; -61.6697\\\\-0.3125 &amp; 0 &amp; 0 &amp; 50.8516\\\\0 &amp; -0.3125 &amp; 0 &amp; 88.5876\\\\0 &amp; 0 &amp; 0 &amp; 1 \\end{bmatrix}</span>
 <span class="sd">    \\begin{bmatrix} i\\\\j\\\\k\\\\1\\end{bmatrix}</span>
 
@@ -264,7 +264,7 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tuple[int]: Axes to transpose to change orientation.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; get_transpose_inds((&quot;SI&quot;, &quot;AP&quot;, &quot;LR&quot;), (&quot;AP&quot;, &quot;SI&quot;, &quot;LR&quot;))</span>
 <span class="sd">        (1,0,2)</span>
@@ -298,7 +298,7 @@
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: If mismatch in orientation indices. To avoid this error,</span>
 <span class="sd">            use :func:`get_transpose_inds` prior to flipping.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; get_transpose_inds((&quot;SI&quot;, &quot;AP&quot;, &quot;LR&quot;), (&quot;IS&quot;, &quot;AP&quot;, &quot;RL&quot;))</span>
 <span class="sd">        [0, 2]</span>
@@ -334,7 +334,7 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tuple[str]: Image orientation in the standard orientation format.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; orientation_nib_to_standard((&quot;R&quot;, &quot;A&quot;, &quot;S&quot;))</span>
 <span class="sd">        (&quot;LR&quot;, &quot;PA&quot;, &quot;IS&quot;)</span>
@@ -353,7 +353,7 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tuple[str]: RAS+ tuple orientation used by Nibabel.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; orientation_nib_to_standard((&quot;LR&quot;, &quot;PA&quot;, &quot;IS&quot;))</span>
 <span class="sd">        (&quot;R&quot;, &quot;A&quot;, &quot;S&quot;)</span>

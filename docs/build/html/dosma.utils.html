@@ -283,6 +283,52 @@ those bounds will be set to <cite>np.nan</cite>. Defaults to <cite>(0, 100.0)</c
 
 </dd></dl>
 
+<dl class="py function">
+<dt id="dosma.utils.fits.biexponential">
+<code class="sig-prename descclassname">dosma.utils.fits.</code><code class="sig-name descname">biexponential</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">a1</span></em>, <em class="sig-param"><span class="n">b1</span></em>, <em class="sig-param"><span class="n">a2</span></em>, <em class="sig-param"><span class="n">b2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/fits.html#biexponential"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.fits.biexponential" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function: <span class="math notranslate nohighlight">\(f(x) = a1*e^{b1*x} + a2*e^{b2*x}\)</span>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="dosma.utils.fits.curve_fit">
+<code class="sig-prename descclassname">dosma.utils.fits.</code><code class="sig-name descname">curve_fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">func</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">y_bounds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">p0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">maxfev</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">ftol</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">eps</span><span class="o">=</span><span class="default_value">1e-08</span></em>, <em class="sig-param"><span class="n">show_pbar</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_workers</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/fits.html#curve_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.fits.curve_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use non-linear least squares to fit a function <code class="docutils literal notranslate"><span class="pre">func</span></code> to data.</p>
+<p>Uses <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.optimize.curve_fit()</span></code> backbone.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> (<em>callable</em>) – The model function, f(x, …). It must take the independent variable
+as the first argument and the parameters to fit as separate remaining arguments.</p></li>
+<li><p><strong>x</strong> (<em>ndarray</em>) – The independent variable(s) where the data is measured.
+Should usually be an M-length sequence or an (k,M)-shaped array for functions
+with k predictors, but can actually be any object.</p></li>
+<li><p><strong>y</strong> (<em>ndarray</em>) – The dependent data, a length M array - nominally func(xdata, …) - or
+an (M,N)-shaped array for N different sequences.</p></li>
+<li><p><strong>y_bounds</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Lower and upper bound on y values. Defaults to no bounds.
+Sequences with observations out of this range will not be processed.</p></li>
+<li><p><strong>p0</strong> (<em>Sequence</em><em>, </em><em>optional</em>) – Initial guess for the parameters (length N). If None, then
+the initial values will all be 1 (if the number of parameters for the
+function can be determined using introspection, otherwise a ValueError is raised).</p></li>
+<li><p><strong>maxfev</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of function evaluations before the termination.
+If <cite>bounds</cite> argument for <cite>scipy.optimize.curve_fit</cite> is specified, this corresponds
+to the <cite>max_nfev</cite> in the least squares algorithm</p></li>
+<li><p><strong>ftol</strong> (<em>float</em>) – Tolerance for termination by the change of the cost function.
+See <cite>scipy.optimize.least_squares</cite> for more details.</p></li>
+<li><p><strong>eps</strong> (<em>float</em><em>, </em><em>optional</em>) – Epsilon for computing r-squared.</p></li>
+<li><p><strong>show_pbar</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>True</cite>, show progress bar. Note this can increase runtime
+slightly when using multiple workers.</p></li>
+<li><p><strong>kwargs</strong> – Keyword args for <cite>scipy.optimize.curve_fit</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="dosma.utils.fits.monoexponential">
+<code class="sig-prename descclassname">dosma.utils.fits.</code><code class="sig-name descname">monoexponential</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">a</span></em>, <em class="sig-param"><span class="n">b</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/fits.html#monoexponential"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.fits.monoexponential" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function: <span class="math notranslate nohighlight">\(f(x) = a * e^{b*x}\)</span>.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="module-dosma.utils.geometry_utils">
 <span id="dosma-utils-geometry-utils-module"></span><h2>dosma.utils.geometry_utils module<a class="headerlink" href="#module-dosma.utils.geometry_utils" title="Permalink to this headline">¶</a></h2>
@@ -482,6 +528,142 @@ to names for the legend.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+</div>
+<div class="section" id="dosma-utils-registration-module">
+<h2>dosma.utils.registration module<a class="headerlink" href="#dosma-utils-registration-module" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-dosma.utils.registration"></span><dl class="py function">
+<dt id="dosma.utils.registration.apply_warp">
+<code class="sig-prename descclassname">dosma.utils.registration.</code><code class="sig-name descname">apply_warp</code><span class="sig-paren">(</span><em class="sig-param">moving: Union[dosma.data_io.med_volume.MedicalVolume, str], transform: Optional[Union[str, Sequence[str]]] = None, out_registration: Optional[nipype.interfaces.elastix.registration.RegistrationOutputSpec] = None, output_path: Optional[str] = None, rtype: type = &lt;class 'dosma.data_io.med_volume.MedicalVolume'&gt;, num_threads: int = 1, show_pbar: bool = False</em><span class="sig-paren">)</span> &#x2192; Union<span class="p">[</span><a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume">dosma.data_io.med_volume.MedicalVolume</a><span class="p">, </span>str<span class="p">]</span><a class="reference internal" href="_modules/dosma/utils/registration.html#apply_warp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.registration.apply_warp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply transform(s) to moving image using transformix.</p>
+<p>Use transformix to apply a transform on an input image. The transform(s) is/are
+specified in the transform-parameter file(s).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>moving</strong> (<a class="reference internal" href="dosma.data_io.html#dosma.data_io.med_volume.MedicalVolume" title="dosma.data_io.med_volume.MedicalVolume"><em>MedicalVolume</em></a><em>(</em><em>s</em><em>) or </em><em>str</em><em>(</em><em>s</em><em>)</em>) – The moving/source image to transform.</p></li>
+<li><p><strong>transform</strong> (<em>str</em><em>(</em><em>s</em><em>)</em>) – Paths to transform files to be used by transformix.
+If multiple files provided, transforms will be applied sequentially.
+If <cite>None</cite>, will be determined by <cite>out_registration.transform</cite>.</p></li>
+<li><p><strong>out_registration</strong> (<em>RegistrationOutputSpec</em><em>(</em><em>s</em><em>)</em>) – Outputs from elastix registration
+using nipype. Must be specified if <cite>transform</cite> is None.</p></li>
+<li><p><strong>output_path</strong> (<em>str</em>) – Output directory to store files.</p></li>
+<li><p><strong>rtype</strong> (<em>type</em><em>, </em><em>optional</em>) – Return type - either <cite>MedicalVolume</cite> or <cite>str</cite>.
+If <cite>str</cite>, <cite>output_path</cite> must be specified. Defaults to <cite>MedicalVolume</cite>.</p></li>
+<li><p><strong>num_threads</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of threads to use for registration. If <cite>None</cite>, defaults to 1.</p></li>
+<li><p><strong>show_pbar</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>True</cite>, show progress bar when applying transforms.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The medical volume or nifti file corresponding to the volume.</dt><dd><p>See <cite>rtype</cite> for details.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>MedVolOrPath</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="dosma.utils.registration.register">
+<code class="sig-prename descclassname">dosma.utils.registration.</code><code class="sig-name descname">register</code><span class="sig-paren">(</span><em class="sig-param">target: Union[dosma.data_io.med_volume.MedicalVolume, str], moving: Union[dosma.data_io.med_volume.MedicalVolume, str, Sequence[Union[dosma.data_io.med_volume.MedicalVolume, str]]], parameters: Union[str, Sequence[str]], output_path: str, target_mask: Optional[Union[dosma.data_io.med_volume.MedicalVolume, str]] = None, moving_masks: Optional[Union[dosma.data_io.med_volume.MedicalVolume, str, Sequence[Union[dosma.data_io.med_volume.MedicalVolume, str]]]] = None, sequential: bool = False, collate: bool = True, num_workers: int = 0, num_threads: int = 1, show_pbar: bool = False, return_volumes: bool = False, rtype: type = &lt;class 'dict'&gt;, **kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/registration.html#register"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.registration.register" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register moving image(s) to the target.</p>
+<p><cite>MedVolOrPath</cite> is a shorthand for <cite>MedicalVolume</cite> or <cite>str</cite>. It indicates the argument
+can be either a <cite>MedicalVolume</cite> or a <cite>str</cite> path to a nifti file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> (<cite>MedicalVolume</cite> or <cite>str</cite>) – The target/fixed image.</p></li>
+<li><p><strong>moving</strong> (<a href="#id1"><span class="problematic" id="id2">`</span></a>MedicalVolume`(s) or <a href="#id3"><span class="problematic" id="id4">`</span></a>str`(s)) – The moving/source image(s).</p></li>
+<li><p><strong>parameters</strong> (<cite>str(s)</cite>) – Elastix parameter files to use.</p></li>
+<li><p><strong>output_path</strong> (<cite>str</cite>) – Output directory to store files.</p></li>
+<li><p><strong>target_mask</strong> (<cite>MedicalVolume</cite> or <cite>str</cite>, optional) – The target/fixed mask.</p></li>
+<li><p><strong>moving_masks</strong> (<a href="#id5"><span class="problematic" id="id6">`</span></a>MedicalVolume`(s) or <a href="#id7"><span class="problematic" id="id8">`</span></a>str`(s), optional) – The moving mask(s).
+If only one specified, the mask will be used for all moving images.</p></li>
+<li><p><strong>sequential</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>True</cite>, apply parameter files sequentially.</p></li>
+<li><p><strong>collate</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>True</cite>, will collate outputs from sequential registration
+into single RegistrationOutputSpec instance. If <cite>sequential=False</cite>, this argument
+is ignored.</p></li>
+<li><p><strong>num_workers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of workers to use for reading/writing data and
+for registration.</p></li>
+<li><p><strong>num_threads</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of threads to use for registration. Note total number of threads
+used will be num_workers * num_threads.</p></li>
+<li><p><strong>show_pbar</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>True</cite>, show progress bar during registration. Note the progress bar
+will not be shown for intermediate reading/writing.</p></li>
+<li><p><strong>return_volumes</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>True</cite>, registered volumes will also be returned.
+By default, only the output namespaces (RegistrationOutputSpec) of the registrations are
+returned.</p></li>
+<li><p><strong>rtype</strong> (<em>type</em><em>, </em><em>optional</em>) – The return type. Either <cite>dict</cite> or <cite>tuple</cite>.</p></li>
+<li><p><strong>kwargs</strong> – Keyword arguments used to initialize <cite>nipype.interfaces.elastix.Registration</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl>
+<dt>Type specified by <cite>rtype</cite>. If dict, with keys ‘outputs’ (registration outputs) and ‘volumes’ (final volumes)</dt><dd><p>if <cite>return_volumes=True</cite>). If tuple, order is (<cite>outputs</cite>, <cite>volumes</cite> or <cite>None</cite>).
+Length of <cite>outputs</cite> and <cite>volumes</cite> depends on number of images specified in <cite>moving</cite>.</p>
+<dl>
+<dt>outputs (Sequence[RegistrationOutputSpec]): The output objects from</dt><dd><p>elastix registration, one for each moving image. Each object is effectively
+a namespace with four main attributes:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>’transform’ (List[str]): Paths to transform files produced using registration.</p></li>
+<li><p>’warped_file’ (str): Path to the final registered image.</p></li>
+<li><dl class="simple">
+<dt>’warped_files’ (List[str]): Paths to all intermediate images created if multiple</dt><dd><p>parameter files used.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+<p>volumes (Sequence[MedicalVolume]): Registered volumes.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Dict or Tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="dosma.utils.registration.symlink_elastix">
+<code class="sig-prename descclassname">dosma.utils.registration.</code><code class="sig-name descname">symlink_elastix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">lib_only</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">force</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/registration.html#symlink_elastix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.registration.symlink_elastix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Symlinks elastix/transformix files to the dosma library.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to elastix folder. This folder should
+contain two folders <cite>bin</cite> and <cite>lib</cite>. If <cite>None</cite>, determined
+using <cite>which elastix</cite>. This will overwrite existing linked
+files. path cannot be automatically determined on Windows.</p></li>
+<li><p><strong>lib_only</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>True</cite>, only links contents of <cite>lib</cite>
+folder.</p></li>
+<li><p><strong>force</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>True</cite>, unlinks existing files before relinking.
+Note this operation is not atomic.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Setting elastix paths this way is not recommended unless you
+are using a MacOS (Darwin) platform, where there are known
+path issues with elastix (<a class="reference external" href="https://github.com/almarklein/pyelastix/issues/9">https://github.com/almarklein/pyelastix/issues/9</a>).
+For linux and windows machines, using the setup described in the elastix
+guide is sufficient.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="dosma.utils.registration.unlink_elastix">
+<code class="sig-prename descclassname">dosma.utils.registration.</code><code class="sig-name descname">unlink_elastix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dosma/utils/registration.html#unlink_elastix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dosma.utils.registration.unlink_elastix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unlinks all elastix/transformix files in the dosma library.</p>
 </dd></dl>
 
 </div>

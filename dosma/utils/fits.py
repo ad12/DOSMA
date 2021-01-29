@@ -15,7 +15,7 @@ from dosma.defaults import preferences
 
 from typing import List, Sequence, Tuple
 
-__all__ = ["MonoExponentialFit"]
+__all__ = ["MonoExponentialFit", "curve_fit", "monoexponential", "biexponential"]
 
 
 class _Fit(ABC):
