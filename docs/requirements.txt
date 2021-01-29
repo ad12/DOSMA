@@ -13,6 +13,8 @@ openpyxl
 Pmw
 PyYAML
 tqdm>=4.42.0
-sphinxcontrib.bibtex
+sphinx
+sphinx-rtd-theme
+recommonmark
 sphinx_bootstrap_theme
 sphinxcontrib-bibtex>=2.0.0

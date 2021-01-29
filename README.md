@@ -31,6 +31,12 @@ install DOSMA with `pip` in editable mode.
 git clone git@github.com:ad12/DOSMA.git
 cd DOSMA
 pip install -e '.[dev]'
+make dev
+```
+
+To run tests, build documentation and contribute, run
+```bash
+make test build-docs
 ```
 
 ## How to Cite
