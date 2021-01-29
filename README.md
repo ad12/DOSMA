@@ -1,4 +1,5 @@
 # DOSMA: Deep Open-Source Medical Image Analysis
+[![Documentation Status](https://readthedocs.org/projects/dosma/badge/?version=stable)](https://dosma.readthedocs.io/en/stable/?badge=stable)
 
 DOSMA is an AI-powered Python library for medical image analysis. This includes, but is not limited to:
 - image processing (denoising, super-resolution, registration, segmentation, etc.)
@@ -7,7 +8,7 @@ DOSMA is an AI-powered Python library for medical image analysis. This includes,
 
 We hope that this open-source pipeline will be useful for quick anatomy/pathology analysis from MRI and will serve as a hub for adding support for analyzing different anatomies and scan sequences.
 
-[Documentation](https://ad12.github.io/DOSMA) | [Questionnaire](https://forms.gle/sprthTC2swyt8dDb6)
+[Documentation](http://dosma.readthedocs.io/) | [Questionnaire](https://forms.gle/sprthTC2swyt8dDb6)
 
 ## Installation
 DOSMA requires Python 3.6+. The core module depends on numpy, nibabel, nipype,
