@@ -6,11 +6,11 @@ class ActionWrapper(object):
 
     Examples include `segment` scans, `interregister` scans, etc.
 
-    Actions are instance methods of classes that can be executed via the command line. They are typically associated
-        with different scans.
+    Actions are instance methods of classes that can be executed via the command line.
+    They are typically associated with different scans.
 
-    To expose these methods to the command-line interface, we wrap these actions as subparsers. Parameters for the
-        method are arguments of the subparser.
+    To expose these methods to the command-line interface, we wrap these actions as subparsers.
+        Parameters for the method are arguments of the subparser.
     """
 
     def __init__(self, name, **kwargs):
@@ -38,11 +38,15 @@ class ActionWrapper(object):
 
         if "alternative_param_names" in kwargs:
             alternative_param_names_in = kwargs.get("alternative_param_names")
-            assert type(alternative_param_names_in) is dict, \
-                "`alternative_param_names` must be a dictionary of str->str"
+            assert (
+                type(alternative_param_names_in) is dict
+            ), "`alternative_param_names` must be a dictionary of str->str"
             for param_name in alternative_param_names_in:
                 assert type(param_name) is str, "Keys must be of string type"
-                assert type(alternative_param_names_in[param_name]) in [list, tuple], "Values must be of string type"
+                assert type(alternative_param_names_in[param_name]) in [
+                    list,
+                    tuple,
+                ], "Values must be of string type"
             self._alternative_param_names = alternative_param_names_in
 
     def get_alternative_param_names(self, param: str):
@@ -87,4 +91,3 @@ class ActionWrapper(object):
     def name(self):
         """str: Action name."""
         return self._name
-

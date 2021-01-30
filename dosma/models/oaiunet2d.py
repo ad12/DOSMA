@@ -3,16 +3,17 @@
         (C) Stanford University, 2019
 """
 
-from copy import deepcopy
 import os
+from copy import deepcopy
 
 import numpy as np
 
 try:
     import keras.backend as K
     from keras.layers import BatchNormalization as BN
-    from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, Concatenate
+    from keras.layers import Concatenate, Conv2D, Conv2DTranspose, Dropout, Input, MaxPooling2D
     from keras.models import Model
+
     _SUPPORTS_KERAS = True
 except ImportError:  # pragma: no-cover
     _SUPPORTS_KERAS = False  # pragma: no-cover
@@ -29,18 +30,23 @@ class OAIUnet2D(KerasSegModel):
 
     Original Github: https://github.com/akshaysc/msk_segmentation
     """
-    ALIASES = ['oai-unet2d', 'oai_unet2d']
+
+    ALIASES = ["oai-unet2d", "oai_unet2d"]
 
     sigmoid_threshold = 0.5
 
     def __load_keras_model__(self, input_shape, force_weights=False):
         """Generate Unet 2D model
 
-        :param input_shape: tuple of input size - format: (height, width, 1)
+        Args:
+            input_shape: tuple of input size - format: (height, width, 1)
 
-        :rtype: Keras model
+        Returns:
+            A Keras model
 
-        :raise ValueError if input_size is not tuple or dimensions of input_size do not match (height, width, 1)
+        Raises:
+            ValueError: If ``input_size`` is not tuple or dimensions
+                or ``input_size`` does not match (height, width, 1)
         """
         if not _SUPPORTS_KERAS:
             raise ImportError(
@@ -49,7 +55,7 @@ class OAIUnet2D(KerasSegModel):
             )
 
         if type(input_shape) is not tuple or len(input_shape) != 3 or input_shape[2] != 1:
-            raise ValueError('input_size must be a tuple of size (height, width, 1)')
+            raise ValueError("input_size must be a tuple of size (height, width, 1)")
 
         nfeatures = [2 ** feat * 32 for feat in np.arange(6)]
         depth = len(nfeatures)
@@ -63,14 +69,20 @@ class OAIUnet2D(KerasSegModel):
         pool = inputs
         for depth_cnt in range(depth):
 
-            conv = Conv2D(nfeatures[depth_cnt], (3, 3),
-                          padding='same',
-                          activation='relu',
-                          kernel_initializer='he_normal')(pool)
-            conv = Conv2D(nfeatures[depth_cnt], (3, 3),
-                          padding='same',
-                          activation='relu',
-                          kernel_initializer='he_normal')(conv)
+            conv = Conv2D(
+                nfeatures[depth_cnt],
+                (3, 3),
+                padding="same",
+                activation="relu",
+                kernel_initializer="he_normal",
+            )(pool)
+            conv = Conv2D(
+                nfeatures[depth_cnt],
+                (3, 3),
+                padding="same",
+                activation="relu",
+                kernel_initializer="he_normal",
+            )(conv)
 
             conv = BN(axis=-1, momentum=0.95, epsilon=0.001)(conv)
             conv = Dropout(rate=0.0)(conv)
@@ -82,9 +94,9 @@ class OAIUnet2D(KerasSegModel):
 
                 # If size of input is odd, only do a 3x3 max pool
                 xres = conv.shape.as_list()[1]
-                if (xres % 2 == 0):
+                if xres % 2 == 0:
                     pooling_size = (2, 2)
-                elif (xres % 2 == 1):
+                elif xres % 2 == 1:
                     pooling_size = (3, 3)
 
                 pool = MaxPooling2D(pool_size=pooling_size)(conv)
@@ -96,30 +108,40 @@ class OAIUnet2D(KerasSegModel):
             deconv_shape[0] = None
 
             # If size of input is odd, then do a 3x3 deconv
-            if (deconv_shape[1] % 2 == 0):
+            if deconv_shape[1] % 2 == 0:
                 unpooling_size = (2, 2)
-            elif (deconv_shape[1] % 2 == 1):
+            elif deconv_shape[1] % 2 == 1:
                 unpooling_size = (3, 3)
 
-            up = Concatenate(axis=3)([Conv2DTranspose(nfeatures[depth_cnt], (3, 3),
-                                                      padding='same',
-                                                      strides=unpooling_size)(conv),
-                                      conv_ptr[depth_cnt]])
+            up = Concatenate(axis=3)(
+                [
+                    Conv2DTranspose(
+                        nfeatures[depth_cnt], (3, 3), padding="same", strides=unpooling_size
+                    )(conv),
+                    conv_ptr[depth_cnt],
+                ]
+            )
 
-            conv = Conv2D(nfeatures[depth_cnt], (3, 3),
-                          padding='same',
-                          activation='relu',
-                          kernel_initializer='he_normal')(up)
-            conv = Conv2D(nfeatures[depth_cnt], (3, 3),
-                          padding='same',
-                          activation='relu',
-                          kernel_initializer='he_normal')(conv)
+            conv = Conv2D(
+                nfeatures[depth_cnt],
+                (3, 3),
+                padding="same",
+                activation="relu",
+                kernel_initializer="he_normal",
+            )(up)
+            conv = Conv2D(
+                nfeatures[depth_cnt],
+                (3, 3),
+                padding="same",
+                activation="relu",
+                kernel_initializer="he_normal",
+            )(conv)
 
             conv = BN(axis=-1, momentum=0.95, epsilon=0.001)(conv)
             conv = Dropout(rate=0.00)(conv)
 
         # combine features
-        recon = Conv2D(1, (1, 1), padding='same', activation='sigmoid')(conv)
+        recon = Conv2D(1, (1, 1), padding="same", activation="sigmoid")(conv)
 
         model = Model(inputs=[inputs], outputs=[recon])
 
@@ -169,25 +191,18 @@ class IWOAIOAIUnet2D(OAIUnet2D):
         Framework on a Standardized Dataset." arXiv preprint arXiv:2004.14003
         (2020). `[link] <https://arxiv.org/abs/2004.14003>`_
     """
-    ALIASES = ['iwoai-2019-t6']
+
+    ALIASES = ["iwoai-2019-t6"]
     _WEIGHTS_FILE = "iwoai-2019-unet2d_fc-tc-pc-men_weights.h5"
 
     def __init__(self, input_shape, weights_path, force_weights=False):
         if not force_weights and os.path.basename(weights_path) != self._WEIGHTS_FILE:
-            raise ValueError(
-                f"Weights {weights_path} not supported for {type(self)}"
-            )
+            raise ValueError(f"Weights {weights_path} not supported for {type(self)}")
         super().__init__(input_shape, weights_path)
 
     def __load_keras_model__(self, input_shape):
-        if (
-            type(input_shape) is not tuple
-            or len(input_shape) != 3
-            or input_shape[2] != 1
-        ):
-            raise ValueError(
-                "input_size must be a tuple of size (height, width, 1)"
-            )
+        if type(input_shape) is not tuple or len(input_shape) != 3 or input_shape[2] != 1:
+            raise ValueError("input_size must be a tuple of size (height, width, 1)")
 
         nfeatures = [2 ** feat * 32 for feat in np.arange(6)]
         depth = len(nfeatures)
@@ -201,14 +216,20 @@ class IWOAIOAIUnet2D(OAIUnet2D):
         pool = inputs
         for depth_cnt in range(depth):
 
-            conv = Conv2D(nfeatures[depth_cnt], (3, 3),
-                          padding='same',
-                          activation='relu',
-                          kernel_initializer='he_normal')(pool)
-            conv = Conv2D(nfeatures[depth_cnt], (3, 3),
-                          padding='same',
-                          activation='relu',
-                          kernel_initializer='he_normal')(conv)
+            conv = Conv2D(
+                nfeatures[depth_cnt],
+                (3, 3),
+                padding="same",
+                activation="relu",
+                kernel_initializer="he_normal",
+            )(pool)
+            conv = Conv2D(
+                nfeatures[depth_cnt],
+                (3, 3),
+                padding="same",
+                activation="relu",
+                kernel_initializer="he_normal",
+            )(conv)
 
             conv = BN(axis=-1, momentum=0.95, epsilon=0.001)(conv)
             conv = Dropout(rate=0.0)(conv)
@@ -220,9 +241,9 @@ class IWOAIOAIUnet2D(OAIUnet2D):
 
                 # If size of input is odd, only do a 3x3 max pool
                 xres = conv.shape.as_list()[1]
-                if (xres % 2 == 0):
+                if xres % 2 == 0:
                     pooling_size = (2, 2)
-                elif (xres % 2 == 1):
+                elif xres % 2 == 1:
                     pooling_size = (3, 3)
 
                 pool = MaxPooling2D(pool_size=pooling_size)(conv)
@@ -234,30 +255,40 @@ class IWOAIOAIUnet2D(OAIUnet2D):
             deconv_shape[0] = None
 
             # If size of input is odd, then do a 3x3 deconv
-            if (deconv_shape[1] % 2 == 0):
+            if deconv_shape[1] % 2 == 0:
                 unpooling_size = (2, 2)
-            elif (deconv_shape[1] % 2 == 1):
+            elif deconv_shape[1] % 2 == 1:
                 unpooling_size = (3, 3)
 
-            up = Concatenate(axis=3)([Conv2DTranspose(nfeatures[depth_cnt], (3, 3),
-                                                      padding='same',
-                                                      strides=unpooling_size)(conv),
-                                      conv_ptr[depth_cnt]])
+            up = Concatenate(axis=3)(
+                [
+                    Conv2DTranspose(
+                        nfeatures[depth_cnt], (3, 3), padding="same", strides=unpooling_size
+                    )(conv),
+                    conv_ptr[depth_cnt],
+                ]
+            )
 
-            conv = Conv2D(nfeatures[depth_cnt], (3, 3),
-                          padding='same',
-                          activation='relu',
-                          kernel_initializer='he_normal')(up)
-            conv = Conv2D(nfeatures[depth_cnt], (3, 3),
-                          padding='same',
-                          activation='relu',
-                          kernel_initializer='he_normal')(conv)
+            conv = Conv2D(
+                nfeatures[depth_cnt],
+                (3, 3),
+                padding="same",
+                activation="relu",
+                kernel_initializer="he_normal",
+            )(up)
+            conv = Conv2D(
+                nfeatures[depth_cnt],
+                (3, 3),
+                padding="same",
+                activation="relu",
+                kernel_initializer="he_normal",
+            )(conv)
 
             conv = BN(axis=-1, momentum=0.95, epsilon=0.001)(conv)
             conv = Dropout(rate=0.00)(conv)
 
         # combine features
-        recon = Conv2D(4, (1, 1), padding='same', activation='sigmoid')(conv)
+        recon = Conv2D(4, (1, 1), padding="same", activation="sigmoid")(conv)
 
         model = Model(inputs=[inputs], outputs=[recon])
 
@@ -315,7 +346,7 @@ class IWOAIOAIUnet2DNormalized(IWOAIOAIUnet2D):
         (2020).
     """
 
-    ALIASES = ('iwoai-2019-t6-normalized',)
+    ALIASES = ("iwoai-2019-t6-normalized",)
     _WEIGHTS_FILE = "iwoai-2019-unet2d-normalized_fc-tc-pc-men_weights.h5"
 
     def __preprocess_volume__(self, volume: np.ndarray):

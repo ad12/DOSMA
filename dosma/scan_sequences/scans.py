@@ -2,12 +2,14 @@
 
 This module defines the abstract interfaces that can be extended by concrete scan types.
 
-Different scan types produce images with different qualities (different quantitative parameters, resolutions, etc.).
-    These scan types have different actions (or processing) associated with them.
+Different scan types produce images with different qualities
+(different quantitative parameters, resolutions, etc.).
+These scan types have different actions (or processing) associated with them.
 
 A scan can have multiple volumes if multiple phases or echo times are used to image in the scan.
 """
 
+import logging
 import os
 import re
 import warnings
@@ -17,7 +19,7 @@ from time import localtime, strftime
 import numpy as np
 import scipy.ndimage as sni
 from natsort import natsorted
-from nipype.interfaces.elastix import Registration, ApplyWarp
+from nipype.interfaces.elastix import ApplyWarp, Registration
 
 from dosma import file_constants as fc
 from dosma.data_io import format_io_utils as fio_utils
@@ -29,8 +31,6 @@ from dosma.defaults import preferences
 from dosma.models.seg_model import SegModel
 from dosma.tissues.tissue import Tissue
 from dosma.utils import io_utils
-
-import logging
 
 
 class ScanSequence(ABC):
@@ -49,17 +49,20 @@ class ScanSequence(ABC):
 
     Kwargs:
 
-        split_by (`str` or `tuple`, optional): DICOM field tag name or tag number used to group dicoms. Default depends
-            on scan sequence - typically EchoNumber. `dicom_path` must be specified.
-        ignore_ext (`bool`, optional): Ignore extension when loading DICOM files. `dicom_path` must be specified.
+        split_by (`str` or `tuple`, optional): DICOM field tag name or tag number
+            used to group dicoms. Default depends on scan sequence - typically EchoNumber.
+            ``dicom_path`` must be specified.
+        ignore_ext (`bool`, optional): Ignore extension when loading DICOM files.
+            ``dicom_path`` must be specified.
 
     Raises:
         NotADirectoryError: If `dicom_path` is not a valid directory.
         ValueError: If dicoms do not correspond to the expected sequence.
 
     """
-    NAME = ''
-    __DEFAULT_SPLIT_BY__ = 'EchoNumbers'
+
+    NAME = ""
+    __DEFAULT_SPLIT_BY__ = "EchoNumbers"
 
     def __init__(self, dicom_path: str = None, load_path: str = None, **kwargs):
         self.split_by = self.__DEFAULT_SPLIT_BY__
@@ -70,7 +73,9 @@ class ScanSequence(ABC):
             if k in kwargs:
                 self.__setattr__(k, kwargs.get(k))
 
-        self.temp_path = os.path.join(fc.TEMP_FOLDER_PATH, self.NAME, strftime("%Y-%m-%d-%H-%M-%S", localtime()))
+        self.temp_path = os.path.join(
+            fc.TEMP_FOLDER_PATH, self.NAME, strftime("%Y-%m-%d-%H-%M-%S", localtime())
+        )
         self.tissues = []
         self.dicom_path = os.path.abspath(dicom_path) if dicom_path is not None else None
 
@@ -81,14 +86,17 @@ class ScanSequence(ABC):
         # check if dicom path exists
         if (dicom_path is not None) and (not os.path.isdir(dicom_path)):
             if load_path is not None:
-                warnings.warn("Dicom_path {} not found. Will load data from {}".format(dicom_path, load_path))
+                warnings.warn(
+                    "Dicom_path {} not found. Will load data from {}".format(dicom_path, load_path)
+                )
             else:
                 raise NotADirectoryError("{} is not a directory".format(dicom_path))
 
         # Only use dicoms if the path exists and path contains files ending in dicom_ext
         is_dicom_available = (dicom_path is not None) and (os.path.isdir(dicom_path))
 
-        # Only load data if dicom path is not given or doesn't exist, else assume user wants to rewrite information
+        # Only load data if dicom path is not given or doesn't exist
+        # Else assume user wants to rewrite information
         if load_path and not is_dicom_available:
             self.load_data(load_path)
 
@@ -96,7 +104,9 @@ class ScanSequence(ABC):
             self.__load_dicom__()
 
         if not self.__validate_scan__():
-            raise ValueError("dicoms in '{}' do not correspond to {} sequence".format(self.dicom_path, self.NAME))
+            raise ValueError(
+                "dicoms in '{}' do not correspond to {} sequence".format(self.dicom_path, self.NAME)
+            )
 
     @abstractmethod
     def __validate_scan__(self) -> bool:
@@ -115,7 +125,7 @@ class ScanSequence(ABC):
         dicom_path = self.dicom_path
 
         if dicom_path is None or not os.path.isdir(dicom_path):
-            raise NotADirectoryError('%s not found' % dicom_path)
+            raise NotADirectoryError("%s not found" % dicom_path)
 
         dr = DicomReader()
 
@@ -132,7 +142,9 @@ class ScanSequence(ABC):
             sn (int): Series number.
         """
         if self.series_number is not None:
-            assert self.series_number == sn, "Series numbers must be identical if loading the same scan"
+            assert (
+                self.series_number == sn
+            ), "Series numbers must be identical if loading the same scan"
             return
         else:
             self.series_number = sn
@@ -154,8 +166,8 @@ class ScanSequence(ABC):
             new_tissue (Tissue): Tissue to add.
 
         Raises:
-            ValueError: If tissue already exists in list. For example, we cannot add FemoralCartilage twice to the list
-                of tissues
+            ValueError: If tissue already exists in list.
+                For example, we cannot add FemoralCartilage twice to the list of tissues.
         """
         contains_tissue = any([tissue.ID == new_tissue.ID for tissue in self.tissues])
         if contains_tissue:
@@ -169,9 +181,11 @@ class ScanSequence(ABC):
         Returns:
             str: File name for pickled data.
         """
-        return '%s.data' % self.NAME
+        return "%s.data" % self.NAME
 
-    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format):
+    def save_data(
+        self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format
+    ):
         """Save data to disk.
 
         Data will be saved in the directory '`base_save_dirpath`/scan.NAME_data/'
@@ -179,9 +193,10 @@ class ScanSequence(ABC):
 
         Serializes variables specified in by self.__serializable_variables__().
 
-        Override this method to save additional information such as volumes, subvolumes, quantitative maps, etc.
-            In override, Call this function (super().save_data(base_save_dirpath)) before adding code to override this
-            method.
+        Override this method to save additional information such as volumes, subvolumes,
+        quantitative maps, etc. In override, Call this function
+        ``super().save_data(base_save_dirpath)`` before adding code to override this
+        method.
 
         Args:
             base_save_dirpath (str): Directory path where all data is stored.
@@ -190,7 +205,7 @@ class ScanSequence(ABC):
 
         # Write data as ref.
         save_dirpath = self.__save_dir__(base_save_dirpath)
-        filepath = os.path.join(save_dirpath, '%s.data' % self.NAME)
+        filepath = os.path.join(save_dirpath, "%s.data" % self.NAME)
 
         metadata = dict()
         for variable_name in self.__serializable_variables__():
@@ -201,11 +216,13 @@ class ScanSequence(ABC):
     def load_data(self, base_load_dirpath: str):
         """Load data from disk.
 
-        Data will be loaded from the directory '`base_load_dirpath`/`scan.NAME`' (e.g. '`base_load_dirpath'/dess/').
+        Data will be loaded from the directory
+        '`base_load_dirpath`/`scan.NAME`' (e.g. '`base_load_dirpath'/dess/').
 
-        Override this method to load additional information such as volumes, subvolumes, quantitative maps, etc.
-            In override, Call this function (super().save_data(base_load_dirpath)) before adding code to override this
-            method.
+        Override this method to load additional information such as volumes, subvolumes,
+        quantitative maps, etc. In override, Call this function
+        ``super().save_data(base_load_dirpath)`` before adding code to override this
+        method.
 
         Args:
             base_load_dirpath (str): Directory path where all data is stored.
@@ -227,8 +244,12 @@ class ScanSequence(ABC):
 
         try:
             self.__load_dicom__()
-        except:
-            logging.info("Dicom directory {} not found. Will try to load from {}".format(self.dicom_path, base_load_dirpath))
+        except Exception:
+            logging.info(
+                "Dicom directory {} not found. Will try to load from {}".format(
+                    self.dicom_path, base_load_dirpath
+                )
+            )
 
     def __save_dir__(self, dir_path: str, create_dir: bool = True):
         """Returns directory path specific to this scan.
@@ -265,15 +286,16 @@ class ScanSequence(ABC):
 
         To add scan specific variables, override this method.
         """
-        return ['dicom_path', 'series_number', 'split_by', 'ignore_ext']
+        return ["dicom_path", "series_number", "split_by", "ignore_ext"]
 
 
 class TargetSequence(ScanSequence):
     """Abstract class for scans that support segmentation of tissues.
 
-    Scans that have high resolution & signal-to-noise ratio (SNR) are typically used for segmentation. Because of this
-        property, they are often referred to as "target scans". This allows them to serve as a good template that other
-        lower SNR/resolution scans can be registered to.
+    Scans that have high resolution & signal-to-noise ratio (SNR) are typically used for
+    segmentation. Because of this property, they are often referred to as *targets*.
+    This allows them to serve as a good template that other lower SNR/resolution scans
+    can be registered to.
     """
 
     @abstractmethod
@@ -291,7 +313,9 @@ class TargetSequence(ScanSequence):
 
 
 class NonTargetSequence(ScanSequence):
-    """Abstract class for scans that cannot serve as targets and have to be registered to some other target scan.
+    """
+    Abstract class for scans that cannot serve as targets and have
+    to be registered to some other target scan.
 
     Examples: Cubequant, Cones
     """
@@ -300,19 +324,23 @@ class NonTargetSequence(ScanSequence):
     def interregister(self, target_path: str, mask_path: str = None):
         """Register this scan to the target scan - save as parameter in scan (volumes, subvolumes, etc).
 
-        We use the term "interregister" to refer to registration between volumes of different scans. Conversely,
-            "intraregister" refers to registering volumes from the same scan.
+        We use the term *interregister* to refer to registration between volumes of different scans.
+        Conversely, *intraregister* refers to registering volumes from the same scan.
 
-        If there are many subvolumes to interregister with the base scan, typically the following actions are used to
-            reduce error accumulation with multiple registrations.
-            1. Pick the volume with the highest SNR. Call this the base moving image.
-            2. Register the base moving image to the target image using elastix.
-            3. Capture the transformation file(s) detailing the transforms to go from base moving image -> target image.
-            4. Apply these transformation(s) to the remaining volumes.
+        If there are many subvolumes to interregister with the base scan,
+        typically the following actions are used to reduce error accumulation
+        with multiple registrations:
+
+        1. Pick the volume with the highest SNR. Call this the base moving image.
+        2. Register the base moving image to the target image using elastix.
+        3. Capture the transformation file(s) detailing the transforms to go from
+           base moving image -> target image.
+        4. Apply these transformation(s) to the remaining volumes.
 
         Args:
-            target_path (str): Path to NIfTI file storing scan. This scan will serve as the base for registration. Note
-                the best target scan will have a high SNR.
+            target_path (str): Path to NIfTI file storing scan.
+                This scan will serve as the base for registration.
+                Note the best target scan will typically have a high SNR.
 
             mask_path (str): Path to mask to use to use as focus points for registration.
         """
@@ -321,15 +349,16 @@ class NonTargetSequence(ScanSequence):
     def __split_volumes__(self, expected_num_subvolumes: int):
         """Split the scan into multiple volumes based on the echo time.
 
-        Each volume represents a volumes of slices acquired with the same TR and TE times. For example, Cubequant uses 4
-            spin lock times -- this will produce 4 volumes.
+        Each volume represents a volumes of slices acquired with the same TR and TE times.
+        For example, Cubequant uses 4 spin lock times -- this will produce 4 volumes.
 
         Args:
             expected_num_subvolumes (int): Expected number of volumes that should be in the scan.
 
         Returns:
-        `dict[int, MedicalVolume]`, `list[float]`: A dictionary mapping echo time index -> MedicalVolume and a list of
-            echo times in ascending order.
+            Tuple[Dict[int, MedicalVolume], list[float]]:
+                A dictionary mapping echo time index -> MedicalVolume
+                and a list of echo times in ascending order.
 
             e.g.: {0: MedicalVolume A, 1:MedicalVolume B}, [10, 50]
 
@@ -338,7 +367,9 @@ class NonTargetSequence(ScanSequence):
         volumes = self.volumes
 
         if len(volumes) != expected_num_subvolumes:
-            raise ValueError("Expected %d subvolumes but got %d" % (expected_num_subvolumes, len(volumes)))
+            raise ValueError(
+                "Expected %d subvolumes but got %d" % (expected_num_subvolumes, len(volumes))
+            )
 
         num_echo_times = len(volumes)
         echo_times = []
@@ -365,17 +396,20 @@ class NonTargetSequence(ScanSequence):
     def __load_interregistered_files__(self, interregistered_dirpath: str):
         """Load the NIfTI files of the interregistered subvolumes.
 
-        These subvolumes have already been registered to some target scan using the `interregister` function.
+        These subvolumes have already been registered to some target scan
+        using the `interregister` function.
 
         Args:
             interregistered_dirpath (str): Directory path where interregistered volumes are stored.
 
         Returns:
-        `dict[int, MedicalVolume]`, `list[float]`: A dictionary mapping echo time index -> MedicalVolume
+            Tuple[Dict[int, MedicalVolume], List[float]]:
+                A dictionary mapping echo time index -> MedicalVolume
 
         Raises:
-            ValueError: If files are not of the name `<INTEGER>.nii.gz` (e.g. `0.nii.gz`, `000.nii.gz`, etc.)
-                or if no interregistered files found in interregistered_dirpath.
+            ValueError: If files are not of the name `<INTEGER>.nii.gz`
+                (e.g. `0.nii.gz`, `000.nii.gz`, etc.) or if no interregistered files
+                found in interregistered_dirpath.
         """
         logging.info("Loading interregistered files")
         if "interregistered" not in interregistered_dirpath:
@@ -414,17 +448,23 @@ class NonTargetSequence(ScanSequence):
 
         return subvolumes_dict
 
-    def __dilate_mask__(self, mask_path: str, temp_path: str,
-                        dil_rate: float = preferences.mask_dilation_rate,
-                        dil_threshold: float = preferences.mask_dilation_threshold):
+    def __dilate_mask__(
+        self,
+        mask_path: str,
+        temp_path: str,
+        dil_rate: float = preferences.mask_dilation_rate,
+        dil_threshold: float = preferences.mask_dilation_threshold,
+    ):
         """Dilate mask using gaussian blur and write to disk to use with Elastix.
 
         Args:
-            mask_path (str): File path for mask to use to use as focus points for registration. Mask must be binary.
+            mask_path (str): File path for mask to use to use as focus points for registration.
+                Mask must be binary.
             temp_path (str): Directory path to store temporary data.
-            dil_rate (`float`, optional): Dilation rate (sigma). Defaults to `preferences.mask_dilation_rate`.
-            dil_threshold (`float`, optional): Threshold to binarize dilated mask. Must be between [0, 1]. Defaults to
-                `preferences.mask_dilation_threshold`.
+            dil_rate (`float`, optional): Dilation rate (sigma).
+                Defaults to ``preferences.mask_dilation_rate``.
+            dil_threshold (`float`, optional): Threshold to binarize dilated mask.
+                Must be between [0, 1]. Defaults to ``preferences.mask_dilation_threshold``.
 
         Returns:
             str: File path of dilated mask.
@@ -442,39 +482,45 @@ class NonTargetSequence(ScanSequence):
 
         mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
 
-        dilated_mask = sni.gaussian_filter(np.asarray(mask.volume, dtype=np.float32),
-                                           sigma=dil_rate) > dil_threshold
-        fixed_mask = np.asarray(dilated_mask,
-                                dtype=np.int8)
+        dilated_mask = (
+            sni.gaussian_filter(np.asarray(mask.volume, dtype=np.float32), sigma=dil_rate)
+            > dil_threshold
+        )
+        fixed_mask = np.asarray(dilated_mask, dtype=np.int8)
         fixed_mask_filepath = os.path.join(io_utils.mkdirs(temp_path), "dilated-mask.nii.gz")
 
-        dilated_mask_volume = MedicalVolume(fixed_mask,
-                                            affine=mask.affine)
+        dilated_mask_volume = MedicalVolume(fixed_mask, affine=mask.affine)
         dilated_mask_volume.save_volume(fixed_mask_filepath)
 
         return fixed_mask_filepath
 
-    def __interregister_base_file__(self, base_image_info: tuple, target_path: str, temp_path: str,
-                                    mask_path: str = None,
-                                    parameter_files=(fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE)):
+    def __interregister_base_file__(
+        self,
+        base_image_info: tuple,
+        target_path: str,
+        temp_path: str,
+        mask_path: str = None,
+        parameter_files=(fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE),
+    ):
         """Interregister the base moving image to the target image.
 
         Args:
             base_image_info (tuple[str, int]): File path, echo index (eg. 'scans/000.nii.gz, 0).
             target_path (str): File path to target scan. Must be in nifti (.nii.gz) format.
             temp_path (str): Directory path to store temporary data.
-            mask_path (str): Path to mask to use to use as focus points for registration. Mask must be binary. Recommend
-                using dilated mask.
+            mask_path (str): Path to mask to use to use as focus points for registration.
+                Mask must be binary. Recommend using dilated mask.
             parameter_files (list[str]): Transformix parameter files to use for transformations.
 
         Returns:
-            tuple[str, list[str]): File path to the transformed moving image and a list of file paths to elastix
-                transformations (e.g. '/result.nii.gz', ['/tranformation0.txt', '/transformation1.txt']).
+            tuple[str, list[str]): File path to the transformed moving image and
+                a list of file paths to elastix transformations
+                (e.g. '/result.nii.gz', ['/tranformation0.txt', '/transformation1.txt']).
         """
         base_image_path, base_time_id = base_image_info
 
         # Register base image to the target image.
-        logging.info("Registering %s (base image)".format(base_image_path))
+        logging.info(f"Registering base image: {base_image_path}")
         transformation_files = []
 
         use_mask_arr = [False, True]
@@ -488,8 +534,9 @@ class NonTargetSequence(ScanSequence):
             reg = Registration()
             reg.inputs.fixed_image = target_path
             reg.inputs.moving_image = moving_image
-            reg.inputs.output_path = io_utils.mkdirs(os.path.join(temp_path,
-                                                                     '{:03d}_param{}'.format(base_time_id, i)))
+            reg.inputs.output_path = io_utils.mkdirs(
+                os.path.join(temp_path, "{:03d}_param{}".format(base_time_id, i))
+            )
             reg.inputs.parameters = pfile
 
             if use_mask and mask_path is not None:
@@ -513,8 +560,8 @@ class NonTargetSequence(ScanSequence):
         """Apply transform(s) to moving image using Transformix.
 
         Args:
-            image_info (tuple[str, int]): File path, echo index (eg. 'scans/000.nii.gz, 0).
-            transformation_files (list[str]): Ordered collection of paths to elastix transformation files.
+            image_info (Tuple[str, int]): File path, echo index (eg. 'scans/000.nii.gz, 0).
+            transformation_files (List[str]): Paths to elastix transformation files.
             temp_path (str): Directory path to store temporary data.
 
         Returns:
@@ -522,14 +569,15 @@ class NonTargetSequence(ScanSequence):
         """
         filename, image_id = image_info
         logging.info("Applying transform {}".format(filename))
-        warped_file = ''
+        warped_file = ""
         for f in transformation_files:
             reg = ApplyWarp()
             reg.inputs.moving_image = filename if len(warped_file) == 0 else warped_file
 
             reg.inputs.transform_file = f
-            reg.inputs.output_path = io_utils.mkdirs(os.path.join(temp_path,
-                                                                     "{:03d}".format(image_id)))
+            reg.inputs.output_path = io_utils.mkdirs(
+                os.path.join(temp_path, "{:03d}".format(image_id))
+            )
             reg.terminal_output = fc.NIPYPE_LOGGING
             reg_output = reg.run()
 

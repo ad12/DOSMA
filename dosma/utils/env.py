@@ -16,4 +16,3 @@ def _package_available(name):
 
 def sitk_available():
     return _package_available("SimpleITK")
-

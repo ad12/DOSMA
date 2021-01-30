@@ -36,7 +36,7 @@ make dev
 
 To run tests, build documentation and contribute, run
 ```bash
-make test build-docs
+make autoformat test build-docs
 ```
 
 ## How to Cite

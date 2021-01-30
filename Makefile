@@ -1,8 +1,8 @@
 autoformat:
-	dev/linter.sh format
-
-lint:
-	dev/linter.sh
+	set -e
+	isort .
+	black --config pyproject.toml .
+	flake8
 
 test:
 	set -e
@@ -18,4 +18,4 @@ dev:
 	pip install sphinx sphinx-rtd-theme recommonmark
 	pip install -r docs/requirements.txt
 
-all: test build-docs
+all: autoformat test build-docs

@@ -8,11 +8,11 @@ class WidgetLogger(logging.StreamHandler):
         logging.Handler.__init__(self, sys.stdout)
         self.setLevel(logging.INFO)
         self.widget = widget
-        self.widget.config(state='disabled')
+        self.widget.config(state="disabled")
 
     def emit(self, record):
-        self.widget.config(state='normal')
+        self.widget.config(state="normal")
         # Append message (record) to the widget
-        self.widget.insert(tk.END, self.format(record) + '\n')
+        self.widget.insert(tk.END, self.format(record) + "\n")
         self.widget.see(tk.END)  # Scroll to the bottom
-        self.widget.config(state='disabled')
+        self.widget.config(state="disabled")

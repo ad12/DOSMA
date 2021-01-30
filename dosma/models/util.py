@@ -7,13 +7,12 @@ Functions for loading Keras models
 import os
 import yaml
 from functools import partial
+from typing import Sequence
 
+from dosma.models.oaiunet2d import IWOAIOAIUnet2D, IWOAIOAIUnet2DNormalized, OAIUnet2D
 from dosma.models.seg_model import SegModel
-from dosma.models.oaiunet2d import OAIUnet2D
-from dosma.models.oaiunet2d import IWOAIOAIUnet2D
-from dosma.models.oaiunet2d import IWOAIOAIUnet2DNormalized
 
-__all__ = ['get_model', 'SUPPORTED_MODELS']
+__all__ = ["get_model", "SUPPORTED_MODELS"]
 
 # Network architectures currently supported
 __SUPPORTED_MODELS__ = [OAIUnet2D, IWOAIOAIUnet2D, IWOAIOAIUnet2DNormalized]
@@ -33,7 +32,7 @@ def get_model(model_str, input_shape, weights_path, **kwargs):
         if model_str in m.ALIASES or model_str == m.__name__:
             return m(input_shape, weights_path, **kwargs)
 
-    raise LookupError('%s model type not supported' % model_str)
+    raise LookupError("%s model type not supported" % model_str)
 
 
 def model_from_config(cfg_file_or_dict, weights_dir=None, **kwargs) -> SegModel:
@@ -59,6 +58,7 @@ def model_from_config(cfg_file_or_dict, weights_dir=None, **kwargs) -> SegModel:
         SegModel: A segmentation model with appropriate changes to `generate_mask` to produce
             the right masks.
     """
+
     def _gen_mask(func, *_args, **_kwargs):
         out = func(*_args, **_kwargs)
         if isinstance(out, dict):

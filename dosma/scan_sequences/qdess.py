@@ -1,9 +1,5 @@
-"""Quantitative Double Echo in Steady State (qDESS) sequence.
-
-Paper:
-    Sveinsson, B., A. S. Chaudhari, G. E. Gold, and B. A. Hargreaves. "A simple analytic method for estimating T2 in the
-    knee from DESS." Magnetic resonance imaging 38 (2017): 63-70.
-"""
+"""Quantitative Double Echo in Steady State (qDESS) sequence."""
+import logging
 import math
 import os
 from copy import deepcopy
@@ -12,18 +8,15 @@ from typing import Sequence
 import numpy as np
 from pydicom.tag import Tag
 
-from dosma.scan_sequences.scans import TargetSequence
-
 from dosma.data_io import format_io_utils as fio_utils
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.defaults import preferences
 from dosma.models.seg_model import SegModel
+from dosma.quant_vals import T2
+from dosma.scan_sequences.scans import TargetSequence
 from dosma.tissues.tissue import Tissue
 from dosma.utils.cmd_line_utils import ActionWrapper
-from dosma.quant_vals import T2
-
-import logging
 
 __all__ = ["QDess"]
 
@@ -48,8 +41,8 @@ class QDess(TargetSequence):
     NAME = "qdess"
 
     # DESS DICOM header keys
-    __GL_AREA_TAG__ = Tag(0x001910b6)
-    __TG_TAG__ = Tag(0x001910b7)
+    __GL_AREA_TAG__ = Tag(0x001910B6)
+    __TG_TAG__ = Tag(0x001910B7)
 
     # DESS constants
     __NUM_ECHOS__ = 2
@@ -70,8 +63,6 @@ class QDess(TargetSequence):
         Returns:
             bool: `True` if has 2 echos, `False` otherwise.
         """
-        ref_dicom = self.ref_dicom
-        # contains_expected_dicom_metadata = self.__GL_AREA_TAG__ in ref_dicom and self.__TG_TAG__ in ref_dicom
         has_expected_num_echos = len(self.volumes) == self.__NUM_ECHOS__
 
         # return contains_expected_dicom_metadata & has_expected_num_echos
@@ -91,7 +82,8 @@ class QDess(TargetSequence):
         """
         tissue_names = (
             ", ".join([t.FULL_NAME for t in tissue])
-            if isinstance(tissue, Sequence) else tissue.FULL_NAME
+            if isinstance(tissue, Sequence)
+            else tissue.FULL_NAME
         )
         logging.info(f"Segmenting {tissue_names}...")
 
@@ -116,9 +108,15 @@ class QDess(TargetSequence):
 
         return mask
 
-    def generate_t2_map(self, tissue: Tissue, suppress_fat: bool = False,
-                        suppress_fluid: bool = False, beta: float = 1.2,
-                        gl_area: float = None, tg: float = None):
+    def generate_t2_map(
+        self,
+        tissue: Tissue,
+        suppress_fat: bool = False,
+        suppress_fluid: bool = False,
+        beta: float = 1.2,
+        gl_area: float = None,
+        tg: float = None,
+    ):
         """Generate 3D T2 map.
 
         Args:
@@ -139,10 +137,12 @@ class QDess(TargetSequence):
 
         if not self.__validate_scan__() and (not gl_area or not tg):
             raise ValueError(
-                'dicoms in \'%s\' do not contain GL_Area and Tg tags. Please input manually' % self.dicom_path)
+                "dicoms in '%s' do not contain GL_Area and Tg tags. Please input manually"
+                % self.dicom_path
+            )
 
         if self.volumes is None or self.ref_dicom is None:
-            raise ValueError('volumes and ref_dicom fields must be initialized')
+            raise ValueError("volumes and ref_dicom fields must be initialized")
 
         ref_dicom = self.ref_dicom
 
@@ -169,9 +169,11 @@ class QDess(TargetSequence):
         dkL = gamma * Gl * Tg
 
         # Simply math
-        k = math.pow((math.sin(alpha / 2)), 2) * (
-                1 + math.exp(-TR / T1 - TR * math.pow(dkL, 2) * self.__D__)) / (
-                    1 - math.cos(alpha) * math.exp(-TR / T1 - TR * math.pow(dkL, 2) * self.__D__))
+        k = (
+            math.pow((math.sin(alpha / 2)), 2)
+            * (1 + math.exp(-TR / T1 - TR * math.pow(dkL, 2) * self.__D__))
+            / (1 - math.cos(alpha) * math.exp(-TR / T1 - TR * math.pow(dkL, 2) * self.__D__))
+        )
 
         c1 = (TR - Tg / 3) * (math.pow(dkL, 2)) * self.__D__
 
@@ -182,7 +184,7 @@ class QDess(TargetSequence):
         ratio = np.nan_to_num(ratio)
 
         # have to divide division into steps to avoid overflow error
-        t2map = (-2000 * (TR - TE) / (np.log(abs(ratio) / k) + c1))
+        t2map = -2000 * (TR - TE) / (np.log(abs(ratio) / k) + c1)
 
         t2map = np.nan_to_num(t2map)
 
@@ -201,16 +203,18 @@ class QDess(TargetSequence):
             vol_null_fluid = echo_1 - beta * echo_2
             t2map = t2map * (vol_null_fluid > 0.1 * np.max(vol_null_fluid))
 
-        t2_map_wrapped = MedicalVolume(t2map,
-                                       affine=subvolumes[0].affine,
-                                       headers=deepcopy(subvolumes[0].headers))
+        t2_map_wrapped = MedicalVolume(
+            t2map, affine=subvolumes[0].affine, headers=deepcopy(subvolumes[0].headers)
+        )
         t2_map_wrapped = T2(t2_map_wrapped)
 
         tissue.add_quantitative_value(t2_map_wrapped)
 
         return t2_map_wrapped
 
-    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format):
+    def save_data(
+        self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format
+    ):
         """Save data to disk.
 
         Data will be saved in the directory '`base_save_dirpath`/qdess/'.
@@ -227,7 +231,7 @@ class QDess(TargetSequence):
 
         # write echos
         for i in range(len(self.volumes)):
-            nii_registration_filepath = os.path.join(base_save_dirpath, 'echo%d.nii.gz' % (i + 1))
+            nii_registration_filepath = os.path.join(base_save_dirpath, "echo%d.nii.gz" % (i + 1))
             filepath = fio_utils.convert_image_data_format(nii_registration_filepath, data_format)
             self.volumes[i].save_volume(filepath, data_format=data_format)
 
@@ -251,8 +255,12 @@ class QDess(TargetSequence):
             self.volumes = []
             # Load subvolumes from nifti file
             for i in range(self.__NUM_ECHOS__):
-                nii_registration_filepath = os.path.join(base_load_dirpath, 'echo%d.nii.gz' % (i + 1))
-                subvolume = fio_utils.generic_load(nii_registration_filepath, expected_num_volumes=1)
+                nii_registration_filepath = os.path.join(
+                    base_load_dirpath, "echo%d.nii.gz" % (i + 1)
+                )
+                subvolume = fio_utils.generic_load(
+                    nii_registration_filepath, expected_num_volumes=1
+                )
                 self.volumes.append(subvolume)
 
     def calc_rms(self):
@@ -262,7 +270,7 @@ class QDess(TargetSequence):
             MedicalVolume: Volume with RMS of two echos.
         """
         if self.volumes is None:
-            raise ValueError('Volumes must be initialized')
+            raise ValueError("Volumes must be initialized")
 
         assert len(self.volumes) == 2, "2 Echos expected"
 
@@ -284,23 +292,29 @@ class QDess(TargetSequence):
 
     @classmethod
     def cmd_line_actions(cls):
-        """Provide command line information (such as name, help strings, etc) as list of dictionary."""
+        """
+        Provide command line information (such as name, help strings, etc)
+        as list of dictionary.
+        """
 
-        segment_action = ActionWrapper(name=cls.segment.__name__,
-                                       help='generate automatic segmentation',
-                                       param_help={
-                                           'use_rms': 'use root mean square (rms) of two echos for segmentation'},
-                                       alternative_param_names={'use_rms': ['rms']})
-        generate_t2_map_action = ActionWrapper(name=cls.generate_t2_map.__name__,
-                                               aliases=['t2'],
-                                               param_help={
-                                                   'suppress_fat': 'suppress computation on low SNR fat regions',
-                                                   'suppress_fluid': 'suppress computation on fluid regions',
-                                                   'beta': 'constant for calculating fluid-nulled image (S1-beta*S2)',
-                                                   'gl_area': 'GL Area. Defaults to value in dicom tag \'0x001910b6\'',
-                                                   'tg': 'Gradient time (in microseconds). '
-                                                         'Defaults to value in dicom tag \'0x001910b7\'.'
-                                               },
-                                               help='generate T2 map')
+        segment_action = ActionWrapper(
+            name=cls.segment.__name__,
+            help="generate automatic segmentation",
+            param_help={"use_rms": "use root mean square (rms) of two echos for segmentation"},
+            alternative_param_names={"use_rms": ["rms"]},
+        )
+        generate_t2_map_action = ActionWrapper(
+            name=cls.generate_t2_map.__name__,
+            aliases=["t2"],
+            param_help={
+                "suppress_fat": "suppress computation on low SNR fat regions",
+                "suppress_fluid": "suppress computation on fluid regions",
+                "beta": "constant for calculating fluid-nulled image (S1-beta*S2)",
+                "gl_area": "GL Area. Defaults to value in dicom tag '0x001910b6'",
+                "tg": "Gradient time (in microseconds). "
+                "Defaults to value in dicom tag '0x001910b7'.",
+            },
+            help="generate T2 map",
+        )
 
         return [(cls.segment, segment_action), (cls.generate_t2_map, generate_t2_map_action)]

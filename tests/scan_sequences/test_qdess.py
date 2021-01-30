@@ -4,9 +4,12 @@ import unittest
 from dosma.models.util import get_model
 from dosma.scan_sequences.qdess import QDess
 from dosma.tissues.femoral_cartilage import FemoralCartilage
+
 from .. import util
 
-SEGMENTATION_WEIGHTS_FOLDER = os.path.join(os.path.dirname(__file__), '../../weights/iwoai-2019-t6-normalized')
+SEGMENTATION_WEIGHTS_FOLDER = os.path.join(
+    os.path.dirname(__file__), "../../weights/iwoai-2019-t6-normalized"
+)
 SEGMENTATION_MODEL = "iwoai-2019-t6-normalized"
 
 
@@ -21,9 +24,7 @@ class QDessTest(util.ScanTest):
         dims = scan.get_dimensions()
         input_shape = (dims[0], dims[1], 1)
         model = get_model(
-            SEGMENTATION_MODEL,
-            input_shape=input_shape,
-            weights_path=tissue.weights_file_path
+            SEGMENTATION_MODEL, input_shape=input_shape, weights_path=tissue.weights_file_path
         )
         scan.segment(model, tissue, use_rms=True)
 
@@ -34,7 +35,7 @@ class QDessTest(util.ScanTest):
     #     tissue = FemoralCartilage()
     #     scan.generate_t2_map(tissue)
     #
-    #     mat_filepath = os.path.join(util.get_expected_data_path(os.path.dirname(self.dicom_dirpath)), tissue.STR_ID,
+    #     mat_filepath = os.path.join(util.get_expected_data_path(os.path.dirname(self.dicom_dirpath)), tissue.STR_ID,  # noqa: E501
     #                                 't2map.mat')
     #     mat_t2_map = sio.loadmat(mat_filepath)
     #     mat_t2_map = mat_t2_map['t2map']
@@ -60,11 +61,10 @@ class QDessTest(util.ScanTest):
 
         # Generate T2 map for femoral cartilage, tibial cartilage, and meniscus.
         cmdline_str = (
-            f"--l {self.data_dirpath} qdess --fc t2 --suppress_fat "
-            f"--suppress_fluid --beta 1.1"
+            f"--l {self.data_dirpath} qdess --fc t2 --suppress_fat " f"--suppress_fluid --beta 1.1"
         )
         self.__cmd_line_helper__(cmdline_str)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
