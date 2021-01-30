@@ -5,21 +5,23 @@ import unittest
 import numpy as np
 import SimpleITK as sitk
 
-from dosma.data_io.med_volume import MedicalVolume
 from dosma.data_io.dicom_io import DicomReader
 from dosma.data_io.format_io import ImageDataFormat
+from dosma.data_io.med_volume import MedicalVolume
 from dosma.data_io.nifti_io import NiftiReader
 
 from .. import util as ututils
 
 
 class TestMedicalVolume(unittest.TestCase):
-    _AFFINE = np.asarray([
-        [0., 0., 0.8, -171.41],
-        [0., -0.3125, 0., 96.0154],
-        [-0.3125, 0., 0., 47.0233],
-        [0., 0., 0., 1.]
-    ])  # ('SI', 'AP', 'LR')
+    _AFFINE = np.asarray(
+        [
+            [0.0, 0.0, 0.8, -171.41],
+            [0.0, -0.3125, 0.0, 96.0154],
+            [-0.3125, 0.0, 0.0, 47.0233],
+            [0.0, 0.0, 0.0, 1.0],
+        ]
+    )  # ('SI', 'AP', 'LR')
 
     _TEMP_PATH = os.path.join(ututils.TEMP_PATH, __name__)
 
@@ -33,7 +35,7 @@ class TestMedicalVolume(unittest.TestCase):
             shutil.rmtree(cls._TEMP_PATH)
 
     def test_reformat(self):
-        mv = MedicalVolume(np.random.rand(10,20,30), self._AFFINE)
+        mv = MedicalVolume(np.random.rand(10, 20, 30), self._AFFINE)
         new_orientation = tuple(x[::-1] for x in mv.orientation[::-1])
 
         mv2 = mv.reformat(new_orientation)
@@ -58,16 +60,16 @@ class TestMedicalVolume(unittest.TestCase):
         assert mv2.is_identical(mv)
 
     def test_reformat_as(self):
-        mv = MedicalVolume(np.random.rand(10,20,30), self._AFFINE)
-        mv2 = MedicalVolume(np.random.rand(10,20,30), self._AFFINE[:, (0,2,1,3)])
+        mv = MedicalVolume(np.random.rand(10, 20, 30), self._AFFINE)
+        mv2 = MedicalVolume(np.random.rand(10, 20, 30), self._AFFINE[:, (0, 2, 1, 3)])
         mv = mv.reformat_as(mv2)
         assert mv.orientation == mv2.orientation
 
     def test_clone(self):
-        mv = MedicalVolume(np.random.rand(10,20,30), self._AFFINE)
+        mv = MedicalVolume(np.random.rand(10, 20, 30), self._AFFINE)
         mv2 = mv.clone()
         assert mv.is_identical(mv2)  # expected identical volumes
-    
+
         dr = DicomReader(num_workers=ututils.num_workers())
         mv = dr.load(ututils.get_dicoms_path(ututils.get_scan_dirpath("qdess")))[0]
         mv2 = mv.clone(headers=False)
@@ -76,12 +78,16 @@ class TestMedicalVolume(unittest.TestCase):
 
         mv3 = mv.clone(headers=True)
         assert mv.is_identical(mv3)  # expected identical volumes
-        assert id(mv.headers) != id(mv3.headers)  # headers cloned, expected different memory address
-    
+        assert id(mv.headers) != id(
+            mv3.headers
+        )  # headers cloned, expected different memory address
+
     def test_to_sitk(self):
-        filepath = ututils.get_read_paths(ututils.get_scan_dirpath("qdess"), ImageDataFormat.nifti)[0]
+        filepath = ututils.get_read_paths(ututils.get_scan_dirpath("qdess"), ImageDataFormat.nifti)[
+            0
+        ]
         expected = sitk.ReadImage(filepath)
-        
+
         nr = NiftiReader()
         mv = nr.load(filepath)
         img = mv.to_sitk()
@@ -92,13 +98,15 @@ class TestMedicalVolume(unittest.TestCase):
         assert img.GetSpacing() == img.GetSpacing()
         assert img.GetDirection() == expected.GetDirection()
 
-        mv = MedicalVolume(np.zeros((10,20,1,3)), affine=self._AFFINE)
+        mv = MedicalVolume(np.zeros((10, 20, 1, 3)), affine=self._AFFINE)
         img = mv.to_sitk(vdim=-1)
         assert np.all(sitk.GetArrayViewFromImage(img) == 0)
-        assert img.GetSize() == (10,20,1)
+        assert img.GetSize() == (10, 20, 1)
 
     def test_from_sitk(self):
-        filepath = ututils.get_read_paths(ututils.get_scan_dirpath("qdess"), ImageDataFormat.nifti)[0]
+        filepath = ututils.get_read_paths(ututils.get_scan_dirpath("qdess"), ImageDataFormat.nifti)[
+            0
+        ]
         nr = NiftiReader()
         expected = nr.load(filepath)
 
@@ -115,8 +123,8 @@ class TestMedicalVolume(unittest.TestCase):
         assert mv.shape == (10, 20, 1, 3)
 
     def test_math(self):
-        mv1 = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
-        mv2 = MedicalVolume(2 * np.ones((10,20,30)), self._AFFINE)
+        mv1 = MedicalVolume(np.ones((10, 20, 30)), self._AFFINE)
+        mv2 = MedicalVolume(2 * np.ones((10, 20, 30)), self._AFFINE)
 
         out = mv1 + mv2
         assert np.all(mv1._volume == 1)
@@ -168,8 +176,8 @@ class TestMedicalVolume(unittest.TestCase):
             mv3 + mv2
 
     def test_comparison(self):
-        mv1 = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
-        mv2 = MedicalVolume(2 * np.ones((10,20,30)), self._AFFINE)
+        mv1 = MedicalVolume(np.ones((10, 20, 30)), self._AFFINE)
+        mv2 = MedicalVolume(2 * np.ones((10, 20, 30)), self._AFFINE)
 
         assert np.all((mv1 == mv1.clone()).volume)
         assert np.all((mv1 != mv2).volume)
@@ -179,26 +187,26 @@ class TestMedicalVolume(unittest.TestCase):
         assert np.all((mv2 >= mv1).volume)
 
     def test_slice(self):
-        mv = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
+        mv = MedicalVolume(np.ones((10, 20, 30)), self._AFFINE)
         with self.assertRaises(IndexError):
             mv[4]
         mv_slice = mv[4:5]
-        assert mv_slice.shape == (1,20,30)
+        assert mv_slice.shape == (1, 20, 30)
 
-        mv = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
-        mv[:5,...] = 2
-        assert np.all(mv._volume[:5,...] == 2) & np.all(mv._volume[5:,...] == 1)
-        assert np.all(mv[:5,...].volume == 2)
+        mv = MedicalVolume(np.ones((10, 20, 30)), self._AFFINE)
+        mv[:5, ...] = 2
+        assert np.all(mv._volume[:5, ...] == 2) & np.all(mv._volume[5:, ...] == 1)
+        assert np.all(mv[:5, ...].volume == 2)
 
-        mv = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
-        mv2 = mv[:5,...].clone()
+        mv = MedicalVolume(np.ones((10, 20, 30)), self._AFFINE)
+        mv2 = mv[:5, ...].clone()
         mv2 = 2
-        mv[:5,...] = mv2
-        assert np.all(mv._volume[:5,...] == 2) & np.all(mv._volume[5:,...] == 1)
-        assert np.all(mv[:5,...].volume == 2)
+        mv[:5, ...] = mv2
+        assert np.all(mv._volume[:5, ...] == 2) & np.all(mv._volume[5:, ...] == 1)
+        assert np.all(mv[:5, ...].volume == 2)
 
     def test_4d(self):
-        vol = np.stack([np.ones((10,20,30)), 2*np.ones((10,20,30))], axis=-1)
+        vol = np.stack([np.ones((10, 20, 30)), 2 * np.ones((10, 20, 30))], axis=-1)
         mv = MedicalVolume(vol, self._AFFINE)
         assert mv.orientation == ("SI", "AP", "LR")
         assert mv.shape == (10, 20, 30, 2)
@@ -209,7 +217,7 @@ class TestMedicalVolume(unittest.TestCase):
         ornt = ("AP", "IS", "RL")
         mv2 = mv.reformat(ornt)
         mv2.orientation == ornt
-        assert mv2.shape == (20,10,30,2)
+        assert mv2.shape == (20, 10, 30, 2)
 
         mv2 = mv.reformat(ornt).reformat(mv.orientation)
         assert mv2.is_identical(mv)

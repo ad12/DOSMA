@@ -4,9 +4,9 @@ import unittest
 import h5py
 import numpy as np
 
+from dosma.data_io.nifti_io import NiftiReader
 from dosma.models.oaiunet2d import IWOAIOAIUnet2D, IWOAIOAIUnet2DNormalized
 from dosma.models.seg_model import whiten_volume
-from dosma.data_io.nifti_io import NiftiReader
 from dosma.tissues.femoral_cartilage import FemoralCartilage
 
 from .. import util
@@ -16,22 +16,21 @@ class TestIWOAIOAIUnet2D(unittest.TestCase):
     def test_segmentation(self):
         """Check that segmentation works as expected from ported version."""
         classes = ["fc", "tc", "pc", "men"]
-        expected_seg = np.load(os.path.join(
-            util.UNITTEST_DATA_PATH, "datasets/oai/expected/test_001_V00-iwoai-2019-t6.npy"
-        ))
+        expected_seg = np.load(
+            os.path.join(
+                util.UNITTEST_DATA_PATH, "datasets/oai/expected/test_001_V00-iwoai-2019-t6.npy"
+            )
+        )
 
-        scan = NiftiReader().load(os.path.join(
-            util.UNITTEST_DATA_PATH, "datasets/oai/test_001_V00.nii.gz"
-        ))
+        scan = NiftiReader().load(
+            os.path.join(util.UNITTEST_DATA_PATH, "datasets/oai/test_001_V00.nii.gz")
+        )
 
         tissue = FemoralCartilage()
-        tissue.find_weights(os.path.join(os.path.dirname(__file__), '../../weights/iwoai-2019-t6'))
+        tissue.find_weights(os.path.join(os.path.dirname(__file__), "../../weights/iwoai-2019-t6"))
         dims = scan.volume.shape
         input_shape = (dims[0], dims[1], 1)
-        model = IWOAIOAIUnet2D(
-            input_shape=input_shape,
-            weights_path=tissue.weights_file_path
-        )
+        model = IWOAIOAIUnet2D(input_shape=input_shape, weights_path=tissue.weights_file_path)
         masks = model.generate_mask(scan)
 
         for i, tissue in enumerate(classes):
@@ -44,9 +43,9 @@ class TestIWOAIOAIUnet2DNormalized(unittest.TestCase):
             os.path.join(util.UNITTEST_DATA_PATH, "datasets/oai/2000001_V00.h5"), "r"
         ) as f:
             h5_data = f["volume"][:]
-        scan = NiftiReader().load(os.path.join(
-            util.UNITTEST_DATA_PATH, "datasets/oai/test_001_V00.nii.gz"
-        ))
+        scan = NiftiReader().load(
+            os.path.join(util.UNITTEST_DATA_PATH, "datasets/oai/test_001_V00.nii.gz")
+        )
         assert np.all(scan.volume.astype(np.float32) == h5_data)
 
         # Issue #50 (https://github.com/ad12/DOSMA/issues/50)
@@ -83,7 +82,7 @@ class TestIWOAIOAIUnet2DNormalized(unittest.TestCase):
     #                    "r") as f:
     #         whitened = f["volume"][:]
     #
-    #     with h5py.File(os.path.join(util.UNITTEST_DATA_PATH, "datasets/oai/2000001_V00.h5"), "r") as f:
+    #     with h5py.File(os.path.join(util.UNITTEST_DATA_PATH, "datasets/oai/2000001_V00.h5"), "r") as f:  # noqa: E501
     #         h5_data = f["volume"][:]
     #     h5_data = whiten_volume(h5_data)
     #
@@ -92,7 +91,7 @@ class TestIWOAIOAIUnet2DNormalized(unittest.TestCase):
     # def test_same_whitened(self):
     #     import h5py
     #     from dosma.models.seg_model import whiten_volume
-    #     with h5py.File(os.path.join(util.UNITTEST_DATA_PATH, "datasets/oai/2000001_V00_w.h5"), "r") as f:
+    #     with h5py.File(os.path.join(util.UNITTEST_DATA_PATH, "datasets/oai/2000001_V00_w.h5"), "r") as f:  # noqa: E501
     #         h5_data = f["volume"][:]
     #
     #     scan = NiftiReader().load(os.path.join(
@@ -104,24 +103,25 @@ class TestIWOAIOAIUnet2DNormalized(unittest.TestCase):
 
     def test_segmentation(self):
         classes = ["fc", "tc", "pc", "men"]
-        expected_seg = np.load(os.path.join(
-            util.UNITTEST_DATA_PATH,
-            "datasets/oai/expected/test_001_V00-iwoai-2019-t6-normalized.npy"
-        ))
+        expected_seg = np.load(
+            os.path.join(
+                util.UNITTEST_DATA_PATH,
+                "datasets/oai/expected/test_001_V00-iwoai-2019-t6-normalized.npy",
+            )
+        )
 
-        scan = NiftiReader().load(os.path.join(
-            util.UNITTEST_DATA_PATH, "datasets/oai/test_001_V00.nii.gz"
-        ))
+        scan = NiftiReader().load(
+            os.path.join(util.UNITTEST_DATA_PATH, "datasets/oai/test_001_V00.nii.gz")
+        )
 
         tissue = FemoralCartilage()
-        tissue.find_weights(os.path.join(
-            os.path.dirname(__file__), '../../weights/iwoai-2019-t6-normalized'
-        ))
+        tissue.find_weights(
+            os.path.join(os.path.dirname(__file__), "../../weights/iwoai-2019-t6-normalized")
+        )
         dims = scan.volume.shape
         input_shape = (dims[0], dims[1], 1)
         model = IWOAIOAIUnet2DNormalized(
-            input_shape=input_shape,
-            weights_path=tissue.weights_file_path
+            input_shape=input_shape, weights_path=tissue.weights_file_path
         )
         masks = model.generate_mask(scan)
 
@@ -141,6 +141,6 @@ class TestIWOAIOAIUnet2DNormalized(unittest.TestCase):
             # achieve a dice score of 1.0 for all tissues.
             # We enforce that the predicted mask must be equal to the expected mask.
             assert dice >= 0.99, "{}: {:0.6f}".format(tissue, dice)
-            assert np.all(masks[tissue].volume == expected_seg[..., i]), (
-                f"Segmentation not same for {tissue}"
-            )
+            assert np.all(
+                masks[tissue].volume == expected_seg[..., i]
+            ), f"Segmentation not same for {tissue}"

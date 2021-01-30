@@ -5,9 +5,10 @@ import unittest
 import numpy as np
 
 from dosma.utils import io_utils
+
 from .. import util
 
-IO_UTILS_DATA = os.path.join(util.UNITTEST_DATA_PATH, 'io_utils')
+IO_UTILS_DATA = os.path.join(util.UNITTEST_DATA_PATH, "io_utils")
 
 
 class UtilsTest(unittest.TestCase):
@@ -20,8 +21,8 @@ class UtilsTest(unittest.TestCase):
         shutil.rmtree(IO_UTILS_DATA)
 
     def test_h5(self):
-        filepath = os.path.join(IO_UTILS_DATA, 'sample.h5')
-        datas = [{'type': np.random.rand(10, 45, 2), 'type2': np.random.rand(13, 95, 4)}]
+        filepath = os.path.join(IO_UTILS_DATA, "sample.h5")
+        datas = [{"type": np.random.rand(10, 45, 2), "type2": np.random.rand(13, 95, 4)}]
 
         for data in datas:
             io_utils.save_h5(filepath, data)
@@ -33,8 +34,8 @@ class UtilsTest(unittest.TestCase):
                 assert (data[key] == data2[key]).all()
 
     def test_pik(self):
-        filepath = os.path.join(IO_UTILS_DATA, 'sample.pik')
-        datas = {'type': np.random.rand(10, 45, 2), 'type2': np.random.rand(13, 95, 4)}
+        filepath = os.path.join(IO_UTILS_DATA, "sample.pik")
+        datas = {"type": np.random.rand(10, 45, 2), "type2": np.random.rand(13, 95, 4)}
 
         io_utils.save_pik(filepath, datas)
         datas2 = io_utils.load_pik(filepath)

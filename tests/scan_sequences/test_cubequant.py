@@ -14,7 +14,7 @@ from .. import util
 
 # target mask path used to register Cubequant volume to qDESS volume
 QDESS_ECHO1_PATH = util.get_read_paths(util.get_scan_dirpath(QDess.NAME), ImageDataFormat.nifti)[0]
-TARGET_MASK_PATH = os.path.join(util.get_scan_dirpath(CubeQuant.NAME), 'misc/fc.nii.gz')
+TARGET_MASK_PATH = os.path.join(util.get_scan_dirpath(CubeQuant.NAME), "misc/fc.nii.gz")
 
 
 class CubeQuantTest(util.ScanTest):
@@ -48,11 +48,11 @@ class CubeQuantTest(util.ScanTest):
         assert map2 is not None, "map should not be None"
 
         # map1 and map2 should be identical
-        assert (map1.volumetric_map.is_identical(map2.volumetric_map))
+        assert map1.volumetric_map.is_identical(map2.volumetric_map)
 
     def test_interregister_upgrade_no_mask(self):
         """Verify cubequant interregistering using new registration.
-        
+
         To be deleted once Cubequant registration is upgraded
         (https://github.com/ad12/DOSMA/issues/55).
         """
@@ -67,21 +67,28 @@ class CubeQuantTest(util.ScanTest):
         vols = DicomReader(num_workers=util.num_workers()).load(self.dicom_dirpath)
         out_path = os.path.join(data_dir, "intra")
         out, _ = register(
-            vols[0], vols[1:], fc.ELASTIX_AFFINE_PARAMS_FILE, out_path, 
-            num_workers=util.num_workers(), num_threads=2, return_volumes=False, rtype=tuple,
+            vols[0],
+            vols[1:],
+            fc.ELASTIX_AFFINE_PARAMS_FILE,
+            out_path,
+            num_workers=util.num_workers(),
+            num_threads=2,
+            return_volumes=False,
+            rtype=tuple,
         )
         base, moving = vols[0], [x.warped_file for x in out]
 
         # Inter-register
         out_path = os.path.join(data_dir, "inter")
         out_reg, _ = register(
-            QDESS_ECHO1_PATH, base, 
+            QDESS_ECHO1_PATH,
+            base,
             parameters=[fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE],
             output_path=out_path,
             sequential=True,
             collate=True,
             num_workers=util.num_workers(),
-            num_threads=2, 
+            num_threads=2,
             return_volumes=False,
             rtype=tuple,
         )
@@ -90,15 +97,15 @@ class CubeQuantTest(util.ScanTest):
         reg_vols = [nr.load(out_reg.warped_file)]
         for mvg in moving:
             reg_vols.append(apply_warp(mvg, out_reg.transform))
-        
+
         for idx, vol in enumerate(reg_vols):
             assert np.allclose(vol.volume, subvolumes[idx].volume), idx
-        
+
         shutil.rmtree(data_dir)
-    
+
     def test_interregister_upgrade_mask(self):
         """Verify cubequant interregistering using new registration.
-        
+
         To be deleted once Cubequant registration is upgraded
         (https://github.com/ad12/DOSMA/issues/55).
         """
@@ -113,21 +120,31 @@ class CubeQuantTest(util.ScanTest):
         vols = DicomReader(num_workers=util.num_workers()).load(self.dicom_dirpath)
         out_path = os.path.join(data_dir, "intra")
         out, _ = register(
-            vols[0], vols[1:], fc.ELASTIX_AFFINE_PARAMS_FILE, out_path, 
-            num_workers=util.num_workers(), num_threads=2, return_volumes=False, rtype=tuple,
+            vols[0],
+            vols[1:],
+            fc.ELASTIX_AFFINE_PARAMS_FILE,
+            out_path,
+            num_workers=util.num_workers(),
+            num_threads=2,
+            return_volumes=False,
+            rtype=tuple,
         )
         base, moving = vols[0], [x.warped_file for x in out]
 
         # Inter-register
         mask_path = scan.__dilate_mask__(TARGET_MASK_PATH, out_path)
         out_reg, _ = register(
-            QDESS_ECHO1_PATH, base, 
-            parameters=[fc.ELASTIX_RIGID_INTERREGISTER_PARAMS_FILE, fc.ELASTIX_AFFINE_INTERREGISTER_PARAMS_FILE],
+            QDESS_ECHO1_PATH,
+            base,
+            parameters=[
+                fc.ELASTIX_RIGID_INTERREGISTER_PARAMS_FILE,
+                fc.ELASTIX_AFFINE_INTERREGISTER_PARAMS_FILE,
+            ],
             output_path=out_path,
             sequential=True,
             collate=True,
             num_workers=util.num_workers(),
-            num_threads=2, 
+            num_threads=2,
             return_volumes=False,
             target_mask=mask_path,
             use_mask=[False, True],
@@ -138,15 +155,15 @@ class CubeQuantTest(util.ScanTest):
         reg_vols = [nr.load(out_reg.warped_file)]
         for mvg in moving:
             reg_vols.append(apply_warp(mvg, out_reg.transform))
-        
+
         for idx, vol in enumerate(reg_vols):
             assert np.allclose(vol.volume, subvolumes[idx].volume), idx
-        
+
         shutil.rmtree(data_dir)
 
     def test_intraregister_upgrade(self):
         """Verify cubequant intraregistering using new registration.
-        
+
         To be deleted once Cubequant registration is upgraded
         (https://github.com/ad12/DOSMA/issues/55).
         """
@@ -155,36 +172,49 @@ class CubeQuantTest(util.ScanTest):
         vols = DicomReader(num_workers=util.num_workers()).load(self.dicom_dirpath)
         out_path = os.path.join(fc.TEMP_FOLDER_PATH, "test-intraregister")
         _, reg_vols = register(
-            vols[0], vols[1:], fc.ELASTIX_AFFINE_PARAMS_FILE, out_path, 
-            num_workers=util.num_workers(), num_threads=2, return_volumes=True, rtype=tuple,
+            vols[0],
+            vols[1:],
+            fc.ELASTIX_AFFINE_PARAMS_FILE,
+            out_path,
+            num_workers=util.num_workers(),
+            num_threads=2,
+            return_volumes=True,
+            rtype=tuple,
         )
         reg_vols = [vols[0]] + list(reg_vols)
 
         for idx, (vol, subvol) in enumerate(zip(vols, scan.subvolumes.values())):
             assert np.allclose(vol.volume, subvol.volume), idx
-        
+
         nr = NiftiReader()
         for idx, vol in enumerate(reg_vols):
-            if idx == 0: fp = scan.intraregistered_data["BASE"][1]
-            else: fp = scan.intraregistered_data["FILES"][idx-1][1]
+            if idx == 0:
+                fp = scan.intraregistered_data["BASE"][1]
+            else:
+                fp = scan.intraregistered_data["FILES"][idx - 1][1]
             subvol = nr.load(fp)
 
             assert np.allclose(vol.volume, subvol.volume), idx
-        
+
         shutil.rmtree(out_path)
 
     def test_cmd_line(self):
         # Generate segmentation mask for femoral cartilage via command line
-        cmdline_str = '--d %s --s %s cubequant --fc interregister --tp %s --tm %s' % (self.dicom_dirpath,
-                                                                                      self.data_dirpath,
-                                                                                      QDESS_ECHO1_PATH,
-                                                                                      TARGET_MASK_PATH)
+        cmdline_str = "--d %s --s %s cubequant --fc interregister --tp %s --tm %s" % (
+            self.dicom_dirpath,
+            self.data_dirpath,
+            QDESS_ECHO1_PATH,
+            TARGET_MASK_PATH,
+        )
         self.__cmd_line_helper__(cmdline_str)
 
         # Generate T1rho map for femoral cartilage, tibial cartilage, and meniscus via command line
-        cmdline_str = '--l %s cubequant --fc t1_rho --mask_path %s' % (self.data_dirpath, TARGET_MASK_PATH)
+        cmdline_str = "--l %s cubequant --fc t1_rho --mask_path %s" % (
+            self.data_dirpath,
+            TARGET_MASK_PATH,
+        )
         self.__cmd_line_helper__(cmdline_str)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

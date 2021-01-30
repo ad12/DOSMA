@@ -10,8 +10,8 @@ from dosma.data_io.format_io import ImageDataFormat
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.data_io.orientation import SAGITTAL
 from dosma.defaults import preferences
+from dosma.quant_vals import QuantitativeValue, QuantitativeValueType
 from dosma.utils import io_utils
-from dosma.quant_vals import QuantitativeValueType, QuantitativeValue
 
 WEIGHTS_FILE_EXT = "h5"
 
@@ -25,23 +25,25 @@ class Tissue(ABC):
 
     Args:
         weights_dir (str): Directory to all segmentation weights.
-        medial_to_lateral (`bool`, optional): If `True`, anatomy is from medial_to_lateral. Defaults to `False`.
+        medial_to_lateral (`bool`, optional): If `True`, anatomy is from medial_to_lateral.
 
     Attributes:
         FULL_NAME (str): Full name of tissue 'femoral cartilage' for femoral cartilage.
-        ID (int): Unique integer ID for tissue. Should be unique to all tissues, and should not change.
+        ID (int): Unique integer ID for tissue. Should be unique to all tissues,
+            and should not change.
         STR_ID (str): Short hand string id such as 'fc' for femoral cartilage.
         T1_EXPECTED (float): Expected T1 value (in milliseconds).
-        medial_to_lateral (bool): If mask is in medial to lateral direction. In the future, this will be something that
-            will be determined automatically.
+        medial_to_lateral (bool): If ``True``, mask is in medial to lateral direction.
         pid (str): Patient/subject ID. Should be anonymized.
-        quant_vals (dict[str, tuple[np.ndarray, pd.DataFrame]]): Mapping from quantitative value name (t2, t1-rho, etc.)
-            to tuple of unrolled map and DataFrame containing measurement values.
+        quant_vals (dict[str, tuple[np.ndarray, pd.DataFrame]]): Mapping from quantitative value
+            name (t2, t1-rho, etc.) to tuple of unrolled map and DataFrame containing
+            measurement values.
         weights_filepath (str): File path to weights directory for neural network segmentation.
     """
+
     ID = -1
-    STR_ID = ''
-    FULL_NAME = ''
+    STR_ID = ""
+    FULL_NAME = ""
 
     # Expected quantitative param values.
     T1_EXPECTED = None
@@ -68,7 +70,8 @@ class Tissue(ABC):
             base_map (np.ndarray): 3D numpy array typically corresponding to volume to split.
 
         Returns:
-            np.ndarray: 4D numpy array (region, height, width, depth). Saved in variable `self.regions`.
+            np.ndarray: 4D numpy array (region, height, width, depth).
+                        Saved in variable `self.regions`.
         """
         pass
 
@@ -87,8 +90,9 @@ class Tissue(ABC):
         Different tissues should override this as they see fit.
 
         Args:
-            quant_map (MedicalVolume): 3D map of pixel-wise quantitative measures (T2, T2*, T1-rho, etc.). Volume should
-                have `np.nan` values for all pixels unable to be calculated.
+            quant_map (MedicalVolume): 3D map of pixel-wise quantitative measures
+                (T2, T2*, T1-rho, etc.). Volume should have ``np.nan`` values for
+                all pixels unable to be calculated.
             map_type (QuantitativeValueType): Type of quantitative value to analyze.
 
         Raises:
@@ -107,12 +111,14 @@ class Tissue(ABC):
         quant_map.reformat(self.__mask__.orientation, inplace=True)
         pass
 
-    def __store_quant_vals__(self, quant_map: MedicalVolume, quant_df: pd.DataFrame, map_type: QuantitativeValueType):
+    def __store_quant_vals__(
+        self, quant_map: MedicalVolume, quant_df: pd.DataFrame, map_type: QuantitativeValueType
+    ):
         """Adds quantitative value in `self.quant_vals`.
 
         Args:
-            quant_map (list[dict]): Dictionaries of different unrolled maps and corresponding plotting data (title,
-                xlabel, etc.).
+            quant_map (list[dict]): Dictionaries of different unrolled maps and
+                corresponding plotting data (title, xlabel, etc.).
             quant_df (pd.DataFrame): Computed data for this quantitative value.
             map_type (QuantitativeValueType): Type of quantitative value to analyze.
         """
@@ -128,7 +134,8 @@ class Tissue(ABC):
             str: File path to weights corresponding to tissue.
 
         Raises:
-            ValueError: If multiple weights files exists for the tissue or no valid weights file found.
+            ValueError: If multiple weights files exists for the tissue
+                or no valid weights file found.
         """
 
         # Find weights file with NAME in the filename, like 'fc_weights.h5'
@@ -142,26 +149,32 @@ class Tissue(ABC):
                 weights_file = file
 
         if weights_file is None:
-            raise ValueError("No file found that contains '{}' and ends in '{}'".format(self.STR_ID, WEIGHTS_FILE_EXT))
+            raise ValueError(
+                "No file found that contains '{}' and ends in '{}'".format(
+                    self.STR_ID, WEIGHTS_FILE_EXT
+                )
+            )
 
         self.weights_file_path = weights_file
 
         return weights_file
 
-    def save_data(self, save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format):
+    def save_data(
+        self, save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format
+    ):
         """Save data for tissue.
 
         Saves mask and quantitative values associated with this tissue.
 
         Override in subclasses to save additional data. When overriding in subclasses, call
-            `super().save_data(save_dirpath)` first to save mask and quantitative values by default. See
-            `femoral_cartilage.py` for details.
+        ``super().save_data(save_dirpath)`` first to save mask and quantitative values by default.
+        See :mod:`dosma.tissues.femoral_cartilage` for details.
 
         .. literalinclude:: femoral_cartilage.py
 
         Args:
             save_dirpath (str): Directory path where all data is stored.
-            data_format (`ImageDataFormat`, optional): Format to save data. Defaults to `preferences.image_data_format`.
+            data_format (`ImageDataFormat`, optional): Format to save data.
         """
         save_dirpath = self.__save_dirpath__(save_dirpath)
 
@@ -189,7 +202,8 @@ class Tissue(ABC):
     def load_data(self, load_dir_path: str):
         """Load data for tissue.
 
-        All tissue information is based on the mask. If mask for tissue doesn't exist, there is no information to load.
+        All tissue information is based on the mask. If mask for tissue doesn't exist,
+        there is no information to load.
 
         Args:
             load_dir_path (str): Directory path where all data is stored.
@@ -254,19 +268,22 @@ class Tissue(ABC):
 
         self.quantitative_values.append(qv_new)
 
-    def __get_axis_bounds__(self, im: np.ndarray, ignore_nan: bool = True, leave_buffer: bool = False):
+    def __get_axis_bounds__(
+        self, im: np.ndarray, ignore_nan: bool = True, leave_buffer: bool = False
+    ):
         """Get tightest bounds for data in the array.
 
-        When plotting data, we would like to avoid making our dynamic range too large such that we cannot detect color
-            changes in differences that matter. To avoid this, we make our bounds as tight as possible.
+        When plotting data, we would like to avoid making our dynamic range too large such
+        that we cannot detect color changes in differences that matter.
+        To avoid this, we make our bounds as tight as possible.
 
-        Bounds are calculated with respect to non-zero elements. If unique values are [0, 8, 9], the dyanmic range will
-            be [8, 9].
+        Bounds are calculated with respect to non-zero elements. If unique values are [0, 8, 9],
+            the dyanmic range will be [8, 9].
 
         Args:
-             im (np.ndarray): Array containing information for which bounds have to be computed.
-             ignore_nan (obj:`bool`, optional): Ignore `nan` values when computing the bounds. Defaults to `True`.
-             leave_buffer (obj:`bool`, optional): Add buffer of +/-5 to dynamic range.
+            im (np.ndarray): Array containing information for which bounds have to be computed.
+            ignore_nan (obj:`bool`, optional): Ignore `nan` values when computing the bounds.
+            leave_buffer (obj:`bool`, optional): Add buffer of +/-5 to dynamic range.
         """
         im_temp = im
         axs = []
@@ -306,7 +323,7 @@ def largest_cc(mask, num=1):
     mask = np.asarray(mask)
     labels, label_nb = sni.label(mask)
     if not label_nb:
-        raise ValueError('No non-zero values: no connected components')
+        raise ValueError("No non-zero values: no connected components")
     if label_nb == 1:
         return mask.astype(np.bool)
     label_count = np.bincount(labels.ravel().astype(np.int))

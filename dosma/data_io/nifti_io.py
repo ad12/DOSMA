@@ -21,6 +21,7 @@ __all__ = ["NiftiReader", "NiftiWriter"]
 class NiftiReader(DataReader):
     """A class for reading NIfTI files.
     """
+
     data_format_code = ImageDataFormat.nifti
 
     def __normalize_affine(self, affine):
@@ -61,7 +62,9 @@ class NiftiReader(DataReader):
             raise FileNotFoundError("{} not found".format(file_path))
 
         if not self.data_format_code.is_filetype(file_path):
-            raise ValueError("{} must be a file with extension '.nii' or '.nii.gz'".format(file_path))
+            raise ValueError(
+                "{} must be a file with extension '.nii' or '.nii.gz'".format(file_path)
+            )
 
         nib_img = nib.load(file_path)
         nib_img_affine = nib_img.affine
@@ -75,6 +78,7 @@ class NiftiReader(DataReader):
 class NiftiWriter(DataWriter):
     """A class for writing volumes in NIfTI format.
     """
+
     data_format_code = ImageDataFormat.nifti
 
     def save(self, volume: MedicalVolume, file_path: str):
@@ -88,7 +92,9 @@ class NiftiWriter(DataWriter):
             ValueError: If `file_path` does not end in a supported NIfTI extension.
         """
         if not self.data_format_code.is_filetype(file_path):
-            raise ValueError("{} must be a file with extension '.nii' or '.nii.gz'".format(file_path))
+            raise ValueError(
+                "{} must be a file with extension '.nii' or '.nii.gz'".format(file_path)
+            )
 
         # Create dir if does not exist
         io_utils.mkdirs(os.path.dirname(file_path))

@@ -12,27 +12,25 @@
 #
 import os
 import sys
-import sphinx_bootstrap_theme
-import sphinx_rtd_theme
-sys.path.insert(0, os.path.abspath('../..'))
+
+sys.path.insert(0, os.path.abspath("../.."))
+
 
 def get_version():
     init_py_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)), "../../dosma", "__init__.py"
     )
     init_py = open(init_py_path, "r").readlines()
-    version_line = [
-        l.strip() for l in init_py if l.startswith("__version__")  # noqa: E741
-    ][0]
+    version_line = [l.strip() for l in init_py if l.startswith("__version__")][0]  # noqa: E741
     version = version_line.split("=")[-1].strip().strip("'\"")
     return version
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'dosma'
-copyright = '2019-2020, Arjun Desai'
-author = 'Arjun Desai'
+project = "dosma"
+copyright = "2019-2020, Arjun Desai"
+author = "Arjun Desai"
 
 # The full version, including alpha/beta/rc tags
 # release = setup.get_version(ignore_nightly=True)
@@ -44,26 +42,26 @@ release = get_version()
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
-    'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.ifconfig',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
-    'sphinx.ext.napoleon',
-    'sphinxcontrib.bibtex',
-    'sphinx_rtd_theme',
-    'sphinx.ext.githubpages',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    "sphinx.ext.coverage",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.ifconfig",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.githubpages",
+    "sphinx.ext.napoleon",
+    "sphinxcontrib.bibtex",
+    "sphinx_rtd_theme",
+    "sphinx.ext.githubpages",
 ]
 
 # Bibtex files
-bibtex_bibfiles = ['references.bib']
+bibtex_bibfiles = ["references.bib"]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -71,27 +69,27 @@ templates_path = ['_templates']
 exclude_patterns = []
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-#html_theme = 'alabaster'
-#html_theme = 'bootstrap'
-#html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
+# html_theme = 'alabaster'
+# html_theme = 'bootstrap'
+# html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 html_theme = "sphinx_rtd_theme"
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'DOSMAdoc'
+htmlhelp_basename = "DOSMAdoc"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # Documentation to include
 todo_include_todos = True

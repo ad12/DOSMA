@@ -3,6 +3,7 @@ import multiprocessing as mp
 import warnings
 from abc import ABC, abstractmethod
 from functools import partial
+from typing import List, Sequence, Tuple
 
 import numpy as np
 from scipy import optimize as sop
@@ -12,8 +13,6 @@ from tqdm.contrib.concurrent import process_map
 from dosma import defaults
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.defaults import preferences
-
-from typing import List, Sequence, Tuple
 
 __all__ = ["MonoExponentialFit", "curve_fit", "monoexponential", "biexponential"]
 
@@ -29,7 +28,8 @@ class _Fit(ABC):
         Pixels with errors in fitting are set to np.nan.
 
         Returns:
-            tuple[MedicalVolume, MedicalVolume]: Quantitative value volume and r-squared goodness of fit volume.
+            tuple[MedicalVolume, MedicalVolume]: Quantitative value volume and
+                r-squared goodness of fit volume.
         """
         pass
 
@@ -38,28 +38,39 @@ class MonoExponentialFit(_Fit):
     """Fit quantitative values using mono-exponential fit of model :math:`a*exp(t/tc)`.
 
     Args:
-        ts (:obj:`array-like`): 1D array of times in milliseconds (typically echo times) corresponding to different
-            volumes.
+        ts (:obj:`array-like`): 1D array of times in milliseconds (typically echo times)
+            corresponding to different volumes.
         subvolumes (list[MedicalVolumes]): Volumes (in order) corresponding to times in `ts`.
-        mask (:obj:`MedicalVolume`, optional): Mask of pixels to fit. If specified, pixels outside of mask region are
-            ignored and set to `np.nan`. Speeds fitting time as fewer fits are required. Defaults to `None`.
-        bounds (:obj:`tuple[float, float]`, optional): Upper and lower bound for quantitative values. Values outside
-            those bounds will be set to `np.nan`. Defaults to `(0, 100.0)`.
-        tc0 (:obj:`float`, optional): Initial time constant guess (in milliseconds). Defaults to `30.0`.
-        decimal_precision (:obj:`int`, optional): Rounding precision after the decimal point. Defaults to `1`.
+        mask (:obj:`MedicalVolume`, optional): Mask of pixels to fit.
+            If specified, pixels outside of mask region are ignored and set to ``np.nan``.
+            Speeds fitting time as fewer fits are required.
+        bounds (:obj:`tuple[float, float]`, optional): Upper and lower bound for quantitative
+            values. Values outside those bounds will be set to ``np.nan``.
+        tc0 (:obj:`float`, optional): Initial time constant guess (in milliseconds).
+        decimal_precision (:obj:`int`, optional): Rounding precision after the decimal point.
     """
 
     def __init__(
-        self, ts: Sequence[float], subvolumes: List[MedicalVolume], mask: MedicalVolume = None,
-        bounds: Tuple[float] = (0, 100.0), tc0: float = 30.0, decimal_precision: int = 1, verbose: bool = False,
+        self,
+        ts: Sequence[float],
+        subvolumes: List[MedicalVolume],
+        mask: MedicalVolume = None,
+        bounds: Tuple[float] = (0, 100.0),
+        tc0: float = 30.0,
+        decimal_precision: int = 1,
+        verbose: bool = False,
         num_workers: int = 0,
     ):
 
-        if (not isinstance(subvolumes, list)) or (not all([isinstance(sv, MedicalVolume) for sv in subvolumes])):
+        if (not isinstance(subvolumes, list)) or (
+            not all([isinstance(sv, MedicalVolume) for sv in subvolumes])
+        ):
             raise TypeError("`subvolumes` must be list of MedicalVolumes.")
 
         if len(ts) != len(subvolumes):
-            raise ValueError("`len(ts)`={:d}, but `len(subvolumes)`={:d}".format(len(ts), len(subvolumes)))
+            raise ValueError(
+                "`len(ts)`={:d}, but `len(subvolumes)`={:d}".format(len(ts), len(subvolumes))
+            )
         self.ts = ts
 
         orientation = subvolumes[0].orientation
@@ -89,8 +100,9 @@ class MonoExponentialFit(_Fit):
             assert subvolumes[0].is_same_dimensions(sv), "Dimension mismatch within subvolumes"
 
         if self.mask:
-            assert subvolumes[0].is_same_dimensions(self.mask,
-                                                    defaults.AFFINE_DECIMAL_PRECISION), "Mask dimension mismatch"
+            assert subvolumes[0].is_same_dimensions(
+                self.mask, defaults.AFFINE_DECIMAL_PRECISION
+            ), "Mask dimension mismatch"
             msk = self.mask.volume
             msk = msk.reshape(1, -1)
 
@@ -110,8 +122,13 @@ class MonoExponentialFit(_Fit):
 
         p0 = (1.0, -1 / self.tc0)
         popt, r_squared = curve_fit(
-            monoexponential, self.ts, svs, self.bounds, p0=p0, 
-            show_pbar=self.verbose, num_workers=self.num_workers,
+            monoexponential,
+            self.ts,
+            svs,
+            self.bounds,
+            p0=p0,
+            show_pbar=self.verbose,
+            num_workers=self.num_workers,
         )
         vals = 1 / np.abs(popt[:, 1])
 
@@ -137,9 +154,18 @@ class MonoExponentialFit(_Fit):
 
 __EPSILON__ = 1e-8
 
+
 def curve_fit(
-    func, x, y, y_bounds=None, p0=None, maxfev=100, 
-    ftol=1e-5, eps=1e-8, show_pbar=False, num_workers=0, 
+    func,
+    x,
+    y,
+    y_bounds=None,
+    p0=None,
+    maxfev=100,
+    ftol=1e-5,
+    eps=1e-8,
+    show_pbar=False,
+    num_workers=0,
     **kwargs,
 ):
     """Use non-linear least squares to fit a function ``func`` to data.
@@ -147,22 +173,22 @@ def curve_fit(
     Uses :func:`scipy.optimize.curve_fit` backbone.
 
     Args:
-        func (callable): The model function, f(x, ...). It must take the independent variable 
+        func (callable): The model function, f(x, ...). It must take the independent variable
             as the first argument and the parameters to fit as separate remaining arguments.
-        x (ndarray): The independent variable(s) where the data is measured. 
-            Should usually be an M-length sequence or an (k,M)-shaped array for functions 
+        x (ndarray): The independent variable(s) where the data is measured.
+            Should usually be an M-length sequence or an (k,M)-shaped array for functions
             with k predictors, but can actually be any object.
         y (ndarray): The dependent data, a length M array - nominally func(xdata, ...) - or
             an (M,N)-shaped array for N different sequences.
         y_bounds (tuple, optional): Lower and upper bound on y values. Defaults to no bounds.
             Sequences with observations out of this range will not be processed.
-        p0 (Sequence, optional): Initial guess for the parameters (length N). If None, then 
-            the initial values will all be 1 (if the number of parameters for the 
+        p0 (Sequence, optional): Initial guess for the parameters (length N). If None, then
+            the initial values will all be 1 (if the number of parameters for the
             function can be determined using introspection, otherwise a ValueError is raised).
         maxfev (int, optional): Maximum number of function evaluations before the termination.
             If `bounds` argument for `scipy.optimize.curve_fit` is specified, this corresponds
             to the `max_nfev` in the least squares algorithm
-        ftol (float): Tolerance for termination by the change of the cost function. 
+        ftol (float): Tolerance for termination by the change of the cost function.
             See `scipy.optimize.least_squares` for more details.
         eps (float, optional): Epsilon for computing r-squared.
         show_pbar (bool, optional): If `True`, show progress bar. Note this can increase runtime
@@ -177,16 +203,24 @@ def curve_fit(
 
     func_args = inspect.getargspec(func).args
     nparams = len(func_args) - 2 if "self" in func_args else len(func_args) - 1
-    
+
     if "bounds" not in kwargs:
         kwargs["maxfev"] = maxfev
     elif "max_nfev" not in kwargs:
         kwargs["max_nfev"] = maxfev
-    
+
     num_workers = min(num_workers, N)
     fitter = partial(
-        _curve_fit, x=x, func=func, y_bounds=y_bounds, p0=p0, 
-        ftol=ftol, eps=eps, show_pbar=show_pbar, nparams=nparams, **kwargs,
+        _curve_fit,
+        x=x,
+        func=func,
+        y_bounds=y_bounds,
+        p0=p0,
+        ftol=ftol,
+        eps=eps,
+        show_pbar=show_pbar,
+        nparams=nparams,
+        **kwargs,
     )
 
     oob = y_bounds is not None and ((y < y_bounds[0]).any() or (y > y_bounds[1]).any())
@@ -207,14 +241,22 @@ def curve_fit(
             with mp.Pool(num_workers) as p:
                 data = p.map(fitter, y.T)
         popts, r_squared = [x[0] for x in data], [x[1] for x in data]
-    
+
     return np.stack(popts, axis=0), np.asarray(r_squared)
 
 
 def _curve_fit(
-    y, x, func, y_bounds=None, p0=None, 
-    maxfev=100, ftol=1e-5, eps=1e-8, 
-    show_pbar=False, nparams=None, **kwargs
+    y,
+    x,
+    func,
+    y_bounds=None,
+    p0=None,
+    maxfev=100,
+    ftol=1e-5,
+    eps=1e-8,
+    show_pbar=False,
+    nparams=None,
+    **kwargs,
 ):
     def _fit_internal(_x, _y):
         popt, _ = sop.curve_fit(func, _x, _y, p0=p0, maxfev=maxfev, ftol=ftol, **kwargs)
@@ -225,7 +267,7 @@ def _curve_fit(
         r_squared = 1 - (ss_res / (ss_tot + eps))
 
         return popt, r_squared
-    
+
     if nparams is None:
         func_args = inspect.getargspec(func).args
         nparams = len(func_args) - 2 if "self" in func_args else len(func_args) - 1
@@ -260,7 +302,7 @@ def __fit_mono_exp__(x, y, p0=None):
     warnings.warn(
         "__fit_mono_exp__ is deprecated since v0.12 and will no longer be "
         "supported in v0.13. Use `curve_fit` instead.",
-        DeprecationWarning
+        DeprecationWarning,
     )
 
     x = np.asarray(x)
@@ -281,7 +323,7 @@ def __fit_monoexp_tc__(x, ys, tc0, show_pbar=False):
     warnings.warn(
         "__fit_monoexp_tc__ is deprecated since v0.12 and will no longer be "
         "supported in v0.13. Use `curve_fit` instead.",
-        DeprecationWarning
+        DeprecationWarning,
     )
 
     p0 = (1.0, -1 / tc0)
@@ -293,7 +335,9 @@ def __fit_monoexp_tc__(x, ys, tc0, show_pbar=False):
         y = ys[..., i]
         if (y < 0).any() and not warned_negative:
             warned_negative = True
-            warnings.warn("Negative values found. Failure in monoexponential fit will result in np.nan")
+            warnings.warn(
+                "Negative values found. Failure in monoexponential fit will result in np.nan"
+            )
 
         # Skip any negative values or all values that are 0s
         if (y < 0).any() or (y == 0).all():
