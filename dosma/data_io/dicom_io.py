@@ -9,14 +9,14 @@ Note:
         - we will call it LPS+, such that letters correspond to increasing end of axis
 
 Attributes:
-
-    TOTAL_NUM_ECHOS_KEY (tuple[int]): Hexadecimal encoding of DICOM tag corresponding to number of echos.
+    TOTAL_NUM_ECHOS_KEY (tuple[int]): Hexadecimal encoding of DICOM tag corresponding
+        to number of echos.
 """
 
 import functools
 import multiprocessing as mp
 import os
-from math import log10, ceil
+from math import ceil, log10
 from typing import List, Sequence, Union
 
 import nibabel as nib
@@ -32,10 +32,9 @@ from dosma.data_io.med_volume import MedicalVolume
 from dosma.defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 from dosma.utils import io_utils
 
-
 __all__ = ["DicomReader", "DicomWriter"]
 
-TOTAL_NUM_ECHOS_KEY = (0x19, 0x107e)
+TOTAL_NUM_ECHOS_KEY = (0x19, 0x107E)
 
 
 def __update_np_dtype__(arr: np.ndarray, bit_depth: int):
@@ -55,8 +54,14 @@ def __update_np_dtype__(arr: np.ndarray, bit_depth: int):
         TypeError: If `arr` contains float values out of supported float types.
     """
     assert bit_depth in [8, 16], "Only bit-depths of 8 and 16 are currently supported."
-    dtype_dict = {8: [(np.int8, -128, 127), (np.uint8, 0, 255)],
-                  16: [(np.float16, -6.55e4, 6.55e4 - 1), (np.int16, -2 ** 15, 2 ** 15), (np.uint16, 0, 2 ** 16 - 1)]}
+    dtype_dict = {
+        8: [(np.int8, -128, 127), (np.uint8, 0, 255)],
+        16: [
+            (np.float16, -6.55e4, 6.55e4 - 1),
+            (np.int16, -2 ** 15, 2 ** 15),
+            (np.uint16, 0, 2 ** 16 - 1),
+        ],
+    }
     supported_floats = [np.float16]
     curr_min = np.min(arr)
     curr_max = np.max(arr)
@@ -71,11 +76,16 @@ def __update_np_dtype__(arr: np.ndarray, bit_depth: int):
         new_dtype = dtype
         break
     if not new_dtype:
-        raise ValueError("Cannot cast numpy array ({}) to bit-depth of {} bits".format(str(arr.dtype), bit_depth))
+        raise ValueError(
+            "Cannot cast numpy array ({}) to bit-depth of {} bits".format(str(arr.dtype), bit_depth)
+        )
 
     if contains_float and new_dtype not in supported_floats:
-        raise TypeError("Array contains float. Cannot cast to numpy array ({}) to {}".format(str(arr.dtype),
-                                                                                             new_dtype))
+        raise TypeError(
+            "Array contains float. Cannot cast to numpy array ({}) to {}".format(
+                str(arr.dtype), new_dtype
+            )
+        )
 
     return arr.astype(new_dtype)
 
@@ -84,8 +94,8 @@ def LPSplus_to_RASplus(headers: List[pydicom.FileDataset]):
     """Convert from LPS+ orientation (default for DICOM) to RAS+ standardized orientation.
 
     Args:
-        headers (list[pydicom.FileDataset]): Headers for DICOM files to reorient. Files should correspond to single
-            volume.
+        headers (list[pydicom.FileDataset]): Headers for DICOM files to reorient.
+            Files should correspond to single volume.
 
     Returns:
         np.ndarray: Affine matrix.
@@ -96,9 +106,14 @@ def LPSplus_to_RASplus(headers: List[pydicom.FileDataset]):
     orientation = np.zeros([3, 3])
 
     # Determine vector for in-plane pixel directions (i, j).
-    i_vec, j_vec = np.asarray(im_dir[:3]).astype(np.float64), np.asarray(im_dir[3:]).astype(
-        np.float64)  # unique to pydicom, please revise if using different library to load dicoms
-    i_vec, j_vec = np.round(i_vec, AFFINE_DECIMAL_PRECISION), np.round(j_vec, AFFINE_DECIMAL_PRECISION)
+    i_vec, j_vec = (
+        np.asarray(im_dir[:3]).astype(np.float64),
+        np.asarray(im_dir[3:]).astype(np.float64),
+    )  # unique to pydicom, please revise if using different library to load dicoms
+    i_vec, j_vec = (
+        np.round(i_vec, AFFINE_DECIMAL_PRECISION),
+        np.round(j_vec, AFFINE_DECIMAL_PRECISION),
+    )
     i_vec = i_vec * in_plane_pixel_spacing[0]
     j_vec = j_vec * in_plane_pixel_spacing[1]
 
@@ -109,7 +124,8 @@ def LPSplus_to_RASplus(headers: List[pydicom.FileDataset]):
     # These actions are done to avoid rounding errors that might result from float subtraction.
     if len(headers) > 1:
         k_vec = np.asarray(headers[1].ImagePositionPatient).astype(np.float64) - np.asarray(
-            headers[0].ImagePositionPatient).astype(np.float64)
+            headers[0].ImagePositionPatient
+        ).astype(np.float64)
     else:
         i_norm = 1 / np.linalg.norm(i_vec) * i_vec
         j_norm = 1 / np.linalg.norm(j_vec) * j_vec
@@ -143,9 +159,11 @@ def _write_dicom_file(np_slice: np.ndarray, header: pydicom.FileDataset, file_pa
         file_path: File path to write to.
     """
     expected_dimensions = header.Rows, header.Columns
-    assert np_slice.shape == expected_dimensions, \
-        "In-plane dimension mismatch - expected shape {}, got {}".format(str(expected_dimensions),
-                                                                            str(np_slice.shape))
+    assert (
+        np_slice.shape == expected_dimensions
+    ), "In-plane dimension mismatch - expected shape {}, got {}".format(
+        str(expected_dimensions), str(np_slice.shape)
+    )
 
     np_slice_bytes = np_slice.tobytes()
     bit_depth = int(len(np_slice_bytes) / (np_slice.shape[0] * np_slice.shape[1]) * 8)
@@ -154,8 +172,9 @@ def _write_dicom_file(np_slice: np.ndarray, header: pydicom.FileDataset, file_pa
         np_slice_bytes = np_slice.tobytes()
         bit_depth = int(len(np_slice_bytes) / (np_slice.shape[0] * np_slice.shape[1]) * 8)
 
-    assert bit_depth == header.BitsAllocated, \
-        "Bit depth mismatch: Expected {:d} got {:d}".format(header.BitsAllocated, bit_depth)
+    assert bit_depth == header.BitsAllocated, "Bit depth mismatch: Expected {:d} got {:d}".format(
+        header.BitsAllocated, bit_depth
+    )
 
     header.PixelData = np_slice_bytes
 
@@ -165,6 +184,7 @@ def _write_dicom_file(np_slice: np.ndarray, header: pydicom.FileDataset, file_pa
 class DicomReader(DataReader):
     """A class for reading DICOM files.
     """
+
     data_format_code = ImageDataFormat.dicom
 
     def __init__(self, num_workers: int = 0, verbose: bool = False):
@@ -178,7 +198,7 @@ class DicomReader(DataReader):
     def load(
         self,
         path: Union[str, Sequence[str]],
-        group_by: Union[str, tuple] = 'EchoNumbers',
+        group_by: Union[str, tuple] = "EchoNumbers",
         ignore_ext: bool = False,
     ):
         """Load dicoms into `MedicalVolume`s grouped by `group_by` tag.
@@ -204,11 +224,15 @@ class DicomReader(DataReader):
             FileNotFoundError: If no valid dicom files found.
 
         Note:
-            This function sorts files using natsort, an intelligent sorting tool. Please verify dicoms are labeled in a
-                sequenced manner (e.g.: dicom1,dicom2,dicom3,...).
+            This function sorts files using natsort, an intelligent sorting tool.
+                Please verify dicoms are labeled in a sequenced manner
+                (e.g.: dicom1,dicom2,dicom3,...).
         """
         if not group_by:
-            raise ValueError("`group_by` must be specified, even if there are not multiple volumes encoded in dicoms")
+            raise ValueError(
+                "`group_by` must be specified, even if there are not multiple "
+                "volumes encoded in dicoms"
+            )
 
         if isinstance(path, str):
             if os.path.isdir(path):
@@ -220,7 +244,7 @@ class DicomReader(DataReader):
                         not ignore_ext and self.data_format_code.is_filetype(f)
                     )
                     is_file = os.path.isfile(os.path.join(path, f))
-                    is_hidden_file = f.startswith('.')
+                    is_hidden_file = f.startswith(".")
                     if is_file and match_ext and not is_hidden_file:
                         lstFilesDCM.append(os.path.join(path, f))
             elif os.path.isfile(path):
@@ -231,9 +255,7 @@ class DicomReader(DataReader):
             not_files = [x for x in path if not os.path.isfile(x)]
             if len(not_files) > 0:
                 raise IOError(
-                    "Files not found:\n{}".format(
-                        "".join("\t{}\n".format(x) for x in not_files)
-                    )
+                    "Files not found:\n{}".format("".join("\t{}\n".format(x) for x in not_files))
                 )
             lstFilesDCM = path
 
@@ -257,7 +279,10 @@ class DicomReader(DataReader):
                 with mp.Pool(self.num_workers) as p:
                     dicom_slices = p.map(fn, lstFilesDCM)
         else:
-            dicom_slices = [pydicom.read_file(fp, force=True) for fp in tqdm(lstFilesDCM, disable=not self.verbose)]
+            dicom_slices = [
+                pydicom.read_file(fp, force=True)
+                for fp in tqdm(lstFilesDCM, disable=not self.verbose)
+            ]
 
         for ds in dicom_slices:
             val_groupby = ds.get(group_by)
@@ -280,9 +305,7 @@ class DicomReader(DataReader):
 
             affine = LPSplus_to_RASplus(headers)
 
-            vol = MedicalVolume(arr,
-                                affine,
-                                headers=headers)
+            vol = MedicalVolume(arr, affine, headers=headers)
             vols.append(vol)
 
         return vols
@@ -291,6 +314,7 @@ class DicomReader(DataReader):
 class DicomWriter(DataWriter):
     """A class for writing volumes in DICOM format.
     """
+
     data_format_code = ImageDataFormat.dicom
 
     def __init__(self, num_workers: int = 0, verbose: bool = False):
@@ -309,12 +333,12 @@ class DicomWriter(DataWriter):
             dir_path: Directory path to store dicom files. Dicoms are stored in directories,
                 as multiple files are needed to store the volume.
             fname_fmt (str, optional): Formatting string for filenames. Must contain ``%d``,
-                which correspopnds to slice number. Defaults to 
+                which correspopnds to slice number. Defaults to
                 ``"I%0{max(4, ceil(log10(num_slices)))}d.dcm"`` (e.g. ``"I0001.dcm"``).
 
         Raises:
-            ValueError: If `im` does not have initialized headers. Or if `im` was flipped across any axis. Flipping
-                changes scanner origin, which is currently not handled.
+            ValueError: If `im` does not have initialized headers. Or if `im` was flipped across
+                any axis. Flipping changes scanner origin, which is currently not handled.
         """
         # Get orientation indicated by headers.
         headers = volume.headers
@@ -326,17 +350,20 @@ class DicomWriter(DataWriter):
 
         # Currently do not support mismatch in scanner_origin.
         if tuple(affine[:3, 3]) != volume.scanner_origin:
-            raise ValueError("Scanner origin mismatch. "
-                             "Currently we do not handle mismatch in scanner origin (i.e. cannot flip across axis)")
+            raise ValueError(
+                "Scanner origin mismatch. "
+                "Currently we do not handle mismatch in scanner origin "
+                "(i.e. cannot flip across axis)"
+            )
 
         # Reformat medical volume to expected orientation specified by dicom headers.
-        # Store original orientation so we can undo the dicom-specific reformatting.
-        original_orientation = volume.orientation
-
         volume = volume.reformat(orientation)
         volume_arr = volume.volume
-        assert volume_arr.shape[2] == len(headers), \
-            "Dimension mismatch - {:d} slices but {:d} headers".format(volume_arr.shape[-1], len(headers))
+        assert volume_arr.shape[2] == len(
+            headers
+        ), "Dimension mismatch - {:d} slices but {:d} headers".format(
+            volume_arr.shape[-1], len(headers)
+        )
 
         # Check if dir_path exists.
         dir_path = io_utils.mkdirs(dir_path)

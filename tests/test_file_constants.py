@@ -18,5 +18,5 @@ class FileConstants(unittest.TestCase):
         assert do == 0, do
         assert dn == 1, dn
 
-        assert oo == 'file_stderr', oo
-        assert on == 'stream', on
+        assert oo == "file_stderr", oo
+        assert on == "stream", on

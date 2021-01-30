@@ -48,3 +48,5 @@ build/
 
 # ignore all resources
 **/resources
+
+.coverage

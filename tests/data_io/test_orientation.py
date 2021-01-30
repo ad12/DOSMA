@@ -1,13 +1,12 @@
-import sys
 import unittest
 
 import numpy as np
 
-from .. import util as ututils
-
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.data_io.nifti_io import NiftiReader, NiftiWriter
+
+from .. import util as ututils
 
 
 class TestOrientation(unittest.TestCase):
@@ -15,7 +14,8 @@ class TestOrientation(unittest.TestCase):
     nw = NiftiWriter()
 
     def setUp(self):
-        # filepaths to all separated echos (done in image-viewer such as ITK-Snap, Horos, etc)
+        # filepaths to all separated echos
+        # (done in image-viewer such as ITK-Snap, Horos, etc)
         filepaths = []
         for fp in ututils.SCAN_DIRPATHS:
             filepaths.extend(ututils.get_read_paths(fp, ImageDataFormat.nifti))
@@ -24,9 +24,12 @@ class TestOrientation(unittest.TestCase):
     def check_orientations(self, mv: MedicalVolume, orientations):
         """
         Apply each orientation specified in orientations to the Medical Volume mv
-        Assert if mv --> apply orientation --> apply original orientation != mv original position coordinates
-        :param mv: a Medical Volume
-        :param orientations: a list or tuple of orientation tuples
+        Assert if mv --> apply orientation --> apply original orientation != mv original
+        position coordinates.
+
+        Args:
+            mv: a Medical Volume
+            orientations: a list or tuple of orientation tuples
         """
         o_base, so_base, ps_base = mv.orientation, mv.scanner_origin, mv.pixel_spacing
         ps_affine = np.array(mv.affine)
@@ -38,26 +41,40 @@ class TestOrientation(unittest.TestCase):
             # Reorient to original orientation
             mv.reformat(o_base, inplace=True)
 
-            assert mv.orientation == o_base, "Orientation mismatch: Expected %s, got %s" % (str(o_base),
-                                                                                            str(mv.orientation))
-            assert mv.scanner_origin == so_base, "Scanner Origin mismatch: Expected %s, got %s" % (str(so_base),
-                                                                                                   str(
-                                                                                                       mv.scanner_origin))
-            assert mv.pixel_spacing == ps_base, "Pixel Spacing mismatch: Expected %s, got %s" % (str(ps_base),
-                                                                                                 str(mv.pixel_spacing))
+            assert mv.orientation == o_base, "Orientation mismatch: Expected %s, got %s" % (
+                str(o_base),
+                str(mv.orientation),
+            )
+            assert mv.scanner_origin == so_base, "Scanner Origin mismatch: Expected %s, got %s" % (
+                str(so_base),
+                str(mv.scanner_origin),
+            )
+            assert mv.pixel_spacing == ps_base, "Pixel Spacing mismatch: Expected %s, got %s" % (
+                str(ps_base),
+                str(mv.pixel_spacing),
+            )
 
-            assert (mv.affine == ps_affine).all(), "Affine matrix mismatch: Expected\n%s\ngot\n%s" % (str(ps_affine),
-                                                                                                      str(mv.affine))
+            assert (
+                mv.affine == ps_affine
+            ).all(), "Affine matrix mismatch: Expected\n%s\ngot\n%s" % (
+                str(ps_affine),
+                str(mv.affine),
+            )
 
     def test_flip(self):
         # tests flipping orientation across volume axis
         for fp in self.filepaths:
             e1 = self.nr.load(fp)
             o = e1.orientation
-            orientations = [(o[0][::-1], o[1], o[2]), (o[0], o[1][::-1], o[2]), (o[0], o[1][::-1], o[2]),
-                            (o[0][::-1], o[1][::-1], o[2]), (o[0][::-1], o[1], o[2][::-1]),
-                            (o[0], o[1][::-1], o[2][::-1]),
-                            (o[0][::-1], o[1][::-1], o[2][::-1])]
+            orientations = [
+                (o[0][::-1], o[1], o[2]),
+                (o[0], o[1][::-1], o[2]),
+                (o[0], o[1][::-1], o[2]),
+                (o[0][::-1], o[1][::-1], o[2]),
+                (o[0][::-1], o[1], o[2][::-1]),
+                (o[0], o[1][::-1], o[2][::-1]),
+                (o[0][::-1], o[1][::-1], o[2][::-1]),
+            ]
 
             self.check_orientations(e1, orientations)
 
@@ -67,13 +84,19 @@ class TestOrientation(unittest.TestCase):
             e1 = self.nr.load(fp)
             o = e1.orientation
 
-            orientations = [(o[1], o[2], o[0]), (o[2], o[0], o[1]), (o[1], o[0], o[2]),
-                            (o[2], o[1], o[0]), (o[0], o[2], o[1])]
+            orientations = [
+                (o[1], o[2], o[0]),
+                (o[2], o[0], o[1]),
+                (o[1], o[0], o[2]),
+                (o[2], o[1], o[0]),
+                (o[0], o[2], o[1]),
+            ]
 
             self.check_orientations(e1, orientations)
 
     def test_transpose_and_flip(self):
         from itertools import permutations
+
         for fp in self.filepaths:
             e1 = self.nr.load(fp)
             o = e1.orientation
@@ -92,5 +115,5 @@ class TestOrientation(unittest.TestCase):
             self.check_orientations(e1, orientations)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

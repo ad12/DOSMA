@@ -1,26 +1,20 @@
-"""Ultra-short Echo Time Cones (UTE-Cones).
-
-Paper:
-    Qian Y, Williams AA, Chu CR, Boada FE. "Multicomponent T2* mapping of knee cartilage: technical feasibility ex vivo."
-    Magnetic resonance in medicine 2010;64(5):1426-1431."
-"""
+"""Ultra-short Echo Time Cones (UTE-Cones)."""
+import logging
 import os
 
 import numpy as np
 from natsort import natsorted
 
-from dosma.scan_sequences.scans import NonTargetSequence
-
-from dosma import file_constants as fc, quant_vals as qv
+from dosma import file_constants as fc
+from dosma import quant_vals as qv
 from dosma.data_io import ImageDataFormat, NiftiReader
 from dosma.data_io import format_io_utils as fio_utils
 from dosma.defaults import preferences
+from dosma.scan_sequences.scans import NonTargetSequence
 from dosma.tissues.tissue import Tissue
 from dosma.utils import io_utils
 from dosma.utils.cmd_line_utils import ActionWrapper
 from dosma.utils.fits import MonoExponentialFit
-
-import logging
 
 __all__ = ["Cones"]
 
@@ -39,6 +33,11 @@ class Cones(NonTargetSequence):
     Ultra-short echo time cones (UTE-Cones) is a :math:`T_2^*`-weighted sequence.
     In practice, many of these scans are low resolution and are ofter interregistered
     with higher-resolution scans. This can be done with :meth:`Cones.interregister`.
+
+    References:
+        Qian Y, Williams AA, Chu CR, Boada FE. Multicomponent T2* mapping of
+        knee cartilage: technical feasibility ex vivo.
+        Magnetic resonance in medicine 2010;64(5):1426-1431."
     """
 
     NAME = "cones"
@@ -80,9 +79,14 @@ class Cones(NonTargetSequence):
             raw_filepaths[i] = raw_filepath
 
         # last echo should be base
-        base_echo_time, base_image = len(echo_time_inds) - 1, raw_filepaths[len(echo_time_inds) - 1]
+        base_echo_time, base_image = (
+            len(echo_time_inds) - 1,
+            raw_filepaths[len(echo_time_inds) - 1],
+        )
 
-        temp_interregistered_dirpath = io_utils.mkdirs(os.path.join(self.temp_path, "interregistered"))
+        temp_interregistered_dirpath = io_utils.mkdirs(
+            os.path.join(self.temp_path, "interregistered")
+        )
 
         logging.info("")
         logging.info("==" * 40)
@@ -102,20 +106,25 @@ class Cones(NonTargetSequence):
         if not target_mask_path:
             parameter_files = [fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE]
         else:
-            parameter_files = [fc.ELASTIX_RIGID_INTERREGISTER_PARAMS_FILE, fc.ELASTIX_AFFINE_INTERREGISTER_PARAMS_FILE]
+            parameter_files = [
+                fc.ELASTIX_RIGID_INTERREGISTER_PARAMS_FILE,
+                fc.ELASTIX_AFFINE_INTERREGISTER_PARAMS_FILE,
+            ]
 
-        warped_file, transformation_files = self.__interregister_base_file__((base_image, base_echo_time),
-                                                                             target_path,
-                                                                             temp_interregistered_dirpath,
-                                                                             mask_path=target_mask_path,
-                                                                             parameter_files=parameter_files)
+        warped_file, transformation_files = self.__interregister_base_file__(
+            (base_image, base_echo_time),
+            target_path,
+            temp_interregistered_dirpath,
+            mask_path=target_mask_path,
+            parameter_files=parameter_files,
+        )
         warped_files = [(base_echo_time, warped_file)]
 
         # Load the transformation file. Apply same transform to the remaining images
         for echo_time, filename in files_to_warp:
-            warped_file = self.__apply_transform__((filename, echo_time),
-                                                   transformation_files,
-                                                   temp_interregistered_dirpath)
+            warped_file = self.__apply_transform__(
+                (filename, echo_time), transformation_files, temp_interregistered_dirpath
+            )
             # append the last warped file - this has all the transforms applied
             warped_files.append((echo_time, warped_file))
 
@@ -128,23 +137,25 @@ class Cones(NonTargetSequence):
         self.subvolumes = subvolumes
 
     def generate_t2_star_map(self, tissue: Tissue, mask_path: str = None, num_workers: int = 0):
-        """Generate 3D T2-star map and r-squared fit map using mono-exponential fit across subvolumes acquired at
-            different echo times.
+        """
+        Generate 3D :math:`T_2^* map and r-squared fit map using mono-exponential fit
+        across subvolumes acquired at different echo times.
 
-        T2-star map is also added to the tissue.
+        :math:`T_2^* map is also added to the tissue.
 
         Args:
             tissue (Tissue): Tissue to generate quantitative value for.
-            mask_path (:obj:`str`, optional): File path to mask of ROI to analyze. If specified, only voxels specified
-                by mask will be fit. Speeds up computation. Defaults to `None`.
+            mask_path (:obj:`str`, optional): File path to mask of ROI to analyze.
+                If specified, only voxels specified by mask will be fit.
+                This can considerably speed up computation.
             num_workers (int, optional): Number of subprocesses to use for fitting.
                 If `0`, will execute on the main thread.
 
         Returns:
-            qv.T2Star: T2-star fit for tissue.
+            qv.T2Star: :math:`T_2^* fit for tissue.
 
         Raises:
-            ValueError: If `mask_path` specifies volume with values other than `0` or `1` (i.e. not binary).
+            ValueError: If ``mask_path`` corresponds to non-binary volume.
         """
         # only calculate for focused region if a mask is available, this speeds up computation
         mask = tissue.get_mask()
@@ -161,7 +172,8 @@ class Cones(NonTargetSequence):
             subvolumes_list.append(self.subvolumes[echo_time])
 
         mef = MonoExponentialFit(
-            spin_lock_times, subvolumes_list,
+            spin_lock_times,
+            subvolumes_list,
             mask=mask,
             bounds=(__T2_STAR_LOWER_BOUND__, __T2_STAR_UPPER_BOUND__),
             tc0=__INITIAL_T2_STAR_VAL__,
@@ -178,7 +190,9 @@ class Cones(NonTargetSequence):
 
         return quant_val_map
 
-    def save_data(self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format):
+    def save_data(
+        self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format
+    ):
         """Save data to disk.
 
         Data will be saved in the directory '`base_save_dirpath`/cones/'.
@@ -193,10 +207,10 @@ class Cones(NonTargetSequence):
         base_save_dirpath = self.__save_dir__(base_save_dirpath)
 
         # Save interregistered files
-        interregistered_dirpath = os.path.join(base_save_dirpath, 'interregistered')
+        interregistered_dirpath = os.path.join(base_save_dirpath, "interregistered")
 
         for spin_lock_time in self.subvolumes.keys():
-            filepath = os.path.join(interregistered_dirpath, '%03d.nii.gz' % spin_lock_time)
+            filepath = os.path.join(interregistered_dirpath, "%03d.nii.gz" % spin_lock_time)
             self.subvolumes[spin_lock_time].save_volume(filepath)
 
     def load_data(self, base_load_dirpath: str):
@@ -213,33 +227,45 @@ class Cones(NonTargetSequence):
         super().load_data(base_load_dirpath)
         base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
 
-        interregistered_dirpath = os.path.join(base_load_dirpath, 'interregistered')
+        interregistered_dirpath = os.path.join(base_load_dirpath, "interregistered")
 
         self.subvolumes = self.__load_interregistered_files__(interregistered_dirpath)
 
     def __serializable_variables__(self):
         var_names = super().__serializable_variables__()
-        var_names.extend(['echo_times'])
+        var_names.extend(["echo_times"])
 
         return var_names
 
     @classmethod
     def cmd_line_actions(cls):
-        """Provide command line information (such as name, help strings, etc) as list of dictionary."""
+        """
+        Provide command line information (such as name, help strings, etc)
+        as list of dictionary.
+        """
 
-        interregister_action = ActionWrapper(name=cls.interregister.__name__,
-                                             help='register to another scan',
-                                             param_help={
-                                                 'target_path': 'path to target image in nifti format (.nii.gz)',
-                                                 'target_mask_path': 'path to target mask in nifti format (.nii.gz)'},
-                                             alternative_param_names={'target_path': ['tp', 'target'],
-                                                                      'target_mask_path': ['tm', 'target_mask']})
-        generate_t2star_map_action = ActionWrapper(name=cls.generate_t2_star_map.__name__,
-                                                   help='generate T2-star map',
-                                                   param_help={
-                                                       'mask_path': 'Mask used for fitting select voxels - '
-                                                                    'in nifti format (.nii.gz)',
-                                                   },
-                                                   aliases=['t2_star'])
+        interregister_action = ActionWrapper(
+            name=cls.interregister.__name__,
+            help="register to another scan",
+            param_help={
+                "target_path": "path to target image in nifti format (.nii.gz)",
+                "target_mask_path": "path to target mask in nifti format (.nii.gz)",
+            },
+            alternative_param_names={
+                "target_path": ["tp", "target"],
+                "target_mask_path": ["tm", "target_mask"],
+            },
+        )
+        generate_t2star_map_action = ActionWrapper(
+            name=cls.generate_t2_star_map.__name__,
+            help="generate T2-star map",
+            param_help={
+                "mask_path": "Mask used for fitting select voxels - " "in nifti format (.nii.gz)"
+            },
+            aliases=["t2_star"],
+        )
 
-        return [(cls.interregister, interregister_action), (cls.generate_t2_star_map, generate_t2star_map_action)]
+        return [
+            (cls.interregister, interregister_action),
+            (cls.generate_t2_star_map, generate_t2star_map_action),
+        ]

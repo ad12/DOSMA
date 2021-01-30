@@ -15,7 +15,7 @@ from dosma.utils.registration import apply_warp, register
 from .. import util
 
 QDESS_ECHO1_PATH = util.get_read_paths(util.get_scan_dirpath(QDess.NAME), ImageDataFormat.nifti)[0]
-TARGET_MASK_PATH = os.path.join(util.get_scan_dirpath(CubeQuant.NAME), 'misc/fc.nii.gz')
+TARGET_MASK_PATH = os.path.join(util.get_scan_dirpath(CubeQuant.NAME), "misc/fc.nii.gz")
 
 
 class TestRegister(unittest.TestCase):
@@ -27,16 +27,28 @@ class TestRegister(unittest.TestCase):
 
         out_path = os.path.join(data_dir, "expected")
         _, expected = register(
-            cq[0], cq[1:], fc.ELASTIX_AFFINE_PARAMS_FILE, out_path, 
-            num_workers=0, num_threads=2, return_volumes=True, rtype=tuple,
-            show_pbar=True
+            cq[0],
+            cq[1:],
+            fc.ELASTIX_AFFINE_PARAMS_FILE,
+            out_path,
+            num_workers=0,
+            num_threads=2,
+            return_volumes=True,
+            rtype=tuple,
+            show_pbar=True,
         )
 
         out_path = os.path.join(data_dir, "out")
         _, out = register(
-            cq[0], cq[1:], fc.ELASTIX_AFFINE_PARAMS_FILE, out_path, 
-            num_workers=util.num_workers(), num_threads=2, return_volumes=True, rtype=tuple,
-            show_pbar=True
+            cq[0],
+            cq[1:],
+            fc.ELASTIX_AFFINE_PARAMS_FILE,
+            out_path,
+            num_workers=util.num_workers(),
+            num_threads=2,
+            return_volumes=True,
+            rtype=tuple,
+            show_pbar=True,
         )
 
         for vol, exp in zip(out, expected):
@@ -45,7 +57,7 @@ class TestRegister(unittest.TestCase):
         shutil.rmtree(data_dir)
 
 
-class TestApplyWarp(unittest.TestCase):    
+class TestApplyWarp(unittest.TestCase):
     def test_multiprocessing(self):
         """Verify that multiprocessing compatible with apply_warp."""
         # Generate viable transform file.
@@ -54,8 +66,14 @@ class TestApplyWarp(unittest.TestCase):
         cq = dr.load(cq_dicoms)
         out_path = os.path.join(fc.TEMP_FOLDER_PATH, "test-register")
         out, _ = register(
-            cq[0], cq[1], fc.ELASTIX_AFFINE_PARAMS_FILE, out_path, 
-            num_workers=util.num_workers(), num_threads=2, return_volumes=False, rtype=tuple,
+            cq[0],
+            cq[1],
+            fc.ELASTIX_AFFINE_PARAMS_FILE,
+            out_path,
+            num_workers=util.num_workers(),
+            num_threads=2,
+            return_volumes=False,
+            rtype=tuple,
         )
         vols = cq[2:]
 
@@ -68,7 +86,7 @@ class TestApplyWarp(unittest.TestCase):
         func = partial(apply_warp, out_registration=out[0])
         with mp.Pool(min(len(vols), util.num_workers())) as p:
             outputs = p.map(func, vols)
-        
+
         for out, exp in zip(outputs, expected):
             assert np.allclose(out.volume, exp.volume)
 
@@ -77,5 +95,3 @@ class TestApplyWarp(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-

@@ -15,8 +15,10 @@ from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
 from dosma import file_constants as fc
-from dosma.data_io.nifti_io import NiftiWriter, NiftiReader
 from dosma.data_io.med_volume import MedicalVolume
+from dosma.data_io.nifti_io import NiftiReader, NiftiWriter
+
+__all__ = ["register", "apply_warp", "symlink_elastix", "unlink_elastix"]
 
 MedVolOrPath = Union[MedicalVolume, str]
 
@@ -39,7 +41,7 @@ def register(
 ):
     """Register moving image(s) to the target.
 
-    `MedVolOrPath` is a shorthand for `MedicalVolume` or `str`. It indicates the argument 
+    `MedVolOrPath` is a shorthand for `MedicalVolume` or `str`. It indicates the argument
     can be either a `MedicalVolume` or a `str` path to a nifti file.
 
     Args:
@@ -56,10 +58,10 @@ def register(
             is ignored.
         num_workers (int, optional): Number of workers to use for reading/writing data and
             for registration.
-        num_threads (int, optional): Number of threads to use for registration. Note total number of threads
-            used will be num_workers * num_threads.
-        show_pbar (bool, optional): If `True`, show progress bar during registration. Note the progress bar
-            will not be shown for intermediate reading/writing.
+        num_threads (int, optional): Number of threads to use for registration.
+            Note total number of threads used will be ``num_workers * num_threads``.
+        show_pbar (bool, optional): If `True`, show progress bar during registration.
+            Note the progress bar will not be shown for intermediate reading/writing.
         return_volumes (bool, optional): If `True`, registered volumes will also be returned.
             By default, only the output namespaces (RegistrationOutputSpec) of the registrations are
             returned.
@@ -67,17 +69,18 @@ def register(
         kwargs: Keyword arguments used to initialize `nipype.interfaces.elastix.Registration`.
 
     Returns:
-        Dict or Tuple: Type specified by `rtype`. If dict, with keys 'outputs' (registration outputs) and 'volumes' (final volumes)
+        Dict or Tuple: Type specified by `rtype`. If dict, with keys 'outputs'
+            (registration outputs) and 'volumes' (final volumes)
             if `return_volumes=True`). If tuple, order is (`outputs`, `volumes` or `None`).
             Length of `outputs` and `volumes` depends on number of images specified in `moving`.
 
-            outputs (Sequence[RegistrationOutputSpec]): The output objects from 
-                elastix registration, one for each moving image. Each object is effectively 
+            outputs (Sequence[RegistrationOutputSpec]): The output objects from
+                elastix registration, one for each moving image. Each object is effectively
                 a namespace with four main attributes:
                     - 'transform' (List[str]): Paths to transform files produced using registration.
                     - 'warped_file' (str): Path to the final registered image.
-                    - 'warped_files' (List[str]): Paths to all intermediate images created if multiple
-                        parameter files used.
+                    - 'warped_files' (List[str]): Paths to all intermediate images created if
+                        multiple parameter files used.
             volumes (Sequence[MedicalVolume]): Registered volumes.
     """
     assert issubclass(rtype, (Dict, Sequence))  # `rtype` must be dict or tuple
@@ -86,15 +89,25 @@ def register(
         output_path = os.path.join(fc.TEMP_FOLDER_PATH, "register")
 
     moving = [moving] if isinstance(moving, (MedicalVolume, str)) else moving
-    moving_masks = [moving_masks] if moving_masks is None or isinstance(moving_masks, (MedicalVolume, str)) else moving_masks
+    moving_masks = (
+        [moving_masks]
+        if moving_masks is None or isinstance(moving_masks, (MedicalVolume, str))
+        else moving_masks
+    )
     if len(moving_masks) > 1 and len(moving) != len(moving_masks):
-        raise ValueError("Got {} moving images but {} moving masks".format(len(moving), len(moving_masks)))
+        raise ValueError(
+            "Got {} moving images but {} moving masks".format(len(moving), len(moving_masks))
+        )
 
     files = [target, target_mask] + moving + moving_masks
 
     # Write medical volumes (if any) to nifti file for use with elastix.
     tmp_dir = os.path.join(output_path, "tmp")
-    default_files = ["target", "target-mask"] + [f"moving-{idx}" for idx in range(len(moving))] + [f"moving-mask-{idx}" for idx in range(len(moving_masks))]  #noqa
+    default_files = (
+        ["target", "target-mask"]
+        + [f"moving-{idx}" for idx in range(len(moving))]
+        + [f"moving-mask-{idx}" for idx in range(len(moving_masks))]
+    )  # noqa
     assert len(default_files) == len(files), default_files  # should be 1-to-1 with # args provided
     vols = [(idx, v) for idx, v in enumerate(files) if isinstance(v, MedicalVolume)]
     idxs, vols = [x[0] for x in vols], [x[1] for x in vols]
@@ -109,13 +122,13 @@ def register(
                 _write(vol, fp)
         for idx, fp in zip(idxs, filepaths):
             files[idx] = fp
-    
+
     # Assign file paths to respective variables.
-    target, moving = files[0], files[2:2+len(moving)]
-    target_mask, moving_masks = files[1], files[2+len(moving):]
+    target, moving = files[0], files[2 : 2 + len(moving)]
+    target_mask, moving_masks = files[1], files[2 + len(moving) :]
     if len(moving_masks) == 1:
         moving_masks = moving_masks * len(moving)
-    
+
     all_outputs = {}
 
     # Perform registration.
@@ -124,17 +137,32 @@ def register(
     if num_workers > 0:
         func = partial(
             _elastix_register_mp,
-            target=target, parameters=parameters, target_mask=target_mask, 
-            sequential=sequential, collate=collate, num_threads=num_threads, **kwargs
+            target=target,
+            parameters=parameters,
+            target_mask=target_mask,
+            sequential=sequential,
+            collate=collate,
+            num_threads=num_threads,
+            **kwargs,
         )
         max_workers = min(num_workers, len(reg_args))
-        out = process_map(func, reg_args, max_workers=max_workers, tqdm_class=tqdm, disable=not show_pbar)
+        out = process_map(
+            func, reg_args, max_workers=max_workers, tqdm_class=tqdm, disable=not show_pbar
+        )
     else:
         out = []
         for mvg, mvg_mask, out_path in tqdm(reg_args, disable=not show_pbar):
             _out = _elastix_register(
-                target, mvg, parameters, out_path, target_mask, 
-                mvg_mask, sequential, collate, num_threads, **kwargs,
+                target,
+                mvg,
+                parameters,
+                out_path,
+                target_mask,
+                mvg_mask,
+                sequential,
+                collate,
+                num_threads,
+                **kwargs,
             )
             out.append(_out)
 
@@ -151,13 +179,13 @@ def register(
             for fp in filepaths:
                 vols.append(_read(fp))
         all_outputs["volume"] = tuple(vols)
-    
+
     # Clean up.
     for _dir in [tmp_dir, output_path if not has_output_path else None]:
         if not _dir or not os.path.isdir(_dir):
             continue
         shutil.rmtree(_dir)
-    
+
     if issubclass(rtype, dict):
         out = rtype(all_outputs)
     elif issubclass(rtype, Sequence):
@@ -192,8 +220,9 @@ def apply_warp(
         output_path (str): Output directory to store files.
         rtype (type, optional): Return type - either `MedicalVolume` or `str`.
             If `str`, `output_path` must be specified. Defaults to `MedicalVolume`.
-        num_threads (int, optional): Number of threads to use for registration. If `None`, defaults to 1.
-        show_pbar (bool, optional): If `True`, show progress bar when applying transforms. 
+        num_threads (int, optional): Number of threads to use for registration.
+            If `None`, defaults to 1.
+        show_pbar (bool, optional): If `True`, show progress bar when applying transforms.
 
     Return:
         MedVolOrPath: The medical volume or nifti file corresponding to the volume.
@@ -218,8 +247,8 @@ def apply_warp(
     if isinstance(moving, MedicalVolume):
         NiftiWriter().save(moving, mv_filepath)
         moving = mv_filepath
-    
-    transformix_path = _local_exe("transformix")
+
+    transformix_path = _local_exe("transformix")  # noqa
     cwd = _local_lib_dir()
     for tf in tqdm(transform, disable=not show_pbar):
         reg = ApplyWarp()
@@ -247,7 +276,7 @@ def apply_warp(
 
 def symlink_elastix(path: str = None, lib_only: bool = True, force: bool = False):
     """Symlinks elastix/transformix files to the dosma library.
-    
+
     Args:
         path (str, optional): Path to elastix folder. This folder should
             contain two folders `bin` and `lib`. If `None`, determined
@@ -269,14 +298,14 @@ def symlink_elastix(path: str = None, lib_only: bool = True, force: bool = False
     assert system in ["windows", "darwin", "linux"]
     if system != "darwin":
         warnings.warn(
-            f"Symlinking elastix/transformix paths not recommended for {system} machines"
+            f"Symlinking elastix/transformix paths not recommended for {system} " f"machines"
         )
 
     if path is None:
         if system == "windows":
             raise ValueError("`path` cannot be determined automatically on Windows")
         try:
-            out = subprocess.check_output(["which", "elastix"]).decode('ascii').strip('\n')
+            out = subprocess.check_output(["which", "elastix"]).decode("ascii").strip("\n")
             path = os.path.dirname(os.path.dirname(out))
         except subprocess.CalledProcessError:
             raise ValueError(
@@ -313,9 +342,17 @@ def unlink_elastix():
 
 
 def _elastix_register(
-    target: str, moving: str, parameters: Sequence[str], output_path: str,
-    target_mask: str = None, moving_mask: str=None, sequential=False, collate=True,
-    num_threads=None, use_mask: Sequence[bool] = None, **kwargs,
+    target: str,
+    moving: str,
+    parameters: Sequence[str],
+    output_path: str,
+    target_mask: str = None,
+    moving_mask: str = None,
+    sequential=False,
+    collate=True,
+    num_threads=None,
+    use_mask: Sequence[bool] = None,
+    **kwargs,
 ):
     def _register(_moving, _parameters, _output_path, _use_mask=None):
         if isinstance(_parameters, str):
@@ -347,9 +384,12 @@ def _elastix_register(
             setattr(reg.inputs, k, v)
 
         return reg.run(cwd=cwd).outputs
-    
+
     def _collate_outputs(_outs):
-        """Concatenates fields that are sequential and takes final output for fields that are not."""
+        """
+        Concatenates fields that are sequential and takes final output
+        for fields that are not.
+        """
         if len(_outs) == 1:
             return _outs[0]
 

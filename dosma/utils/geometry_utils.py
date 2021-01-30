@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import optimize
 
-__all__ = ['circle_fit', 'cart2pol']
+__all__ = ["circle_fit", "cart2pol"]
 
 
 def circle_fit(x: np.ndarray, y: np.ndarray):
@@ -34,11 +34,23 @@ def circle_fit(x: np.ndarray, y: np.ndarray):
     y_m = np.mean(y)
 
     def calc_R(xc, yc):
-        """ calculate the distance of each 2D points from the center (xc, yc) """
+        """
+        Calculate the distance of each 2D points from the center (xc, yc).
+
+        Args:
+            xc: Center x.
+            yc: Center y.
+        """
         return np.sqrt((x - xc) ** 2 + (y - yc) ** 2)
 
     def f_2(c):
-        """ calculate the algebraic distance between the 2D points and the mean circle centered at c=(xc, yc) """
+        """
+        Calculate the algebraic distance between the 2D points
+        and the mean circle centered at :math:`c=(xc, yc)`.
+
+        Args:
+            c (float): Circle center.
+        """
         Ri = calc_R(*c)
         return Ri - Ri.mean()
 

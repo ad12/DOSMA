@@ -1,0 +1,5 @@
+[run]
+omit =
+    dosma/gui/*
+    dosma/resources/*
+    *test*

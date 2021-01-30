@@ -1,8 +1,8 @@
 import os
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections import defaultdict
 from enum import Enum
-from typing import Dict, Sequence, Tuple, Union
+from typing import Dict, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -12,7 +12,7 @@ from dosma.data_io.format_io import ImageDataFormat
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.defaults import preferences
 
-__all__ = ['QuantitativeValueType', 'QuantitativeValue', 'T1Rho', 'T2', 'T2Star']
+__all__ = ["QuantitativeValueType", "QuantitativeValue", "T1Rho", "T2", "T2Star"]
 
 
 class QuantitativeValueType(Enum):
@@ -20,6 +20,7 @@ class QuantitativeValueType(Enum):
 
     For more information on quantitative parameters, see :obj:`QuantitativeValue`.
     """
+
     T1_RHO = 1
     T2 = 2
     T2_STAR = 3
@@ -28,25 +29,29 @@ class QuantitativeValueType(Enum):
 class QuantitativeValue(ABC):
     """This class handles tracking volumes associated with different quantitative values.
 
-    Quantitative MRI characterizes the relaxation profile of different regions in the volume. This profile is determined
-         by the composition of the object and has been shown to be informative for early detection of pathology.
+    Quantitative MRI characterizes the relaxation profile of different regions in the volume.
+    This profile is determined by the composition of the object and has been shown to be
+    informative for early detection of pathology.
 
-    In practice, many of these quantitative relaxation parameters (:math:`T_1`, :math:`T_2`, :math:`T_2^*`, etc.) are
-        computed per voxel by fitting to the exponential decay/recovery curves or by some analytical method. This
-        results in a volume where different voxels have different relaxation parameters. These volumes are referred to
-        as 'volumetric quantitative maps' or 'quantitative maps'.
+    In practice, many of these quantitative relaxation parameters
+    (:math:`T_1`, :math:`T_2`, :math:`T_2^*`, etc.) are computed per voxel by fitting
+    to the exponential decay/recovery curves or by some analytical method. This results
+    in a volume where different voxels have different relaxation parameters. These volumes
+    are referred to as *volumetric quantitative maps* or *quantitative maps*.
 
     These fitted/computed relaxation parameters are called quantitative values.
 
     Args:
-        volumetric_map (:obj:`MedicalVolume`, optional): Volumetric quantitative map.
+        volumetric_map (MedicalVolume, optional): Volumetric quantitative map.
 
     Attributes:
         volumetric_map (MedicalVolume): Volumetric quantitative map.
-        additional_volumes (dict[str, MedicalVolume]): Additional volumes associated with quantitative value. These
-            are typically volumes associated with the goodness of fit of the value. For example, a volume could be
-            pixel-wise r-squared, or error bounds, etc.
+        additional_volumes (Dict[str, MedicalVolume]): Additional volumes associated
+            with quantitative value. These are typically volumes associated with the
+            goodness of fit of the value. For example, a volume could be pixel-wise r-squared,
+            or error bounds, etc.
     """
+
     ID = 0
     NAME = ""
 
@@ -67,20 +72,25 @@ class QuantitativeValue(ABC):
         # these results will not be loaded
         self.additional_volumes = dict()
 
-    def save_data(self, dir_path: str, data_format: ImageDataFormat = preferences.image_data_format):
+    def save_data(
+        self, dir_path: str, data_format: ImageDataFormat = preferences.image_data_format
+    ):
         """Save data to disk.
 
         Data will be stored in folder '`dir_path`/`self.NAME`'.
 
         Args:
             dir_path (str): Directory path.
-            data_format (:obj:`ImageDataFormat`, optional): Data format to save medical volumes. Defaults to
-                `preferences.image_data_format`.
+            data_format (:obj:`ImageDataFormat`, optional): Data format to save medical volumes.
+                Defaults to ``preferences.image_data_format``.
         """
         if data_format != ImageDataFormat.nifti:
             import warnings
-            warnings.warn("Due to bit depth issues, only nifti format is supported for quantitative values. "
-                          "Writing as nifti file...")
+
+            warnings.warn(
+                "Due to bit depth issues, only nifti format is supported for quantitative values. "
+                "Writing as nifti file..."
+            )
             data_format = ImageDataFormat.nifti
 
         if self.volumetric_map is not None:
@@ -89,9 +99,13 @@ class QuantitativeValue(ABC):
             self.volumetric_map.save_volume(filepath, data_format=data_format)
 
         for volume_name in self.additional_volumes.keys():
-            add_vol_filepath = os.path.join(dir_path, self.NAME, "{}-{}.nii.gz".format(self.NAME, volume_name))
+            add_vol_filepath = os.path.join(
+                dir_path, self.NAME, "{}-{}.nii.gz".format(self.NAME, volume_name)
+            )
             # add_vol_filepath = fio_utils.convert_format_filename(add_vol_filepath, data_format)
-            self.additional_volumes[volume_name].save_volume(add_vol_filepath, data_format=data_format)
+            self.additional_volumes[volume_name].save_volume(
+                add_vol_filepath, data_format=data_format
+            )
 
     def load_data(self, dir_path):
         """Load data from disk.
@@ -111,10 +125,11 @@ class QuantitativeValue(ABC):
     def add_additional_volume(self, name: str, volume: MedicalVolume):
         """Add volume that corresponds to quantitative value.
 
-        Additional volumes are typically volumes associated with the goodness of fit of the value. For example, a volume
-            could be r-squared values per voxel, or error bounds, etc.
+        Additional volumes are typically volumes associated with the goodness of fit of the value.
+        For example, a volume could be r-squared values per voxel, or error bounds, etc.
 
-        This should not be the volumetric quantitative map. To update that map, see `self.volumetric_map`.
+        This should not be the volumetric quantitative map.
+        To update that map, see ``self.volumetric_map``.
 
         Args:
             name (str): Name of additional volume.
@@ -123,7 +138,7 @@ class QuantitativeValue(ABC):
         if not isinstance(volume, MedicalVolume):
             raise TypeError("`volumes` must be of type MedicalVolume")
         self.additional_volumes[name] = volume
-    
+
     def to_metrics(
         self,
         mask: MedicalVolume = None,
@@ -134,7 +149,7 @@ class QuantitativeValue(ABC):
         """Compute scalar metrics for quantitative values.
 
         Metrics include mean, median, standard deviation, and number of voxels.
-        Valid voxels are defined as finite valued voxels within the interval 
+        Valid voxels are defined as finite valued voxels within the interval
         `bounds` (if specified).
 
         Args:
@@ -150,7 +165,7 @@ class QuantitativeValue(ABC):
             closed (str, optional): If `bounds` specified, whether the bounds are closed
                 on the left-side, right-side, both or neither.
                 One of {'right', 'left', 'both', 'neither'}.
-        
+
         Returns:
             metrics (pd.DataFrame): Metrics for quantitative value. Columns include:
                 * "Region" (str): The label name.
@@ -183,9 +198,12 @@ class QuantitativeValue(ABC):
 
         metrics = defaultdict(list)
         for label, name in labels.items():
-            if label == -2: qv_region_vals = volume[valid_mask]  # Entire volume.
-            elif label == -1: qv_region_vals = volume[np.isin(mask, list(labels.keys())) & valid_mask]  # noqa
-            else: qv_region_vals = volume[(mask == label) & valid_mask]
+            if label == -2:
+                qv_region_vals = volume[valid_mask]  # Entire volume.
+            elif label == -1:
+                qv_region_vals = volume[np.isin(mask, list(labels.keys())) & valid_mask]  # noqa
+            else:
+                qv_region_vals = volume[(mask == label) & valid_mask]
             num_voxels = np.prod(qv_region_vals.shape)
 
             metrics["Region"].append(name)
@@ -201,7 +219,8 @@ class QuantitativeValue(ABC):
         """Find QuantitativeValue enum using id or name.
 
         Args:
-            qv_id (:obj:`int` or :obj:`str`): Either quantitative value enum number or name in lower case.
+            qv_id (:obj:`int` or :obj:`str`): Either quantitative value enum number
+                or name in lower case.
 
         Returns:
             QuantitativeValue: Quantitative value corresponding to id.
@@ -255,7 +274,7 @@ class QuantitativeValue(ABC):
 
 class T1Rho(QuantitativeValue):
     ID = 1
-    NAME = 't1_rho'
+    NAME = "t1_rho"
 
     @property
     def qv_type(self):
@@ -264,7 +283,7 @@ class T1Rho(QuantitativeValue):
 
 class T2(QuantitativeValue):
     ID = 2
-    NAME = 't2'
+    NAME = "t2"
 
     @property
     def qv_type(self):
@@ -273,7 +292,7 @@ class T2(QuantitativeValue):
 
 class T2Star(QuantitativeValue):
     ID = 3
-    NAME = 't2_star'
+    NAME = "t2_star"
 
     @property
     def qv_type(self):
