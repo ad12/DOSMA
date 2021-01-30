@@ -1,4 +1,5 @@
 import unittest
+
 import numpy as np
 
 from dosma.tissues.tissue import largest_cc
@@ -7,11 +8,11 @@ from dosma.tissues.tissue import largest_cc
 class TestLargestCC(unittest.TestCase):
     def test_largest_cc(self):
         # smallest cc
-        a = np.zeros((100,100)).astype(np.uint8)
+        a = np.zeros((100, 100)).astype(np.uint8)
         a[:10, :10] = 1
 
         # medium cc
-        b = np.zeros((100,100)).astype(np.uint8)
+        b = np.zeros((100, 100)).astype(np.uint8)
         b[85:, 85:] = 1
 
         # largest cc

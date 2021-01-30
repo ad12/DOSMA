@@ -49,9 +49,15 @@ class MedicalVolume(object):
         headers (list[pydicom.FileDataset]): Headers for DICOM files.
     """
 
-    def __init__(self, volume: np.ndarray, affine: np.ndarray, headers: List[pydicom.FileDataset] = None):
+    def __init__(
+        self, volume: np.ndarray, affine: np.ndarray, headers: List[pydicom.FileDataset] = None
+    ):
         if headers and len(headers) != volume.shape[-1]:
-            raise ValueError("Header mismatch. {:d} headers, but {:d} slices".format(len(headers), volume.shape[-1]))
+            raise ValueError(
+                "Header mismatch. {:d} headers, but {:d} slices".format(
+                    len(headers), volume.shape[-1]
+                )
+            )
 
         self._volume = volume
         self._affine = np.array(affine)
@@ -61,11 +67,12 @@ class MedicalVolume(object):
         """Write volumes in specified data format.
 
         Args:
-            file_path (str): File path to save data. May be modified to follow convention given by the data format in which
-                the volume will be saved.
+            file_path (str): File path to save data. May be modified to follow convention
+                given by the data format in which the volume will be saved.
             data_format (ImageDataFormat): Format to save data.
         """
         import dosma.data_io.format_io_utils
+
         writer = dosma.data_io.format_io_utils.get_writer(data_format)
 
         writer.save(self, file_path)
@@ -77,7 +84,8 @@ class MedicalVolume(object):
 
         Reorientation method:
         ---------------------
-        - Axis transpose and flipping are linear operations and therefore can be treated independently
+        - Axis transpose and flipping are linear operations and therefore can be treated
+        independently.
         - working example: ('AP', 'SI', 'LR') --> ('RL', 'PA', 'SI')
         1. Transpose volume and RAS orientation to appropriate column in matrix
             eg. ('AP', 'SI', 'LR') --> ('LR', 'AP', 'SI') - transpose_inds=[2, 0, 1]
@@ -86,9 +94,11 @@ class MedicalVolume(object):
 
         Reorientation method implementation:
         ------------------------------------
-        1. Transpose: Switching (transposing) axes in volume is the same as switching columns in affine matrix
-        2. Flipping: Negate each column corresponding to pixel axis to flip (i, j, k) and reestablish origins based on
-                     flipped axes
+        1. Transpose: Switching (transposing) axes in volume is the same as switching columns
+        in affine matrix
+
+        2. Flipping: Negate each column corresponding to pixel axis to flip (i, j, k) and
+        reestablish origins based on flipped axes
 
         Args:
             new_orientation (Sequence): New orientation.
@@ -131,10 +141,15 @@ class MedicalVolume(object):
         for i in range(len(phi)):
             b_vecs[:, i] *= phi[i]
 
-        # get number of pixels to shift by on each axis (should be 0 when not flipping - i.e. phi<0 mask)
-        vol_shape_vec = ((np.asarray(volume.shape[:3]) - 1) * (phi < 0).astype(np.float32)).transpose()
-        b_origin = np.round(a_origin.flatten() - np.matmul(b_vecs, vol_shape_vec).flatten(),
-                            SCANNER_ORIGIN_DECIMAL_PRECISION)
+        # get number of pixels to shift by on each axis.
+        # Should be 0 when not flipping - i.e. phi<0 mask
+        vol_shape_vec = (
+            (np.asarray(volume.shape[:3]) - 1) * (phi < 0).astype(np.float32)
+        ).transpose()
+        b_origin = np.round(
+            a_origin.flatten() - np.matmul(b_vecs, vol_shape_vec).flatten(),
+            SCANNER_ORIGIN_DECIMAL_PRECISION,
+        )
 
         temp_affine = np.array(self.affine)
         temp_affine[:3, :3] = b_vecs
@@ -148,9 +163,9 @@ class MedicalVolume(object):
         else:
             mv = self._partial_clone(volume=volume, affine=temp_affine)
 
-        assert mv.orientation == new_orientation, (
-            f"Orientation mismatch: Expected: {self.orientation}. Got {new_orientation}"
-        )
+        assert (
+            mv.orientation == new_orientation
+        ), f"Orientation mismatch: Expected: {self.orientation}. Got {new_orientation}"
         return mv
 
     def reformat_as(self, other, inplace: bool = False) -> "MedicalVolume":
@@ -169,7 +184,8 @@ class MedicalVolume(object):
     def is_identical(self, mv):
         """Check if another medical volume is identical.
 
-        Two volumes are identical if they have the same pixel_spacing, orientation, scanner_origin, and volume.
+        Two volumes are identical if they have the same pixel_spacing, orientation,
+        scanner_origin, and volume.
 
         Args:
             mv (MedicalVolume): Volume to compare with.
@@ -189,24 +205,26 @@ class MedicalVolume(object):
 
         Args:
             mv (MedicalVolume): Volume to compare with.
-            precision (`int`, optional): Number of significant figures after the decimal. If not specified, check that
-                affine matrices between two volumes are identical. Defaults to `None`.
+            precision (`int`, optional): Number of significant figures after the decimal.
+                If not specified, check that affine matrices between two volumes are identical.
+                Defaults to `None`.
 
         Returns:
             bool: `True` if spacing between two volumes within tolerance, `False` otherwise.
         """
         if precision:
             tol = 10 ** (-precision)
-            return np.allclose(mv.affine[:3, :3], self.affine[:3, :3], atol=tol) and np.allclose(mv.scanner_origin,
-                                                                                                 self.scanner_origin,
-                                                                                                 rtol=tol)
+            return np.allclose(mv.affine[:3, :3], self.affine[:3, :3], atol=tol) and np.allclose(
+                mv.scanner_origin, self.scanner_origin, rtol=tol
+            )
         else:
             return (mv.affine == self.affine).all()
 
     def is_same_dimensions(self, mv, precision: int = None, err: bool = False):
         """Check if two volumes have the same dimensions.
 
-        Two volumes have the same dimensions if they have the same pixel_spacing, orientation, and scanner_origin.
+        Two volumes have the same dimensions if they have the same pixel_spacing,
+        orientation, and scanner_origin.
 
         Args:
             mv (MedicalVolume): Volume to compare with.
@@ -217,8 +235,8 @@ class MedicalVolume(object):
                 raise descriptive ValueError.
 
         Returns:
-            bool: `True` if pixel spacing, orientation, and scanner origin between two volumes within tolerance, `False`
-                otherwise.
+            bool: ``True`` if pixel spacing, orientation, and scanner origin
+                between two volumes within tolerance, ``False`` otherwise.
 
         Raises:
             TypeError: If ``mv`` is not a MedicalVolume.
@@ -235,17 +253,17 @@ class MedicalVolume(object):
         if err and not out:
             tol_str = f" (tol: 1e-{precision})" if precision else ""
             if not is_close_spacing:
-                raise ValueError("Affine matrices not equal{}:\n{}\n{}".format(
-                    tol_str, self._affine, mv._affine,
-                ))
+                raise ValueError(
+                    "Affine matrices not equal{}:\n{}\n{}".format(tol_str, self._affine, mv._affine)
+                )
             if not is_same_orientation:
-                raise ValueError("Orientations not equal: {}, {}".format(
-                    self.orientation, mv.orientation,
-                ))
+                raise ValueError(
+                    "Orientations not equal: {}, {}".format(self.orientation, mv.orientation)
+                )
             if not is_same_shape:
-                raise ValueError("Shapes not equal: {}, {}".format(
-                    self._volume.shape, mv._volume.shape,
-                ))
+                raise ValueError(
+                    "Shapes not equal: {}, {}".format(self._volume.shape, mv._volume.shape)
+                )
             assert False  # should not reach here
 
         return out
@@ -259,7 +277,7 @@ class MedicalVolume(object):
         warnings.warn(
             "`match_orientation` is deprecated and will be removed in v0.1. "
             "Use `mv.reformat_as(self, inplace=True)` instead.",
-            DeprecationWarning
+            DeprecationWarning,
         )
         if not isinstance(mv, MedicalVolume):
             raise TypeError("`mv` must be a MedicalVolume.")
@@ -275,7 +293,7 @@ class MedicalVolume(object):
         warnings.warn(
             "`match_orientation_batch` is deprecated and will be removed in v0.1. "
             "Use `[x.reformat_as(self, inplace=True) for x in mvs]` instead.",
-            DeprecationWarning
+            DeprecationWarning,
         )
         for mv in mvs:
             self.match_orientation(mv)
@@ -308,7 +326,7 @@ class MedicalVolume(object):
 
         Note:
             Header information is not currently copied.
-        
+
         Returns:
             SimpleITK.Image
         """
@@ -348,8 +366,9 @@ class MedicalVolume(object):
     @volume.setter
     def volume(self, value: np.ndarray):
         """
-        If the volume is of a different shape, the headers are no longer valid, so delete all reorientations are done
-            as part of MedicalVolume, so reorientations are permitted.
+        If the volume is of a different shape, the headers are no longer valid,
+        so delete all reorientations are done as part of MedicalVolume,
+        so reorientations are permitted.
 
         However, external setting of the volume to a different shape array is not allowed.
         """
@@ -402,14 +421,14 @@ class MedicalVolume(object):
     @classmethod
     def from_sitk(cls, image, copy=False) -> "MedicalVolume":
         """Constructs MedicalVolume from SimpleITK.Image.
-        
+
         Note:
             Metadata information is not copied.
 
         Args:
             image (SimpleITK.Image): The image.
             copy (bool, optional): If ``True``, copies array.
-        
+
         Returns:
             MedicalVolume
         """
@@ -467,11 +486,11 @@ class MedicalVolume(object):
         affine = slicer.slice_affine(_slice)
         # slicing data makes headers invalid
         return self._partial_clone(volume=volume, affine=affine, headers=None)
-    
+
     def __setitem__(self, _slice, value):
         if isinstance(value, MedicalVolume):
             image = self[_slice]
-            assert self.is_same_dimensions(value, err=True)
+            assert value.is_same_dimensions(image, err=True)
             value = value._volume
         self._volume[_slice] = value
 

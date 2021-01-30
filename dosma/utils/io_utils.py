@@ -1,15 +1,13 @@
+import logging
 import os
 import pickle
-
 from time import localtime, strftime
+from typing import Sequence
 
 import h5py
 import pandas as pd
 
-import logging
-from typing import Sequence
-
-__all__ = ['mkdirs', 'save_pik', 'load_pik', 'save_h5', 'load_h5', 'save_tables']
+__all__ = ["mkdirs", "save_pik", "load_pik", "save_h5", "load_h5", "save_tables"]
 
 
 def mkdirs(dir_path: str):
@@ -72,7 +70,7 @@ def save_h5(file_path: str, data_dict: dict):
         data_dict (dict): Dictionary of data to store. Dictionary can only have depth of 1.
     """
     mkdirs(os.path.dirname(file_path))
-    with h5py.File(file_path, 'w') as f:
+    with h5py.File(file_path, "w") as f:
         for key in data_dict.keys():
             f.create_dataset(key, data=data_dict[key])
 
@@ -93,19 +91,22 @@ def load_h5(file_path):
         raise FileNotFoundError("{} does not exist".format(file_path))
 
     data = dict()
-    with h5py.File(file_path, 'r') as f:
+    with h5py.File(file_path, "r") as f:
         for key in f.keys():
             data[key] = f.get(key).value
 
     return data
 
 
-def save_tables(file_path: str, data_frames: Sequence[pd.DataFrame], sheet_names: Sequence[str]=None):
+def save_tables(
+    file_path: str, data_frames: Sequence[pd.DataFrame], sheet_names: Sequence[str] = None
+):
     """Save data in excel tables.
 
     Args:
         file_path (str): File path to excel file.
-        data_frames (Sequence[pd.DataFrame]): Tables to store to excel file. One table stored per sheet.
+        data_frames (Sequence[pd.DataFrame]): Tables to store to excel file.
+            One table stored per sheet.
         sheet_names (:obj:`Sequence[str]`, optional): Sheet names for each data frame.
     """
     mkdirs(os.path.dirname(file_path))
@@ -114,10 +115,10 @@ def save_tables(file_path: str, data_frames: Sequence[pd.DataFrame], sheet_names
     if sheet_names is None:
         sheet_names = []
         for i in range(len(data_frames)):
-            sheet_names.append('Sheet%d' % (i + 1))
+            sheet_names.append("Sheet%d" % (i + 1))
 
     if len(data_frames) != len(sheet_names):
-        raise ValueError('Number of data_frames and sheet_frames should be the same')
+        raise ValueError("Number of data_frames and sheet_frames should be the same")
 
     for i in range(len(data_frames)):
         df = data_frames[i]
@@ -126,13 +127,14 @@ def save_tables(file_path: str, data_frames: Sequence[pd.DataFrame], sheet_names
     writer.save()
 
 
-def init_logger(log_file: str, debug: bool=False):
+def init_logger(log_file: str, debug: bool = False):
     """Initialize logger.
 
     Args:
         log_file (str): File path to log file.
-        debug (:obj:`bool`, optional): If `True`, debug mode will be enabled for the logger. This means debug statements
-            will also be written to the log file. Defaults to `False`.
+        debug (:obj:`bool`, optional): If ``True``, debug mode will be enabled for the logger.
+            This means debug statements will also be written to the log file.
+            Defaults to ``False``.
     """
     level = logging.DEBUG if debug else logging.INFO
     logging.basicConfig(level=level)
@@ -140,9 +142,9 @@ def init_logger(log_file: str, debug: bool=False):
     root_logger = logging.getLogger()
 
     if os.path.exists(log_file):
-        mode = 'a'
+        mode = "a"
     else:
-        mode = 'w'
+        mode = "w"
 
     mkdirs(os.path.dirname(log_file))
 
@@ -152,9 +154,9 @@ def init_logger(log_file: str, debug: bool=False):
 
     logging.captureWarnings(True)
 
-    if mode == 'a':
-        logging.info('\n'*4)
+    if mode == "a":
+        logging.info("\n" * 4)
 
-    logging.info('==' * 40)
-    logging.info('Timestamp: %s' % strftime("%Y-%m-%d %H:%M:%S", localtime()))
-    logging.info('\n\n')
+    logging.info("==" * 40)
+    logging.info("Timestamp: %s" % strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    logging.info("\n\n")

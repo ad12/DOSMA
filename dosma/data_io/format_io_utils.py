@@ -3,11 +3,17 @@
 
 import os
 
-from dosma.data_io.dicom_io import DicomWriter, DicomReader
-from dosma.data_io.format_io import DataWriter, DataReader, ImageDataFormat
-from dosma.data_io.nifti_io import NiftiWriter, NiftiReader
+from dosma.data_io.dicom_io import DicomReader, DicomWriter
+from dosma.data_io.format_io import DataReader, DataWriter, ImageDataFormat
+from dosma.data_io.nifti_io import NiftiReader, NiftiWriter
 
-__all__ = ["get_reader", "get_writer", "get_filepath_variations", "convert_image_data_format", "generic_load"]
+__all__ = [
+    "get_reader",
+    "get_writer",
+    "get_filepath_variations",
+    "convert_image_data_format",
+    "generic_load",
+]
 
 _READERS = {ImageDataFormat.dicom: DicomReader, ImageDataFormat.nifti: NiftiReader}
 _WRITERS = {ImageDataFormat.dicom: DicomWriter, ImageDataFormat.nifti: NiftiWriter}
@@ -48,7 +54,8 @@ def convert_image_data_format(file_or_dir_path: str, new_data_format: ImageDataF
         str: File/directory path based on convention of new data format.
 
     Raises:
-        NotImplementedError: If conversion from current image data format to new image data format not found.
+        NotImplementedError: If conversion from current image data format
+            to new image data format not found.
     """
     current_format = ImageDataFormat.get_image_data_format(file_or_dir_path)
 
@@ -66,7 +73,9 @@ def convert_image_data_format(file_or_dir_path: str, new_data_format: ImageDataF
         basename = basename.split(".", 1)[0]
         return os.path.join(dirname, basename)
 
-    raise NotImplementedError("{} -> {} not implemented".format(current_format.name, new_data_format.name))
+    raise NotImplementedError(
+        "{} -> {} not implemented".format(current_format.name, new_data_format.name)
+    )
 
 
 def get_filepath_variations(file_or_dir_path: str):
@@ -89,12 +98,13 @@ def generic_load(file_or_dir_path: str, expected_num_volumes: int = None):
 
     Args:
         file_or_dir_path (str): File or directory path.
-        expected_num_volumes (int, `optional`): Number of volumes expected. If specified, assert if number of loaded
+        expected_num_volumes (int, `optional`): Number of volumes expected.
+            If specified, assert if number of loaded
             volumes != expected num volumes. Defaults to `None`.
 
     Returns:
-        `list[MedicalVolume]` or `MedicalVolume`: Volume(s) loaded. If `expected_num_volumes = 1`, returns
-            `MedicalVolume`.
+        `list[MedicalVolume]` or `MedicalVolume`: Volume(s) loaded.
+            If ``expected_num_volumes = 1``, returns :class:``MedicalVolume``.
 
     Raises:
         ValueError: If multiple file paths corresponding to different ImageDataFormats exist.
@@ -107,11 +117,15 @@ def generic_load(file_or_dir_path: str, expected_num_volumes: int = None):
         if os.path.exists(fp):
             if exist_path is not None:
                 raise ValueError(
-                    'Ambiguous loading state - multiple possible files to load from %s' % str(possible_filepaths))
+                    "Ambiguous loading state - multiple possible files to load from %s"
+                    % str(possible_filepaths)
+                )
             exist_path = fp
 
     if exist_path is None:
-        raise FileNotFoundError('No file associated with basename %s found' % os.path.basename(file_or_dir_path))
+        raise FileNotFoundError(
+            "No file associated with basename %s found" % os.path.basename(file_or_dir_path)
+        )
 
     io_format = ImageDataFormat.get_image_data_format(exist_path)
     r = get_reader(io_format)
@@ -123,7 +137,10 @@ def generic_load(file_or_dir_path: str, expected_num_volumes: int = None):
     if type(vols) is not list:
         vols = [vols]
 
-    assert len(vols) == expected_num_volumes, "Expected %d volumes, got %d" % (expected_num_volumes, len(vols))
+    assert len(vols) == expected_num_volumes, "Expected %d volumes, got %d" % (
+        expected_num_volumes,
+        len(vols),
+    )
 
     if len(vols) == 1:
         return vols[0]

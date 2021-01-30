@@ -1,18 +1,13 @@
 #!/usr/bin/env python
 
 import os
-from os import path
 from setuptools import find_packages, setup
 
 
 def get_version():
-    init_py_path = path.join(
-        path.abspath(path.dirname(__file__)), "dosma", "__init__.py"
-    )
+    init_py_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "dosma", "__init__.py")
     init_py = open(init_py_path, "r").readlines()
-    version_line = [
-        l.strip() for l in init_py if l.startswith("__version__")  # noqa: E741
-    ][0]
+    version_line = [l.strip() for l in init_py if l.startswith("__version__")][0]  # noqa: E741
     version = version_line.split("=")[-1].strip().strip("'\"")
 
     # The following is used to build release packages.
@@ -25,9 +20,7 @@ def get_version():
         date_str = datetime.today().strftime("%y%m%d")
         version = version + ".dev" + date_str
 
-        new_init_py = [
-            l for l in init_py if not l.startswith("__version__")  # noqa: E741
-        ]
+        new_init_py = [l for l in init_py if not l.startswith("__version__")]  # noqa: E741
         new_init_py.append('__version__ = "{}"\n'.format(version))
         with open(init_py_path, "w") as f:
             f.write("".join(new_init_py))
@@ -43,9 +36,9 @@ def get_resources():
 
     files = []
     # Elastix files
-    for path in pathlib.Path("dosma/resources/elastix/params").rglob('*.*'):
+    for path in pathlib.Path("dosma/resources/elastix/params").rglob("*.*"):
         files.append(str(path))
-    for path in pathlib.Path("dosma/resources/templates").rglob('*.*'):
+    for path in pathlib.Path("dosma/resources/templates").rglob("*.*"):
         files.append(str(path))
     return [x.split("/", 1)[1] for x in files]
 
@@ -57,7 +50,7 @@ setup(
     url="https://ad12.github.io/DOSMA",
     description="An AI-powered open-source medical image analysis toolbox",
     packages=find_packages(exclude=("configs", "tests", "tests.*")),
-    package_data={'dosma': get_resources(),},
+    package_data={"dosma": get_resources()},
     python_requires=">=3.6",
     install_requires=[
         "numpy",
@@ -75,7 +68,7 @@ setup(
         "openpyxl",
         "Pmw",
         "PyYAML",
-        "tqdm>=4.42.0"
+        "tqdm>=4.42.0",
     ],
     license="GNU",
     classifiers=[
@@ -83,7 +76,5 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
     ],
-    extras_require={
-        "dev": ["flake8", "isort", "black==19.3b0", "sphinx", "sphinxcontrib.bibtex"],
-    },
+    extras_require={"dev": ["flake8", "isort", "black==19.3b0", "sphinx", "sphinxcontrib.bibtex"]},
 )

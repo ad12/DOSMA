@@ -30,17 +30,19 @@ Two general conventions are followed:
 - Left: corresponds to patient (not observer) left,
   right: corresponds to patient (not observer) right.
 
-We adopt the RAS+ standard (as defined by NIfTI) for orienting our images. 
+We adopt the RAS+ standard (as defined by NIfTI) for orienting our images.
 The ``+`` in RAS+ indicates that all directions point to the increasing direction.
 i.e. from -x to x:.
 
 Image spacing, direction, and global origin are represented by a 4x4 affine matrix (:math:`A`) and
-is identical to the nibabel affine matrix (see `nibabel <https://nipy.org/nibabel/coordinate_systems.html>`_).
+is identical to the nibabel affine matrix
+(see `nibabel <https://nipy.org/nibabel/coordinate_systems.html>`_).
 The affine matrix converts pixel coordinates (i, j, k) into world (NIfTI) coordinates (x, y, z).
 
 .. math::
 
-    \\begin{bmatrix} x\\\\y\\\\z\\\\1\\end{bmatrix} = A \\begin{bmatrix} i\\\\j\\\\k\\\\1\\end{bmatrix}
+    \\begin{bmatrix} x\\\\y\\\\z\\\\1\\end{bmatrix} = A
+    \\begin{bmatrix} i\\\\j\\\\k\\\\1\\end{bmatrix}
 
 
 For example,
@@ -48,25 +50,33 @@ For example,
 .. math::
 
     \\begin{bmatrix} x\\\\y\\\\z\\\\1 \\end{bmatrix} =
-    \\begin{bmatrix} 0 & 0 & 1.5 & -61.6697\\\\-0.3125 & 0 & 0 & 50.8516\\\\0 & -0.3125 & 0 & 88.5876\\\\0 & 0 & 0 & 1 \\end{bmatrix}
+    \\begin{bmatrix} 0 & 0 & 1.5 & -61.6697\\\\-0.3125 & 0 & 0 & 50.8516\\\\
+    0 & -0.3125 & 0 & 88.5876\\\\0 & 0 & 0 & 1 \\end{bmatrix}
     \\begin{bmatrix} i\\\\j\\\\k\\\\1\\end{bmatrix}
 
-For details on how the affine matrix is used for reformatting see :class:`dosma.data_io.MedicalVolume`.
+For details on how the affine matrix is used for reformatting see
+:class:`dosma.data_io.MedicalVolume`.
+
 """
 
-__all__ = ["get_transpose_inds", "get_flip_inds", "orientation_nib_to_standard", "orientation_standard_to_nib",
-           "SAGITTAL", "CORONAL", "AXIAL"]
+__all__ = [
+    "get_transpose_inds",
+    "get_flip_inds",
+    "orientation_nib_to_standard",
+    "orientation_standard_to_nib",
+    "SAGITTAL",
+    "CORONAL",
+    "AXIAL",
+]
 
 
-SAGITTAL = ('SI', 'AP', 'LR')
-CORONAL = ('SI', 'LR', 'AP')
-AXIAL = ('AP', 'LR', 'SI')
+SAGITTAL = ("SI", "AP", "LR")
+CORONAL = ("SI", "LR", "AP")
+AXIAL = ("AP", "LR", "SI")
 
 __EXPECTED_ORIENTATION_TUPLE_LEN__ = 3
-__SUPPORTED_ORIENTATIONS__ = ['LR', 'RL', 'PA', 'AP', 'IS', 'SI']
-__ORIENTATIONS_TO_AXIS_ID__ = {'LR': 0, 'RL': 0,
-                               'PA': 1, 'AP': 1,
-                               'IS': 2, 'SI': 2}
+__SUPPORTED_ORIENTATIONS__ = ["LR", "RL", "PA", "AP", "IS", "SI"]
+__ORIENTATIONS_TO_AXIS_ID__ = {"LR": 0, "RL": 0, "PA": 1, "AP": 1, "IS": 2, "SI": 2}
 
 
 def __check_orientation__(orientation: tuple):
@@ -78,18 +88,24 @@ def __check_orientation__(orientation: tuple):
     Raises:
         ValueError: If orientation tuple is invalid.
     """
-    is_orientation_format = len(orientation) == __EXPECTED_ORIENTATION_TUPLE_LEN__ and sum(
-        [type(o) is str for o in orientation]) == __EXPECTED_ORIENTATION_TUPLE_LEN__
+    is_orientation_format = (
+        len(orientation) == __EXPECTED_ORIENTATION_TUPLE_LEN__
+        and sum([type(o) is str for o in orientation]) == __EXPECTED_ORIENTATION_TUPLE_LEN__
+    )
 
-    orientation_str_exists = sum(
-        [o in __SUPPORTED_ORIENTATIONS__ for o in orientation]) == __EXPECTED_ORIENTATION_TUPLE_LEN__
+    orientation_str_exists = (
+        sum([o in __SUPPORTED_ORIENTATIONS__ for o in orientation])
+        == __EXPECTED_ORIENTATION_TUPLE_LEN__
+    )
 
     orientation_ids = [__ORIENTATIONS_TO_AXIS_ID__[o] for o in orientation]
     unique_ids = len(orientation_ids) == len(set(orientation_ids))
 
     if not is_orientation_format or not orientation_str_exists or not unique_ids:
-        raise ValueError("Orientation format mismatch: Orientations must be tuple of strings of "
-                         "length {}".format(__EXPECTED_ORIENTATION_TUPLE_LEN__))
+        raise ValueError(
+            "Orientation format mismatch: Orientations must be tuple of strings of "
+            "length {}".format(__EXPECTED_ORIENTATION_TUPLE_LEN__)
+        )
 
 
 def get_transpose_inds(curr_orientation: tuple, new_orientation: tuple):
@@ -120,7 +136,10 @@ def get_transpose_inds(curr_orientation: tuple, new_orientation: tuple):
     new_orientation_ids = [__ORIENTATIONS_TO_AXIS_ID__[o] for o in new_orientation]
 
     if set(curr_orientation_ids) != set(new_orientation_ids):
-        raise ValueError("Orientation mismatch: Both curr_orientation and new_orientation must contain the same axes")
+        raise ValueError(
+            "Orientation mismatch: Both curr_orientation and new_orientation "
+            "must contain the same axes"
+        )
 
     transpose_inds = [curr_orientation_ids.index(n_o) for n_o in new_orientation_ids]
 
@@ -152,7 +171,10 @@ def get_flip_inds(curr_orientation: tuple, new_orientation: tuple):
     new_orientation_ids = [__ORIENTATIONS_TO_AXIS_ID__[o] for o in new_orientation]
 
     if curr_orientation_ids != new_orientation_ids:
-        raise ValueError('All axis orientations (S/I, L/R, A/P) must be in the same location in tuple')
+        raise ValueError(
+            "All axis orientations (S/I, L/R, A/P) must be ordered. "
+            "Use `get_transpose_inds` to reorder axes."
+        )
 
     flip_axs_inds = []
     for i in range(__EXPECTED_ORIENTATION_TUPLE_LEN__):
@@ -163,9 +185,14 @@ def get_flip_inds(curr_orientation: tuple, new_orientation: tuple):
 
 
 # Nibabel to standard orientation conversion utils.
-__nib_to_standard_orientation_map__ = {'R': 'LR', 'L': 'RL',
-                                       'A': 'PA', 'P': 'AP',
-                                       'S': 'IS', 'I': 'SI'}
+__nib_to_standard_orientation_map__ = {
+    "R": "LR",
+    "L": "RL",
+    "A": "PA",
+    "P": "AP",
+    "S": "IS",
+    "I": "SI",
+}
 
 
 def orientation_nib_to_standard(nib_orientation):
