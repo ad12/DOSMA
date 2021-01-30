@@ -116,10 +116,23 @@ class QDess(TargetSequence):
 
         return mask
 
-    def generate_t2_map(self, tissue: Tissue, suppress_fat: bool = False,
-                        suppress_fluid: bool = False, beta: float = 1.2,
-                        gl_area: float = None, tg: float = None):
+    def generate_t2_map(
+        self,
+        tissue: Tissue,
+        suppress_fat: bool = False,
+        suppress_fluid: bool = False,
+        beta: float = 1.2,
+        gl_area: float = None,
+        tg: float = None,
+        tr: float = None,
+        te: float = None,
+        alpha = None,
+        diffusivity: float = 1.25e-9,
+        t1 = None,
+    ):
         """Generate 3D T2 map.
+
+        If dicom header does not have the appropriate private tagsis not visible, ``tr``, ``te``, ``alpha``, and ``tg
 
         Args:
             tissue (Tissue): Tissue to generate T2 map for.
@@ -127,11 +140,16 @@ class QDess(TargetSequence):
                 Can help reduce noise.
             suppress_fluid (`bool`, optional): Suppress fluid region in T2 computation.
                 Fluid-nulled image is calculated as ``S1 - beta*S2``.
-            beta (`float`, optional): Beta value used for suppressing fluid. Defaults to 1.2.
-            gl_area (`float`, optional): GL Area. Required if not provided in the dicom.
-                Defaults to value in dicom tag '0x001910b6'.
-            tg (`float`, optional): tg value (in microseconds). Required if not provided in the
-                dicom. Defaults to value in dicom tag '0x001910b7'.
+            beta (float, optional): Beta value used for suppressing fluid.
+                :math: 
+            gl_area (float, optional): Spoiler amplitude.
+                Defaults to value in dicom private tag '0x001910b6'.
+                Required if dicom header unavailable or private tag missing.
+            tg (float, optional): Spoiler duration (in microseconds). 
+                Defaults to value in dicom private tag ``0x001910b7``.
+                Required if dicom header unavailable or private tag missing.
+            tr (float, optional): Repitition time (in milliseconds). Required if dicom header
+                unavailable
 
         Returns:
             qv.T2: T2 fit for tissue.
@@ -154,9 +172,9 @@ class QDess(TargetSequence):
         echo_2 = subvolumes[1].volume
 
         # All timing in seconds
-        TR = float(ref_dicom.RepetitionTime) * 1e-3
-        TE = float(ref_dicom.EchoTime) * 1e-3
-        Tg = tg * 1e-6 if tg else float(ref_dicom[self.__TG_TAG__].value) * 1e-6
+        TR = (float(ref_dicom.RepetitionTime) if tr is None else tr) * 1e-3
+        TE = (float(ref_dicom.EchoTime) if te is None else te) * 1e-3
+        Tg = (float(ref_dicom[self.__TG_TAG__].value) if tg is None else tg) * 1e-6
         T1 = float(tissue.T1_EXPECTED) * 1e-3
 
         # Flip Angle (degree -> radians)
