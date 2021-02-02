@@ -261,6 +261,21 @@ class TestMedicalVolume(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             mv_gpu.save_volume(os.path.join(self._TEMP_PATH, "test_device.nii.gz"))
 
+    def test_array_cpu(self):
+        mv = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
+
+        data = np.asarray(mv)
+        assert np.shares_memory(data, mv.volume)
+    
+    @ututils.requires_packages("cupy")
+    def test_array_gpu(self):
+        import cupy as cp
+
+        mv = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
+        mv_gpu = mv.to(Device(0))
+        data = cp.asarray(mv_gpu)
+        assert cp.shares_memory(data, mv_gpu.volume)
+
 
 if __name__ == "__main__":
     unittest.main()

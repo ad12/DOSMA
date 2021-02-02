@@ -50,10 +50,10 @@ class MedicalVolume(object):
     >>> id(mv2) == id(mv)
     True
 
-    BETA: Medical volumes can interface with the gpu using the :mod:`cupy` library. Volumes can be
-    moved between devices (see :cls:`dosma.Device`) using the ``.to()`` method. Only the volume
-    data will be moved to the gpu. Headers and affine matrix will remain on the cpu. The following
-    code moves a MedicalVolume to gpu 0 and back to the cpu:
+    **BETA**: Medical volumes can interface with the gpu using the :mod:`cupy` library.
+    Volumes can be moved between devices (see :cls:`dosma.Device`) using the ``.to()`` method.
+    Only the volume data will be moved to the gpu. Headers and affine matrix will remain on
+    the cpu. The following code moves a MedicalVolume to gpu 0 and back to the cpu:
 
     >>> from dosma import Device
     >>> mv = MedicalVolume(np.random.rand((10,20,30)), np.eye(4))
@@ -67,6 +67,19 @@ class MedicalVolume(object):
 
     >>> mv_gpu == mv_cpu
     >>> mv_gpu.is_identical(mv_cpu)
+    <class 'numpy.ndarray'>
+
+    **BETA**: MedicalVolumes also have a limited NumPy/CuPy-compatible interface.
+    Standard numpy/cupy functions can be performed on MedicalVolume objects, but the resulting
+    output will be a ndarray. This functionality may change in the future such that NumPy
+    operations return MedicalVolumes.
+
+    >>> log_arr = np.log(mv)
+    >>> type(log_arr)
+    <class 'numpy.ndarray'>
+    >>> log_arr_gpu = cp.log(mv_gpu)
+    >>> type(log_arr_gpu)
+    <class 'cupy.core.core.ndarray'>
 
     Args:
         volume (np.ndarray): 3D volume.
@@ -135,6 +148,7 @@ class MedicalVolume(object):
             MedicalVolume: The reformatted volume. If ``inplace=True``, returns ``self``.
         """
         xp = self.device.xp
+        device = self.device
 
         new_orientation = tuple(new_orientation)
         if new_orientation == self.orientation:
@@ -148,14 +162,16 @@ class MedicalVolume(object):
         transpose_inds = stdo.get_transpose_inds(temp_orientation, new_orientation)
         all_transpose_inds = transpose_inds + tuple(range(3, self._volume.ndim))
 
-        volume = xp.transpose(self.volume, all_transpose_inds)
+        with device:
+            volume = xp.transpose(self.volume, all_transpose_inds)
         for i in range(len(transpose_inds)):
             temp_affine[..., i] = self._affine[..., transpose_inds[i]]
 
         temp_orientation = tuple([self.orientation[i] for i in transpose_inds])
 
         flip_axs_inds = list(stdo.get_flip_inds(temp_orientation, new_orientation))
-        volume = xp.flip(volume, axis=tuple(flip_axs_inds))
+        with device:
+            volume = xp.flip(volume, axis=tuple(flip_axs_inds))
         a_vecs = temp_affine[:3, :3]
         a_origin = temp_affine[:3, 3]
 
@@ -228,7 +244,8 @@ class MedicalVolume(object):
         if idevice != odevice:
             raise RuntimeError(f"Expected device {idevice}, got {odevice}.")
 
-        return self.is_same_dimensions(mv) and (mv.volume == self.volume).all()
+        with idevice:
+            return self.is_same_dimensions(mv) and (mv.volume == self.volume).all()
 
     def __allclose_spacing(self, mv, precision: int = None):
         """Check if spacing between self and another medical volume is within tolerance.
@@ -562,7 +579,8 @@ class MedicalVolume(object):
             image = self[_slice]
             assert value.is_same_dimensions(image, err=True)
             value = value._volume
-        self._volume[_slice] = value
+        with self.device:
+            self._volume[_slice] = value
 
     def __add__(self, other):
         if isinstance(other, MedicalVolume):
@@ -689,6 +707,40 @@ class MedicalVolume(object):
             other = other.volume
         volume = (self._volume < other).astype(self.device.xp.uint8)
         return self._partial_clone(volume=volume)
+
+    def __array__(self):
+        """Wrapper for performing numpy operations on MedicalVolume array.
+
+        Examples:
+            >>> a = np.asarray(mv)
+            >>> type(a)
+            <class 'numpy.ndarray'>
+            >>> np.log()
+        
+        Note:
+            This is not valid when ``self.volume`` is a ``cupy.ndarray``.
+            All CUDA ndarrays must first be moved to the cpu.
+        """
+        try:
+            return np.asarray(self.volume)
+        except TypeError:
+            raise TypeError(
+                "Implicit conversion to a NumPy array is not allowed. "
+                "Please use `.cpu()` to move the array to the cpu explicitly "
+                "before constructing a NumPy array."
+            )
+    
+    @property
+    def __cuda_array_interface__(self):
+        """Wrapper for performing cupy operations on MedicalVolume array.
+        """
+        if self.device == cpu_device:
+            raise TypeError(
+                "Implicit conversion to a CuPy array is not allowed. "
+                "Please use `.to(device)` to move the array to the gpu explicitly "
+                "before constructing a CuPy array."
+            )
+        return self.volume.__cuda_array_interface__
 
 
 class _SpatialFirstSlicer(_SpatialFirstSlicerNib):

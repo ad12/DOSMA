@@ -16,7 +16,6 @@ def _package_available(name):
 
 def sitk_available():
     return _package_available("SimpleITK")
-<<<<<<< HEAD
 
 def cupy_available():
     return _package_available("cupy")
@@ -26,5 +25,3 @@ def sigpy_available():
 
 def torch_available():
     return _package_available("torch")
-=======
->>>>>>> master
