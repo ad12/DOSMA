@@ -43,12 +43,20 @@ def get_resources():
     return [x.split("/", 1)[1] for x in files]
 
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
 setup(
     name="dosma",
     version=get_version(),
     author="Arjun Desai",
-    url="https://ad12.github.io/DOSMA",
+    url="https://github.com/ad12/DOSMA",
+    project_urls = {
+        "Documentation": "https://dosma.readthedocs.io/",
+    },
     description="An AI-powered open-source medical image analysis toolbox",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     packages=find_packages(exclude=("configs", "tests", "tests.*")),
     package_data={"dosma": get_resources()},
     python_requires=">=3.6",
