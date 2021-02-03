@@ -16,7 +16,7 @@ pandas, pydicom, scikit-image, scipy, PyYAML, and tqdm.
 
 Additional AI features can be unlocked by installing tensorflow and keras. To
 enable built-in registration functionality, download [elastix](https://elastix.lumc.nl/download.php).
-Details can be found in the [setup documentation](https://ad12.github.io/DOSMA/build/html/general/installation.html#setup).
+Details can be found in the [setup documentation](https://dosma.readthedocs.io/en/latest/general/installation.html#setup).
 
 To install DOSMA, run:
 
