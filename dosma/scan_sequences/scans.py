@@ -7,14 +7,19 @@ Different scan types produce images with different qualities
 These scan types have different actions (or processing) associated with them.
 
 A scan can have multiple volumes if multiple phases or echo times are used to image in the scan.
+
+Scans that have high resolution & signal-to-noise ratio (SNR) are typically used for
+segmentation. Because of this property, they are often referred to as *targets*.
+This allows them to serve as a good template that other lower SNR/resolution scans
+can be registered to.
 """
 
 import logging
 import os
 import re
-import warnings
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from time import localtime, strftime
+from typing import Any, Sequence, Union
 
 import numpy as np
 import scipy.ndimage as sni
@@ -23,18 +28,16 @@ from nipype.interfaces.elastix import ApplyWarp, Registration
 
 from dosma import file_constants as fc
 from dosma.data_io import format_io_utils as fio_utils
-from dosma.data_io.dicom_io import DicomReader
-from dosma.data_io.format_io import ImageDataFormat
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.data_io.nifti_io import NiftiReader
 from dosma.defaults import preferences
-from dosma.models.seg_model import SegModel
+from dosma.scan_sequences.scan_io import ScanIOMixin
 from dosma.tissues.tissue import Tissue
 from dosma.utils import io_utils
 
 
-class ScanSequence(ABC):
-    """Abstract class for scan sequences and corresponding analysis.
+class ScanSequence(ScanIOMixin):
+    """The class for scan sequences and corresponding analysis.
 
     All scan sequence classes should inherit from this abstract classes.
 
@@ -64,90 +67,37 @@ class ScanSequence(ABC):
     NAME = ""
     __DEFAULT_SPLIT_BY__ = "EchoNumbers"
 
-    def __init__(self, dicom_path: str = None, load_path: str = None, **kwargs):
-        self.split_by = self.__DEFAULT_SPLIT_BY__
-        self.ignore_ext = False
+    def __init__(self, volumes: Union[MedicalVolume, Sequence[MedicalVolume]]):
+        self.volumes = volumes
 
-        kwargs_str = ["split_by", "ignore_ext"]
-        for k in kwargs_str:
-            if k in kwargs:
-                self.__setattr__(k, kwargs.get(k))
+        # TODO: Remove series number as an attribute.
+        # It should be directly accessed through the reference header.
+        self.series_number = None
+        self._from_file_args = {}
 
         self.temp_path = os.path.join(
             fc.TEMP_FOLDER_PATH, self.NAME, strftime("%Y-%m-%d-%H-%M-%S", localtime())
         )
         self.tissues = []
-        self.dicom_path = os.path.abspath(dicom_path) if dicom_path is not None else None
+        self._metadata = {}
 
-        self.volumes = None
-        self.ref_dicom = None
-        self.series_number = None
-
-        # check if dicom path exists
-        if (dicom_path is not None) and (not os.path.isdir(dicom_path)):
-            if load_path is not None:
-                warnings.warn(
-                    "Dicom_path {} not found. Will load data from {}".format(dicom_path, load_path)
-                )
-            else:
-                raise NotADirectoryError("{} is not a directory".format(dicom_path))
-
-        # Only use dicoms if the path exists and path contains files ending in dicom_ext
-        is_dicom_available = (dicom_path is not None) and (os.path.isdir(dicom_path))
-
-        # Only load data if dicom path is not given or doesn't exist
-        # Else assume user wants to rewrite information
-        if load_path and not is_dicom_available:
-            self.load_data(load_path)
-
-        if is_dicom_available:
-            self.__load_dicom__()
-
-        if not self.__validate_scan__():
-            raise ValueError(
-                "dicoms in '{}' do not correspond to {} sequence".format(self.dicom_path, self.NAME)
-            )
-
-    @abstractmethod
     def __validate_scan__(self) -> bool:
         """Validate this scan (usually done by checking dicom header tags, if available).
-
         Returns:
             bool: `True` if scan metadata is valid, `False` otherwise.
         """
-        pass
+        return True
 
-    def __load_dicom__(self):
-        """Load data from dicom path.
-        """
-        split_by = self.split_by
-
-        dicom_path = self.dicom_path
-
-        if dicom_path is None or not os.path.isdir(dicom_path):
-            raise NotADirectoryError("%s not found" % dicom_path)
-
-        dr = DicomReader()
-
-        self.volumes = dr.load(dicom_path, group_by=split_by, ignore_ext=self.ignore_ext)
-
-        self.ref_dicom = self.volumes[0].headers[0]
-
-        self.__set_series_number__(self.ref_dicom.SeriesNumber)
-
-    def __set_series_number__(self, sn: int):
-        """Set series number.
-
-        Args:
-            sn (int): Series number.
-        """
-        if self.series_number is not None:
-            assert (
-                self.series_number == sn
-            ), "Series numbers must be identical if loading the same scan"
-            return
+    def get_metadata(self, key: Any, default=None):
+        metadata = self._metadata.get(key, None)
+        if metadata is None and self.ref_dicom is not None:
+            metadata = self.ref_dicom[key].value if key in self.ref_dicom else None
+        if metadata is None and default is False:
+            raise KeyError(f"Metadata '{key}' not found")
+        elif metadata is None:
+            return default
         else:
-            self.series_number = sn
+            return metadata
 
     def get_dimensions(self):
         """Get shape of volumes.
@@ -158,6 +108,12 @@ class ScanSequence(ABC):
             tuple[int]: Shape of volumes in scan.
         """
         return self.volumes[0].volume.shape
+
+    @property
+    def ref_dicom(self):
+        """The reference dicom."""
+        vol = self.volumes[0] if isinstance(self.volumes, Sequence) else self.volumes
+        return vol.headers[0] if vol.headers is not None else None
 
     def __add_tissue__(self, new_tissue: Tissue):
         """Add a tissue to the list of tissues associated with this scan.
@@ -174,142 +130,6 @@ class ScanSequence(ABC):
             raise ValueError("Tissue already exists")
 
         self.tissues.append(new_tissue)
-
-    def __data_filename__(self):
-        """Get filename for storing serialized data.
-
-        Returns:
-            str: File name for pickled data.
-        """
-        return "%s.data" % self.NAME
-
-    def save_data(
-        self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format
-    ):
-        """Save data to disk.
-
-        Data will be saved in the directory '`base_save_dirpath`/scan.NAME_data/'
-            (e.g. '`base_save_dirpath`/dess_data/').
-
-        Serializes variables specified in by self.__serializable_variables__().
-
-        Override this method to save additional information such as volumes, subvolumes,
-        quantitative maps, etc. In override, Call this function
-        ``super().save_data(base_save_dirpath)`` before adding code to override this
-        method.
-
-        Args:
-            base_save_dirpath (str): Directory path where all data is stored.
-            data_format (ImageDataFormat): Format to save data.
-        """
-
-        # Write data as ref.
-        save_dirpath = self.__save_dir__(base_save_dirpath)
-        filepath = os.path.join(save_dirpath, "%s.data" % self.NAME)
-
-        metadata = dict()
-        for variable_name in self.__serializable_variables__():
-            metadata[variable_name] = self.__getattribute__(variable_name)
-
-        io_utils.save_pik(filepath, metadata)
-
-    def load_data(self, base_load_dirpath: str):
-        """Load data from disk.
-
-        Data will be loaded from the directory
-        '`base_load_dirpath`/`scan.NAME`' (e.g. '`base_load_dirpath'/dess/').
-
-        Override this method to load additional information such as volumes, subvolumes,
-        quantitative maps, etc. In override, Call this function
-        ``super().save_data(base_load_dirpath)`` before adding code to override this
-        method.
-
-        Args:
-            base_load_dirpath (str): Directory path where all data is stored.
-
-        Raises:
-            NotADirectoryError: if base_load_dirpath/scan.NAME/ does not exist.
-        """
-        load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
-
-        if not os.path.isdir(load_dirpath):
-            raise NotADirectoryError("{} does not exist".format(load_dirpath))
-
-        file_path = os.path.join(load_dirpath, "{}.data".format(self.NAME))
-
-        metadata = io_utils.load_pik(file_path)
-        for key in metadata.keys():
-            if hasattr(self, key):
-                self.__setattr__(key, metadata[key])
-
-        try:
-            self.__load_dicom__()
-        except Exception:
-            logging.info(
-                "Dicom directory {} not found. Will try to load from {}".format(
-                    self.dicom_path, base_load_dirpath
-                )
-            )
-
-    def __save_dir__(self, dir_path: str, create_dir: bool = True):
-        """Returns directory path specific to this scan.
-
-        Formatted as '`base_load_dirpath`/`scan.NAME`'.
-
-        Args:
-            dir_path (str): Directory path where all data is stored.
-            create_dir (`bool`, optional): If `True`, creates directory if it doesn't exist.
-
-        Returns:
-            str: Data directory path for this scan.
-        """
-        # folder_id = '%s-%03d' % (self.NAME, self.series_number)
-        folder_id = self.NAME
-
-        name_len = len(folder_id) + 2  # buffer
-        if self.NAME in dir_path[-name_len:]:
-            scan_dirpath = os.path.join(dir_path, folder_id)
-        else:
-            scan_dirpath = dir_path
-
-        scan_dirpath = os.path.join(scan_dirpath, folder_id)
-
-        if create_dir:
-            scan_dirpath = io_utils.mkdirs(scan_dirpath)
-
-        return scan_dirpath
-
-    def __serializable_variables__(self):
-        """Variables to serialize.
-
-        Not all variables can be serialized.
-
-        To add scan specific variables, override this method.
-        """
-        return ["dicom_path", "series_number", "split_by", "ignore_ext"]
-
-
-class TargetSequence(ScanSequence):
-    """Abstract class for scans that support segmentation of tissues.
-
-    Scans that have high resolution & signal-to-noise ratio (SNR) are typically used for
-    segmentation. Because of this property, they are often referred to as *targets*.
-    This allows them to serve as a good template that other lower SNR/resolution scans
-    can be registered to.
-    """
-
-    @abstractmethod
-    def segment(self, model: SegModel, tissue: Tissue) -> MedicalVolume:
-        """Segment tissue in scan.
-
-        Args:
-            model (SegModel): Model to use for segmenting scans.
-            tissue (Tissue): The tissue to segment.
-
-        Returns:
-            MedicalVolume: Binary mask for segmented region.
-        """
-        pass
 
 
 class NonTargetSequence(ScanSequence):

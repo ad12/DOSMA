@@ -1,27 +1,23 @@
 """Quantitative Double Echo in Steady State (qDESS) sequence."""
 import logging
 import math
-import os
 from copy import deepcopy
 from typing import Sequence
 
 import numpy as np
 from pydicom.tag import Tag
 
-from dosma.data_io import format_io_utils as fio_utils
-from dosma.data_io.format_io import ImageDataFormat
 from dosma.data_io.med_volume import MedicalVolume
-from dosma.defaults import preferences
 from dosma.models.seg_model import SegModel
 from dosma.quant_vals import T2
-from dosma.scan_sequences.scans import TargetSequence
+from dosma.scan_sequences.scans import ScanSequence
 from dosma.tissues.tissue import Tissue
 from dosma.utils.cmd_line_utils import ActionWrapper
 
 __all__ = ["QDess"]
 
 
-class QDess(TargetSequence):
+class QDess(ScanSequence):
     """qDESS MRI sequence.
 
     Quantitative double echo in steady state (qDESS) is a high-resolution scan that consists
@@ -47,15 +43,16 @@ class QDess(TargetSequence):
     # DESS constants
     __NUM_ECHOS__ = 2
     __VOLUME_DIMENSIONS__ = 3
-    __D__ = 1.25 * 1e-9
 
     # Clipping bounds for t2
     __T2_LOWER_BOUND__ = 0
     __T2_UPPER_BOUND__ = 100
     __T2_DECIMAL_PRECISION__ = 1  # 0.1 ms
 
-    def __init__(self, dicom_path, load_path=None, **kwargs):
-        super().__init__(dicom_path=dicom_path, load_path=load_path, **kwargs)
+    def __init__(self, volumes: Sequence[MedicalVolume]):
+        if len(volumes) != 2:
+            raise ValueError("QDess currently only supports 2 volumes.")
+        super().__init__(volumes)
 
     def __validate_scan__(self) -> bool:
         """Validate that the dicoms are of qDESS sequence.
@@ -63,10 +60,7 @@ class QDess(TargetSequence):
         Returns:
             bool: `True` if has 2 echos, `False` otherwise.
         """
-        has_expected_num_echos = len(self.volumes) == self.__NUM_ECHOS__
-
-        # return contains_expected_dicom_metadata & has_expected_num_echos
-        return has_expected_num_echos
+        return len(self.volumes) == self.__NUM_ECHOS__
 
     def segment(self, model: SegModel, tissue: Tissue, use_rms: bool = False):
         """Segment tissue in scan.
@@ -116,48 +110,57 @@ class QDess(TargetSequence):
         beta: float = 1.2,
         gl_area: float = None,
         tg: float = None,
-<<<<<<< HEAD
         tr: float = None,
         te: float = None,
-        alpha = None,
+        alpha: float = None,
         diffusivity: float = 1.25e-9,
-        t1 = None,
-=======
->>>>>>> master
+        t1: float = None,
     ):
         """Generate 3D T2 map.
 
-        If dicom header does not have the appropriate private tagsis not visible, ``tr``, ``te``, ``alpha``, and ``tg
+        Spoiler amplitude (``gl_area``) and duration (``tg``) must be specified if dicom header
+        does not contain relevant private tags. If dicom header is unavailable, ``tr``, ``te``,
+        and ``alpha`` must also be specified.
+
+        All array-like arguments must be the same dimensions as the echo 1 and echo 2 volumes.
 
         Args:
             tissue (Tissue): Tissue to generate T2 map for.
             suppress_fat (`bool`, optional): Suppress fat region in T2 computation.
-                Can help reduce noise.
+                This can help reduce noise.
             suppress_fluid (`bool`, optional): Suppress fluid region in T2 computation.
                 Fluid-nulled image is calculated as ``S1 - beta*S2``.
             beta (float, optional): Beta value used for suppressing fluid.
-                :math: 
-            gl_area (float, optional): Spoiler amplitude.
+            gl_area (float, optional): Spoiler area.
                 Defaults to value in dicom private tag '0x001910b6'.
                 Required if dicom header unavailable or private tag missing.
-            tg (float, optional): Spoiler duration (in microseconds). 
+            tg (float, optional): Spoiler duration (in microseconds).
                 Defaults to value in dicom private tag ``0x001910b7``.
                 Required if dicom header unavailable or private tag missing.
-            tr (float, optional): Repitition time (in milliseconds). Required if dicom header
-                unavailable
+            tr (float, optional): Repitition time (in milliseconds).
+                Required if dicom header unavailable.
+            te (float, optional): Echo time (in milliseconds).
+                Required if dicom header unavailable.
+            alpha (float or array-like): Flip angle in degrees.
+                Required if dicom header unavailable.
+            diffusivity (float or array-like): Estimated diffusivity.
+            t1 (float or array-like): Estimated t1 in milliseconds.
+                Defaults to ``tissue.T1_EXPECTED``.
 
         Returns:
             qv.T2: T2 fit for tissue.
         """
 
-        if not self.__validate_scan__() and (not gl_area or not tg):
-            raise ValueError(
-                "dicoms in '%s' do not contain GL_Area and Tg tags. Please input manually"
-                % self.dicom_path
-            )
-
         if self.volumes is None or self.ref_dicom is None:
             raise ValueError("volumes and ref_dicom fields must be initialized")
+
+        if (
+            self.get_metadata(self.__GL_AREA_TAG__, gl_area) is None
+            or self.get_metadata(self.__TG_TAG__, tg) is None
+        ):
+            raise ValueError(
+                "Dicom headers do not contain tags for `gl_area` and `tg`. Please input manually"
+            )
 
         ref_dicom = self.ref_dicom
 
@@ -172,12 +175,13 @@ class QDess(TargetSequence):
         TR = (float(ref_dicom.RepetitionTime) if tr is None else tr) * 1e-3
         TE = (float(ref_dicom.EchoTime) if te is None else te) * 1e-3
         Tg = (float(ref_dicom[self.__TG_TAG__].value) if tg is None else tg) * 1e-6
-        T1 = float(tissue.T1_EXPECTED) * 1e-3
+        T1 = (float(tissue.T1_EXPECTED) if t1 is None else t1) * 1e-3
 
         # Flip Angle (degree -> radians)
-        alpha = math.radians(float(ref_dicom.FlipAngle))
+        alpha = float(ref_dicom.FlipAngle) if alpha is None else alpha
+        alpha = math.radians(alpha)
 
-        GlArea = gl_area if gl_area else float(ref_dicom[self.__GL_AREA_TAG__].value)
+        GlArea = float(ref_dicom[self.__GL_AREA_TAG__].value) if gl_area is None else gl_area
 
         Gl = GlArea / (Tg * 1e6) * 100
         gamma = 4258 * 2 * math.pi  # Gamma, Rad / (G * s).
@@ -186,11 +190,11 @@ class QDess(TargetSequence):
         # Simply math
         k = (
             math.pow((math.sin(alpha / 2)), 2)
-            * (1 + math.exp(-TR / T1 - TR * math.pow(dkL, 2) * self.__D__))
-            / (1 - math.cos(alpha) * math.exp(-TR / T1 - TR * math.pow(dkL, 2) * self.__D__))
+            * (1 + math.exp(-TR / T1 - TR * math.pow(dkL, 2) * diffusivity))
+            / (1 - math.cos(alpha) * math.exp(-TR / T1 - TR * math.pow(dkL, 2) * diffusivity))
         )
 
-        c1 = (TR - Tg / 3) * (math.pow(dkL, 2)) * self.__D__
+        c1 = (TR - Tg / 3) * (math.pow(dkL, 2)) * diffusivity
 
         # T2 fit
         mask = np.ones([r, c, num_slices])
@@ -227,57 +231,6 @@ class QDess(TargetSequence):
 
         return t2_map_wrapped
 
-    def save_data(
-        self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format
-    ):
-        """Save data to disk.
-
-        Data will be saved in the directory '`base_save_dirpath`/qdess/'.
-
-        Serializes variables specified in by self.__serializable_variables__().
-
-        Args:
-            base_save_dirpath (str): Directory path where all data is stored.
-            data_format (ImageDataFormat): Format to save data.
-        """
-        super().save_data(base_save_dirpath, data_format=data_format)
-
-        base_save_dirpath = self.__save_dir__(base_save_dirpath)
-
-        # write echos
-        for i in range(len(self.volumes)):
-            nii_registration_filepath = os.path.join(base_save_dirpath, "echo%d.nii.gz" % (i + 1))
-            filepath = fio_utils.convert_image_data_format(nii_registration_filepath, data_format)
-            self.volumes[i].save_volume(filepath, data_format=data_format)
-
-    def load_data(self, base_load_dirpath):
-        """Load data from disk.
-
-        Data will be loaded from the directory '`base_load_dirpath`/qdess'.
-
-        Args:
-           base_load_dirpath (str): Directory path where all data is stored.
-
-        Raises:
-           NotADirectoryError: if `base_load_dirpath`/qdess/ does not exist.
-        """
-        super().load_data(base_load_dirpath)
-
-        base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
-
-        # if reading dicoms from dicom path failed
-        if not self.volumes:
-            self.volumes = []
-            # Load subvolumes from nifti file
-            for i in range(self.__NUM_ECHOS__):
-                nii_registration_filepath = os.path.join(
-                    base_load_dirpath, "echo%d.nii.gz" % (i + 1)
-                )
-                subvolume = fio_utils.generic_load(
-                    nii_registration_filepath, expected_num_volumes=1
-                )
-                self.volumes.append(subvolume)
-
     def calc_rms(self):
         """Calculate root-mean-square (RMS) of two echos.
 
@@ -304,6 +257,11 @@ class QDess(TargetSequence):
         mv.volume = rms
 
         return mv
+
+    def _save(self, metadata, save_dir, fname_fmt=None, **kwargs):
+        default_fmt = {MedicalVolume: "echo-{}"}
+        default_fmt.update(fname_fmt if fname_fmt else {})
+        return super()._save(metadata, save_dir, fname_fmt=default_fmt, **kwargs)
 
     @classmethod
     def cmd_line_actions(cls):

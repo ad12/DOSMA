@@ -7,9 +7,9 @@ from natsort import natsorted
 
 from dosma import file_constants as fc
 from dosma import quant_vals as qv
-from dosma.data_io import ImageDataFormat, NiftiReader
+from dosma.data_io import NiftiReader
 from dosma.data_io import format_io_utils as fio_utils
-from dosma.defaults import preferences
+from dosma.data_io.med_volume import MedicalVolume
 from dosma.scan_sequences.scans import NonTargetSequence
 from dosma.tissues.tissue import Tissue
 from dosma.utils import io_utils
@@ -42,28 +42,14 @@ class Cones(NonTargetSequence):
 
     NAME = "cones"
 
-    def __init__(self, dicom_path=None, load_path=None, **kwargs):
+    def __init__(self, volumes):
+        super().__init__(volumes)
         self.subvolumes = None
         self.echo_times = None
-        super().__init__(dicom_path=dicom_path, load_path=load_path, **kwargs)
+        self.intraregistered_data = None
 
-        if dicom_path is not None:
+        if self.ref_dicom is not None:
             self.subvolumes, self.echo_times = self.__split_volumes__(__EXPECTED_NUM_ECHO_TIMES__)
-
-        if self.subvolumes is None:
-            raise ValueError("Either dicom_path or load_path must be specified")
-
-    def __validate_scan__(self):
-        return True
-
-    def __load_dicom__(self):
-        super().__load_dicom__()
-
-        echo_times = []
-        for vol in self.volumes:
-            echo_times.append(float(vol.headers[0].EchoTime))
-
-        self.echo_times = natsorted(echo_times)
 
     def interregister(self, target_path: str, target_mask_path: str = None):
         temp_raw_dirpath = io_utils.mkdirs(os.path.join(self.temp_path, "raw"))
@@ -190,52 +176,19 @@ class Cones(NonTargetSequence):
 
         return quant_val_map
 
-    def save_data(
-        self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format
-    ):
-        """Save data to disk.
+    def _save(self, metadata, save_dir, fname_fmt=None, **kwargs):
+        default_fmt = {
+            "subvolumes": os.path.abspath(os.path.join(save_dir, "interregistered/{}")),
+            MedicalVolume: "echo-{}",
+        }
+        default_fmt.update(fname_fmt if fname_fmt else {})
+        return super()._save(metadata, save_dir, fname_fmt=default_fmt, **kwargs)
 
-        Data will be saved in the directory '`base_save_dirpath`/cones/'.
-
-        Serializes variables specified in by self.__serializable_variables__().
-
-        Args:
-            base_save_dirpath (str): Directory path where all data is stored.
-            data_format (ImageDataFormat): Format to save data.
-        """
-        super().save_data(base_save_dirpath, data_format=data_format)
-        base_save_dirpath = self.__save_dir__(base_save_dirpath)
-
-        # Save interregistered files
-        interregistered_dirpath = os.path.join(base_save_dirpath, "interregistered")
-
-        for spin_lock_time in self.subvolumes.keys():
-            filepath = os.path.join(interregistered_dirpath, "%03d.nii.gz" % spin_lock_time)
-            self.subvolumes[spin_lock_time].save_volume(filepath)
-
-    def load_data(self, base_load_dirpath: str):
-        """Load data from disk.
-
-        Data will be loaded from the directory '`base_load_dirpath`/cones'.
-
-        Args:
-           base_load_dirpath (str): Directory path where all data is stored.
-
-        Raises:
-           NotADirectoryError: if `base_load_dirpath`/cones/ does not exist.
-        """
-        super().load_data(base_load_dirpath)
-        base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
-
-        interregistered_dirpath = os.path.join(base_load_dirpath, "interregistered")
-
-        self.subvolumes = self.__load_interregistered_files__(interregistered_dirpath)
-
-    def __serializable_variables__(self):
-        var_names = super().__serializable_variables__()
-        var_names.extend(["echo_times"])
-
-        return var_names
+    @classmethod
+    def from_dict(cls, data, force: bool):
+        interregistered_dirpath = os.path.dirpath(data.pop("subvolumes")[0])
+        scan = super().from_dict(data, force=force)
+        scan.__load_interregistered_files__(interregistered_dirpath)
 
     @classmethod
     def cmd_line_actions(cls):

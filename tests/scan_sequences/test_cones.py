@@ -23,11 +23,11 @@ class ConesTest(util.ScanTest):
     def test_interregister(self):
         """Test Cones interregistration."""
         # Register to first echo of QDess without a mask.
-        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
+        scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath)
         scan.interregister(target_path=QDESS_ECHO1_PATH)
 
         # Register to first echo of QDess with a mask.
-        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
+        scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath)
         scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
 
     def test_interregister_upgrade_no_mask(self):
@@ -38,7 +38,7 @@ class ConesTest(util.ScanTest):
         """
         nr = NiftiReader()
 
-        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
+        scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         scan.interregister(target_path=QDESS_ECHO1_PATH)
         subvolumes = list(scan.subvolumes.values())
 
@@ -58,6 +58,7 @@ class ConesTest(util.ScanTest):
             num_threads=2,
             return_volumes=False,
             rtype=tuple,
+            show_pbar=True,
         )
         out_reg = out_reg[0]
 
@@ -78,7 +79,7 @@ class ConesTest(util.ScanTest):
         """
         nr = NiftiReader()
 
-        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
+        scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
         subvolumes = list(scan.subvolumes.values())
 
@@ -106,6 +107,7 @@ class ConesTest(util.ScanTest):
             target_mask=mask_path,
             use_mask=[False, True],
             rtype=tuple,
+            show_pbar=True,
         )
         out_reg = out_reg[0]
 
@@ -119,7 +121,7 @@ class ConesTest(util.ScanTest):
         shutil.rmtree(out_path)
 
     def test_t2_star_map(self):
-        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
+        scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
 
         # run analysis with femoral cartilage, without mask in tissue, but mask as additional input.

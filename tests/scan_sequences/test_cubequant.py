@@ -22,18 +22,18 @@ class CubeQuantTest(util.ScanTest):
 
     def test_interregister_no_mask(self):
         """Register Cubequant scan to qDESS scan without a target mask"""
-        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
+        scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
 
         # Register to first echo of QDess without a mask
         scan.interregister(target_path=QDESS_ECHO1_PATH)
 
     def test_interregister_mask(self):
         """Register Cubequant scan to qDESS scan with a target mask (mask for femoral cartilage)"""
-        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
+        scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
 
     def test_t1_rho_map(self):
-        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
+        scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
 
         # run analysis with femoral cartilage, without mask
@@ -59,7 +59,7 @@ class CubeQuantTest(util.ScanTest):
         nr = NiftiReader()
         data_dir = os.path.join(fc.TEMP_FOLDER_PATH, "test-interregister-no-mask")
 
-        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
+        scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         scan.interregister(target_path=QDESS_ECHO1_PATH)
         subvolumes = scan.subvolumes
 
@@ -75,6 +75,7 @@ class CubeQuantTest(util.ScanTest):
             num_threads=2,
             return_volumes=False,
             rtype=tuple,
+            show_pbar=True,
         )
         base, moving = vols[0], [x.warped_file for x in out]
 
@@ -91,6 +92,7 @@ class CubeQuantTest(util.ScanTest):
             num_threads=2,
             return_volumes=False,
             rtype=tuple,
+            show_pbar=True,
         )
         out_reg = out_reg[0]
 
@@ -112,7 +114,7 @@ class CubeQuantTest(util.ScanTest):
         nr = NiftiReader()
         data_dir = os.path.join(fc.TEMP_FOLDER_PATH, "test-interregister-mask")
 
-        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
+        scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
         subvolumes = scan.subvolumes
 
@@ -128,6 +130,7 @@ class CubeQuantTest(util.ScanTest):
             num_threads=2,
             return_volumes=False,
             rtype=tuple,
+            show_pbar=True,
         )
         base, moving = vols[0], [x.warped_file for x in out]
 
@@ -149,6 +152,7 @@ class CubeQuantTest(util.ScanTest):
             target_mask=mask_path,
             use_mask=[False, True],
             rtype=tuple,
+            show_pbar=True,
         )
         out_reg = out_reg[0]
 
@@ -167,7 +171,7 @@ class CubeQuantTest(util.ScanTest):
         To be deleted once Cubequant registration is upgraded
         (https://github.com/ad12/DOSMA/issues/55).
         """
-        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
+        scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
 
         vols = DicomReader(num_workers=util.num_workers()).load(self.dicom_dirpath)
         out_path = os.path.join(fc.TEMP_FOLDER_PATH, "test-intraregister")
@@ -180,6 +184,7 @@ class CubeQuantTest(util.ScanTest):
             num_threads=2,
             return_volumes=True,
             rtype=tuple,
+            show_pbar=True,
         )
         reg_vols = [vols[0]] + list(reg_vols)
 

@@ -63,7 +63,7 @@ def get_expected_data_path(fp):
 
 
 def num_workers() -> int:
-    return min(8, os.cpu_count())
+    return int(os.environ.get("DOSMA_NUM_WORKERS", min(8, os.cpu_count())))
 
 
 class ScanTest(unittest.TestCase):
@@ -106,5 +106,11 @@ class ScanTest(unittest.TestCase):
         ), "All scan supported in command line must have test methods `test_cmd_line`"
 
     def __cmd_line_helper__(self, cmdline_str: str):
+        env_args = {"--num-workers": num_workers()}
+        for arg, value in env_args.items():
+            if arg in cmdline_str:
+                continue
+            cmdline_str = f"{arg} {value} {cmdline_str}"
+
         cmdline_input = cmdline_str.strip().split()
         parse_args(cmdline_input)
