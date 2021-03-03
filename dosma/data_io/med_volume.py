@@ -4,25 +4,30 @@ This module defines `MedicalVolume`, which is a wrapper for 3D volumes.
 """
 import warnings
 from copy import deepcopy
+from numbers import Number
 from typing import List, Sequence
 
 import nibabel as nib
 import numpy as np
 import pydicom
 from nibabel.spatialimages import SpatialFirstSlicer as _SpatialFirstSlicerNib
+from numpy.lib.mixins import NDArrayOperatorsMixin
 
 from dosma.data_io import orientation as stdo
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
 from dosma.utils import env
+from dosma.utils.device import Device, cpu_device, get_device, to_device
 
 if env.sitk_available():
     import SimpleITK as sitk
+if env.cupy_available():
+    import cupy as cp
 
 __all__ = ["MedicalVolume"]
 
 
-class MedicalVolume(object):
+class MedicalVolume(NDArrayOperatorsMixin):
     """The class for medical images.
 
     Medical volumes are 3D matrices representing medical data. These volumes have inherent
@@ -38,10 +43,56 @@ class MedicalVolume(object):
     overhead. The affine matrix (``self.affine``) is copied as it is lightweight and
     often modified.
 
-    2D images are also supported when viewed trivial 3D volumes with shape ``(H, W, 1)``.
+    2D images are also supported when viewed trivial 3D volumes with shape ``(H, W, 1)``:
+
+    >>> mv = MedicalVolume(np.random.rand(10,20,1), np.eye(4))
 
     Many operations are in-place and modify the instance directly (e.g. `reformat(inplace=True)`).
     To allow chaining operations, operations that are in-place return ``self``.
+
+    >>> mv2 = mv.reformat(ornt, inplace=True)
+    >>> id(mv2) == id(mv)
+    True
+
+    **BETA**: Medical volumes can interface with the gpu using the :mod:`cupy` library.
+    Volumes can be moved between devices (see ``dosma.Device``) using the ``.to()`` method.
+    Only the volume data will be moved to the gpu. Headers and affine matrix will remain on
+    the cpu. The following code moves a MedicalVolume to gpu 0 and back to the cpu:
+
+    >>> from dosma import Device
+    >>> mv = MedicalVolume(np.random.rand((10,20,30)), np.eye(4))
+    >>> mv_gpu = mv.to(Device(0))
+    >>> mv_cpu = mv.cpu()
+
+    Note, moving data across devices results in a full copy. Above, ``mv_cpu.volume`` and
+    ``mv.volume`` do not share memory. Saving volumes and converting to other images
+    (e.g. ``SimpleITK.Image``) are only supported for cpu volumes. Volumes can also only
+    be compared when on the same device. For example, both commands below will raise a
+    RuntimeError:
+
+    >>> mv_gpu == mv_cpu
+    >>> mv_gpu.is_identical(mv_cpu)
+
+    While CuPy requires the current device be set using ``cp.cuda.Device(X).use()`` or inside
+    the ``with`` context, ``MedicalVolume`` automatically sets the appropriate context
+    for performing operations. This means the CuPy current device need to be the same as the
+    ``MedicalVolume`` object. For example, the following still works:
+
+    >>> cp.cuda.Device(0).use()
+    >>> mv_gpu = MedicalVolume(cp.ones((3,3,3)), np.eye(4))
+    >>> cp.cuda.Device(1).use()
+    >>> mv_gpu *= 2
+
+    **BETA**: MedicalVolumes also have a limited NumPy/CuPy-compatible interface.
+    Standard numpy/cupy functions that preserve array shapes can be performed
+    on MedicalVolume objects:
+
+    >>> log_arr = np.log(mv)
+    >>> type(log_arr)
+    <class 'dosma.data_io.MedicalVolume'>
+    >>> exp_arr_gpu = cp.exp(mv_gpu)
+    >>> type(exp_arr_gpu)
+    <class 'dosma.data_io.MedicalVolume'>
 
     Args:
         volume (np.ndarray): 3D volume.
@@ -73,8 +124,11 @@ class MedicalVolume(object):
         """
         import dosma.data_io.format_io_utils
 
-        writer = dosma.data_io.format_io_utils.get_writer(data_format)
+        device = self.device
+        if device != cpu_device:
+            raise RuntimeError(f"MedicalVolume must be on cpu, got {self.device}")
 
+        writer = dosma.data_io.format_io_utils.get_writer(data_format)
         writer.save(self, file_path)
 
     def reformat(self, new_orientation: Sequence, inplace: bool = False) -> "MedicalVolume":
@@ -107,6 +161,9 @@ class MedicalVolume(object):
         Returns:
             MedicalVolume: The reformatted volume. If ``inplace=True``, returns ``self``.
         """
+        xp = self.device.xp
+        device = self.device
+
         new_orientation = tuple(new_orientation)
         if new_orientation == self.orientation:
             if inplace:
@@ -119,16 +176,16 @@ class MedicalVolume(object):
         transpose_inds = stdo.get_transpose_inds(temp_orientation, new_orientation)
         all_transpose_inds = transpose_inds + tuple(range(3, self._volume.ndim))
 
-        volume = np.transpose(self.volume, all_transpose_inds)
+        with device:
+            volume = xp.transpose(self.volume, all_transpose_inds)
         for i in range(len(transpose_inds)):
             temp_affine[..., i] = self._affine[..., transpose_inds[i]]
 
         temp_orientation = tuple([self.orientation[i] for i in transpose_inds])
 
         flip_axs_inds = list(stdo.get_flip_inds(temp_orientation, new_orientation))
-
-        volume = np.flip(volume, axis=flip_axs_inds)
-
+        with device:
+            volume = xp.flip(volume, axis=tuple(flip_axs_inds))
         a_vecs = temp_affine[:3, :3]
         a_origin = temp_affine[:3, 3]
 
@@ -196,7 +253,13 @@ class MedicalVolume(object):
         if not isinstance(mv, MedicalVolume):
             raise TypeError("`mv` must be a MedicalVolume.")
 
-        return self.is_same_dimensions(mv) and (mv.volume == self.volume).all()
+        idevice = self.device
+        odevice = mv.device
+        if idevice != odevice:
+            raise RuntimeError(f"Expected device {idevice}, got {odevice}.")
+
+        with idevice:
+            return self.is_same_dimensions(mv) and (mv.volume == self.volume).all()
 
     def __allclose_spacing(self, mv, precision: int = None):
         """Check if spacing between self and another medical volume is within tolerance.
@@ -314,12 +377,35 @@ class MedicalVolume(object):
             headers=deepcopy(self._headers) if headers else self._headers,
         )
 
+    def to(self, device):
+        """Move to device.
+
+        If on same device, no-op and returns ``self``.
+
+        Args:
+            device: The device to move to.
+
+        Returns:
+            MedicalVolume
+        """
+        device = Device(device)
+        if self.device == device:
+            return self
+
+        return self._partial_clone(volume=to_device(self._volume, device))
+
+    def cpu(self):
+        """Move to cpu."""
+        return self.to("cpu")
+
     def to_sitk(self, vdim: int = None):
         """Converts to SimpleITK Image.
 
         SimpleITK Image objects support vector pixel types, which are represented
         as an extra dimension in numpy arrays. The vector dimension can be specified
         with ``vdim``.
+
+        MedicalVolume must be on cpu. Use ``self.cpu()`` to move.
 
         Args:
             vdim (int, optional): The vector dimension.
@@ -329,9 +415,19 @@ class MedicalVolume(object):
 
         Returns:
             SimpleITK.Image
+
+        Raises:
+            ImportError: If `SimpleITK` is not installed.
+            RuntimeError: If MedicalVolume is not on cpu.
+
+        Note:
+            Header information is not currently copied.
         """
         if not env.sitk_available():
             raise ImportError("SimpleITK is not installed. Install it with `pip install simpleitk`")
+        device = self.device
+        if device != cpu_device:
+            raise RuntimeError(f"MedicalVolume must be on cpu, got {self.device}")
 
         arr = self.volume
         ndim = arr.ndim
@@ -360,11 +456,11 @@ class MedicalVolume(object):
 
     @property
     def volume(self):
-        """np.ndarray: 3D numpy array representing volume values."""
+        """ndarray: 3D ndarray representing volume values."""
         return self._volume
 
     @volume.setter
-    def volume(self, value: np.ndarray):
+    def volume(self, value):
         """
         If the volume is of a different shape, the headers are no longer valid,
         so delete all reorientations are done as part of MedicalVolume,
@@ -379,6 +475,7 @@ class MedicalVolume(object):
             self._headers = None
 
         self._volume = value
+        self._device = get_device(self._volume)
 
     @property
     def headers(self):
@@ -417,6 +514,10 @@ class MedicalVolume(object):
     @property
     def shape(self):
         return self._volume.shape
+
+    @property
+    def device(self):
+        return get_device(self._volume)
 
     @classmethod
     def from_sitk(cls, image, copy=False) -> "MedicalVolume":
@@ -470,7 +571,7 @@ class MedicalVolume(object):
                 kwargs[k] = getattr(self, f"_{k}").copy()
         if "headers" not in kwargs:
             kwargs["headers"] = self._headers
-        return MedicalVolume(**kwargs)
+        return self.__class__(**kwargs)
 
     def __getitem__(self, _slice):
         slicer = _SpatialFirstSlicer(self)
@@ -492,49 +593,12 @@ class MedicalVolume(object):
             image = self[_slice]
             assert value.is_same_dimensions(image, err=True)
             value = value._volume
-        self._volume[_slice] = value
+        with self.device:
+            self._volume[_slice] = value
 
-    def __add__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        volume = self._volume.__add__(other)
-        return self._partial_clone(volume=volume)
-
-    def __floordiv__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        volume = self._volume.__floordiv__(other)
-        return self._partial_clone(volume=volume)
-
-    def __mul__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        volume = self._volume.__mul__(other)
-        return self._partial_clone(volume=volume)
-
-    def __pow__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        volume = self._volume.__pow__(other)
-        return self._partial_clone(volume=volume)
-
-    def __sub__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        volume = self._volume.__sub__(other)
-        return self._partial_clone(volume=volume)
-
-    def __truediv__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        volume = self._volume.__truediv__(other)
-        return self._partial_clone(volume=volume)
+    def __repr__(self) -> str:
+        nl = "\n"
+        return f"{self.__class__.__name__}(volume={self._volume},{nl}affine={self._affine})"
 
     def __iadd__(self, other):
         if isinstance(other, MedicalVolume):
@@ -578,47 +642,75 @@ class MedicalVolume(object):
         self._volume.__itruediv__(other)
         return self
 
-    def __ne__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        volume = (self._volume != other).astype(np.uint8)
-        return self._partial_clone(volume=volume)
+    def __array__(self):
+        """Wrapper for performing numpy operations on MedicalVolume array.
 
-    def __eq__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        volume = (self._volume == other).astype(np.uint8)
-        return self._partial_clone(volume=volume)
+        Examples:
+            >>> a = np.asarray(mv)
+            >>> type(a)
+            <class 'numpy.ndarray'>
+            >>> np.log()
 
-    def __ge__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        volume = (self._volume >= other).astype(np.uint8)
-        return self._partial_clone(volume=volume)
+        Note:
+            This is not valid when ``self.volume`` is a ``cupy.ndarray``.
+            All CUDA ndarrays must first be moved to the cpu.
+        """
+        try:
+            return np.asarray(self.volume)
+        except TypeError:
+            raise TypeError(
+                "Implicit conversion to a NumPy array is not allowed. "
+                "Please use `.cpu()` to move the array to the cpu explicitly "
+                "before constructing a NumPy array."
+            )
 
-    def __gt__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        volume = (self._volume > other).astype(np.uint8)
-        return self._partial_clone(volume=volume)
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        if method == "__call__":
+            _inputs = []
+            device = self.device
+            device_err = "Expected device {} but got device ".format(self.device) + "{}"
+            for input in inputs:
+                if isinstance(input, Number):
+                    _inputs.append(input)
+                elif isinstance(input, np.ndarray):
+                    if device != cpu_device:
+                        raise RuntimeError(device_err.format(cpu_device))
+                    _inputs.append(device)
+                elif env.cupy_available() and isinstance(input, cp.ndarray):
+                    if device != input.device:
+                        raise RuntimeError(device_err.format(Device(input.device)))
+                    _inputs.append(input)
+                elif isinstance(input, MedicalVolume):
+                    if device != input.device:
+                        raise RuntimeError(device_err.format(Device(input.device)))
+                    assert self.is_same_dimensions(input, err=True)
+                    _inputs.append(input._volume)
+                else:
+                    return NotImplemented
+            with device:
+                volume = ufunc(*_inputs, **kwargs)
+            if volume.shape != self._volume.shape:
+                raise ValueError(
+                    f"{self.__class__.__name__} does not support operations that change shape. "
+                    f"Use operations on `self.volume` to modify array objects."
+                )
+            if volume.dtype == np.bool:
+                volume = volume.astype(np.uint8)
+            return self._partial_clone(volume=volume)
+        else:
+            return NotImplemented
 
-    def __le__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        volume = (self._volume <= other).astype(np.uint8)
-        return self._partial_clone(volume=volume)
-
-    def __lt__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        volume = (self._volume < other).astype(np.uint8)
-        return self._partial_clone(volume=volume)
+    @property
+    def __cuda_array_interface__(self):
+        """Wrapper for performing cupy operations on MedicalVolume array.
+        """
+        if self.device == cpu_device:
+            raise TypeError(
+                "Implicit conversion to a CuPy array is not allowed. "
+                "Please use `.to(device)` to move the array to the gpu explicitly "
+                "before constructing a CuPy array."
+            )
+        return self.volume.__cuda_array_interface__
 
 
 class _SpatialFirstSlicer(_SpatialFirstSlicerNib):

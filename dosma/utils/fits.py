@@ -13,6 +13,7 @@ from tqdm.contrib.concurrent import process_map
 from dosma import defaults
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.defaults import preferences
+from dosma.utils.device import cpu_device, get_device
 
 __all__ = ["MonoExponentialFit", "curve_fit", "monoexponential", "biexponential"]
 
@@ -66,6 +67,9 @@ class MonoExponentialFit(_Fit):
             not all([isinstance(sv, MedicalVolume) for sv in subvolumes])
         ):
             raise TypeError("`subvolumes` must be list of MedicalVolumes.")
+
+        if any(x.device != cpu_device for x in subvolumes):
+            raise RuntimeError("All MedicalVolumes must be on the CPU")
 
         if len(ts) != len(subvolumes):
             raise ValueError(
@@ -195,6 +199,9 @@ def curve_fit(
             slightly when using multiple workers.
         kwargs: Keyword args for `scipy.optimize.curve_fit`.
     """
+    if (get_device(x) != cpu_device) or (get_device(y) != cpu_device):
+        raise RuntimeError("`x` and `y` must be on CPU")
+
     x = np.asarray(x)
     y = np.asarray(y)
     if y.ndim == 1:

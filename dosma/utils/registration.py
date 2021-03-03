@@ -17,6 +17,7 @@ from tqdm.contrib.concurrent import process_map
 from dosma import file_constants as fc
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.data_io.nifti_io import NiftiReader, NiftiWriter
+from dosma.utils.device import cpu_device
 
 __all__ = ["register", "apply_warp", "symlink_elastix", "unlink_elastix"]
 
@@ -100,6 +101,8 @@ def register(
         )
 
     files = [target, target_mask] + moving + moving_masks
+    if any(isinstance(f, MedicalVolume) and f.device != cpu_device for f in files):
+        raise RuntimeError("MedicalVolume data must be on CPU")
 
     # Write medical volumes (if any) to nifti file for use with elastix.
     tmp_dir = os.path.join(output_path, "tmp")

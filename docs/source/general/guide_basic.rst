@@ -59,3 +59,23 @@ in-place (i.e. ``self``) to allow chaining methods together.
 We may also want to reformat images to be in the same orientation as other images:
 
 >>> mv = mv.reformat_as(other_image)
+
+
+Image Slicing and Arithmetic Operations
+========================================
+
+:class:`MedicalVolume` supports some array-like functionality, including Python arithmetic
+operations (``+``, ``-``, ``**``, ``/``, ``//``), NumPy shape-preserving operations
+(e.g. ``np.exp``, ``np.log``, ``np.pow``, etc.), and slicing.
+
+>>> mv += 5
+>>> mv = mv * mv / mv
+>>> mv = np.exp(mv)
+>>> mv = mv[:5, :6, :7]
+
+Note, in order to preserve dimensions, slicing cannot be used to reduce dimensions.
+For example, the first line will throw an error; the second will not:
+
+>>> mv = mv[2]
+IndexError: Scalar indices disallowed in spatial dimensions; Use `[x]` or `x:x+1`
+>>> mv[2:3]
