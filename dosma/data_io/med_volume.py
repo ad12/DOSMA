@@ -55,7 +55,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
     True
 
     **BETA**: Medical volumes can interface with the gpu using the :mod:`cupy` library.
-    Volumes can be moved between devices (see :cls:`dosma.Device`) using the ``.to()`` method.
+    Volumes can be moved between devices (see ``dosma.Device``) using the ``.to()`` method.
     Only the volume data will be moved to the gpu. Headers and affine matrix will remain on
     the cpu. The following code moves a MedicalVolume to gpu 0 and back to the cpu:
 

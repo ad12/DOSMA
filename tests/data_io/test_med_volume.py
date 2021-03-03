@@ -177,7 +177,11 @@ class TestMedicalVolume(unittest.TestCase):
             mv3 + mv2
 
     def test_numpy(self):
-        pass
+        mv = MedicalVolume(np.ones((10, 20, 30)), np.eye(4))
+        assert np.all(np.exp(mv.volume) == np.exp(mv).volume)
+
+        mv[np.where(mv == 1)] = 5
+        assert np.all(mv.volume == 5)
 
     def test_comparison(self):
         mv1 = MedicalVolume(np.ones((10, 20, 30)), self._AFFINE)
