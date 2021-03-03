@@ -176,6 +176,9 @@ class TestMedicalVolume(unittest.TestCase):
         with self.assertRaises(ValueError):
             mv3 + mv2
 
+    def test_numpy(self):
+        pass
+
     def test_comparison(self):
         mv1 = MedicalVolume(np.ones((10, 20, 30)), self._AFFINE)
         mv2 = MedicalVolume(2 * np.ones((10, 20, 30)), self._AFFINE)
@@ -232,7 +235,7 @@ class TestMedicalVolume(unittest.TestCase):
     def test_device(self):
         import cupy as cp
 
-        mv = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
+        mv = MedicalVolume(np.ones((10, 20, 30)), self._AFFINE)
         mv_gpu = mv.to(Device(0))
 
         assert mv_gpu.device == Device(0)
@@ -262,16 +265,16 @@ class TestMedicalVolume(unittest.TestCase):
             mv_gpu.save_volume(os.path.join(self._TEMP_PATH, "test_device.nii.gz"))
 
     def test_array_cpu(self):
-        mv = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
+        mv = MedicalVolume(np.ones((10, 20, 30)), self._AFFINE)
 
         data = np.asarray(mv)
         assert np.shares_memory(data, mv.volume)
-    
+
     @ututils.requires_packages("cupy")
     def test_array_gpu(self):
         import cupy as cp
 
-        mv = MedicalVolume(np.ones((10,20,30)), self._AFFINE)
+        mv = MedicalVolume(np.ones((10, 20, 30)), self._AFFINE)
         mv_gpu = mv.to(Device(0))
         data = cp.asarray(mv_gpu)
         assert cp.shares_memory(data, mv_gpu.volume)

@@ -2,6 +2,7 @@
 
 """
 import numpy as np
+
 from dosma.utils import env
 
 if env.cupy_available():
@@ -20,7 +21,7 @@ class Device(object):
     :cls:`dosma.Device` extends ``cupy.Device`` and can also be used to interface with
     ``torch.Device`` and ``sigpy.Device``. The :cls:`dosma.Device` contains a device type
     ('cpu' or 'cuda') and optional device ordinal (i.e. the id) for the device type.
-    The :cls:`dosma.Device` can also be constructed using only the ordinal id, where id >= 0 
+    The :cls:`dosma.Device` can also be constructed using only the ordinal id, where id >= 0
     representing the id-th GPU, and id = -1 representing CPU. cupy must be installed to use GPUs.
 
     The array module for the corresponding device can be obtained via :param:`xp`.
@@ -62,13 +63,15 @@ class Device(object):
         elif env.torch_available() and isinstance(id_or_device, torch.device):
             _type, id = id_or_device.type, id_or_device.index
             if id is None:
-                if _type == "cuda": id = torch.cuda.current_device()
-                elif _type == "cpu": id = -1
-                else: raise ValueError(f"Unsupported device type: {_type}")
+                if _type == "cuda":
+                    id = torch.cuda.current_device()
+                elif _type == "cpu":
+                    id = -1
+                else:
+                    raise ValueError(f"Unsupported device type: {_type}")
         else:
             raise ValueError(
-                f"Accepts int, Device, cupy.cuda.Device, or torch.device"
-                f"got {id_or_device}"
+                f"Accepts int, Device, cupy.cuda.Device, or torch.device" f"got {id_or_device}"
             )
 
         assert id >= -1
@@ -80,8 +83,7 @@ class Device(object):
             if env.cupy_available():
                 cpdevice = cp.cuda.Device(id)
             else:
-                raise ValueError(
-                    'cupy not installed, but set device {}.'.format(id))
+                raise ValueError("cupy not installed, but set device {}.".format(id))
 
         self._type = _type
         self._id = id
@@ -112,7 +114,7 @@ class Device(object):
             return torch.device("cpu")
 
         return torch.device(f"{self.type}:{self.id}")
-    
+
     @property
     def spdevice(self):
         if not env.sigpy_available():

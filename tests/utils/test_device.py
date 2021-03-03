@@ -12,7 +12,7 @@ class TestDevice(unittest.TestCase):
         assert Device(-1) == cpu_device
         assert Device("cpu") == cpu_device
         assert cpu_device.xp == np
-        
+
         device = Device(-1)
         assert int(device) == -1
 

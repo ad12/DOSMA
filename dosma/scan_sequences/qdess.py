@@ -5,7 +5,6 @@ import os
 from copy import deepcopy
 from typing import Sequence
 
-import numpy as np
 from pydicom.tag import Tag
 
 from dosma.data_io import format_io_utils as fio_utils
@@ -185,7 +184,7 @@ class QDess(TargetSequence):
         ratio = xp.nan_to_num(ratio)
 
         # have to divide division into steps to avoid overflow error
-        t2map = (-2000 * (TR - TE) / (xp.log(abs(ratio) / k) + c1))
+        t2map = -2000 * (TR - TE) / (xp.log(abs(ratio) / k) + c1)
 
         t2map = xp.nan_to_num(t2map)
 
