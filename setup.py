@@ -51,9 +51,7 @@ setup(
     version=get_version(),
     author="Arjun Desai",
     url="https://github.com/ad12/DOSMA",
-    project_urls = {
-        "Documentation": "https://dosma.readthedocs.io/",
-    },
+    project_urls={"Documentation": "https://dosma.readthedocs.io/"},
     description="An AI-powered open-source medical image analysis toolbox",
     long_description=long_description,
     long_description_content_type="text/markdown",
