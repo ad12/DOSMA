@@ -153,7 +153,6 @@ class QDess(ScanSequence):
         if self.volumes is None or self.ref_dicom is None:
             raise ValueError("volumes and ref_dicom fields must be initialized")
 
-<<<<<<< HEAD
         if (
             self.get_metadata(self.__GL_AREA_TAG__, gl_area) is None
             or self.get_metadata(self.__TG_TAG__, tg) is None
@@ -162,9 +161,7 @@ class QDess(ScanSequence):
                 "Dicom headers do not contain tags for `gl_area` and `tg`. Please input manually"
             )
 
-=======
         xp = self.volumes[0].device.xp
->>>>>>> master
         ref_dicom = self.ref_dicom
 
         r, c, num_slices = self.volumes[0].volume.shape
