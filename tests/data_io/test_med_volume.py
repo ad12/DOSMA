@@ -183,6 +183,8 @@ class TestMedicalVolume(unittest.TestCase):
         mv[np.where(mv == 1)] = 5
         assert np.all(mv.volume == 5)
 
+        _ = mv + np.ones(mv.shape)
+
     def test_comparison(self):
         mv1 = MedicalVolume(np.ones((10, 20, 30)), self._AFFINE)
         mv2 = MedicalVolume(2 * np.ones((10, 20, 30)), self._AFFINE)

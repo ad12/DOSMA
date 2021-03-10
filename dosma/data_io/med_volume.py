@@ -675,7 +675,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
                 elif isinstance(input, np.ndarray):
                     if device != cpu_device:
                         raise RuntimeError(device_err.format(cpu_device))
-                    _inputs.append(device)
+                    _inputs.append(input)
                 elif env.cupy_available() and isinstance(input, cp.ndarray):
                     if device != input.device:
                         raise RuntimeError(device_err.format(Device(input.device)))
