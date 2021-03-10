@@ -83,7 +83,7 @@ class MonoExponentialFit(_Fit):
 
         if mask and not isinstance(mask, MedicalVolume):
             raise TypeError("`mask` must be a MedicalVolume")
-        self.mask = mask.reformat(orientation)
+        self.mask = mask.reformat(orientation) if mask else None
 
         self.verbose = verbose
         self.num_workers = num_workers
@@ -148,7 +148,8 @@ class MonoExponentialFit(_Fit):
         tc_map[tc_map > self.bounds[1]] = np.nan
         tc_map = np.nan_to_num(tc_map)
 
-        tc_map = np.around(tc_map, self.decimal_precision)
+        if self.decimal_precision is not None:
+            tc_map = np.around(tc_map, self.decimal_precision)
 
         time_constant_volume = MedicalVolume(tc_map, affine=affine)
         rsquared_volume = MedicalVolume(r_squared, affine=affine)
@@ -243,7 +244,7 @@ def curve_fit(
             r_squared.append(r2_)
     else:
         if show_pbar:
-            data = process_map(fitter, y.T, max_workers=num_workers, tqdm_class=tqdm)
+            data = process_map(fitter, y.T, max_workers=num_workers)
         else:
             with mp.Pool(num_workers) as p:
                 data = p.map(fitter, y.T)
