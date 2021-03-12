@@ -73,11 +73,12 @@ General fitting functions:
    dosma.utils.fits.monoexponential
    dosma.utils.fits.biexponential
 
-Quantitative MR Fitter classes:
+Fitter classes:
 
 .. autosummary::
    :toctree:
    :nosignatures:
 
+   dosma.utils.fits.CurveFitter
    dosma.utils.fits.MonoExponentialFit
 

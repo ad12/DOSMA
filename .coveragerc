@@ -3,3 +3,7 @@ omit =
     dosma/gui/*
     dosma/resources/*
     *test*
+
+[report]
+include =
+    dosma/*
