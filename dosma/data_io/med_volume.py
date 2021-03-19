@@ -571,6 +571,8 @@ class MedicalVolume(NDArrayOperatorsMixin):
                 kwargs[k] = getattr(self, f"_{k}").copy()
         if "headers" not in kwargs:
             kwargs["headers"] = self._headers
+        elif isinstance(kwargs["headers"], bool) and kwargs["headers"]:
+            kwargs["headers"] = deepcopy(self._headers)
         return self.__class__(**kwargs)
 
     def __getitem__(self, _slice):

@@ -7,7 +7,7 @@ from typing import Callable, List, Sequence, Tuple, Union
 
 import numpy as np
 from scipy import optimize as sop
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from tqdm.contrib.concurrent import process_map
 
 from dosma import defaults
@@ -199,9 +199,9 @@ class CurveFitter:
                 will be fit.
 
         Returns:
-            tuple: Tuple of fitted parameters (``popt``) and goodness of fit (``r2``)
-            values. Last axis of fitted parameters corresponds to different parameters
-            in order of appearance in ``self.func``.
+            Tuple[MedicalVolume, MedicalVolume]: Tuple of fitted parameters (``popt``)
+            and goodness of fit (``r2``) values. Last axis of fitted parameters
+            corresponds to different parameters in order of appearance in ``self.func``.
         """
         svs = []
         msk = None
@@ -233,7 +233,6 @@ class CurveFitter:
             msk = msk.reshape(1, -1)
 
         original_shape = y[0].shape
-        affine = np.array(y[0].affine)
         for i in range(len(y)):
             sv = y[i].volume
             svr = sv.reshape((1, -1))
@@ -264,8 +263,8 @@ class CurveFitter:
         if self.nan_to_num is not None:
             popt = np.nan_to_num(popt, nan=self.nan_to_num, copy=False)
 
-        popt = MedicalVolume(popt, affine=affine)
-        rsquared_volume = MedicalVolume(r_squared, affine=affine)
+        popt = y[0]._partial_clone(volume=popt, headers=True)
+        rsquared_volume = y[0]._partial_clone(volume=r_squared, headers=True)
 
         return popt, rsquared_volume
 
@@ -369,7 +368,6 @@ class MonoExponentialFit(_Fit):
             msk = msk.reshape(1, -1)
 
         original_shape = subvolumes[0].volume.shape
-        affine = np.array(self.subvolumes[0].affine)
 
         for i in range(len(self.ts)):
             sv = subvolumes[i].volume
@@ -409,8 +407,8 @@ class MonoExponentialFit(_Fit):
         if self.decimal_precision is not None:
             tc_map = np.around(tc_map, self.decimal_precision)
 
-        time_constant_volume = MedicalVolume(tc_map, affine=affine)
-        rsquared_volume = MedicalVolume(r_squared, affine=affine)
+        time_constant_volume = self.subvolumes[0]._partial_clone(volume=tc_map, headers=True)
+        rsquared_volume = self.subvolumes[0]._partial_clone(volume=r_squared, headers=True)
 
         return time_constant_volume, rsquared_volume
 
