@@ -23,7 +23,7 @@ import nibabel as nib
 import numpy as np
 import pydicom
 from natsort import natsorted
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from tqdm.contrib.concurrent import process_map
 
 from dosma.data_io import orientation as stdo
@@ -266,7 +266,7 @@ class DicomReader(DataReader):
         # Check if dicom file has the group_by element specified
         temp_dicom = pydicom.read_file(lstFilesDCM[0], force=True)
 
-        if not temp_dicom.get(group_by):
+        if group_by not in temp_dicom:
             raise ValueError("Tag {} does not exist in dicom".format(group_by))
 
         dicom_data = {}
