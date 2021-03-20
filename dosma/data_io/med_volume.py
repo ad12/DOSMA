@@ -5,11 +5,10 @@ This module defines `MedicalVolume`, which is a wrapper for 3D volumes.
 import warnings
 from copy import deepcopy
 from numbers import Number
-from typing import List, Sequence
+from typing import Sequence
 
 import nibabel as nib
 import numpy as np
-import pydicom
 from nibabel.spatialimages import SpatialFirstSlicer as _SpatialFirstSlicerNib
 from numpy.lib.mixins import NDArrayOperatorsMixin
 
@@ -17,7 +16,7 @@ from dosma.data_io import orientation as stdo
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
 from dosma.utils import env
-from dosma.utils.device import Device, cpu_device, get_device, to_device
+from dosma.utils.device import Device, cpu_device, get_array_module, get_device, to_device
 
 if env.sitk_available():
     import SimpleITK as sitk
@@ -30,9 +29,23 @@ __all__ = ["MedicalVolume"]
 class MedicalVolume(NDArrayOperatorsMixin):
     """The class for medical images.
 
-    Medical volumes are 3D matrices representing medical data. These volumes have inherent
-    metadata, such as pixel/voxel spacing, global coordinates, rotation information, all of
-    which can be characterized by an affine matrix following the RAS+ coordinate system.
+    Medical volumes use ndarrays to represent medical data. However, unlike standard ndarrays,
+    these volumes have inherent spatial metadata, such as pixel/voxel spacing, global coordinates,
+    rotation information, all of which can be characterized by an affine matrix following the
+    RAS+ coordinate system. The code below creates a random 300x300x40 medical volume with
+    spatial origin ``(0, 0, 0)`` and voxel spacing of ``(1,1,1)``:
+
+    >>> mv = MedicalVolume(np.random.rand(300, 300, 40), np.eye(4))
+
+    Medical volumes can also store header information that accompanies pixel data
+    (e.g. DICOM headers). These headers are used to expose metadata, which can be fetched
+    and set using :meth:`get_metadata()` and :meth:`set_metadata()`, respectively. Headers are
+    also auto-aligned, which means that headers will be aligned with the slice(s) of data from
+    which they originated, which makes Python slicing feasible. Currently, medical volumes
+    support DICOM headers using ``pydicom`` when loaded with :class:``dosma.data_io.DicomReader``.
+
+    >>> mv.get_metadata("EchoTime")  # Returns EchoTime
+    >>> mv.set_metadata("EchoTime", 10.0)  # Sets EchoTime to 10.0
 
     Standard math and boolean operations are supported with other ``MedicalVolume`` objects,
     numpy arrays (following standard broadcasting), and scalars. Boolean operations are performed
@@ -95,24 +108,17 @@ class MedicalVolume(NDArrayOperatorsMixin):
     <class 'dosma.data_io.MedicalVolume'>
 
     Args:
-        volume (np.ndarray): 3D volume.
-        affine (np.ndarray): 4x4 array corresponding to affine matrix transform in RAS+ coordinates.
-        headers (list[pydicom.FileDataset]): Headers for DICOM files.
+        volume (array-like): nD medical image.
+        affine (array-like): 4x4 array corresponding to affine matrix transform in RAS+ coordinates.
+            Must be on cpu (i.e. no ``cupy.ndarray``).
+        headers (array-like[pydicom.FileDataset]): Headers for DICOM files.
     """
 
-    def __init__(
-        self, volume: np.ndarray, affine: np.ndarray, headers: List[pydicom.FileDataset] = None
-    ):
-        if headers and len(headers) != volume.shape[-1]:
-            raise ValueError(
-                "Header mismatch. {:d} headers, but {:d} slices".format(
-                    len(headers), volume.shape[-1]
-                )
-            )
-
-        self._volume = volume
+    def __init__(self, volume, affine, headers=None):
+        xp = get_array_module(volume)
+        self._volume = xp.asarray(volume)
         self._affine = np.array(affine)
-        self._headers = headers
+        self._headers = self._validate_and_format_headers(headers) if headers is not None else None
 
     def save_volume(self, file_path: str, data_format: ImageDataFormat = ImageDataFormat.nifti):
         """Write volumes in specified data format.
@@ -163,6 +169,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
         """
         xp = self.device.xp
         device = self.device
+        headers = self._headers
 
         new_orientation = tuple(new_orientation)
         if new_orientation == self.orientation:
@@ -178,6 +185,8 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
         with device:
             volume = xp.transpose(self.volume, all_transpose_inds)
+        if headers is not None:
+            headers = np.transpose(headers, all_transpose_inds)
         for i in range(len(transpose_inds)):
             temp_affine[..., i] = self._affine[..., transpose_inds[i]]
 
@@ -186,6 +195,8 @@ class MedicalVolume(NDArrayOperatorsMixin):
         flip_axs_inds = list(stdo.get_flip_inds(temp_orientation, new_orientation))
         with device:
             volume = xp.flip(volume, axis=tuple(flip_axs_inds))
+        if headers is not None:
+            headers = np.flip(headers, axis=tuple(flip_axs_inds))
         a_vecs = temp_affine[:3, :3]
         a_origin = temp_affine[:3, 3]
 
@@ -216,9 +227,10 @@ class MedicalVolume(NDArrayOperatorsMixin):
         if inplace:
             self._affine = temp_affine
             self._volume = volume
+            self._headers = headers
             mv = self
         else:
-            mv = self._partial_clone(volume=volume, affine=temp_affine)
+            mv = self._partial_clone(volume=volume, affine=temp_affine, headers=headers)
 
         assert (
             mv.orientation == new_orientation
@@ -454,6 +466,61 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
         return img
 
+    def headers(self, flatten=False):
+        """Returns headers"""
+        if flatten:
+            return self._headers.flatten()
+        return self._headers
+
+    def get_metadata(self, key, dtype=None):
+        """Get metadata value from first header.
+
+        The first header is defined as the first header in ``np.flatten(self._headers)``.
+        To extract header information for other headers, use ``self.headers()``.
+
+        Args:
+            key (``str`` or pydicom.BaseTag``): Metadata field to access.
+            dtype (type, optional): If specified, data type to cast value to.
+                By default for DICOM headers, data will be in the value
+                representation format specified by pydicom. See
+                ``pydicom.valuerep``.
+
+        Examples:
+            >>> mv.get_metadata("EchoTime")
+            '10.0'  # this is a number type ``pydicom.valuerep.DSDecimal``
+            >>> mv.get_metadata("EchoTime", dtype=float)
+            10.0
+
+        Note:
+            Currently header information is tied to the ``pydicom.FileDataset`` implementation.
+            This function is synonymous to ``dataset.<key>`` in ``pydicom.FileDataset``.
+        """
+        if self._headers is None:
+            raise RuntimeError("No headers found. MedicalVolume must be initialized with `headers`")
+        headers = self.headers(flatten=True)
+        element = headers[0][key]
+        val = element.value
+        if dtype is not None:
+            val = dtype(val)
+        return val
+
+    def set_metadata(self, key, value, force: bool = False):
+        """Sets metadata for all headers.
+
+        Args:
+            key (str or pydicom.BaseTag): Metadata field to access.
+            value (Any): The value.
+            force (bool, optional): If ``True``, force the header to
+                set key even if key does not exist in header.
+        """
+        if self._headers is None:
+            raise RuntimeError("No headers found. MedicalVolume must be initialized with `headers`")
+        for h in self.headers(flatten=True):
+            if force:
+                setattr(h, key, value)
+            else:
+                h[key].value = value
+
     @property
     def volume(self):
         """ndarray: 3D ndarray representing volume values."""
@@ -476,11 +543,6 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
         self._volume = value
         self._device = get_device(self._volume)
-
-    @property
-    def headers(self):
-        """list[pydicom.FileDataset]: Headers for DICOM files."""
-        return self._headers
 
     @property
     def pixel_spacing(self):
@@ -575,6 +637,32 @@ class MedicalVolume(NDArrayOperatorsMixin):
             kwargs["headers"] = deepcopy(self._headers)
         return self.__class__(**kwargs)
 
+    def _validate_and_format_headers(self, headers):
+        """Validate headers are of appropriate shape and format into standardized shape.
+
+        Headers are stored an ndarray of dictionary-like objects with explicit dimensions
+        that match the dimensions of ``self._volume``. If header objects are not
+
+        Assumes ``self._volume`` and ``self._affine`` have been set.
+        """
+        headers = np.asarray(headers)
+        if headers.ndim > self._volume.ndim:
+            raise ValueError(
+                f"`headers` has too many dimensions. "
+                f"Got headers.ndim={headers.ndim}, but volume.ndim={self._volume.ndim}"
+            )
+        for dim in range(-headers.ndim, 0)[::-1]:
+            if headers.shape[dim] not in (1, self._volume.shape[dim]):
+                raise ValueError(
+                    f"`headers` must follow standard broadcasting shape. "
+                    f"Got headers.shape={headers.shape}, but volume.shape={self._volume.shape}"
+                )
+
+        ndim = self._volume.ndim
+        shape = (1,) * (ndim - len(headers.shape)) + headers.shape
+        headers = np.reshape(headers, shape)
+        return headers
+
     def __getitem__(self, _slice):
         slicer = _SpatialFirstSlicer(self)
         try:
@@ -586,9 +674,20 @@ class MedicalVolume(NDArrayOperatorsMixin):
         if any(dim == 0 for dim in volume.shape):
             raise IndexError("Empty slice requested")
 
+        headers = self._headers
+        if headers is not None:
+            _slice_headers = []
+            for idx, x in enumerate(_slice):
+                if headers.shape[idx] == 1 and not isinstance(x, int):
+                    _slice_headers.append(slice(None))
+                elif headers.shape[idx] == 1 and isinstance(x, int):
+                    _slice_headers.append(0)
+                else:
+                    _slice_headers.append(x)
+            headers = headers[_slice_headers]
+
         affine = slicer.slice_affine(_slice)
-        # slicing data makes headers invalid
-        return self._partial_clone(volume=volume, affine=affine, headers=None)
+        return self._partial_clone(volume=volume, affine=affine, headers=headers)
 
     def __setitem__(self, _slice, value):
         if isinstance(value, MedicalVolume):

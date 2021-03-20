@@ -13,7 +13,9 @@ Attributes:
         to number of echos.
 """
 
+import copy
 import functools
+import itertools
 import multiprocessing as mp
 import os
 from math import ceil, log10
@@ -30,7 +32,6 @@ from dosma.data_io import orientation as stdo
 from dosma.data_io.format_io import DataReader, DataWriter, ImageDataFormat
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
-from dosma.utils import io_utils
 
 __all__ = ["DicomReader", "DicomWriter"]
 
@@ -158,6 +159,8 @@ def _write_dicom_file(np_slice: np.ndarray, header: pydicom.FileDataset, file_pa
         header (pydicom.FileDataset): DICOM header.
         file_path: File path to write to.
     """
+    # Deep copy required in case headers are shared.
+    header = copy.deepcopy(header)
     expected_dimensions = header.Rows, header.Columns
     assert (
         np_slice.shape == expected_dimensions
@@ -328,6 +331,17 @@ class DicomWriter(DataWriter):
     def save(self, volume: MedicalVolume, dir_path: str, fname_fmt: str = None):
         """Save `medical volume` in dicom format.
 
+        This function assumes headers for the volume (``volume.headers()``) exist
+        for one spatial dimension. Headers for non-spatial dimensions are optional, but
+        highly recommended. If provided, they will be used to write the volume. If not,
+        headers will be appropriately broadcast to these dimensions. Note, this means
+        that multiple files will have the same header information and will not be able
+        to be loaded automatically.
+
+        Currently header spatial information (orientation, origin, slicing between spaces,
+        etc.) is not overwritten nor validated. All data must correspond to the same
+        spatial information as specified in the headers to produce valid DICOM files.
+
         Args:
             volume (MedicalVolume): Volume to save.
             dir_path: Directory path to store dicom files. Dicoms are stored in directories,
@@ -341,24 +355,45 @@ class DicomWriter(DataWriter):
                 any axis. Flipping changes scanner origin, which is currently not handled.
         """
         # Get orientation indicated by headers.
-        headers = volume.headers
+        headers = volume.headers()
         if headers is None:
             raise ValueError("MedicalVolume headers must be initialized to save as a dicom")
 
-        affine = LPSplus_to_RASplus(headers)
-        orientation = stdo.orientation_nib_to_standard(nib.aff2axcodes(affine))
-
-        # Currently do not support mismatch in scanner_origin.
-        if tuple(affine[:3, 3]) != volume.scanner_origin:
+        # Reformat to put headers in last dimensions.
+        single_dim = []
+        full_dim = []
+        for i, dim in enumerate(headers.shape[:3]):
+            if dim == 1:
+                single_dim.append(i)
+            else:
+                full_dim.append(i)
+        if len(full_dim) > 1:
             raise ValueError(
-                "Scanner origin mismatch. "
-                "Currently we do not handle mismatch in scanner origin "
-                "(i.e. cannot flip across axis)"
+                f"Only one spatial dimension can have headers. Got {len(full_dim)} - "
+                f"headers.shape={headers.shape[:3]}"
             )
+        new_orientation = (volume.orientation[x] for x in single_dim + full_dim)
+
+        volume = volume.reformat(new_orientation)
+        assert volume.headers().shape[:3] == (1, 1, volume.shape[2])
 
         # Reformat medical volume to expected orientation specified by dicom headers.
-        volume = volume.reformat(orientation)
-        volume_arr = volume.volume
+        # NOTE: This is temporary. Future fixes will allow us to modify header
+        # data to match affine matrix.
+        if len(volume.shape) > 3:
+            shape = volume.shape[3:]
+            multi_volumes = np.empty(shape, dtype=object)
+            for dims in itertools.product(*[list(range(0, x)) for x in multi_volumes.shape]):
+                multi_volumes[dims] = _format_volume_to_header(volume[(Ellipsis,) + dims])
+            multi_volumes = multi_volumes.flatten()
+            volume_arr = np.concatenate([v.volume for v in multi_volumes], axis=-1)
+            headers = np.concatenate([v.headers(flatten=True) for v in multi_volumes], axis=-1)
+        else:
+            volume = _format_volume_to_header(volume)
+            volume_arr = volume.volume
+            headers = volume.headers(flatten=True)
+
+        assert headers.ndim == 1
         assert volume_arr.shape[2] == len(
             headers
         ), "Dimension mismatch - {:d} slices but {:d} headers".format(
@@ -366,7 +401,7 @@ class DicomWriter(DataWriter):
         )
 
         # Check if dir_path exists.
-        dir_path = io_utils.mkdirs(dir_path)
+        os.makedirs(dir_path, exist_ok=True)
 
         num_slices = len(headers)
         if not fname_fmt:
@@ -386,3 +421,32 @@ class DicomWriter(DataWriter):
         else:
             for s in tqdm(range(num_slices), disable=not self.verbose):
                 _write_dicom_file(volume_arr[..., s], headers[s], filepaths[s])
+
+
+def _format_volume_to_header(volume: MedicalVolume) -> MedicalVolume:
+    """Reformats the volume according to its header.
+
+    Args:
+        volume (MedicalVolume): The volume to reformat.
+            Must be 3D and have headers of shape (1, 1, volume.shape[2]).
+
+    Returns:
+        MedicalVolume: The reformatted volume.
+    """
+    headers = volume.headers()
+    assert headers.shape == (1, 1, volume.shape[2])
+
+    affine = LPSplus_to_RASplus(headers.flatten())
+    orientation = stdo.orientation_nib_to_standard(nib.aff2axcodes(affine))
+
+    # Currently do not support mismatch in scanner_origin.
+    if tuple(affine[:3, 3]) != volume.scanner_origin:
+        raise ValueError(
+            "Scanner origin mismatch. "
+            "Currently we do not handle mismatch in scanner origin "
+            "(i.e. cannot flip across axis)"
+        )
+
+    volume = volume.reformat(orientation)
+    assert volume.headers().shape == (1, 1, volume.shape[2])
+    return volume

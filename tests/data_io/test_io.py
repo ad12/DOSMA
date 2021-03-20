@@ -9,6 +9,7 @@ import pydicom
 
 from dosma.data_io.dicom_io import DicomReader, DicomWriter
 from dosma.data_io.format_io import ImageDataFormat
+from dosma.data_io.med_volume import MedicalVolume
 from dosma.data_io.nifti_io import NiftiReader, NiftiWriter
 
 from .. import util as ututils
@@ -121,7 +122,7 @@ class TestDicomIO(unittest.TestCase):
 
             # Headers for e1 should all have EchoNumbers field = 1
             for i in range(len(volumes)):
-                for h in volumes[i].headers:
+                for h in volumes[i].headers(flatten=True):
                     assert h.EchoNumbers == i + 1, "e%d headers should have all EchoNumbers=%d" % (
                         i + 1,
                         i + 1,
@@ -147,7 +148,7 @@ class TestDicomIO(unittest.TestCase):
                 assert type(echo_volume) is list, "Output type should be list with length 1"
                 assert len(echo_volume) == 1, "length of list must be 1"
 
-                for h in echo_volume[0].headers:
+                for h in echo_volume[0].headers(flatten=True):
                     assert (
                         h.EchoNumbers == echo_number
                     ), "%s headers should have all EchoNumbers=%d" % (echo_name, echo_number)
@@ -164,13 +165,15 @@ class TestDicomIO(unittest.TestCase):
                 ), "e%d-split and e%d-total should be identical" % (echo_number, echo_number)
 
                 # headers should also be identical
-                assert len(echo_volume.headers) == len(e_t.headers), (
+                ev_headers = echo_volume.headers(flatten=True)
+                e_t_headers = e_t.headers(flatten=True)
+                assert len(ev_headers) == len(e_t_headers), (
                     "number of headers should be identical in echo %d" % echo_number
                 )
 
-                for i in range(len(echo_volume.headers)):
-                    h1 = echo_volume.headers[i]
-                    h2 = e_t.headers[i]
+                for i in range(len(ev_headers)):
+                    h1 = ev_headers[i]
+                    h2 = e_t_headers[i]
 
                     assert self.are_equivalent_headers(h1, h2), (
                         "headers for echos %d must be equivalent" % echo_number
@@ -195,7 +198,8 @@ class TestDicomIO(unittest.TestCase):
             for v, e in zip(volumes, expected):
                 assert v.is_identical(e)
                 assert all(
-                    self.are_equivalent_headers(h1, h2) for h1, h2 in zip(v.headers, e.headers)
+                    self.are_equivalent_headers(h1, h2)
+                    for h1, h2 in zip(v.headers(flatten=True), e.headers(flatten=True))
                 )
 
     def test_dicom_reader_single_file(self):
@@ -248,17 +252,43 @@ class TestDicomIO(unittest.TestCase):
                 ), "Loaded e1 and original e1 should be identical"
 
                 # headers should also be identical
-                assert len(echo_volume_loaded.headers) == len(
-                    e_t.headers
+                evl_headers = echo_volume_loaded.headers(flatten=True)
+                e_t_headers = e_t.headers(flatten=True)
+                assert len(evl_headers) == len(
+                    e_t_headers
                 ), "number of headers should be identical in echo%d" % (ind + 1)
 
-                for i in range(len(echo_volume_loaded.headers)):
-                    h1 = echo_volume_loaded.headers[i]
-                    h2 = e_t.headers[i]
+                for i in range(len(evl_headers)):
+                    h1 = evl_headers[i]
+                    h2 = e_t_headers[i]
 
                     assert self.are_equivalent_headers(
                         h1, h2
                     ), "headers for echoes %d must be equivalent" % (ind + 1)
+
+    def test_dicom_writer_nd(self):
+        """Test writing dicoms for >3D MedicalVolume data."""
+        dicom_path = ututils.get_dicoms_path(ututils.get_scan_dirpath("qdess"))
+        e1, e2 = tuple(self.dr.load(dicom_path))
+        vol, headers = np.stack([e1, e2], axis=-1), np.stack([e1.headers(), e2.headers()], axis=-1)
+        vol = MedicalVolume(vol, affine=e1.affine, headers=headers)
+
+        write_path = ututils.get_write_path(dicom_path, self.data_format)
+        self.dw.save(vol, write_path)
+
+        e1_l, e2_l = tuple(self.dr.load(write_path))
+        assert e1_l.is_identical(e1)
+        assert e2_l.is_identical(e2)
+
+        for ind, (e_l, e) in enumerate([(e1_l, e1), (e2_l, e2)]):
+            el_headers = e_l.headers(flatten=True)
+            e_headers = e.headers(flatten=True)
+            for i in range(len(el_headers)):
+                h1 = el_headers[i]
+                h2 = e_headers[i]
+                assert self.are_equivalent_headers(
+                    h1, h2
+                ), "headers for echoes %d must be equivalent" % (ind + 1)
 
     def test_dicom_writer_orientation(self):
         # Read in dicom information, reorient image, write out to different folder,
@@ -318,13 +348,15 @@ class TestDicomIO(unittest.TestCase):
                 ), "Loaded e%d and original e%d should be identical" % (echo_num, echo_num)
 
                 # headers should also be identical
-                assert len(e_loaded.headers) == len(e_vol.headers), (
+                el_headers = e_loaded.headers(flatten=True)
+                ev_headers = e_vol.headers(flatten=True)
+                assert len(el_headers) == len(ev_headers), (
                     "number of headers should be identical in echo%d" % echo_num
                 )
 
-                for i in range(len(e_loaded.headers)):
-                    h1 = e_loaded.headers[i]
-                    h2 = e_vol.headers[i]
+                for i in range(len(el_headers)):
+                    h1 = el_headers[i]
+                    h2 = ev_headers[i]
 
                     assert self.are_equivalent_headers(h1, h2), (
                         "headers for echoes %d must be equivalent" % echo_num

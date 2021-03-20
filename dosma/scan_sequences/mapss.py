@@ -67,7 +67,7 @@ class Mapss(TargetSequence):
 
     def __load_dicom__(self):
         super().__load_dicom__()
-        self.echo_times = [float(x.headers[0].EchoTime) for x in self.volumes]
+        self.echo_times = [float(x.get_metadata("EchoTime")) for x in self.volumes]
 
     def __validate_scan__(self):
         return len(self.volumes) == 7
@@ -142,7 +142,7 @@ class Mapss(TargetSequence):
             intrareg_vol = MedicalVolume(
                 volume=intrareg_vol.volume,
                 affine=volumes[echo_index].affine,
-                headers=deepcopy(volumes[echo_index].headers),
+                headers=deepcopy(volumes[echo_index].headers()),
             )
 
             intraregistered_volumes.append(intrareg_vol)

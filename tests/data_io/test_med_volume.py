@@ -66,6 +66,56 @@ class TestMedicalVolume(unittest.TestCase):
         mv = mv.reformat_as(mv2)
         assert mv.orientation == mv2.orientation
 
+    def test_reformat_header(self):
+        volume = np.random.rand(10, 20, 30, 40)
+        headers = ututils.build_dummy_headers(volume.shape[2:])
+        mv = MedicalVolume(volume, self._AFFINE, headers=headers)
+        new_orientation = tuple(x[::-1] for x in mv.orientation[::-1])
+
+        mv2 = mv.reformat(new_orientation)
+        assert mv2._headers.shape == (30, 1, 1, 40)
+
+        mv2 = mv.clone()
+        mv2.reformat(new_orientation, inplace=True)
+        assert mv2._headers.shape == (30, 1, 1, 40)
+
+        volume = np.random.rand(10, 20, 30, 40)
+        headers = ututils.build_dummy_headers((volume.shape[2], 1))
+        mv = MedicalVolume(volume, self._AFFINE, headers=headers)
+        new_orientation = tuple(x[::-1] for x in mv.orientation[::-1])
+
+        mv2 = mv.reformat(new_orientation)
+        assert mv2._headers.shape == (30, 1, 1, 1)
+
+    def test_metadata(self):
+        field, field_val = "EchoTime", 4.0
+
+        volume = np.random.rand(10, 20, 30, 40)
+        headers = ututils.build_dummy_headers(volume.shape[2:], {field: field_val})
+        mv = MedicalVolume(volume, self._AFFINE, headers=headers)
+
+        echo_time = mv.get_metadata(field)
+        assert echo_time == field_val
+
+        new_val = 5.0
+        mv2 = mv.clone(headers=True)
+        mv2.set_metadata(field, new_val)
+        assert mv.get_metadata(field, type(field_val)) == field_val
+        assert mv2.get_metadata(field, type(new_val)) == new_val
+        for h in mv2.headers(flatten=True):
+            assert h[field].value == new_val
+
+        new_val = 6.0
+        mv2 = mv.clone(headers=True)
+        mv2[..., 1].set_metadata(field, new_val)
+        assert mv2[..., 0].get_metadata(field) == field_val
+        assert mv2[..., 1].get_metadata(field) == new_val
+        headers = mv2.headers()
+        for h in headers[..., 0].flatten():
+            assert h[field].value == field_val
+        for h in headers[..., 1].flatten():
+            assert h[field].value == new_val
+
     def test_clone(self):
         mv = MedicalVolume(np.random.rand(10, 20, 30), self._AFFINE)
         mv2 = mv.clone()
@@ -75,13 +125,15 @@ class TestMedicalVolume(unittest.TestCase):
         mv = dr.load(ututils.get_dicoms_path(ututils.get_scan_dirpath("qdess")))[0]
         mv2 = mv.clone(headers=False)
         assert mv.is_identical(mv2)  # expected identical volumes
-        assert id(mv.headers) == id(mv2.headers)  # headers not cloned, expected same memory address
+        assert id(mv.headers(flatten=True)[0]) == id(
+            mv2.headers(flatten=True)[0]
+        ), "headers not cloned, expected same memory address"
 
         mv3 = mv.clone(headers=True)
         assert mv.is_identical(mv3)  # expected identical volumes
-        assert id(mv.headers) != id(
-            mv3.headers
-        )  # headers cloned, expected different memory address
+        assert id(mv.headers(flatten=True)[0]) != id(
+            mv3.headers(flatten=True)[0]
+        ), "headers cloned, expected different memory address"
 
     def test_to_sitk(self):
         filepath = ututils.get_read_paths(ututils.get_scan_dirpath("qdess"), ImageDataFormat.nifti)[
@@ -214,6 +266,48 @@ class TestMedicalVolume(unittest.TestCase):
         mv[:5, ...] = mv2
         assert np.all(mv._volume[:5, ...] == 2) & np.all(mv._volume[5:, ...] == 1)
         assert np.all(mv[:5, ...].volume == 2)
+
+    def test_slice_with_headers(self):
+        vol = np.stack([np.ones((10, 20, 30)), 2 * np.ones((10, 20, 30))], axis=-1)
+        headers = np.stack(
+            [
+                ututils.build_dummy_headers(vol.shape[2], {"EchoTime": 2}),
+                ututils.build_dummy_headers(vol.shape[2], {"EchoTime": 10}),
+            ],
+            axis=-1,
+        )
+        mv = MedicalVolume(vol, self._AFFINE, headers=headers)
+
+        mv2 = mv[..., 0]
+        assert mv2._headers.shape == (1, 1, 30)
+        for h in mv2.headers(flatten=True):
+            assert h["EchoTime"].value == 2
+
+        mv2 = mv[..., 1]
+        assert mv2._headers.shape == (1, 1, 30)
+        for h in mv2.headers(flatten=True):
+            assert h["EchoTime"].value == 10
+
+        mv2 = mv[:10, :5, 8:10, :1]
+        assert mv2._headers.shape == (1, 1, 2, 1)
+
+        mv2 = mv[:10]
+        mv2._headers.shape == (1, 1, 30, 40)
+        mv2 = mv[:, :10]
+        mv2._headers.shape == (1, 1, 30, 40)
+
+        mv2 = mv[..., 0:1]
+        assert mv2._headers.shape == (1, 1, 30, 1)
+
+        vol = np.stack([np.ones((10, 20, 30)), 2 * np.ones((10, 20, 30))], axis=-1)
+        headers = ututils.build_dummy_headers(vol.shape[2], {"EchoTime": 2})[..., np.newaxis]
+        mv = MedicalVolume(vol, self._AFFINE, headers=headers)
+        mv1 = mv[..., 0]
+        mv2 = mv[..., 1]
+        assert mv1._headers.shape == (1, 1, 30)
+        assert mv2._headers.shape == (1, 1, 30)
+        for h1, h2 in zip(mv1.headers(flatten=True), mv2.headers(flatten=True)):
+            assert id(h1) == id(h2)
 
     def test_4d(self):
         vol = np.stack([np.ones((10, 20, 30)), 2 * np.ones((10, 20, 30))], axis=-1)
