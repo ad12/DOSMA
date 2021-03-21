@@ -23,6 +23,8 @@ if env.sitk_available():
     import SimpleITK as sitk
 if env.cupy_available():
     import cupy as cp
+if env.package_available("h5py"):
+    import h5py
 
 __all__ = ["MedicalVolume"]
 
@@ -398,6 +400,29 @@ class MedicalVolume(NDArrayOperatorsMixin):
         """Move to cpu."""
         return self.to("cpu")
 
+    def astype(self, dtype, **kwargs):
+        """Modifies dtype of ``self._volume``.
+
+        Note this operation is done in place. ``self._volume`` is modified, based
+        on the ``astype`` implementation of the type associated with ``self._volume``.
+        No new MedicalVolume is created - ``self`` is returned.
+
+        Args:
+            dtype (str or dtype): Typecode or data-type to which the array is cast.
+
+        Returns:
+            self
+        """
+        if (
+            env.package_available("h5py")
+            and isinstance(self._volume, h5py.Dataset)
+            and env.get_version(h5py) < (3, 0, 0)
+        ):
+            raise ValueError("Cannot cast h5py.Dataset to dtype for h5py<3.0.0")
+
+        self._volume = self._volume.astype(dtype, **kwargs)
+        return self
+
     def to_sitk(self, vdim: int = None):
         """Converts to SimpleITK Image.
 
@@ -518,6 +543,10 @@ class MedicalVolume(NDArrayOperatorsMixin):
     @property
     def device(self):
         return get_device(self._volume)
+
+    @property
+    def dtype(self):
+        return self._volume.dtype
 
     @classmethod
     def from_sitk(cls, image, copy=False) -> "MedicalVolume":
