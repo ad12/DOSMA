@@ -61,7 +61,7 @@ class Cones(NonTargetSequence):
 
         echo_times = []
         for vol in self.volumes:
-            echo_times.append(float(vol.headers[0].EchoTime))
+            echo_times.append(float(vol.get_metadata("EchoTime")))
 
         self.echo_times = natsorted(echo_times)
 

@@ -9,7 +9,6 @@ from pydicom.tag import Tag
 
 from dosma.data_io import format_io_utils as fio_utils
 from dosma.data_io.format_io import ImageDataFormat
-from dosma.data_io.med_volume import MedicalVolume
 from dosma.defaults import preferences
 from dosma.models.seg_model import SegModel
 from dosma.quant_vals import T2
@@ -203,9 +202,7 @@ class QDess(TargetSequence):
             vol_null_fluid = echo_1 - beta * echo_2
             t2map = t2map * (vol_null_fluid > 0.1 * xp.max(vol_null_fluid))
 
-        t2_map_wrapped = MedicalVolume(
-            t2map, affine=subvolumes[0].affine, headers=deepcopy(subvolumes[0].headers)
-        )
+        t2_map_wrapped = subvolumes[0]._partial_clone(volume=t2map, headers=True)
         t2_map_wrapped = T2(t2_map_wrapped)
 
         tissue.add_quantitative_value(t2_map_wrapped)

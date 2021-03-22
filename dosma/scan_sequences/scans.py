@@ -131,7 +131,7 @@ class ScanSequence(ABC):
 
         self.volumes = dr.load(dicom_path, group_by=split_by, ignore_ext=self.ignore_ext)
 
-        self.ref_dicom = self.volumes[0].headers[0]
+        self.ref_dicom = self.volumes[0].headers(flatten=True)[0]
 
         self.__set_series_number__(self.ref_dicom.SeriesNumber)
 
@@ -375,7 +375,7 @@ class NonTargetSequence(ScanSequence):
         echo_times = []
 
         for i in range(num_echo_times):
-            echo_time = float(volumes[i].headers[0].EchoTime)
+            echo_time = float(volumes[i].get_metadata("EchoTime"))
             echo_times.append((i, echo_time))
 
         # Sort list of tuples (ind, echo_time) by echo_time

@@ -83,6 +83,14 @@ setup(
         "Operating System :: OS Independent",
     ],
     extras_require={
-        "dev": ["coverage", "flake8", "isort", "black==19.3b0", "sphinx", "sphinxcontrib.bibtex"]
+        "dev": [
+            "coverage",
+            "flake8",
+            "isort",
+            "black==19.3b0",
+            "simpleitk",
+            "sphinx",
+            "sphinxcontrib.bibtex",
+        ]
     },
 )

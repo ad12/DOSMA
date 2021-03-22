@@ -29,6 +29,16 @@ We can also load specific files in the image series:
 >>> with DicomReader() as dr:
 >>>   volumes = dr.load(["file1", "file2", ...], group_by="EchoNumbers")
 
+DICOM image data often has associated metadata. :class:`MedicalVolume` makes it easy to get
+and set metadata:
+
+>>> volume = volumes[0]  # first echo time
+>>> volume.get_metadata("EchoTime", float)
+10.0
+>>> volume.set_metadata("EchoTime", 20)
+>>> volume.get_metadata("EchoTime", float)
+20.0
+
 Similarly, to load a NIfTI volume, we use the :class:`NiftiReader` class:
 
 >>> from dosma.data_io import NiftiReader
