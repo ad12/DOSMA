@@ -690,6 +690,11 @@ class MedicalVolume(NDArrayOperatorsMixin):
         return self._partial_clone(volume=volume, affine=affine, headers=headers)
 
     def __setitem__(self, _slice, value):
+        """
+        Note:
+            When ``value`` is a ``MedicalVolume``, the headers from that value
+            are not copied over. This may be changed in the future.
+        """
         if isinstance(value, MedicalVolume):
             image = self[_slice]
             assert value.is_same_dimensions(image, err=True)
