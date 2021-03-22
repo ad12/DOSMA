@@ -2,6 +2,7 @@ import os
 import shutil
 import unittest
 
+import h5py
 import numpy as np
 import SimpleITK as sitk
 
@@ -237,6 +238,24 @@ class TestMedicalVolume(unittest.TestCase):
 
         _ = mv + np.ones(mv.shape)
 
+    def test_hdf5(self):
+        shape = (10, 20, 30)
+        volume = np.reshape([i for i in range(np.product(shape))], shape)
+        hdf5_file = os.path.join(self._TEMP_PATH, "unittest.h5")
+
+        with h5py.File(hdf5_file, "w") as f:
+            f.create_dataset("volume", data=volume)
+        f = h5py.File(hdf5_file, "r")
+
+        mv = MedicalVolume(f["volume"], np.eye(4))
+        assert mv.device == Device("cpu")
+        assert mv.dtype == f["volume"].dtype
+
+        mv2 = mv[:, :, :1]
+        assert np.all(mv2.volume == volume[:, :, :1])
+        assert mv2.device == Device("cpu")
+        assert mv2.dtype == volume.dtype
+
     def test_comparison(self):
         mv1 = MedicalVolume(np.ones((10, 20, 30)), self._AFFINE)
         mv2 = MedicalVolume(2 * np.ones((10, 20, 30)), self._AFFINE)
@@ -378,6 +397,16 @@ class TestMedicalVolume(unittest.TestCase):
         mv_gpu = mv.to(Device(0))
         data = cp.asarray(mv_gpu)
         assert cp.shares_memory(data, mv_gpu.volume)
+
+    def test_dtype(self):
+        vol = np.ones((10, 20, 30))
+        mv = MedicalVolume(vol, self._AFFINE)
+
+        assert mv.volume.dtype == vol.dtype
+
+        mv2 = mv.astype("int32")
+        assert id(mv) == id(mv2)
+        assert mv2.volume.dtype == np.int32
 
 
 if __name__ == "__main__":
