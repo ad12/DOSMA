@@ -213,10 +213,10 @@ def get_device(array):
     Returns:
         Device.
     """
-    if get_array_module(array) == np:
-        return cpu_device
-    else:
+    if hasattr(array, "device"):
         return Device(array.device)
+    else:
+        return cpu_device
 
 
 def to_device(input, device=cpu_device):
