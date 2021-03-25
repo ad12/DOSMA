@@ -92,7 +92,7 @@ htmlhelp_basename = "DOSMAdoc"
 html_static_path = ["_static"]
 
 # Intersphinx mappings
-intersphinx_mapping = {'numpy': ('https://numpy.org/doc/stable/', None)}
+intersphinx_mapping = {"numpy": ("https://numpy.org/doc/stable/", None)}
 
 # Documentation to include
 todo_include_todos = True

@@ -278,7 +278,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
         with idevice:
             return self.is_same_dimensions(mv) and (mv.volume == self.volume).all()
 
-    def __allclose_spacing(self, mv, precision: int = None):
+    def _allclose_spacing(self, mv, precision: int = None, ignore_origin: bool = False):
         """Check if spacing between self and another medical volume is within tolerance.
 
         Tolerance is `10 ** (-precision)`.
@@ -288,17 +288,21 @@ class MedicalVolume(NDArrayOperatorsMixin):
             precision (`int`, optional): Number of significant figures after the decimal.
                 If not specified, check that affine matrices between two volumes are identical.
                 Defaults to `None`.
+            ignore_origin (bool, optional): If ``True``, ignore matching origin in the affine
+                matrix.
 
         Returns:
             bool: `True` if spacing between two volumes within tolerance, `False` otherwise.
         """
-        if precision:
+        if precision is not None:
             tol = 10 ** (-precision)
-            return np.allclose(mv.affine[:3, :3], self.affine[:3, :3], atol=tol) and np.allclose(
-                mv.scanner_origin, self.scanner_origin, rtol=tol
+            return np.allclose(mv.affine[:3, :3], self.affine[:3, :3], atol=tol) and (
+                ignore_origin or np.allclose(mv.scanner_origin, self.scanner_origin, rtol=tol)
             )
         else:
-            return (mv.affine == self.affine).all()
+            return (mv.affine == self.affine).all() or (
+                ignore_origin and (mv.affine[:, :3] == self.affine[:, :3]).all()
+            )
 
     def is_same_dimensions(self, mv, precision: int = None, err: bool = False):
         """Check if two volumes have the same dimensions.
@@ -325,7 +329,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
         if not isinstance(mv, MedicalVolume):
             raise TypeError("`mv` must be a MedicalVolume.")
 
-        is_close_spacing = self.__allclose_spacing(mv, precision)
+        is_close_spacing = self._allclose_spacing(mv, precision)
         is_same_orientation = mv.orientation == self.orientation
         is_same_shape = mv.volume.shape == self.volume.shape
         out = is_close_spacing and is_same_orientation and is_same_shape
@@ -1075,6 +1079,8 @@ def around(x, decimals=0, affine=False):
 def stack(xs, axis: int = -1):
     """Stack medical images across non-spatial dimensions.
 
+    Images will be auto-oriented to the orientation of the first medical volume.
+
     Args:
         xs (array-like[MedicalVolume]): 1D array-like of aligned medical images to stack.
         axis (int, optional): Axis to stack along.
@@ -1092,6 +1098,7 @@ def stack(xs, axis: int = -1):
     if not isinstance(axis, int):
         raise TypeError(f"'{type(axis)}' cannot be interpreted as int")
 
+    xs = [x.reformat(xs[0].orientation) for x in xs]
     affine = xs[0].affine
     for x in xs[1:]:
         assert x.is_same_dimensions(xs[0], err=True)
@@ -1099,6 +1106,7 @@ def stack(xs, axis: int = -1):
         axis = _to_positive_axis(axis, len(xs[0].shape), grow=True, invalid_axis="spatial")
     except ValueError:
         raise ValueError(f"Cannot stack across spatial dimension (axis={axis})")
+    assert axis >= 0
 
     vol = np.stack([x.volume for x in xs], axis=axis)
     headers = [x.headers() for x in xs]
@@ -1110,14 +1118,90 @@ def stack(xs, axis: int = -1):
     return MedicalVolume(vol, affine, headers=headers)
 
 
-# @implements(np.concatenate)
-# def concatenate(xs, axis: int = -1):
-#     """Concatenate medical images.
-#     Note:
-#         Headers are not set unless all inputs have headers of the same
-#         shape. This functionality may change in the future.
-#     """
-#     pass
+@implements(np.concatenate)
+def concatenate(xs, axis: int = -1):
+    """Concatenate medical images.
+
+    Image concatenation is slightly different if the axis is a spatial axis
+    (one of the first 3 dimensions) or a non-spatial dimension.
+
+    If concatenating along a non-spatial dimension, the image dimensions for all
+    other axes and affine matrix of each ``x`` must be the same, which is standard
+    for concatenation.
+
+    If concatenating along a spatial dimension, all images must have the same direction
+    and pixel spacing. Additionally, the scanner origin for all spatial axes not being
+    concatenated should be the same. The origin for other scans should be consecutive.
+    For example, if images are concatenated on ``axis=i``, a spatial axis, then
+    ``xs[0].scanner_origin + xs[0].``.
+
+    Images will be auto-oriented to the orientation of the first medical volume.
+
+    Note:
+        Headers are not set unless all inputs have headers of the same
+        shape. This functionality may change in the future.
+    """
+    precision = None
+    tol = 10 ** (-precision) if precision is not None else None
+
+    if not isinstance(axis, int):
+        raise TypeError(f"'{type(axis)}' cannot be interpreted as int")
+
+    xs = [x.reformat(xs[0].orientation) for x in xs]
+    axis = _to_positive_axis(axis, len(xs[0].shape), grow=False, invalid_axis=None)
+    assert axis >= 0
+
+    if axis in range(3):
+        # Concatenate along spatial dimension
+        for i, x in enumerate(xs[1:]):
+            if not x._allclose_spacing(xs[0], precision=precision, ignore_origin=True):
+                raise ValueError(
+                    "All the inputs must have the same direction and pixel spacing "
+                    "when concatenating spatial dimensions, but input at index 0 "
+                    "has affine {} and the input at index {} "
+                    "has affine {}".format(xs[0].affine[:3, :3], i, x.affine[:3, :3])
+                )
+        for i, (x1, x2) in enumerate(zip(xs[:-1], xs[1:])):
+            ijk1 = np.array([0, 0, 0, 1])
+            ijk1[axis] = x1.shape[axis]
+            xyz = x1.affine.dot(ijk1)[:3]
+            if not (
+                (precision is not None and np.allclose(x2.scanner_origin, xyz, rtol=tol))
+                or (np.asarray(x2.scanner_origin) == xyz).all()
+            ):
+                raise ValueError(
+                    "All the inputs must be sequentially increasing in space "
+                    "when concatenating spatial dimensions, but input at index {} "
+                    "ends at xyz location {} and the input at index {} "
+                    "starts at xyz location {}".format(i, xyz, i + 1, x2.scanner_origin)
+                )
+    else:
+        for i, x in enumerate(xs[1:]):
+            if not x._allclose_spacing(xs[0], precision=precision):
+                raise ValueError(
+                    "All the inputs must have the same affine matrix "
+                    "when concatenating non-spatial dimensions, but input at index 0 "
+                    "has affine {} and the input at index {} "
+                    "has affine {}".format(xs[0].affine, i, x.affine)
+                )
+
+    volume = np.concatenate([x.volume for x in xs], axis=axis)
+    headers = [x.headers() for x in xs]
+    if any(x is None for x in headers):
+        headers = None
+    else:
+        headers = np.concatenate(headers, axis=axis)
+        if headers.ndim != volume.ndim or any(
+            [hs != 1 and hs != vs for hs, vs in zip(headers.shape, volume.shape)]
+        ):
+            warnings.warn(
+                "Got invalid headers shape ({}) given concatenated output shape ({}). "
+                "Expected header dimensions to be 1 or same as volume dimension for all axes. "
+                "Dropping all headers in concatenated output.".format(volume.shape, headers.shape)
+            )
+            headers = None
+
+    return MedicalVolume(volume, xs[0].affine, headers=headers)
 
 
 @implements(np.expand_dims)

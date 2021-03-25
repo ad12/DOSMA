@@ -379,8 +379,29 @@ class TestMedicalVolume(unittest.TestCase):
         mv2 = np.nanargmax(mv)
         assert np.all(mv2 == np.nanargmax(mv.volume))
 
-        # Shaping functions
+        # Round
         shape = (10, 20, 30, 2)
+        affine = np.concatenate([np.random.rand(3, 4), [[0, 0, 0, 1]]], axis=0)
+        mv = MedicalVolume(np.random.rand(*shape), affine, headers=headers)
+
+        mv2 = mv.round()
+        assert np.allclose(mv2.affine, affine)
+        assert np.unique(mv2.volume).tolist() == [0, 1]
+
+        mv2 = mv.round(affine=True)
+        assert np.unique(mv2.affine).tolist() == [0, 1]
+        assert np.unique(mv2.volume).tolist() == [0, 1]
+
+    def test_numpy_shaping(self):
+        """Test numpy shaping functions (stack, concatenate, etc.)."""
+        shape = (10, 20, 30, 2)
+        headers = np.stack(
+            [
+                ututils.build_dummy_headers(shape[2], {"EchoTime": 2}),
+                ututils.build_dummy_headers(shape[2], {"EchoTime": 10}),
+            ],
+            axis=-1,
+        )
         vol = np.ones(shape)
         mv_a = MedicalVolume(vol, np.eye(4), headers=headers)
         mv_b = MedicalVolume(vol * 2, np.eye(4), headers=headers)
@@ -404,18 +425,27 @@ class TestMedicalVolume(unittest.TestCase):
         with self.assertRaises(ValueError):
             mv2 = np.expand_dims(mv_a, 0)
 
-        # Round
-        shape = (10, 20, 30, 2)
-        affine = np.concatenate([np.random.rand(3, 4), [[0, 0, 0, 1]]], axis=0)
-        mv = MedicalVolume(np.random.rand(*shape), affine, headers=headers)
+        with self.assertRaises(ValueError):
+            np.concatenate([mv_a, mv_b], axis=0)
 
-        mv2 = mv.round()
-        assert np.allclose(mv2.affine, affine)
-        assert np.unique(mv2.volume).tolist() == [0, 1]
+        mv2 = np.concatenate([mv_a, mv_b], axis=-1)
+        assert np.all(mv2.volume == np.concatenate([mv_a.volume, mv_b.volume], axis=-1))
+        assert mv2.headers().shape == (1, 1, 30, 4)
 
-        mv2 = mv.round(affine=True)
-        assert np.unique(mv2.affine).tolist() == [0, 1]
-        assert np.unique(mv2.volume).tolist() == [0, 1]
+        affine = np.eye(4)
+        affine[:3, 3] += [10, 0, 0]
+        mv_d = MedicalVolume(vol * 2, affine, headers=headers)
+        with self.assertWarns(UserWarning):
+            mv2 = np.concatenate([mv_a, mv_d], axis=0)
+        assert mv2.headers() is None
+        assert np.all(mv2.volume == np.concatenate([mv_a.volume, mv_d.volume], axis=0))
+
+        affine = np.eye(4)
+        affine[:3, 3] += [0, 0, 30]
+        mv_d = MedicalVolume(vol * 2, affine, headers=headers)
+        mv2 = np.concatenate([mv_a, mv_d], axis=-2)
+        assert np.all(mv2.volume == np.concatenate([mv_a.volume, mv_d.volume], axis=-2))
+        assert mv2.headers().shape == (1, 1, 60, 2)
 
     def test_hdf5(self):
         shape = (10, 20, 30)
