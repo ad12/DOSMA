@@ -425,6 +425,18 @@ class TestMedicalVolume(unittest.TestCase):
         with self.assertRaises(ValueError):
             mv2 = np.expand_dims(mv_a, 0)
 
+        mv_d = mv_a[..., :1]
+        assert mv_d.shape == (10, 20, 30, 1)
+        assert np.squeeze(mv_d).shape == (10, 20, 30)
+        assert np.squeeze(mv_d, axis=-1).shape == (10, 20, 30)
+        assert np.squeeze(mv_d, axis=3).shape == (10, 20, 30)
+        assert np.squeeze(mv_d, axis=3).shape == (10, 20, 30)
+
+        mv_d = mv_a[:1, :, :, :1]
+        assert np.squeeze(mv_d).shape == (1, 20, 30)
+        with self.assertRaises(ValueError):
+            np.squeeze(mv_d, axis=0)
+
         with self.assertRaises(ValueError):
             np.concatenate([mv_a, mv_b], axis=0)
 

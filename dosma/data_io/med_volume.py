@@ -1226,6 +1226,39 @@ def expand_dims(x, axis: Union[int, Sequence[int]]):
     return x._partial_clone(volume=vol, headers=headers)
 
 
+@implements(np.squeeze)
+def squeeze(x, axis: Union[int, Sequence[int]] = None):
+    """Squeeze non-spatial dimensions.
+
+    Args:
+        x (MedicalVolume): A medical image.
+        axis (``int(s)``): Axis/axes to squeeze. Defaults to non-spatial axes.
+
+    Returns:
+        MedicalVolume: The medical image with squeezed dimensions.
+
+    Raises:
+        ValueError: If axis is not None, and an axis being squeezed is not of length 1
+            or axis is not None and is squeezing spatial dimension (i.e. axis=0, 1, or 2).
+    """
+    if axis is not None:
+        try:
+            axis = _to_positive_axis(axis, len(x.shape), grow=False, invalid_axis="spatial")
+        except ValueError:
+            raise ValueError(f"Cannot squeeze across spatial dimensions (axis={axis})")
+    else:
+        axis = tuple(i for i in range(3, len(x.shape)) if x.shape[i] == 1)
+        if not axis:
+            return x
+
+    vol = np.squeeze(x.volume, axis=axis)
+    headers = x.headers()
+    if headers is not None:
+        headers = np.squeeze(headers, axis=axis)
+
+    return x._partial_clone(volume=vol, headers=headers)
+
+
 @implements(np.where)
 def where(*args, **kwargs):
     return np.where(np.asarray(args[0]), *args[1:], **kwargs)
