@@ -29,7 +29,7 @@ def get_version():
 # -- Project information -----------------------------------------------------
 
 project = "dosma"
-copyright = "2019-2020, Arjun Desai"
+copyright = "2019-2021, Arjun Desai"
 author = "Arjun Desai"
 
 # The full version, including alpha/beta/rc tags
