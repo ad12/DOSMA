@@ -93,7 +93,11 @@ class TestMedicalVolume(unittest.TestCase):
 
         volume = np.random.rand(10, 20, 30, 40)
         headers = ututils.build_dummy_headers(volume.shape[2:], {field: field_val})
+        mv_no_headers = MedicalVolume(volume, self._AFFINE)
         mv = MedicalVolume(volume, self._AFFINE, headers=headers)
+
+        assert mv_no_headers.headers() is None
+        assert mv_no_headers.headers(flatten=True) is None
 
         echo_time = mv.get_metadata(field)
         assert echo_time == field_val
@@ -409,7 +413,7 @@ class TestMedicalVolume(unittest.TestCase):
 
         mv2 = np.stack([mv_a, mv_b, mv_c], axis=-1)
         assert mv2.shape == (10, 20, 30, 2, 3)
-        assert mv2.headers is not None
+        assert mv2.headers() is not None
         assert np.all(mv2.volume == np.stack([mv_a.volume, mv_b.volume, mv_c.volume], axis=-1))
         mv2 = np.stack([mv_a, mv_b, mv_c], axis=-2)
         assert mv2.shape == (10, 20, 30, 3, 2)
