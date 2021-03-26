@@ -29,6 +29,16 @@ We can also load specific files in the image series:
 >>> with DicomReader() as dr:
 >>>   volumes = dr.load(["file1", "file2", ...], group_by="EchoNumbers")
 
+DICOM image data often has associated metadata. :class:`MedicalVolume` makes it easy to get
+and set metadata:
+
+>>> volume = volumes[0]  # first echo time
+>>> volume.get_metadata("EchoTime", float)
+10.0
+>>> volume.set_metadata("EchoTime", 20)
+>>> volume.get_metadata("EchoTime", float)
+20.0
+
 Similarly, to load a NIfTI volume, we use the :class:`NiftiReader` class:
 
 >>> from dosma.data_io import NiftiReader
@@ -79,3 +89,19 @@ For example, the first line will throw an error; the second will not:
 >>> mv = mv[2]
 IndexError: Scalar indices disallowed in spatial dimensions; Use `[x]` or `x:x+1`
 >>> mv[2:3]
+
+
+NumPy Interoperability
+========================================
+
+In addition to standard shape-preserving universal functions (ufuncs) described above,
+:class:`MedicalVolume` also support a subset of other numpy functions that, like the ufuncs,
+operate on the pixel data in the medical volume:
+
+- Boolean Functions: :func:`numpy.all`, :func:`numpy.any`, :func:`numpy.where`
+- Statistics functions: :func:`numpy.mean`, :func:`numpy.sum`, :func:`numpy.std`, :func:`numpy.amin`, :func:`numpy.amax`, :func:`numpy.argmax`, :func:`numpy.argmin`
+- Rounding functions: :func:`numpy.round`, :func:`numpy.around`, :func:`numpy.round_`
+- NaN functions: :func:`numpy.nanmean`, :func:`numpy.nansum`, :func:`numpy.nanstd`, :func:`numpy.nan_to_num`
+
+For example, ``np.all(mv)`` is equivalent to ``np.all(mv.volume)``, except the former will return a :class:`MedicalVolume` object.
+Note, headers are not deep copied.

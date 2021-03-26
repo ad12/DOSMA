@@ -82,5 +82,15 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
     ],
-    extras_require={"dev": ["flake8", "isort", "black==19.3b0", "sphinx", "sphinxcontrib.bibtex"]},
+    extras_require={
+        "dev": [
+            "coverage",
+            "flake8",
+            "isort",
+            "black==19.3b0",
+            "simpleitk",
+            "sphinx",
+            "sphinxcontrib.bibtex",
+        ]
+    },
 )

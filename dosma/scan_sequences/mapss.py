@@ -130,7 +130,7 @@ class Mapss(ScanSequence):
             intrareg_vol = MedicalVolume(
                 volume=intrareg_vol.volume,
                 affine=volumes[echo_index].affine,
-                headers=deepcopy(volumes[echo_index].headers),
+                headers=deepcopy(volumes[echo_index].headers()),
             )
 
             intraregistered_volumes.append(intrareg_vol)

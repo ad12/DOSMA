@@ -1,10 +1,14 @@
+import datetime
 import os
 import re
 import shutil
+import tempfile
 import unittest
 import uuid
 
 import natsort
+import numpy as np
+from pydicom.dataset import FileDataset, FileMetaDataset
 
 from dosma.cli import SUPPORTED_SCAN_TYPES, parse_args
 from dosma.data_io.format_io import ImageDataFormat
@@ -28,6 +32,26 @@ SCAN_DIRPATHS = [os.path.join(UNITTEST_SCANDATA_PATH, x) for x in SCANS]
 
 # Decimal precision for analysis (quantitative values, etc)
 DECIMAL_PRECISION = 1  # (+/- 0.1ms)
+
+
+def build_dummy_headers(shape, fields=None):
+    """Build dummy ``pydicom.FileDataset`` headers.
+
+    Note these headers are not dicom compliant and should not be used to write out DICOM
+    files.
+
+    Args:
+        shape (int or tuple[int]): Shape of headers array.
+        fields (Dict): Fields and corresponding values to use to populate the header.
+
+    Returns:
+        ndarray: Headers
+    """
+    if isinstance(shape, int):
+        shape = (shape,)
+    num_headers = np.prod(shape)
+    headers = np.asarray([_build_dummy_pydicom_header(fields) for _ in range(num_headers)])
+    return headers.reshape(shape)
 
 
 def get_scan_dirpath(scan: str):
@@ -74,12 +98,53 @@ def requires_packages(*packages):
 
     def _decorator(func):
         def _wrapper(*args, **kwargs):
-            if all([env._package_available(x) for x in packages]):
+            if all([env.package_available(x) for x in packages]):
                 func(*args, **kwargs)
 
         return _wrapper
 
     return _decorator
+
+
+def _build_dummy_pydicom_header(fields=None):
+    """Builds dummy pydicom-based header.
+
+    Note these headers are not dicom compliant and should not be used to write out DICOM
+    files.
+
+    Adapted from
+    https://pydicom.github.io/pydicom/dev/auto_examples/input_output/plot_write_dicom.html
+    """
+    suffix = ".dcm"
+    filename_little_endian = tempfile.NamedTemporaryFile(suffix=suffix).name
+
+    file_meta = FileMetaDataset()
+    file_meta.MediaStorageSOPClassUID = "1.2.840.10008.5.1.4.1.1.2"
+    file_meta.MediaStorageSOPInstanceUID = "1.2.3"
+    file_meta.ImplementationClassUID = "1.2.3.4"
+
+    # Create the FileDataset instance (initially no data elements, but file_meta supplied).
+    ds = FileDataset(filename_little_endian, {}, file_meta=file_meta, preamble=b"\0" * 128)
+
+    # Add the data elements -- not trying to set all required here. Check DICOM standard.
+    ds.PatientName = "Test^Firstname"
+    ds.PatientID = "123456"
+
+    if fields is not None:
+        for k, v in fields.items():
+            setattr(ds, k, v)
+
+    # Set the transfer syntax
+    ds.is_little_endian = True
+    ds.is_implicit_VR = True
+
+    # Set creation date/time
+    dt = datetime.datetime.now()
+    ds.ContentDate = dt.strftime("%Y%m%d")
+    timeStr = dt.strftime("%H%M%S.%f")  # long format with micro seconds
+    ds.ContentTime = timeStr
+
+    return ds
 
 
 class ScanTest(unittest.TestCase):

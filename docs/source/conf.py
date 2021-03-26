@@ -29,7 +29,7 @@ def get_version():
 # -- Project information -----------------------------------------------------
 
 project = "dosma"
-copyright = "2019-2020, Arjun Desai"
+copyright = "2019-2021, Arjun Desai"
 author = "Arjun Desai"
 
 # The full version, including alpha/beta/rc tags
@@ -90,6 +90,9 @@ htmlhelp_basename = "DOSMAdoc"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+
+# Intersphinx mappings
+intersphinx_mapping = {"numpy": ("https://numpy.org/doc/stable/", None)}
 
 # Documentation to include
 todo_include_todos = True

@@ -195,7 +195,7 @@ class NonTargetSequence(ScanSequence):
         echo_times = []
 
         for i in range(num_echo_times):
-            echo_time = float(volumes[i].headers[0].EchoTime)
+            echo_time = float(volumes[i].get_metadata("EchoTime"))
             echo_times.append((i, echo_time))
 
         # Sort list of tuples (ind, echo_time) by echo_time
