@@ -89,3 +89,19 @@ For example, the first line will throw an error; the second will not:
 >>> mv = mv[2]
 IndexError: Scalar indices disallowed in spatial dimensions; Use `[x]` or `x:x+1`
 >>> mv[2:3]
+
+
+NumPy Interoperability
+========================================
+
+In addition to standard shape-preserving universal functions (ufuncs) described above,
+:class:`MedicalVolume` also support a subset of other numpy functions that, like the ufuncs,
+operate on the pixel data in the medical volume:
+
+- Boolean Functions: :func:`numpy.all`, :func:`numpy.any`, :func:`numpy.where`
+- Statistics functions: :func:`numpy.mean`, :func:`numpy.sum`, :func:`numpy.std`, :func:`numpy.amin`, :func:`numpy.amax`, :func:`numpy.argmax`, :func:`numpy.argmin`
+- Rounding functions: :func:`numpy.round`, :func:`numpy.around`, :func:`numpy.round_`
+- NaN functions: :func:`numpy.nanmean`, :func:`numpy.nansum`, :func:`numpy.nanstd`, :func:`numpy.nan_to_num`
+
+For example, ``np.all(mv)`` is equivalent to ``np.all(mv.volume)``, except the former will return a :class:`MedicalVolume` object.
+Note, headers are not deep copied.

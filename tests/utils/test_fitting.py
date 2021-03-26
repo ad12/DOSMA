@@ -118,7 +118,7 @@ class TestCurveFitter(unittest.TestCase):
         popt, _ = fitter.fit(x, y)
         a_hat, b_hat = popt[..., 0], popt[..., 1]
         assert np.allclose(a_hat[:5].volume, 1.0) and np.all(np.isnan(a_hat[5:].volume))
-        assert np.allclose(b_hat, b)
+        assert np.allclose(b_hat.volume, b)
 
     def test_out_ufuncs(self):
         shape = (10, 10, 20)
@@ -132,19 +132,19 @@ class TestCurveFitter(unittest.TestCase):
         popt, _ = fitter.fit(x, y)
         a_hat, b_hat = popt[..., 0], popt[..., 1]
         assert np.allclose(a_hat.volume, ufunc(a))
-        assert np.allclose(b_hat, ufunc(b))
+        assert np.allclose(b_hat.volume, ufunc(b))
 
         fitter = CurveFitter(monoexponential, out_ufuncs=[None, ufunc])
         popt, _ = fitter.fit(x, y)
         a_hat, b_hat = popt[..., 0], popt[..., 1]
         assert np.allclose(a_hat.volume, a)
-        assert np.allclose(b_hat, ufunc(b))
+        assert np.allclose(b_hat.volume, ufunc(b))
 
         fitter = CurveFitter(monoexponential, out_ufuncs=[ufunc])
         popt, _ = fitter.fit(x, y)
         a_hat, b_hat = popt[..., 0], popt[..., 1]
         assert np.allclose(a_hat.volume, ufunc(a))
-        assert np.allclose(b_hat, b)
+        assert np.allclose(b_hat.volume, b)
 
     def test_nan_to_num(self):
         shape = (10, 10, 20)
@@ -179,7 +179,7 @@ class TestCurveFitter(unittest.TestCase):
         t_hat_cf = fitter.fit(x, y)[0][..., 1]
         t_hat_cf = np.round(t_hat_cf, decimals=8)
 
-        assert np.allclose(t_hat_mef.volume, t_hat_cf)
+        assert np.allclose(t_hat_mef.volume, t_hat_cf.volume)
 
 
 if __name__ == "__main__":

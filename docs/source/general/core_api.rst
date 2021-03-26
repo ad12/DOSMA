@@ -1,10 +1,12 @@
-.. _documentation:
+.. _core_api:
 
 Core API
 ================================================================================
 
 MedicalVolume
 ---------------------------
+.. _core_api_medicalvolume:
+
 .. autosummary::
    :toctree:
    :nosignatures:

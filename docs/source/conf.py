@@ -91,6 +91,9 @@ htmlhelp_basename = "DOSMAdoc"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
+# Intersphinx mappings
+intersphinx_mapping = {"numpy": ("https://numpy.org/doc/stable/", None)}
+
 # Documentation to include
 todo_include_todos = True
 napoleon_use_ivar = True
