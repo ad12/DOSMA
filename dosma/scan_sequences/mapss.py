@@ -55,12 +55,15 @@ class Mapss(ScanSequence):
     NAME = "mapss"
 
     def __init__(self, volumes: Sequence[MedicalVolume]):
+        if not isinstance(volumes, Sequence):
+            raise ValueError("`volumes` must be sequence of MedicalVolumes.")
+
         super().__init__(volumes)
         self.echo_times = None
         self.raw_volumes = None
 
         if self.ref_dicom is not None:
-            self.echo_times = [float(x.headers[0].EchoTime) for x in self.volumes]
+            self.echo_times = [x.get_metadata("EchoTime", float) for x in self.volumes]
             # TODO: Do not intraregister out of init.
             self.__intraregister__(self.volumes)
 

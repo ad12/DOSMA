@@ -89,6 +89,25 @@ class ScanSequence(ScanIOMixin):
         return True
 
     def get_metadata(self, key: Any, default=None):
+        """Get metadata for the scan.
+
+        The metadata is either stored in the ``self._metadata`` property
+        if it is not a part of the standard DICOM header or the reference
+        DICOM does not exist.
+
+        Args:
+            key (Any): The attribute to fetch.
+            default (Any, optional): The default value to return.
+                Set to ``False`` to raise an error when metadata is not found in
+                either the scan metadata or DICOM headers (if available).
+                Defaults to ``None``.
+
+        Returns:
+            Any: The value.
+
+        Raises:
+            ValueError: If ``default == False`` and metadata not found
+        """
         metadata = self._metadata.get(key, None)
         if metadata is None and self.ref_dicom is not None:
             metadata = self.ref_dicom[key].value if key in self.ref_dicom else None
@@ -111,9 +130,14 @@ class ScanSequence(ScanIOMixin):
 
     @property
     def ref_dicom(self):
-        """The reference dicom."""
+        """The reference dicom.
+
+        The reference dicom is defined as the first dicom of the first volume if
+        ``self.volumes`` is a sequence of volumes.
+        """
         vol = self.volumes[0] if isinstance(self.volumes, Sequence) else self.volumes
-        return vol.headers[0] if vol.headers is not None else None
+        headers = vol.headers(flatten=True)
+        return headers[0] if headers is not None else None
 
     def __add_tissue__(self, new_tissue: Tissue):
         """Add a tissue to the list of tissues associated with this scan.
