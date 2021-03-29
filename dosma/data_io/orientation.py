@@ -292,6 +292,8 @@ def to_affine(
 
         return input
 
+    if len(orientation) == 2:
+        orientation = _infer_orientation(orientation)
     __check_orientation__(orientation)
     spacing = _format_numbers(spacing, 1, "spacing", len(orientation))
     origin = _format_numbers(origin, 0, "origin", len(orientation))
@@ -310,3 +312,22 @@ def to_affine(
     affine[:3, 3] = np.asarray(origin)
 
     return affine
+
+
+def _infer_orientation(orientation):
+    """Infer 3-length orientation from 2-length orientation.
+
+    Args:
+        orientation: The incomplete orientation.
+    
+    Returns:
+        tuple[str, str, str]: Standard orientation.
+    """
+    idxs = set([__ORIENTATIONS_TO_AXIS_ID__[k] for k in orientation])
+    if len(orientation) != 2 or len(idxs) != 2:
+        raise ValueError(
+            "`orientation` must be an incomplete orientation that encodes orthogonal directions"
+        )
+
+    missing_ornt = [k for k, v in __ORIENTATIONS_TO_AXIS_ID__.items() if v not in idxs][0]
+    return tuple(orientation) + (missing_ornt,)

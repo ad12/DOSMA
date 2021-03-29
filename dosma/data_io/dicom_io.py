@@ -101,7 +101,12 @@ def LPSplus_to_RASplus(headers: List[pydicom.FileDataset]):
     Returns:
         np.ndarray: Affine matrix.
     """
-    im_dir = headers[0].ImageOrientationPatient
+    try:
+        im_dir = headers[0].ImageOrientationPatient
+    except AttributeError:
+        im_dir = _decode_inplane_direction(headers)
+        if im_dir is None:
+            raise RuntimeError("Could not determine in-plane directions from headers.")
     in_plane_pixel_spacing = headers[0].PixelSpacing
 
     orientation = np.zeros([3, 3])
@@ -128,16 +133,18 @@ def LPSplus_to_RASplus(headers: List[pydicom.FileDataset]):
             headers[0].ImagePositionPatient
         ).astype(np.float64)
     else:
+        slice_thickness = headers[0].get("SliceThickness", 1.)
         i_norm = 1 / np.linalg.norm(i_vec) * i_vec
         j_norm = 1 / np.linalg.norm(j_vec) * j_vec
         k_norm = np.cross(i_norm, j_norm)
-        k_vec = k_norm / np.linalg.norm(k_norm) * headers[0].SliceThickness
+        k_vec = k_norm / np.linalg.norm(k_norm) * slice_thickness
         if hasattr(headers[0], "SpacingBetweenSlices") and headers[0].SpacingBetweenSlices < 0:
             k_vec *= -1
     k_vec = np.round(k_vec, AFFINE_DECIMAL_PRECISION)
 
     orientation[:3, :3] = np.stack([j_vec, i_vec, k_vec], axis=1)
-    scanner_origin = np.array(headers[0].ImagePositionPatient).astype(np.float64)
+    scanner_origin = headers[0].get("ImagePositionPatient", np.zeros((3,)))
+    scanner_origin = np.asarray(scanner_origin).astype(np.float64)
     scanner_origin = np.round(scanner_origin, SCANNER_ORIGIN_DECIMAL_PRECISION)
 
     affine = np.zeros([4, 4])
@@ -421,6 +428,32 @@ class DicomWriter(DataWriter):
         else:
             for s in tqdm(range(num_slices), disable=not self.verbose):
                 _write_dicom_file(volume_arr[..., s], headers[s], filepaths[s])
+
+
+def _decode_inplane_direction(headers: Sequence[pydicom.FileDataset]):
+    """Helper function to decode in-plane direction from header(s).
+
+    Recall the direction in dicoms are in cartesian order ``(x,y)``,
+    but numpy/dosma are in matrix order ``(y,x)``. When adding new
+    methods, make sure to account for this.
+
+    Returns:
+        np.ndarray: 6-element LPS direction array where first 3 elements define
+            direction for x-direction (columns) and second 3 elements define
+            direction for y-direction (rows)
+    """
+    _patient_ornt_to_nib = {"H": "S", "F": "I"}
+
+    if len(headers) == 1 and hasattr(headers[0], "PatientOrientation"):
+        # Decoder: patient orientation.
+        # Patient orientation is only decoded along principal direction (e.g. "FR" -> "F").
+        ornt = [_patient_ornt_to_nib.get(k[:1], k) for k in headers[0].PatientOrientation]  # (x,y)
+        ornt = stdo.orientation_nib_to_standard(ornt)
+        affine = stdo.to_affine(ornt)
+        affine[:2, :] = -1 * affine[:2, :]
+        return np.concatenate([affine[:3, 0], affine[:3, 1]], axis=0)
+
+    return None
 
 
 def _format_volume_to_header(volume: MedicalVolume) -> MedicalVolume:
