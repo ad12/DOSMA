@@ -58,6 +58,10 @@ For details on how the affine matrix is used for reformatting see
 :class:`dosma.data_io.MedicalVolume`.
 
 """
+from typing import Sequence, Union
+
+import nibabel.orientations as nibo
+import numpy as np
 
 __all__ = [
     "get_transpose_inds",
@@ -231,3 +235,99 @@ def orientation_standard_to_nib(orientation):
     for symb in orientation:
         nib_orientation.append(symb[1])
     return tuple(nib_orientation)
+
+
+def to_affine(
+    orientation,
+    spacing: Sequence[Union[int, float]] = None,
+    origin: Sequence[Union[int, float]] = None,
+):
+    """Convert orientation, spacing, and origin data into affine matrix.
+
+    Args:
+        orientation (Sequence[str]): Image orientation in the standard orientation format
+            (e.g. ``("LR", "AP", "SI")``).
+        spacing (int(s) | float(s)): Number(s) corresponding to pixel spacing of each direction.
+            If a single value, same pixel spacing is used for all directions.
+            If sequence is less than length of ``orientation``, remaining direction have unit
+            spacing (i.e. ``1``). Defaults to unit spacing ``(1, 1, 1)``
+        origin (int(s) | float(s)): The ``(x0, y0, z0)`` origin for the scan.
+            If a single value, same origin is used for all directions.
+            If sequence is less than length of ``orientation``, remaining direction have standard
+            origin (i.e. ``0``). Defaults to ``(0, 0, 0)``
+
+    Returns:
+        ndarray: A 4x4 ndarray representing the affine matrix.
+
+    Examples:
+        >>> to_affine(("SI", "AP", "RL"), spacing=(0.5, 0.5, 1.5), origin=(10, 20, 0))
+        array([[-0. , -0. , -1.5,  10. ],
+               [-0. , -0.5, -0. ,  20. ],
+               [-0.5, -0. , -0. ,  30. ],
+               [ 0. ,  0. ,  0. ,   1. ]])
+
+    Note:
+        This method assumes all direction follow the standard principal directions in the normative
+        patient orientation. Moving along one direction of the array only moves along one fo the
+        normative directions.
+    """
+
+    def _format_numbers(input, default_val, name, expected_num):
+        """Formats (sequence of) numbers (spacing, origin) into standard 3-length tuple."""
+        if input is None:
+            return (default_val,) * expected_num
+        if isinstance(input, (int, float)):
+            return (input,) * expected_num
+
+        if not isinstance(input, (np.ndarray, Sequence)) or len(input) > expected_num:
+            raise ValueError(
+                f"`{name}` must be a real number or sequence (length<={expected_num}) "
+                f"of real numbers. Got {input}"
+            )
+        input = tuple(input)
+
+        if len(input) < expected_num:
+            input += (default_val,) * (expected_num - len(input))
+        assert len(input) == expected_num
+
+        return input
+
+    if len(orientation) == 2:
+        orientation = _infer_orientation(orientation)
+    __check_orientation__(orientation)
+    spacing = _format_numbers(spacing, 1, "spacing", len(orientation))
+    origin = _format_numbers(origin, 0, "origin", len(orientation))
+
+    affine = np.eye(4)
+    start_ornt = nibo.io_orientation(affine)
+    end_ornt = nibo.axcodes2ornt(orientation_standard_to_nib(orientation))
+    ornt = nibo.ornt_transform(start_ornt, end_ornt)
+
+    transpose_idxs = ornt[:, 0].astype(np.int)
+    flip_idxs = ornt[:, 1]
+
+    affine[:3] = affine[:3][transpose_idxs]
+    affine[:3] *= flip_idxs[..., np.newaxis]
+    affine[:3, :3] *= np.asarray(spacing)
+    affine[:3, 3] = np.asarray(origin)
+
+    return affine
+
+
+def _infer_orientation(orientation):
+    """Infer 3-length orientation from 2-length orientation.
+
+    Args:
+        orientation: The incomplete orientation.
+
+    Returns:
+        tuple[str, str, str]: Standard orientation.
+    """
+    idxs = set([__ORIENTATIONS_TO_AXIS_ID__[k] for k in orientation])
+    if len(orientation) != 2 or len(idxs) != 2:
+        raise ValueError(
+            "`orientation` must be an incomplete orientation that encodes orthogonal directions"
+        )
+
+    missing_ornt = [k for k, v in __ORIENTATIONS_TO_AXIS_ID__.items() if v not in idxs][0]
+    return tuple(orientation) + (missing_ornt,)

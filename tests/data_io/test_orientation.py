@@ -5,6 +5,7 @@ import numpy as np
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.data_io.nifti_io import NiftiReader, NiftiWriter
+from dosma.data_io.orientation import to_affine
 
 from .. import util as ututils
 
@@ -113,6 +114,78 @@ class TestOrientation(unittest.TestCase):
                     orientations.append(tuple(o_test))
 
             self.check_orientations(e1, orientations)
+
+
+class TestToAffine(unittest.TestCase):
+    """Test cases for dosma.data_io.orientation.to_affine."""
+
+    def test_basic(self):
+        """Basic transposes and flips in RAS+ coordinate system."""
+        orientations = [
+            ("LR", "PA", "IS"),  # standard RAS+
+            ("RL", "AP", "SI"),  # flipped
+            ("IS", "LR", "PA"),  # transposed
+            ("AP", "SI", "RL"),  # transposed + flipped
+        ]
+
+        for ornt in orientations:
+            affine = to_affine(ornt)
+            mv = MedicalVolume(np.ones((10, 20, 30)), affine)
+            assert mv.orientation == ornt
+            assert np.all(np.asarray(mv.pixel_spacing) == 1)
+            assert np.all(np.asarray(mv.scanner_origin) == 0)
+
+    def test_spacing(self):
+        """Test affine matrix with pixel spacing."""
+        ornt = ("AP", "SI", "RL")
+
+        spacing = np.random.rand(3) + 0.1  # avoid pixel spacing of 0
+        affine = to_affine(ornt, spacing)
+        mv = MedicalVolume(np.ones((10, 20, 30)), affine)
+        assert mv.orientation == ornt
+        assert np.all(np.asarray(mv.pixel_spacing) == spacing)
+        assert np.all(np.asarray(mv.scanner_origin) == 0)
+
+        spacing = np.random.rand(1) + 0.1  # avoid pixel spacing of 0
+        expected_spacing = np.asarray(list(spacing) + [1.0, 1.0])
+        affine = to_affine(ornt, spacing)
+        mv = MedicalVolume(np.ones((10, 20, 30)), affine)
+        assert mv.orientation == ornt
+        assert np.all(np.asarray(mv.pixel_spacing) == expected_spacing)
+        assert np.all(np.asarray(mv.scanner_origin) == 0)
+
+    def test_origin(self):
+        """Test affine matrix with scanner origin."""
+        ornt = ("AP", "SI", "RL")
+
+        origin = np.random.rand(3)
+        affine = to_affine(ornt, spacing=None, origin=origin)
+        mv = MedicalVolume(np.ones((10, 20, 30)), affine)
+        assert mv.orientation == ornt
+        assert np.all(np.asarray(mv.pixel_spacing) == 1)
+        assert np.all(np.asarray(mv.scanner_origin) == origin)
+
+        origin = np.random.rand(1)
+        expected_origin = np.asarray(list(origin) + [0.0, 0.0])
+        affine = to_affine(ornt, spacing=None, origin=origin)
+        mv = MedicalVolume(np.ones((10, 20, 30)), affine)
+        assert mv.orientation == ornt
+        assert np.all(np.asarray(mv.pixel_spacing) == 1)
+        assert np.all(np.asarray(mv.scanner_origin) == expected_origin)
+
+    def test_complex(self):
+        ornt = ("AP", "SI", "RL")
+        spacing = (0.5, 0.7)
+        origin = (100, -54)
+
+        expected_spacing = np.asarray(list(spacing) + [1.0])
+        expected_origin = np.asarray(list(origin) + [0.0])
+
+        affine = to_affine(ornt, spacing=spacing, origin=origin)
+        mv = MedicalVolume(np.ones((10, 20, 30)), affine)
+        assert mv.orientation == ornt
+        assert np.all(np.asarray(mv.pixel_spacing) == expected_spacing)
+        assert np.all(np.asarray(mv.scanner_origin) == expected_origin)
 
 
 if __name__ == "__main__":

@@ -499,8 +499,19 @@ class MedicalVolume(NDArrayOperatorsMixin):
         return img
 
     def headers(self, flatten=False):
-        """Returns headers"""
-        if flatten:
+        """Returns headers.
+
+        If headers exist, they are currently stored as an array of
+        pydicom dataset headers, though this is subject to change.
+
+        Args:
+            flatten (bool, optional): If ``True``, flattens header array
+                before returning.
+
+        Returns:
+            Optional[ndarray[pydicom.dataset.FileDataset]]: Array of headers (if they exist).
+        """
+        if flatten and self._headers is not None:
             return self._headers.flatten()
         return self._headers
 
