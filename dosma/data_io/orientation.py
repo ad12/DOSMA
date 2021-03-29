@@ -319,7 +319,7 @@ def _infer_orientation(orientation):
 
     Args:
         orientation: The incomplete orientation.
-    
+
     Returns:
         tuple[str, str, str]: Standard orientation.
     """

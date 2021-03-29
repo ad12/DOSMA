@@ -7,7 +7,7 @@ import unittest
 import numpy as np
 import pydicom
 
-from dosma.data_io.dicom_io import DicomReader, DicomWriter, LPSplus_to_RASplus
+from dosma.data_io.dicom_io import DicomReader, DicomWriter, to_RAS_affine
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.data_io.nifti_io import NiftiReader, NiftiWriter
@@ -404,11 +404,11 @@ class TestDicomIO(unittest.TestCase):
         header = ututils.build_dummy_headers(
             1, fields={"PatientOrientation": ["P", "F"], "PixelSpacing": [0.2, 0.5]}
         )
-        affine = LPSplus_to_RASplus(header)
+        affine = to_RAS_affine(header)
         mv = MedicalVolume(np.ones((10, 20, 30)), affine=affine)
         assert mv.orientation == ("SI", "AP", "LR")
-        assert mv.pixel_spacing == (0.5, 0.2, 1.)
-        assert mv.scanner_origin == (0., 0., 0.)
+        assert mv.pixel_spacing == (0.5, 0.2, 1.0)
+        assert mv.scanner_origin == (0.0, 0.0, 0.0)
 
 
 class TestInterIO(unittest.TestCase):
