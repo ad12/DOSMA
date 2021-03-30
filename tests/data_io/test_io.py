@@ -410,6 +410,16 @@ class TestDicomIO(unittest.TestCase):
         assert mv.pixel_spacing == (0.5, 0.2, 1.0)
         assert mv.scanner_origin == (0.0, 0.0, 0.0)
 
+    def test_load_sort_by(self):
+        """Test sorting by dicom attributes."""
+        dp = ututils.SCAN_DIRPATHS[0]
+        dicom_path = ututils.get_read_paths(dp, self.data_format)[0]
+        vols = self.dr.load(dicom_path, sort_by="InstanceNumber")
+
+        for v in vols:
+            instance_numbers = [h.InstanceNumber for h in v.headers(flatten=True)]
+            assert instance_numbers == sorted(instance_numbers)
+
 
 class TestInterIO(unittest.TestCase):
     nr = NiftiReader()
