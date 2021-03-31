@@ -198,7 +198,7 @@ class DicomReader(DataReader):
 
         if sort_by:
             try:
-                dicom_slices = sorted(
+                dicom_slices = natsorted(
                     dicom_slices,
                     key=lambda x: tuple(
                         _unpack_dicom_attr(x, attr, required=True) for attr in sort_by
