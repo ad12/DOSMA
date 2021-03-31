@@ -74,6 +74,9 @@ class CurveFitter:
             replace *posinf* and *neginf* values with very large positive and negative values,
             respectively. See ``numpy.nan_to_num`` for more details.
         num_workers (int, optional): Maximum number of workers to use for fitting.
+        chunksize (int, optional): Size of chunks sent to worker processes when
+            ``num_workers > 0``. When ``show_pbar=True``, this defaults to the standard
+            value in :func:`tqdm.concurrent.process_map`.
         verbose (bool, optional): If `True`, show progress bar. Note this can increase runtime
             slightly when using multiple workers.
         kwargs: Keyword args for :func:`dosma.utils.fits.curve_fit`.
@@ -109,6 +112,7 @@ class CurveFitter:
         r2_threshold: float = "preferences",
         nan_to_num: float = None,
         num_workers: int = 0,
+        chunksize: int = None,
         verbose: bool = False,
         **kwargs,
     ):
@@ -156,6 +160,7 @@ class CurveFitter:
         self.r2_threshold = r2_threshold
         self.nan_to_num = nan_to_num
         self.num_workers = num_workers
+        self.chunksize = chunksize
         self.verbose = verbose
         self.kwargs = kwargs
 
@@ -251,6 +256,7 @@ class CurveFitter:
             p0=self.p0,
             show_pbar=self.verbose,
             num_workers=self.num_workers,
+            chunksize=self.chunksize,
             **self.kwargs,
         )
 
@@ -286,6 +292,7 @@ class CurveFitter:
             "r2_threshold",
             "nan_to_num",
             "num_workers",
+            "chunksize",
             "verbose",
         ]
         vals = [f"func={self._func_name}"]
@@ -436,6 +443,7 @@ def curve_fit(
     eps=1e-8,
     show_pbar=False,
     num_workers=0,
+    chunksize: int = None,
     **kwargs,
 ):
     """Use non-linear least squares to fit a function ``func`` to data.
@@ -463,6 +471,10 @@ def curve_fit(
         eps (float, optional): Epsilon for computing r-squared.
         show_pbar (bool, optional): If `True`, show progress bar. Note this can increase runtime
             slightly when using multiple workers.
+        num_workers (int, optional): Maximum number of workers to use for fitting.
+        chunksize (int, optional): Size of chunks sent to worker processes when
+            ``num_workers > 0``. When ``show_pbar=True``, this defaults to the standard
+            value in :func:`tqdm.concurrent.process_map`.
         kwargs: Keyword args for `scipy.optimize.curve_fit`.
     """
     if (get_device(x) != cpu_device) or (get_device(y) != cpu_device):
@@ -509,10 +521,12 @@ def curve_fit(
             r_squared.append(r2_)
     else:
         if show_pbar:
-            data = process_map(fitter, y.T, max_workers=num_workers)
+            tqdm_kwargs = {"chunksize": chunksize}
+            tqdm_kwargs = {k: v for k, v in tqdm_kwargs.items() if v is not None}
+            data = process_map(fitter, y.T, max_workers=num_workers, **tqdm_kwargs)
         else:
             with mp.Pool(num_workers) as p:
-                data = p.map(fitter, y.T)
+                data = p.map(fitter, y.T, chunksize=chunksize)
         popts, r_squared = [x[0] for x in data], [x[1] for x in data]
 
     return np.stack(popts, axis=0), np.asarray(r_squared)

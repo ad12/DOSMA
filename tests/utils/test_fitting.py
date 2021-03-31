@@ -51,6 +51,11 @@ class TestCurveFit(unittest.TestCase):
         popt_mw, _ = curve_fit(monoexponential, x, ys, num_workers=util.num_workers())
         assert np.allclose(popt, popt_mw)
 
+        popt_mw, _ = curve_fit(
+            monoexponential, x, ys, num_workers=util.num_workers(), show_pbar=True
+        )
+        assert np.allclose(popt, popt_mw)
+
 
 class TestMonoExponentialFit(unittest.TestCase):
     def test_basic(self):
