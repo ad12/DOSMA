@@ -2,6 +2,7 @@ import inspect
 import multiprocessing as mp
 import warnings
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from functools import partial
 from typing import Callable, List, Sequence, Tuple, Union
 
@@ -263,7 +264,15 @@ class CurveFitter:
         if self.nan_to_num is not None:
             popt = np.nan_to_num(popt, nan=self.nan_to_num, copy=False)
 
-        popt = y[0]._partial_clone(volume=popt, headers=True)
+        # For parameters, headers have to be deep copied and expanded to follow
+        # broadcasting dimensions.
+        headers = y[0].headers()
+        if headers is not None:
+            headers = deepcopy(headers)
+            if popt.ndim > y[0].volume.ndim:
+                axis = tuple(-i for i in range(1, popt.ndim - y[0].volume.ndim + 1))
+                headers = np.expand_dims(headers, axis=axis)
+        popt = y[0]._partial_clone(volume=popt, headers=headers)
         rsquared_volume = y[0]._partial_clone(volume=r_squared, headers=True)
 
         return popt, rsquared_volume
