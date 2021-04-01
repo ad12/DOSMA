@@ -25,7 +25,7 @@ from typing import List, Sequence, Union
 import nibabel as nib
 import numpy as np
 import pydicom
-from natsort import natsorted
+from natsort import index_natsorted, natsorted
 from tqdm.auto import tqdm
 from tqdm.contrib.concurrent import process_map
 
@@ -246,7 +246,13 @@ class DicomWriter(DataWriter):
         self.num_workers = num_workers
         self.verbose = verbose
 
-    def save(self, volume: MedicalVolume, dir_path: str, fname_fmt: str = None):
+    def save(
+        self,
+        volume: MedicalVolume,
+        dir_path: str,
+        fname_fmt: str = None,
+        sort_by: Union[str, int, Sequence[Union[str, int]]] = None,
+    ):
         """Save `medical volume` in dicom format.
 
         This function assumes headers for the volume (``volume.headers()``) exist
@@ -267,6 +273,9 @@ class DicomWriter(DataWriter):
             fname_fmt (str, optional): Formatting string for filenames. Must contain ``%d``,
                 which correspopnds to slice number. Defaults to
                 ``"I%0{max(4, ceil(log10(num_slices)))}d.dcm"`` (e.g. ``"I0001.dcm"``).
+            sort_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+                to define ordering of slices prior to writing. If not specified, this ordering
+                will be defined by the order of blocks in ``volume``.
 
         Raises:
             ValueError: If `im` does not have initialized headers. Or if `im` was flipped across
@@ -276,6 +285,8 @@ class DicomWriter(DataWriter):
         headers = volume.headers()
         if headers is None:
             raise ValueError("MedicalVolume headers must be initialized to save as a dicom")
+
+        sort_by = _wrap_as_tuple(sort_by, default=())
 
         # Reformat to put headers in last dimensions.
         single_dim = []
@@ -317,6 +328,16 @@ class DicomWriter(DataWriter):
         ), "Dimension mismatch - {:d} slices but {:d} headers".format(
             volume_arr.shape[-1], len(headers)
         )
+
+        if sort_by:
+            idxs = np.asarray(
+                index_natsorted(
+                    headers,
+                    key=lambda h: tuple(_unpack_dicom_attr(h, k, required=True) for k in sort_by),
+                )
+            )
+            headers = headers[idxs]
+            volume_arr = volume_arr[..., idxs]
 
         # Check if dir_path exists.
         os.makedirs(dir_path, exist_ok=True)
