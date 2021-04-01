@@ -440,6 +440,19 @@ class TestDicomIO(unittest.TestCase):
         assert e1.is_identical(vols[0])
         assert e2.is_identical(vols[1])
 
+    def test_load_no_group_by(self):
+        """Test reading dicoms without group_by."""
+        dp = ututils.get_scan_dirpath("qdess")
+        # Echo 1 only
+        fp = ututils.get_read_paths(dp, self.data_format)[0]
+
+        dicom_path = ututils.get_dicoms_path(dp)
+        e1_expected = self.dr.load(dicom_path)[0]
+
+        e1 = self.dr.load(fp, group_by=None)[0]
+
+        assert e1.is_identical(e1_expected)
+
 
 class TestInterIO(unittest.TestCase):
     nr = NiftiReader()

@@ -142,20 +142,11 @@ class DicomReader(DataReader):
             FileNotFoundError: If no valid dicom files found.
 
         Note:
-            This function sorts files using natsort, an intelligent sorting tool.
-            Please verify dicoms are labeled in a sequenced manner (e.g.: dicom1,
-            dicom2, dicom3,...).
-
-        Note:
-            Currently, ``group_by`` must be specified for all dicom loading.
-            This may be changed in future version.
+            Not setting the ``group_by`` argument could result in ill-formatted volumes.
+            For best performance, specify ``group_by`` based on the attribute(s) differentiating
+            different volumes in the scan.
         """
-        if not group_by:
-            raise ValueError(
-                "`group_by` must be specified, even if there are not multiple "
-                "volumes encoded in dicoms"
-            )
-        group_by = _wrap_as_tuple(group_by)
+        group_by = _wrap_as_tuple(group_by, default=())
         sort_by = _wrap_as_tuple(sort_by, default=())
 
         if isinstance(path, str):
