@@ -22,6 +22,24 @@ def _generate_monoexp_data(shape=None, x=None, a=1.0, b=None):
     return x, y, b
 
 
+def _linear(x, a):
+    return a * x
+
+
+def _generate_linear_data(shape=None, x=None, a=None):
+    """Generate sample linear data.
+    ``a`` is randomly generated in interval [0.1, 1.1).
+    """
+    if a is None:
+        a = np.random.rand(*shape) + 0.1
+    else:
+        shape = a.shape
+    if x is None:
+        x = np.asarray([0.5, 1.0, 2.0, 4.0])
+    y = [MedicalVolume(_linear(t, a), affine=np.eye(4)) for t in x]
+    return x, y, a
+
+
 class TestCurveFit(unittest.TestCase):
     def test_multiple_workers(self):
         x = np.asarray([1, 2, 3, 4])
@@ -31,6 +49,11 @@ class TestCurveFit(unittest.TestCase):
         )
         popt, _ = curve_fit(monoexponential, x, ys)
         popt_mw, _ = curve_fit(monoexponential, x, ys, num_workers=util.num_workers())
+        assert np.allclose(popt, popt_mw)
+
+        popt_mw, _ = curve_fit(
+            monoexponential, x, ys, num_workers=util.num_workers(), show_pbar=True
+        )
         assert np.allclose(popt, popt_mw)
 
 
@@ -180,6 +203,34 @@ class TestCurveFitter(unittest.TestCase):
         t_hat_cf = np.round(t_hat_cf, decimals=8)
 
         assert np.allclose(t_hat_mef.volume, t_hat_cf.volume)
+
+    def test_headers(self):
+        """Test curve fitter does not fail with volumes with headers."""
+        x, y, b = _generate_monoexp_data((10, 10, 20, 4))
+        for idx, _y in enumerate(y):
+            _y._headers = util.build_dummy_headers(
+                (1, 1) + _y.shape[2:], fields={"EchoNumbers": idx}
+            )
+
+        fitter = CurveFitter(monoexponential)
+        popt, _ = fitter.fit(x, y)
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+
+        assert np.allclose(a_hat.volume, 1.0)
+        assert np.allclose(b_hat.volume, b)
+
+        # Test header with single parameter to fit
+        x, y, a = _generate_linear_data((10, 10, 20, 4))
+        for idx, _y in enumerate(y):
+            _y._headers = util.build_dummy_headers(
+                (1, 1) + _y.shape[2:], fields={"EchoNumbers": idx}
+            )
+
+        fitter = CurveFitter(_linear)
+        popt, _ = fitter.fit(x, y)
+        a_hat = popt[..., 0]
+
+        assert np.allclose(a_hat.volume, a)
 
 
 if __name__ == "__main__":
