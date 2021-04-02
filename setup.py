@@ -74,6 +74,7 @@ setup(
         "openpyxl",
         "Pmw",
         "PyYAML",
+        "tabulate",
         "tqdm>=4.42.0",
     ],
     license="GNU",
