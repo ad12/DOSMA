@@ -590,6 +590,20 @@ class MedicalVolume(NDArrayOperatorsMixin):
         return mean_np(self, axis=axis, dtype=dtype, keepdims=keepdims, where=where)
 
     @property
+    def A(self):
+        """The pixel array.
+
+        Same as ``self.volume``.
+
+        Examples:
+            >>> mv = MedicalVolume([[[1,2],[3,4]]], np.eye(4))
+            >>> mv.A
+            array([[[1, 2],
+                    [3, 4]]])
+        """
+        return self.volume
+
+    @property
     def volume(self):
         """ndarray: 3D ndarray representing volume values."""
         return self._volume
