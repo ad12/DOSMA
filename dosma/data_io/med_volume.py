@@ -1100,6 +1100,36 @@ def around(x, decimals=0, affine=False):
     return x._partial_clone(volume=np.around(x.volume, decimals=decimals), affine=affine)
 
 
+@implements(np.clip)
+def clip(x, x_min, x_max, **kwargs):
+    """Clip the values in the array.
+
+    Same as applying :func:`np.clip` on ``x.volume``.
+    Only one of ``x_min`` or ``x_max`` can be ``None``.
+
+    Args:
+        x (MedicalVolume): Medical image to clip.
+        x_min (array-like or ``MedicalVolume``): Minimum value.
+            If ``None``, clipping is not performed on this edge.
+        x_max (array-like or ``MedicalVolume``): Maximum value.
+            If ``None``, clipping is not performed on this edge.
+        kwargs: Optional keyword arguments, see :func:`np.clip`.
+
+    Returns:
+        MedicalVolume: The clipped medical image.
+
+    Note:
+        The ``out`` positional argument is not currently supported.
+    """
+    if isinstance(x_min, MedicalVolume):
+        x_min = x_min.A
+    if isinstance(x_max, MedicalVolume):
+        x_max = x_max.A
+
+    arr = np.clip(x.A, x_min, x_max, **kwargs)
+    return x._partial_clone(volume=arr)
+
+
 @implements(np.stack)
 def stack(xs, axis: int = -1):
     """Stack medical images across non-spatial dimensions.
