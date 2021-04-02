@@ -6,6 +6,8 @@ from tkinter import IntVar, Radiobutton, filedialog, messagebox, ttk
 
 import numpy as np
 import Pmw
+from skimage.color import label2rgb
+from skimage.measure import label
 
 from dosma.cli import SUPPORTED_QUANTITATIVE_VALUES, SUPPORTED_SCAN_TYPES, parse_args
 from dosma.data_io import format_io_utils as fio_utils
@@ -19,8 +21,6 @@ from dosma.msk import knee
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from skimage.color import label2rgb
-from skimage.measure import label
 
 matplotlib.use("TkAgg")
 LARGE_FONT = ("Verdana", 12)

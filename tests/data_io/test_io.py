@@ -410,6 +410,49 @@ class TestDicomIO(unittest.TestCase):
         assert mv.pixel_spacing == (0.5, 0.2, 1.0)
         assert mv.scanner_origin == (0.0, 0.0, 0.0)
 
+    def test_load_sort_by(self):
+        """Test sorting by dicom attributes."""
+        dp = ututils.SCAN_DIRPATHS[0]
+        dicom_path = ututils.get_dicoms_path(dp)
+        vols = self.dr.load(dicom_path, sort_by="InstanceNumber")
+
+        for v in vols:
+            instance_numbers = [h.InstanceNumber for h in v.headers(flatten=True)]
+            assert instance_numbers == sorted(instance_numbers)
+
+    def test_write_sort_by(self):
+        """Test sorting by dicom attributes before writing."""
+        dp = ututils.get_scan_dirpath("qdess")
+        dicom_path = ututils.get_dicoms_path(dp)
+        vols = self.dr.load(dicom_path)
+        vol = np.stack(vols)
+
+        write_path = os.path.join(ututils.get_write_path(dp, self.data_format), "out-multi")
+        self.dw.save(vol, write_path, sort_by="InstanceNumber")
+
+        files = [os.path.join(write_path, x) for x in sorted(os.listdir(write_path))]
+        e1_files, e2_files = files[::2], files[1::2]
+
+        e1_vols, e2_vols = self.dr.load(e1_files), self.dr.load(e2_files)
+        assert len(e1_vols) == len(e2_vols) == 1
+        e1, e2 = e1_vols[0], e2_vols[0]
+
+        assert e1.is_identical(vols[0])
+        assert e2.is_identical(vols[1])
+
+    def test_load_no_group_by(self):
+        """Test reading dicoms without group_by."""
+        dp = ututils.get_scan_dirpath("qdess")
+        # Echo 1 only
+        fp = ututils.get_read_paths(dp, self.data_format)[0]
+
+        dicom_path = ututils.get_dicoms_path(dp)
+        e1_expected = self.dr.load(dicom_path)[0]
+
+        e1 = self.dr.load(fp, group_by=None)[0]
+
+        assert e1.is_identical(e1_expected)
+
 
 class TestInterIO(unittest.TestCase):
     nr = NiftiReader()

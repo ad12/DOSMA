@@ -18,13 +18,14 @@ import functools
 import itertools
 import multiprocessing as mp
 import os
+import re
 from math import ceil, log10
 from typing import List, Sequence, Union
 
 import nibabel as nib
 import numpy as np
 import pydicom
-from natsort import natsorted
+from natsort import index_natsorted, natsorted
 from tqdm.auto import tqdm
 from tqdm.contrib.concurrent import process_map
 
@@ -52,25 +53,85 @@ class DicomReader(DataReader):
         self.num_workers = num_workers
         self.verbose = verbose
 
+    def get_files(
+        self,
+        path,
+        include: Union[str, Sequence[str]] = None,
+        exclude: Union[str, Sequence[str]] = None,
+        ignore_ext: bool = False,
+        ignore_hidden: bool = True,
+    ):
+        """Get dicom files from directory.
+
+        Args:
+            path (str): Directory with dicom file(s).
+            include (str(s), optional): Regex pattern(s) of files to include.
+                Pattern matching will only be applied to the base file name.
+                Used with :func:`re.match`.
+            exclude (str(s), optional): Regex pattern(s) of files to exclude.
+                Pattern matching will only be applied to the base file name.
+                Used with :func:`re.match`.
+            ignore_ext (bool, optional): If ``True``, ignore extension (`.dcm`)
+                when loading dicoms from directory.
+            ignore_hidden (bool, optional): If ``True``, ignores hidden
+                files (files starting with ``"."``).
+
+        Returns:
+            List[str]: Dicom file paths (in natsort order)
+
+        Raises:
+            NotADirectoryError: If ``path`` does not correspond to directory.
+        """
+        if not os.path.isdir(path):
+            raise NotADirectoryError("`path` must be path to directory with dicoms.")
+
+        include = _wrap_as_tuple(include, default=())
+        exclude = _wrap_as_tuple(exclude, default=())
+        assert isinstance(include, tuple)
+        assert isinstance(exclude, tuple)
+        if ignore_hidden:
+            exclude += ("^\.",)  # noqa: W605
+
+        possible_files = os.listdir(path)
+        lstFilesDCM = []
+        for f in possible_files:
+            # If ignore extension, don't look for '.dcm' extension.
+            is_file = os.path.isfile(os.path.join(path, f))
+            match_ext = ignore_ext or self.data_format_code.is_filetype(f)
+            if (
+                is_file
+                and match_ext
+                and (not include or any(re.match(x, f) for x in include))
+                and (not exclude or all(not re.match(x, f) for x in exclude))
+            ):
+                lstFilesDCM.append(os.path.join(path, f))
+
+        lstFilesDCM = natsorted(lstFilesDCM)
+        return lstFilesDCM
+
     def load(
         self,
         path: Union[str, Sequence[str]],
-        group_by: Union[str, tuple] = "EchoNumbers",
+        group_by: Union[str, int, Sequence[Union[str, int]]] = "EchoNumbers",
+        sort_by: Union[str, int, Sequence[Union[str, int]]] = None,
         ignore_ext: bool = False,
     ):
-        """Load dicoms into `MedicalVolume`s grouped by `group_by` tag.
+        """Load dicoms into ``MedicalVolume``s grouped by ``group_by`` tag(s).
 
-        When loading files from a directory, all hidden files (files starting with ".")
-        are ignored. Files are sorted in alphabetical order.
+        When loading files from a directory, all hidden files (files starting with ``"."``)
+        are ignored. Files are initially sorted in alphabetical order and subsequently by
+        ``sort_by`` if specified.
 
         Args:
             path (`str(s)`): Directory with dicom files or dicom file(s).
-            group_by (`str` or `tuple`, optional): DICOM field tag name or tag number
-                used to group dicoms. Defaults to `EchoNumbers`. Most DICOM headers
-                encode different echo numbers as volumes acquired at different echo
-                times or different phases.
-            ignore_ext (`bool`, optional): If `True`, ignore extension (`.dcm`)
-                when loading dicoms from directory. Defaults to `False`.
+            group_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+                to group dicoms. This can be the attribute tag name (str) or tag
+                number (int). Defaults to ``EchoNumbers``.
+            sort_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+                to sort dicoms. This sorting is done after sorting files in alphabetical
+                order.
+            ignore_ext (bool, optional): If ``True``, ignore extension (``".dcm"``)
+                when loading dicoms from directory.
 
         Returns:
             list[MedicalVolume]: Different volumes grouped by the `group_by` DICOM tag.
@@ -81,29 +142,16 @@ class DicomReader(DataReader):
             FileNotFoundError: If no valid dicom files found.
 
         Note:
-            This function sorts files using natsort, an intelligent sorting tool.
-                Please verify dicoms are labeled in a sequenced manner
-                (e.g.: dicom1,dicom2,dicom3,...).
+            Not setting the ``group_by`` argument could result in ill-formatted volumes.
+            For best performance, specify ``group_by`` based on the attribute(s) differentiating
+            different volumes in the scan.
         """
-        if not group_by:
-            raise ValueError(
-                "`group_by` must be specified, even if there are not multiple "
-                "volumes encoded in dicoms"
-            )
+        group_by = _wrap_as_tuple(group_by, default=())
+        sort_by = _wrap_as_tuple(sort_by, default=())
 
         if isinstance(path, str):
             if os.path.isdir(path):
-                possible_files = os.listdir(path)
-                lstFilesDCM = []
-                for f in possible_files:
-                    # If ignore extension, don't look for '.dcm' extension.
-                    match_ext = ignore_ext or (
-                        not ignore_ext and self.data_format_code.is_filetype(f)
-                    )
-                    is_file = os.path.isfile(os.path.join(path, f))
-                    is_hidden_file = f.startswith(".")
-                    if is_file and match_ext and not is_hidden_file:
-                        lstFilesDCM.append(os.path.join(path, f))
+                lstFilesDCM = self.get_files(path, ignore_ext=ignore_ext, ignore_hidden=True)
             elif os.path.isfile(path):
                 lstFilesDCM = [path]
             else:
@@ -122,11 +170,9 @@ class DicomReader(DataReader):
 
         # Check if dicom file has the group_by element specified
         temp_dicom = pydicom.read_file(lstFilesDCM[0], force=True)
-
-        if group_by not in temp_dicom:
-            raise ValueError("Tag {} does not exist in dicom".format(group_by))
-
-        dicom_data = {}
+        for _group in group_by:
+            if _group not in temp_dicom:
+                raise ValueError("Tag {} does not exist in dicom".format(_group))
 
         if self.num_workers:
             fn = functools.partial(pydicom.read_file, force=True)
@@ -141,11 +187,20 @@ class DicomReader(DataReader):
                 for fp in tqdm(lstFilesDCM, disable=not self.verbose)
             ]
 
-        for ds in dicom_slices:
-            val_groupby = ds.get(group_by)
-            if type(val_groupby) is pydicom.DataElement:
-                val_groupby = val_groupby.value
+        if sort_by:
+            try:
+                dicom_slices = natsorted(
+                    dicom_slices,
+                    key=lambda x: tuple(
+                        _unpack_dicom_attr(x, attr, required=True) for attr in sort_by
+                    ),
+                )
+            except KeyError as e:
+                raise KeyError(f"Tag not found in dicom - {e}")
 
+        dicom_data = {}
+        for ds in dicom_slices:
+            val_groupby = tuple(_unpack_dicom_attr(ds, attr, required=True) for attr in group_by)
             if val_groupby not in dicom_data.keys():
                 dicom_data[val_groupby] = {"headers": [], "arr": []}
 
@@ -182,7 +237,13 @@ class DicomWriter(DataWriter):
         self.num_workers = num_workers
         self.verbose = verbose
 
-    def save(self, volume: MedicalVolume, dir_path: str, fname_fmt: str = None):
+    def save(
+        self,
+        volume: MedicalVolume,
+        dir_path: str,
+        fname_fmt: str = None,
+        sort_by: Union[str, int, Sequence[Union[str, int]]] = None,
+    ):
         """Save `medical volume` in dicom format.
 
         This function assumes headers for the volume (``volume.headers()``) exist
@@ -203,6 +264,9 @@ class DicomWriter(DataWriter):
             fname_fmt (str, optional): Formatting string for filenames. Must contain ``%d``,
                 which correspopnds to slice number. Defaults to
                 ``"I%0{max(4, ceil(log10(num_slices)))}d.dcm"`` (e.g. ``"I0001.dcm"``).
+            sort_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+                to define ordering of slices prior to writing. If not specified, this ordering
+                will be defined by the order of blocks in ``volume``.
 
         Raises:
             ValueError: If `im` does not have initialized headers. Or if `im` was flipped across
@@ -212,6 +276,8 @@ class DicomWriter(DataWriter):
         headers = volume.headers()
         if headers is None:
             raise ValueError("MedicalVolume headers must be initialized to save as a dicom")
+
+        sort_by = _wrap_as_tuple(sort_by, default=())
 
         # Reformat to put headers in last dimensions.
         single_dim = []
@@ -253,6 +319,16 @@ class DicomWriter(DataWriter):
         ), "Dimension mismatch - {:d} slices but {:d} headers".format(
             volume_arr.shape[-1], len(headers)
         )
+
+        if sort_by:
+            idxs = np.asarray(
+                index_natsorted(
+                    headers,
+                    key=lambda h: tuple(_unpack_dicom_attr(h, k, required=True) for k in sort_by),
+                )
+            )
+            headers = headers[idxs]
+            volume_arr = volume_arr[..., idxs]
 
         # Check if dir_path exists.
         os.makedirs(dir_path, exist_ok=True)
@@ -483,3 +559,29 @@ def _update_np_dtype(arr: np.ndarray, bit_depth: int):
         )
 
     return arr.astype(new_dtype)
+
+
+def _unpack_dicom_attr(header, attr, required=False):
+    if not required:
+        val = header.get(attr)
+    else:
+        try:
+            val = header[attr]
+        except KeyError:
+            raise KeyError(f"Tag {attr} missing from dicom")
+
+    if type(val) is pydicom.DataElement:
+        val = val.value
+    return val
+
+
+def _wrap_as_tuple(x, default=None):
+    """Wraps individual values as tuple."""
+    if default is not None and not x:
+        return default
+
+    if isinstance(x, str) or not isinstance(x, Sequence):
+        x = (x,)
+    elif isinstance(x, Sequence) and not isinstance(x, tuple):
+        x = tuple(x)
+    return x
