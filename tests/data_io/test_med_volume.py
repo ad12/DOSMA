@@ -396,6 +396,13 @@ class TestMedicalVolume(unittest.TestCase):
         assert np.unique(mv2.affine).tolist() == [0, 1]
         assert np.unique(mv2.volume).tolist() == [0, 1]
 
+        # Clip
+        shape = (10, 20, 30)
+        mv = MedicalVolume(np.random.rand(*shape), np.eye(4))
+
+        mv2 = np.clip(mv, 0.4, 0.6)
+        assert np.all((mv2.volume >= 0.4) & (mv2.volume <= 0.6))
+
     def test_numpy_shaping(self):
         """Test numpy shaping functions (stack, concatenate, etc.)."""
         shape = (10, 20, 30, 2)

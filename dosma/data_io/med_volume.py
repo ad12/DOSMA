@@ -590,6 +590,20 @@ class MedicalVolume(NDArrayOperatorsMixin):
         return mean_np(self, axis=axis, dtype=dtype, keepdims=keepdims, where=where)
 
     @property
+    def A(self):
+        """The pixel array.
+
+        Same as ``self.volume``.
+
+        Examples:
+            >>> mv = MedicalVolume([[[1,2],[3,4]]], np.eye(4))
+            >>> mv.A
+            array([[[1, 2],
+                    [3, 4]]])
+        """
+        return self.volume
+
+    @property
     def volume(self):
         """ndarray: 3D ndarray representing volume values."""
         return self._volume
@@ -1084,6 +1098,36 @@ def around(x, decimals=0, affine=False):
     """
     affine = np.around(x.affine, decimals=decimals) if affine else x.affine
     return x._partial_clone(volume=np.around(x.volume, decimals=decimals), affine=affine)
+
+
+@implements(np.clip)
+def clip(x, x_min, x_max, **kwargs):
+    """Clip the values in the array.
+
+    Same as applying :func:`np.clip` on ``x.volume``.
+    Only one of ``x_min`` or ``x_max`` can be ``None``.
+
+    Args:
+        x (MedicalVolume): Medical image to clip.
+        x_min (array-like or ``MedicalVolume``): Minimum value.
+            If ``None``, clipping is not performed on this edge.
+        x_max (array-like or ``MedicalVolume``): Maximum value.
+            If ``None``, clipping is not performed on this edge.
+        kwargs: Optional keyword arguments, see :func:`np.clip`.
+
+    Returns:
+        MedicalVolume: The clipped medical image.
+
+    Note:
+        The ``out`` positional argument is not currently supported.
+    """
+    if isinstance(x_min, MedicalVolume):
+        x_min = x_min.A
+    if isinstance(x_max, MedicalVolume):
+        x_max = x_max.A
+
+    arr = np.clip(x.A, x_min, x_max, **kwargs)
+    return x._partial_clone(volume=arr)
 
 
 @implements(np.stack)
