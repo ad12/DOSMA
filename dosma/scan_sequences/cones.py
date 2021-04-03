@@ -1,9 +1,9 @@
 """Ultra-short Echo Time Cones (UTE-Cones)."""
 import logging
 import os
+from typing import Sequence
 
 import numpy as np
-from natsort import natsorted
 
 from dosma import file_constants as fc
 from dosma import quant_vals as qv
@@ -12,9 +12,9 @@ from dosma.data_io import format_io_utils as fio_utils
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.scan_sequences.scans import NonTargetSequence
 from dosma.tissues.tissue import Tissue
-from dosma.utils import io_utils
 from dosma.utils.cmd_line_utils import ActionWrapper
 from dosma.utils.fits import MonoExponentialFit
+from dosma.utils.registration import apply_warp, register
 
 __all__ = ["Cones"]
 
@@ -42,85 +42,88 @@ class Cones(NonTargetSequence):
 
     NAME = "cones"
 
-    def __init__(self, volumes):
+    def __init__(self, volumes, echo_times: Sequence[float] = None):
         super().__init__(volumes)
-        self.subvolumes = None
-        self.echo_times = None
-        self.intraregistered_data = None
 
-        if self.ref_dicom is not None:
-            self.subvolumes, self.echo_times = self.__split_volumes__(__EXPECTED_NUM_ECHO_TIMES__)
+        if echo_times is None:
+            try:
+                if all(x.headers() is not None for x in self.volumes):
+                    echo_times = [x.get_metadata("EchoTime", float) for x in self.volumes]
+            except (KeyError, AttributeError, RuntimeError) as e:
+                raise ValueError(
+                    f"Could not extract echo times from header. "
+                    f"Please specify `echo_times` argument - {e}"
+                )
+
+        self.echo_times = echo_times
 
     def interregister(self, target_path: str, target_mask_path: str = None):
-        temp_raw_dirpath = io_utils.mkdirs(os.path.join(self.temp_path, "raw"))
-        subvolumes = self.subvolumes
+        volumes = self.volumes
+        echo_times = self.echo_times
+        idxs = np.argsort(echo_times)
 
-        raw_filepaths = dict()
+        echo_times = [echo_times[i] for i in idxs]
+        volumes = [volumes[i] for i in idxs]
+        nr = NiftiReader()
+        out_path = os.path.join(self.temp_path, "interregistered")
+        os.makedirs(out_path, exist_ok=True)
 
-        echo_time_inds = natsorted(list(subvolumes.keys()))
+        # TODO: Make these into parameters
+        num_threads = 2
+        num_workers = 0
+        verbose = True
 
-        for i in range(len(echo_time_inds)):
-            raw_filepath = os.path.join(temp_raw_dirpath, "{:03d}.nii.gz".format(i))
-            subvolumes[i].save_volume(raw_filepath)
-            raw_filepaths[i] = raw_filepath
+        if verbose:
+            logging.info("")
+            logging.info("==" * 40)
+            logging.info("Interregistering...")
+            logging.info("Target: {}".format(target_path))
+            if target_mask_path is not None:
+                logging.info("Mask: {}".format(target_mask_path))
+            logging.info("==" * 40)
 
-        # last echo should be base
-        base_echo_time, base_image = (
-            len(echo_time_inds) - 1,
-            raw_filepaths[len(echo_time_inds) - 1],
-        )
-
-        temp_interregistered_dirpath = io_utils.mkdirs(
-            os.path.join(self.temp_path, "interregistered")
-        )
-
-        logging.info("")
-        logging.info("==" * 40)
-        logging.info("Interregistering...")
-        logging.info("Target: {}".format(target_path))
-        if target_mask_path is not None:
-            logging.info("Mask: {}".format(target_mask_path))
-        logging.info("==" * 40)
-
-        files_to_warp = []
-        for echo_time_ind in raw_filepaths.keys():
-            if echo_time_ind == base_echo_time:
-                continue
-            filepath = raw_filepaths[echo_time_ind]
-            files_to_warp.append((echo_time_ind, filepath))
-
-        if not target_mask_path:
-            parameter_files = [fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE]
-        else:
+        # Target mask path has to be dilated.
+        if target_mask_path:
+            target_mask_path = self.__dilate_mask__(target_mask_path, out_path)
             parameter_files = [
                 fc.ELASTIX_RIGID_INTERREGISTER_PARAMS_FILE,
                 fc.ELASTIX_AFFINE_INTERREGISTER_PARAMS_FILE,
             ]
+            use_mask = [False, True]
+        else:
+            parameter_files = [fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE]
+            use_mask = None
 
-        warped_file, transformation_files = self.__interregister_base_file__(
-            (base_image, base_echo_time),
+        # Last echo should be the base.
+        base, moving = volumes[-1], volumes[:-1]
+
+        out_reg, _ = register(
             target_path,
-            temp_interregistered_dirpath,
-            mask_path=target_mask_path,
-            parameter_files=parameter_files,
+            base,
+            parameters=parameter_files,
+            output_path=out_path,
+            sequential=True,
+            collate=True,
+            num_workers=num_workers,
+            num_threads=num_threads,
+            return_volumes=False,
+            target_mask=target_mask_path,
+            use_mask=use_mask,
+            rtype=tuple,
+            show_pbar=verbose,
         )
-        warped_files = [(base_echo_time, warped_file)]
+        out_reg = out_reg[0]
 
-        # Load the transformation file. Apply same transform to the remaining images
-        for echo_time, filename in files_to_warp:
-            warped_file = self.__apply_transform__(
-                (filename, echo_time), transformation_files, temp_interregistered_dirpath
-            )
-            # append the last warped file - this has all the transforms applied
-            warped_files.append((echo_time, warped_file))
+        reg_vols = []
+        for mvg in moving:
+            reg_vols.append(apply_warp(mvg, out_reg.transform))
+        reg_vols.append(nr.load(out_reg.warped_file))  # base volume is last
 
-        # copy each of the interregistered warped files to their own output
-        nifti_reader = NiftiReader()
-        subvolumes = dict()
-        for echo_time, warped_file in warped_files:
-            subvolumes[echo_time] = nifti_reader.load(warped_file)
+        # Undo sorting by echo time.
+        reverse_idxs = {v: i for i, v in enumerate(idxs)}
+        reg_vols = [reg_vols[reverse_idxs[k]] for k in sorted(list(reverse_idxs.keys()))]
 
-        self.subvolumes = subvolumes
+        self.volumes = reg_vols
 
     def generate_t2_star_map(self, tissue: Tissue, mask_path: str = None, num_workers: int = 0):
         """
@@ -150,12 +153,8 @@ class Cones(NonTargetSequence):
             if tuple(np.unique(mask.volume)) != (0, 1):
                 raise ValueError("`mask_path` must reference binary segmentation volume")
 
-        spin_lock_times = []
-        subvolumes_list = []
-
-        for echo_time in self.subvolumes.keys():
-            spin_lock_times.append(echo_time)
-            subvolumes_list.append(self.subvolumes[echo_time])
+        spin_lock_times = self.echo_times
+        subvolumes_list = self.volumes
 
         mef = MonoExponentialFit(
             spin_lock_times,
@@ -177,18 +176,19 @@ class Cones(NonTargetSequence):
         return quant_val_map
 
     def _save(self, metadata, save_dir, fname_fmt=None, **kwargs):
-        default_fmt = {
-            "subvolumes": os.path.abspath(os.path.join(save_dir, "interregistered/{}")),
-            MedicalVolume: "echo-{}",
-        }
+        default_fmt = {MedicalVolume: "echo-{}"}
         default_fmt.update(fname_fmt if fname_fmt else {})
         return super()._save(metadata, save_dir, fname_fmt=default_fmt, **kwargs)
 
     @classmethod
     def from_dict(cls, data, force: bool):
-        interregistered_dirpath = os.path.dirpath(data.pop("subvolumes")[0])
+        interregistered_dirpath = None
+        if "subvolumes" in data:
+            interregistered_dirpath = os.path.dirpath(data.pop("subvolumes")[0])
         scan = super().from_dict(data, force=force)
-        scan.__load_interregistered_files__(interregistered_dirpath)
+        if interregistered_dirpath is not None:
+            subvolumes = scan.__load_interregistered_files__(interregistered_dirpath)
+            cls.volumes = [subvolumes[k] for k in sorted(list(subvolumes.keys()))]
 
     @classmethod
     def cmd_line_actions(cls):

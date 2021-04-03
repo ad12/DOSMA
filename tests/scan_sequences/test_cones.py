@@ -40,7 +40,7 @@ class ConesTest(util.ScanTest):
 
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         scan.interregister(target_path=QDESS_ECHO1_PATH)
-        subvolumes = list(scan.subvolumes.values())
+        subvolumes = scan.volumes
 
         # Inter-register with last echo.
         vols = DicomReader(num_workers=util.num_workers()).load(self.dicom_dirpath)
@@ -62,9 +62,10 @@ class ConesTest(util.ScanTest):
         )
         out_reg = out_reg[0]
 
-        reg_vols = [nr.load(out_reg.warped_file)]
+        reg_vols = []
         for mvg in moving:
             reg_vols.append(apply_warp(mvg, out_reg.transform))
+        reg_vols.append(nr.load(out_reg.warped_file))
 
         for idx, vol in enumerate(reg_vols):
             assert np.allclose(vol.volume, subvolumes[idx].volume), idx
@@ -81,7 +82,7 @@ class ConesTest(util.ScanTest):
 
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
-        subvolumes = list(scan.subvolumes.values())
+        subvolumes = scan.volumes
 
         # Inter-register with last echo.
         vols = DicomReader(num_workers=util.num_workers()).load(self.dicom_dirpath)
@@ -111,9 +112,10 @@ class ConesTest(util.ScanTest):
         )
         out_reg = out_reg[0]
 
-        reg_vols = [nr.load(out_reg.warped_file)]
+        reg_vols = []
         for mvg in moving:
             reg_vols.append(apply_warp(mvg, out_reg.transform))
+        reg_vols.append(nr.load(out_reg.warped_file))
 
         for idx, vol in enumerate(reg_vols):
             assert np.allclose(vol.volume, subvolumes[idx].volume), idx
