@@ -331,7 +331,14 @@ def add_base_argument(
     param_help,
     additional_param_names: list = [],
 ):
-    assert param_type in BASIC_TYPES, "type %s not in BASIC_TYPES" % param_type
+    # TODO: Clean up this code block to properly do syntax parsing.
+    try:
+        if param_type not in BASIC_TYPES:
+            param_type = extract_basic_type(param_type)
+    except (AttributeError, TypeError):
+        raise TypeError(
+            "Parameter '{}' - type '{}' not in BASIC_TYPES".format(param_name, param_type)
+        )
 
     # add default value to param help
     has_default = param_default is not inspect._empty
@@ -372,6 +379,9 @@ def add_base_argument(
 
 
 def parse_basic_type(val, param_type):
+    if param_type not in BASIC_TYPES:
+        param_type = extract_basic_type(param_type)
+
     if type(val) is param_type:
         return val
 
@@ -382,6 +392,24 @@ def parse_basic_type(val, param_type):
     if type(val) is list and nargs == 1:
         return val[0]
     return param_type(val) if val else val
+
+
+def extract_basic_type(param_type):
+    """Extracts basic types from ``typing`` aliases.
+
+    Args:
+        param_type (typing._GenericAlias): A generic alias
+            (e.g. ``typing.Tuple``, ``typing.List``).
+
+    Returns:
+        type: The basic type.
+    """
+    try:
+        # Python 3.5 / 3.6
+        return param_type.__extra__
+    except AttributeError:
+        # Python 3.7/3.8/3.9
+        return param_type.__origin__
 
 
 def add_scans(dosma_subparser):

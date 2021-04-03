@@ -2,7 +2,7 @@
 import logging
 import math
 from copy import deepcopy
-from typing import Sequence
+from typing import Sequence, Tuple
 
 from pydicom.tag import Tag
 
@@ -114,6 +114,8 @@ class QDess(ScanSequence):
         alpha: float = None,
         diffusivity: float = 1.25e-9,
         t1: float = None,
+        nan_bounds: Tuple[float, float] = (0, 100),
+        nan_to_num: float = 0.0,
     ):
         """Generate 3D T2 map.
 
@@ -145,6 +147,11 @@ class QDess(ScanSequence):
             diffusivity (float or array-like): Estimated diffusivity.
             t1 (float or array-like): Estimated t1 in milliseconds.
                 Defaults to ``tissue.T1_EXPECTED``.
+            nan_bounds (float or Tuple[float, float], optional): The closed interval
+                (``[a, b]``) for valid t2 values. All values outside of this interval will
+                be set to ``nan``.
+            nan_to_num (float): Value to be used to fill NaN values. If ``None``, values
+                will not be replaced.
 
         Returns:
             qv.T2: T2 fit for tissue.
@@ -208,10 +215,11 @@ class QDess(ScanSequence):
         t2map = xp.nan_to_num(t2map)
 
         # Filter calculated T2 values that are below 0ms and over 100ms
-        t2map[t2map <= self.__T2_LOWER_BOUND__] = xp.nan
-        t2map = xp.nan_to_num(t2map)
-        t2map[t2map > self.__T2_UPPER_BOUND__] = xp.nan
-        t2map = xp.nan_to_num(t2map)
+        if nan_bounds is not None:
+            lower, upper = nan_bounds
+            t2map[(t2map < lower) | (t2map > upper)] = xp.nan
+        if nan_to_num is not None:
+            t2map = xp.nan_to_num(t2map, nan=nan_to_num)
 
         t2map = xp.around(t2map, self.__T2_DECIMAL_PRECISION__)
 
@@ -286,6 +294,8 @@ class QDess(ScanSequence):
                 "gl_area": "GL Area. Defaults to value in dicom tag '0x001910b6'",
                 "tg": "Gradient time (in microseconds). "
                 "Defaults to value in dicom tag '0x001910b7'.",
+                "alpha": "Flip angle in degrees. Defaults to value in dicom tag '0x00181314'.",
+                "diffusivity": "Estimated diffusivity. Defaults to 1.25e-9",
             },
             help="generate T2 map",
         )
