@@ -714,8 +714,11 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
     def _partial_clone(self, **kwargs) -> "MedicalVolume":
         """Copies constructor information from ``self`` if not available in ``kwargs``."""
+        if kwargs.get("volume", None) is False:
+            # special use case to not clone volume
+            kwargs["volume"] = self._volume
         for k in ("volume", "affine"):
-            if k not in kwargs:
+            if k not in kwargs or (kwargs[k] is True):
                 kwargs[k] = getattr(self, f"_{k}").copy()
         if "headers" not in kwargs:
             kwargs["headers"] = self._headers

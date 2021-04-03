@@ -60,27 +60,13 @@ class CubeQuantTest(util.ScanTest):
         data_dir = os.path.join(fc.TEMP_FOLDER_PATH, "test-interregister-no-mask")
 
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
-        scan.interregister(target_path=QDESS_ECHO1_PATH)
-        subvolumes = scan.subvolumes
+        intraregistered_vols = sorted(scan.volumes, key=lambda x: x.get_metadata("EchoTime", float))
 
-        # Intra-register
-        vols = DicomReader(num_workers=util.num_workers()).load(self.dicom_dirpath)
-        out_path = os.path.join(data_dir, "intra")
-        out, _ = register(
-            vols[0],
-            vols[1:],
-            fc.ELASTIX_AFFINE_PARAMS_FILE,
-            out_path,
-            num_workers=util.num_workers(),
-            num_threads=2,
-            return_volumes=False,
-            rtype=tuple,
-            show_pbar=True,
-        )
-        base, moving = vols[0], [x.warped_file for x in out]
+        scan.interregister(target_path=QDESS_ECHO1_PATH)
 
         # Inter-register
         out_path = os.path.join(data_dir, "inter")
+        base, moving = intraregistered_vols[0], intraregistered_vols[1:]
         out_reg, _ = register(
             QDESS_ECHO1_PATH,
             base,
@@ -100,8 +86,8 @@ class CubeQuantTest(util.ScanTest):
         for mvg in moving:
             reg_vols.append(apply_warp(mvg, out_reg.transform))
 
-        for idx, vol in enumerate(reg_vols):
-            assert np.allclose(vol.volume, subvolumes[idx].volume), idx
+        for idx, (vol, subvol) in enumerate(zip(reg_vols, scan.volumes)):
+            assert np.allclose(vol.volume, subvol.volume), idx
 
         shutil.rmtree(data_dir)
 
@@ -115,26 +101,13 @@ class CubeQuantTest(util.ScanTest):
         data_dir = os.path.join(fc.TEMP_FOLDER_PATH, "test-interregister-mask")
 
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
-        scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
-        subvolumes = scan.subvolumes
+        intraregistered_vols = sorted(scan.volumes, key=lambda x: x.get_metadata("EchoTime", float))
 
-        # Intra-register
-        vols = DicomReader(num_workers=util.num_workers()).load(self.dicom_dirpath)
-        out_path = os.path.join(data_dir, "intra")
-        out, _ = register(
-            vols[0],
-            vols[1:],
-            fc.ELASTIX_AFFINE_PARAMS_FILE,
-            out_path,
-            num_workers=util.num_workers(),
-            num_threads=2,
-            return_volumes=False,
-            rtype=tuple,
-            show_pbar=True,
-        )
-        base, moving = vols[0], [x.warped_file for x in out]
+        scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
 
         # Inter-register
+        out_path = os.path.join(data_dir, "inter")
+        base, moving = intraregistered_vols[0], intraregistered_vols[1:]
         mask_path = scan.__dilate_mask__(TARGET_MASK_PATH, out_path)
         out_reg, _ = register(
             QDESS_ECHO1_PATH,
@@ -160,8 +133,8 @@ class CubeQuantTest(util.ScanTest):
         for mvg in moving:
             reg_vols.append(apply_warp(mvg, out_reg.transform))
 
-        for idx, vol in enumerate(reg_vols):
-            assert np.allclose(vol.volume, subvolumes[idx].volume), idx
+        for idx, (vol, subvol) in enumerate(zip(reg_vols, scan.volumes)):
+            assert np.allclose(vol.volume, subvol.volume), idx
 
         shutil.rmtree(data_dir)
 
@@ -188,17 +161,7 @@ class CubeQuantTest(util.ScanTest):
         )
         reg_vols = [vols[0]] + list(reg_vols)
 
-        for idx, (vol, subvol) in enumerate(zip(vols, scan.subvolumes.values())):
-            assert np.allclose(vol.volume, subvol.volume), idx
-
-        nr = NiftiReader()
-        for idx, vol in enumerate(reg_vols):
-            if idx == 0:
-                fp = scan.intraregistered_data["BASE"][1]
-            else:
-                fp = scan.intraregistered_data["FILES"][idx - 1][1]
-            subvol = nr.load(fp)
-
+        for idx, (vol, subvol) in enumerate(zip(reg_vols, scan.volumes)):
             assert np.allclose(vol.volume, subvol.volume), idx
 
         shutil.rmtree(out_path)

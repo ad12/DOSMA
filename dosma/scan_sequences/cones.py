@@ -181,7 +181,7 @@ class Cones(NonTargetSequence):
         return super()._save(metadata, save_dir, fname_fmt=default_fmt, **kwargs)
 
     @classmethod
-    def from_dict(cls, data, force: bool):
+    def from_dict(cls, data, force: bool = False):
         interregistered_dirpath = None
         if "subvolumes" in data:
             interregistered_dirpath = os.path.dirpath(data.pop("subvolumes")[0])
@@ -189,6 +189,8 @@ class Cones(NonTargetSequence):
         if interregistered_dirpath is not None:
             subvolumes = scan.__load_interregistered_files__(interregistered_dirpath)
             cls.volumes = [subvolumes[k] for k in sorted(list(subvolumes.keys()))]
+
+        return scan
 
     @classmethod
     def cmd_line_actions(cls):
