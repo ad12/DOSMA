@@ -42,10 +42,7 @@ class MapssTest(util.ScanTest):
 
     def test_cmd_line(self):
         # Intraregister
-        cmdline_str = "--d %s --s %s mapss intraregister" % (
-            self.dicom_dirpath,
-            self.data_dirpath,
-        )
+        cmdline_str = "--d %s --s %s mapss intraregister" % (self.dicom_dirpath, self.data_dirpath)
         self.__cmd_line_helper__(cmdline_str)
 
         # Estimate T1-rho for femoral cartilage.

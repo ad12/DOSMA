@@ -1,14 +1,9 @@
 import os
-import shutil
 import unittest
 
-import numpy as np
-
-import dosma.file_constants as fc
-from dosma.data_io import DicomReader, ImageDataFormat, NiftiReader
+from dosma.data_io import ImageDataFormat, NiftiReader
 from dosma.scan_sequences import Cones, QDess
 from dosma.tissues.femoral_cartilage import FemoralCartilage
-from dosma.utils.registration import apply_warp, register
 
 from .. import util
 

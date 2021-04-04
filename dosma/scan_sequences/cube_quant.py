@@ -41,11 +41,7 @@ class CubeQuant(NonTargetSequence):
 
     NAME = "cubequant"
 
-    def __init__(
-        self,
-        volumes: Sequence[MedicalVolume],
-        spin_lock_times: Sequence[float] = None,
-    ):
+    def __init__(self, volumes: Sequence[MedicalVolume], spin_lock_times: Sequence[float] = None):
         super().__init__(volumes=volumes)
 
         if spin_lock_times is None:
@@ -261,8 +257,7 @@ class CubeQuant(NonTargetSequence):
         as list of dictionary.
         """
         intraregister_action = ActionWrapper(
-            name=cls.intraregister.__name__,
-            help="register volumes within this scan",
+            name=cls.intraregister.__name__, help="register volumes within this scan"
         )
         interregister_action = ActionWrapper(
             name=cls.interregister.__name__,

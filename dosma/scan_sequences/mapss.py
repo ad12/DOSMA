@@ -65,8 +65,11 @@ class Mapss(ScanSequence):
                 if all(x.headers() is not None for x in self.volumes):
                     echo_times = [x.get_metadata("EchoTime", float) for x in self.volumes]
             except (KeyError, AttributeError, RuntimeError) as e:
-                pass
-        
+                raise ValueError(
+                    f"Could not extract echo times from header. "
+                    f"Please specify `echo_times` argument - {e}"
+                )
+
         self.echo_times = echo_times
 
     def __validate_scan__(self):
@@ -254,8 +257,7 @@ class Mapss(ScanSequence):
         as list of dictionary.
         """
         intraregister_action = ActionWrapper(
-            name=cls.intraregister.__name__,
-            help="register volumes within this scan",
+            name=cls.intraregister.__name__, help="register volumes within this scan"
         )
         generate_t1_rho_map_action = ActionWrapper(
             name=cls.generate_t1_rho_map.__name__,
