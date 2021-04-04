@@ -43,11 +43,6 @@ class QDess(ScanSequence):
     __NUM_ECHOS__ = 2
     __VOLUME_DIMENSIONS__ = 3
 
-    # Clipping bounds for t2
-    __T2_LOWER_BOUND__ = 0
-    __T2_UPPER_BOUND__ = 100
-    __T2_DECIMAL_PRECISION__ = 1  # 0.1 ms
-
     def __init__(self, volumes: Sequence[MedicalVolume]):
         if len(volumes) != 2:
             raise ValueError("QDess currently only supports 2 volumes.")
@@ -67,8 +62,9 @@ class QDess(ScanSequence):
         Args:
             model (SegModel): Model to use for segmenting scans.
             tissue (Tissue): The tissue to segment.
-            use_rms (`bool`, optional): If `True`, use root-mean-square of
-                echos for segmentation (preferred). Defaults to `False`.
+            use_rms (`bool`, optional): If ``True``, use root-mean-square of
+                echos for segmentation (preferred for built-in methods).
+                If ``False``, use first echo for segmentation.
 
         Returns:
             MedicalVolume: Binary mask for segmented region.
@@ -116,6 +112,7 @@ class QDess(ScanSequence):
         t1: float = None,
         nan_bounds: Tuple[float, float] = (0, 100),
         nan_to_num: float = 0.0,
+        decimals: int = 1,
     ):
         """Generate 3D T2 map.
 
@@ -152,6 +149,8 @@ class QDess(ScanSequence):
                 be set to ``nan``.
             nan_to_num (float): Value to be used to fill NaN values. If ``None``, values
                 will not be replaced.
+            decimals (int): Number of decimal places to round to. If ``None``, values
+                will not be rounded.
 
         Returns:
             qv.T2: T2 fit for tissue.
@@ -221,7 +220,8 @@ class QDess(ScanSequence):
         if nan_to_num is not None:
             t2map = xp.nan_to_num(t2map, nan=nan_to_num)
 
-        t2map = xp.around(t2map, self.__T2_DECIMAL_PRECISION__)
+        if decimals is not None:
+            t2map = xp.around(t2map, decimals)
 
         if suppress_fat:
             t2map = t2map * (echo_1 > 0.15 * xp.max(echo_1))

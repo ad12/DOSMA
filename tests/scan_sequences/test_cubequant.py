@@ -145,6 +145,7 @@ class CubeQuantTest(util.ScanTest):
         (https://github.com/ad12/DOSMA/issues/55).
         """
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
+        scan.intraregister()
 
         vols = DicomReader(num_workers=util.num_workers()).load(self.dicom_dirpath)
         out_path = os.path.join(fc.TEMP_FOLDER_PATH, "test-intraregister")
@@ -167,9 +168,15 @@ class CubeQuantTest(util.ScanTest):
         shutil.rmtree(out_path)
 
     def test_cmd_line(self):
-        # Generate segmentation mask for femoral cartilage via command line
-        cmdline_str = "--d %s --s %s cubequant --fc interregister --tp %s --tm %s" % (
+        # Intraregister
+        cmdline_str = "--d %s --s %s cubequant intraregister" % (
             self.dicom_dirpath,
+            self.data_dirpath,
+        )
+        self.__cmd_line_helper__(cmdline_str)
+
+        # Generate segmentation mask for femoral cartilage via command line
+        cmdline_str = "--l %s cubequant --fc interregister --tp %s --tm %s" % (
             self.data_dirpath,
             QDESS_ECHO1_PATH,
             TARGET_MASK_PATH,

@@ -41,15 +41,21 @@ class MapssTest(util.ScanTest):
             ), "%s: map1 and map2 should be identical" % str(action)
 
     def test_cmd_line(self):
-        # Estimate T1-rho for femoral cartilage.
-        cmdline_str = "--d %s --s %s mapss --fc t1_rho --mask %s" % (
+        # Intraregister
+        cmdline_str = "--d %s --s %s mapss intraregister" % (
             self.dicom_dirpath,
+            self.data_dirpath,
+        )
+        self.__cmd_line_helper__(cmdline_str)
+
+        # Estimate T1-rho for femoral cartilage.
+        cmdline_str = "--l %s mapss --fc t1_rho --mask %s" % (
             self.data_dirpath,
             MANUAL_SEGMENTATION_MASK_PATH,
         )
         self.__cmd_line_helper__(cmdline_str)
 
-        # Generate T1rho map for femoral cartilage, tibial cartilage, and meniscus via command line
+        # Generate T2 map for femoral cartilage, tibial cartilage, and meniscus via command line
         cmdline_str = "--l %s mapss --fc t2 --mask %s" % (
             self.data_dirpath,
             MANUAL_SEGMENTATION_MASK_PATH,

@@ -54,18 +54,20 @@ class Mapss(ScanSequence):
 
     NAME = "mapss"
 
-    def __init__(self, volumes: Sequence[MedicalVolume]):
+    def __init__(self, volumes: Sequence[MedicalVolume], echo_times: Sequence[float] = None):
         if not isinstance(volumes, Sequence):
             raise ValueError("`volumes` must be sequence of MedicalVolumes.")
 
         super().__init__(volumes)
-        self.echo_times = None
-        self.raw_volumes = None
 
-        if self.ref_dicom is not None:
-            self.echo_times = [x.get_metadata("EchoTime", float) for x in self.volumes]
-            # TODO: Do not intraregister out of init.
-            self.__intraregister__(self.volumes)
+        if echo_times is None:
+            try:
+                if all(x.headers() is not None for x in self.volumes):
+                    echo_times = [x.get_metadata("EchoTime", float) for x in self.volumes]
+            except (KeyError, AttributeError, RuntimeError) as e:
+                pass
+        
+        self.echo_times = echo_times
 
     def __validate_scan__(self):
         return len(self.volumes) == 7
@@ -138,8 +140,11 @@ class Mapss(ScanSequence):
 
             intraregistered_volumes.append(intrareg_vol)
 
-        self.raw_volumes = deepcopy(volumes)
         self.volumes = intraregistered_volumes
+
+    def intraregister(self):
+        """Intra-register volumes."""
+        self.__intraregister__(self.volumes)
 
     def generate_t1_rho_map(
         self, tissue: Tissue = None, mask_path: str = None, num_workers: int = 0
@@ -248,7 +253,10 @@ class Mapss(ScanSequence):
         Provide command line information (such as name, help strings, etc)
         as list of dictionary.
         """
-
+        intraregister_action = ActionWrapper(
+            name=cls.intraregister.__name__,
+            help="register volumes within this scan",
+        )
         generate_t1_rho_map_action = ActionWrapper(
             name=cls.generate_t1_rho_map.__name__,
             aliases=["t1_rho"],
@@ -275,6 +283,7 @@ class Mapss(ScanSequence):
         )
 
         return [
+            (cls.intraregister, intraregister_action),
             (cls.generate_t1_rho_map, generate_t1_rho_map_action),
             (cls.generate_t2_map, generate_t2_map_action),
         ]

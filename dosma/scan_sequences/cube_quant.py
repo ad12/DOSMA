@@ -45,7 +45,6 @@ class CubeQuant(NonTargetSequence):
         self,
         volumes: Sequence[MedicalVolume],
         spin_lock_times: Sequence[float] = None,
-        intraregister: bool = None,
     ):
         super().__init__(volumes=volumes)
 
@@ -60,12 +59,12 @@ class CubeQuant(NonTargetSequence):
                 )
         self.spin_lock_times = spin_lock_times
 
-        if intraregister is None:
-            # Backwards compatibility: by default intraregister if reference
-            # dicoms are available.
-            intraregister = self.ref_dicom is not None
-        if intraregister:
-            self.__intraregister__()
+    def intraregister(self):
+        """Intra-register volumes.
+
+        Alias for :func:`self.__intraregister__`.
+        """
+        self.__intraregister__()
 
     def interregister(self, target_path: str, target_mask_path: str = None):
         volumes = self.volumes
@@ -261,7 +260,10 @@ class CubeQuant(NonTargetSequence):
         Provide command line information (such as name, help strings, etc)
         as list of dictionary.
         """
-
+        intraregister_action = ActionWrapper(
+            name=cls.intraregister.__name__,
+            help="register volumes within this scan",
+        )
         interregister_action = ActionWrapper(
             name=cls.interregister.__name__,
             help="register to another scan",
@@ -284,6 +286,7 @@ class CubeQuant(NonTargetSequence):
         )
 
         return [
+            (cls.intraregister, intraregister_action),
             (cls.interregister, interregister_action),
             (cls.generate_t1_rho_map, generate_t1rho_map_action),
         ]
