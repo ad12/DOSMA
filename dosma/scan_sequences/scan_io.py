@@ -181,6 +181,23 @@ class ScanIOMixin(ABC):
 
     @classmethod
     def load(cls, path_or_data: Union[str, Dict], num_workers: int = 0):
+        """Load scan.
+
+        This method overloads the :func:`from_dict` method by supporting loading from a file
+        in addition to the data dictionary. If loading and constructing a scan using
+        :func:`from_dict` fails, defaults to loading data from original dicoms
+        (if ``self._from_file_args`` is initialized).
+
+        Args:
+            path_or_data (Union[str, Dict]): Pickle file to load or data dictionary.
+            num_workers (int, optional): Number of workers to use for loading.
+
+        Returns:
+            ScanSequence: Of type ``cls``.
+
+        Raises:
+            ValueError: If ``scan`` cannot be constructed.
+        """
         if isinstance(path_or_data, str):
             if not os.path.isfile(path_or_data):
                 raise FileNotFoundError(f"File {path_or_data} does not exist")
@@ -192,7 +209,7 @@ class ScanIOMixin(ABC):
             scan = cls.from_dict(data)
             return scan
         except Exception:
-            logging.warn(
+            warnings.warn(
                 f"Failed to load {cls.__name__} from data. Trying to load from dicom file."
             )
 
@@ -218,7 +235,7 @@ class ScanIOMixin(ABC):
 
         for k, v in data.items():
             if not hasattr(scan, k):
-                logging.warn(f"{cls.__name__} does not have attribute {k}. Skipping...")
+                warnings.warn(f"{cls.__name__} does not have attribute {k}. Skipping...")
                 continue
             scan.__setattr__(k, v)
 

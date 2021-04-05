@@ -39,29 +39,23 @@ from dosma.utils import io_utils
 class ScanSequence(ScanIOMixin):
     """The class for scan sequences and corresponding analysis.
 
-    All scan sequence classes should inherit from this abstract classes.
-
-    In practice, only either `dicom_path` or `load_path` should be specified.
-
-    If both are specified, the dicom_path is used, and all information in `load_path` is ignored.
+    This is the base class for scan-specific analysis. All classes implementing scan-specific
+    image processing/analysis methods should inherit from this class.
 
     Args:
-        dicom_path (str): Folder path to DICOM files.
-        load_path (str): Base path where data is stored.
-        **kwargs: Arbitrary keyword arguments.
+        volumes (MedicalVolume(s)): The medical image(s) that this scan is composed of.
+            Note these are typically the different 2D/3D image(s) . For example, for a
+            multi-echo MRI scan, each volume in ``volumes`` would correspond to the spatial
+            volume acquired at different echo times.
 
-    Kwargs:
-
-        split_by (`str` or `tuple`, optional): DICOM field tag name or tag number
-            used to group dicoms. Default depends on scan sequence - typically EchoNumber.
-            ``dicom_path`` must be specified.
-        ignore_ext (`bool`, optional): Ignore extension when loading DICOM files.
-            ``dicom_path`` must be specified.
+    Attributes:
+        volumes (MedicalVolume(s)): See ``volume`` in Args.
+        temp_path (str): The directory path where temporary results
+            are written. This will be under ``dosma.file_constants.TEMP_FOLDER_PATH``.
 
     Raises:
         NotADirectoryError: If `dicom_path` is not a valid directory.
         ValueError: If dicoms do not correspond to the expected sequence.
-
     """
 
     NAME = ""
@@ -72,6 +66,7 @@ class ScanSequence(ScanIOMixin):
 
         # TODO: Remove series number as an attribute.
         # It should be directly accessed through the reference header.
+        # This involves some backward compatible fixes.
         self.series_number = None
         self._from_file_args = {}
 
@@ -124,9 +119,11 @@ class ScanSequence(ScanIOMixin):
         All volumes in scan are assumed to be same dimension.
 
         Returns:
-            tuple[int]: Shape of volumes in scan.
+            tuple[int]: Shape of each volume in scan.
         """
-        return self.volumes[0].volume.shape
+        if isinstance(self.volumes, MedicalVolume):
+            return self.volumes.shape
+        return self.volumes[0].shape
 
     @property
     def ref_dicom(self):

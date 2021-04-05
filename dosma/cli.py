@@ -75,7 +75,7 @@ BASIC_TYPES = [bool, str, float, int, list, tuple]
 class CommandLineScanContainer:
     def __init__(
         self,
-        scan_type: ScanSequence,
+        scan_type: type,
         dicom_path,
         load_path,
         ignore_ext: bool = False,
@@ -83,7 +83,50 @@ class CommandLineScanContainer:
         num_workers=0,
         **kwargs,
     ):
-        """The class for command-line handling around :class:`ScanSequence`."""
+        """The class for command-line handling around :class:`ScanSequence`.
+
+        The command line interface for :class:`ScanSequence` data is highly structured,
+        particularly in data saving and loading to support easy and accurate command-line
+        compatibility.
+
+        This class overloads some standard functionality in :class:`ScanSequence`
+        (:func:`save`, :func:`load`). When methods are not implemented, this class provides
+        access directly to attributes/methods of the underlying scan instantiation.
+        For example, if ``scan_type=QDess``, the following will call
+        :func:`QDess.generate_t2_map`:
+
+        >>> cli_scan = CommandLineScanContainer(QDess, dicom_path="/path/to/qdess/scan")
+        >>> cli_scan.generate_t2_map(...)  # this calls cli_scan.scan.generate_t2_map
+
+        Data is loaded either from the ``dicom_path`` or the ``load_path``. If both are specified,
+        the data is loaded from the ``dicom_path``.
+
+        Args:
+            scan_type (type): A scan type. Should be subclass of `ScanSequence`.
+            dicom_path (str): The dicom path. This value can be ``None``, but must
+                be explicitly set.
+            load_path (str): The load path. This value can be ``None``, but must be
+                explicitly set.
+            ignore_ext (bool, optional): If ``True``, ignore extensions when loading
+                dicom data. See :func:`DicomReader.load` for details.
+            group_by (optional): The value(s) to group dicoms by. See :func:`DicomReader.load`
+                for details.
+            num_workers (int, optional): Number of works for loading scan.
+
+        Attributes:
+            scan_type (type): The scan type to instantiate.
+            scan (ScanSequence): The instantiated scan.
+            generic_args (Dict[str, Any]): Generic duck typed parameter names and values.
+                If parameters with this name are part of the method signature, they will
+                automatically be set to the values in this dictionary. Keys include:
+                    * "num_workers": Number of cpu workers to use.
+                    * "max_workers": Alias for "num_workers" in some functions
+                    * "verbose": Verbosity
+                    * "show_pbar": Show progress bar.
+
+        Raises:
+            NotADirectoryError: If ``dicom_path`` is not a path to a directory.
+        """
         self.scan_type = scan_type
 
         if (dicom_path is not None) and (not os.path.isdir(dicom_path)):
@@ -126,6 +169,24 @@ class CommandLineScanContainer:
         return attr
 
     def load(self, path: str, num_workers: int = 0):
+        """Command line interface loading scan data.
+
+        ``self.scan_type`` must be set before calling this function.
+
+        Args
+            path (str): Path to pickle file or directory where data is stored.
+            num_workers (int, optional): Number of workers to use to load data.
+
+        Returns:
+            ScanSequence: Scan of type ``self.scan_type``.
+
+        Raises:
+            ValueError: If path to load data from cannot be determined.
+
+        Examples:
+            >>> cli_scan.load("/path/to/pickle/file")  # load data from pickle file
+            >>> cli_scan.load("/path/to/directory")  # load data from directory
+        """
         scan_type = self.scan_type
 
         file_path = None
