@@ -515,7 +515,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
             return self._headers.flatten()
         return self._headers
 
-    def get_metadata(self, key, dtype=None):
+    def get_metadata(self, key, dtype=None, default=np._NoValue):
         """Get metadata value from first header.
 
         The first header is defined as the first header in ``np.flatten(self._headers)``.
@@ -527,12 +527,20 @@ class MedicalVolume(NDArrayOperatorsMixin):
                 By default for DICOM headers, data will be in the value
                 representation format specified by pydicom. See
                 ``pydicom.valuerep``.
+            default (Any): Default value to return if `key`` not found in header.
+                If not specified and ``key`` not found in header, raises a KeyError.
 
         Examples:
             >>> mv.get_metadata("EchoTime")
             '10.0'  # this is a number type ``pydicom.valuerep.DSDecimal``
             >>> mv.get_metadata("EchoTime", dtype=float)
             10.0
+            >>> mv.get_metadata("foobar", default=0)
+            0
+
+        Raises:
+            RuntimeError: If ``self._headers`` is ``None``.
+            KeyError: If ``key`` not found and ``default`` not specified.
 
         Note:
             Currently header information is tied to the ``pydicom.FileDataset`` implementation.
@@ -541,7 +549,11 @@ class MedicalVolume(NDArrayOperatorsMixin):
         if self._headers is None:
             raise RuntimeError("No headers found. MedicalVolume must be initialized with `headers`")
         headers = self.headers(flatten=True)
-        element = headers[0][key]
+
+        if key not in headers[0] and default != np._NoValue:
+            return default
+        else:
+            element = headers[0][key]
         val = element.value
         if dtype is not None:
             val = dtype(val)
@@ -555,6 +567,9 @@ class MedicalVolume(NDArrayOperatorsMixin):
             value (Any): The value.
             force (bool, optional): If ``True``, force the header to
                 set key even if key does not exist in header.
+
+        Raises:
+            RuntimeError: If ``self._headers`` is ``None``.
         """
         if self._headers is None:
             raise RuntimeError("No headers found. MedicalVolume must be initialized with `headers`")
