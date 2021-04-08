@@ -503,7 +503,6 @@ def curve_fit(
         p0=p0,
         ftol=ftol,
         eps=eps,
-        show_pbar=show_pbar,
         nparams=nparams,
         **kwargs,
     )
@@ -532,21 +531,9 @@ def curve_fit(
     return np.stack(popts, axis=0), np.asarray(r_squared)
 
 
-def _curve_fit(
-    y,
-    x,
-    func,
-    y_bounds=None,
-    p0=None,
-    maxfev=100,
-    ftol=1e-5,
-    eps=1e-8,
-    show_pbar=False,
-    nparams=None,
-    **kwargs,
-):
+def _curve_fit(y, x, func, y_bounds=None, p0=None, ftol=1e-5, eps=1e-8, nparams=None, **kwargs):
     def _fit_internal(_x, _y):
-        popt, _ = sop.curve_fit(func, _x, _y, p0=p0, maxfev=maxfev, ftol=ftol, **kwargs)
+        popt, _ = sop.curve_fit(func, _x, _y, p0=p0, ftol=ftol, **kwargs)
 
         residuals = _y - func(_x, *popt)
         ss_res = np.sum(residuals ** 2)
