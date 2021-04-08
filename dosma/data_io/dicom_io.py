@@ -77,8 +77,8 @@ class DicomReader(DataReader):
         path,
         include: Union[str, Sequence[str]] = None,
         exclude: Union[str, Sequence[str]] = None,
-        ignore_ext: bool = False,
         ignore_hidden: bool = True,
+        ignore_ext: bool = np._NoValue,
     ):
         """Get dicom files from directory.
 
@@ -93,7 +93,7 @@ class DicomReader(DataReader):
             ignore_ext (bool, optional): If ``True``, ignore extension (`.dcm`)
                 when loading dicoms from directory.
             ignore_hidden (bool, optional): If ``True``, ignores hidden
-                files (files starting with ``"."``).
+                files (files starting with ``"."``). Defaults to ``self.ignore_ext``.
 
         Returns:
             List[str]: Dicom file paths (in natsort order)
@@ -103,6 +103,8 @@ class DicomReader(DataReader):
         """
         if not os.path.isdir(path):
             raise NotADirectoryError("`path` must be path to directory with dicoms.")
+
+        ignore_ext = ignore_ext if ignore_ext != np._NoValue else self.ignore_ext
 
         include = _wrap_as_tuple(include, default=())
         exclude = _wrap_as_tuple(exclude, default=())
@@ -174,7 +176,7 @@ class DicomReader(DataReader):
 
         if isinstance(path, str):
             if os.path.isdir(path):
-                lstFilesDCM = self.get_files(path, ignore_ext=ignore_ext, ignore_hidden=True)
+                lstFilesDCM = self.get_files(path, ignore_hidden=True, ignore_ext=ignore_ext)
             elif os.path.isfile(path):
                 lstFilesDCM = [path]
             else:
