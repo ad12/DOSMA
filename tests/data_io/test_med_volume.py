@@ -99,6 +99,10 @@ class TestMedicalVolume(unittest.TestCase):
         assert mv_no_headers.headers() is None
         assert mv_no_headers.headers(flatten=True) is None
 
+        with self.assertRaises(ValueError):
+            mv.get_metadata("foobar")
+        assert mv.get_metadata("foobar", default=0) == 0
+
         echo_time = mv.get_metadata(field)
         assert echo_time == field_val
 

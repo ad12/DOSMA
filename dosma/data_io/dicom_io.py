@@ -41,25 +41,69 @@ TOTAL_NUM_ECHOS_KEY = (0x19, 0x107E)
 
 class DicomReader(DataReader):
     """A class for reading DICOM files.
+
+    Attributes:
+        num_workers (int, optional): Number of workers to use for loading.
+        verbose (bool, optional): If ``True``, show loading progress bar.
+        group_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+            to group dicoms. This can be the attribute tag name (str) or tag
+            number (int).
+        sort_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+            to sort dicoms. This sorting is done after sorting files in alphabetical
+            order.
+        ignore_ext (bool, optional): If ``True``, ignore extension (``".dcm"``)
+            when loading dicoms from directory.
+
+    Examples:
+        >>> # Load single dicom
+        >>> dr = DicomReader()
+        >>> mv = dr.load("/path/to/dicom/file", group_by=None)[0]
+
+        >>> # Load multi-echo MRI data
+        >>> dr = DicomReader(num_workers=0, verbose=True)
+        >>> mvs = dr.load("/dicoms/directory", group_by="EchoTime", sort_by="InstanceNumber")
+
+        >>> # Use the same loader for multiple multi-echo MRI scans
+        >>> dr = DicomReader(group_by="EchoTime", sort_by="InstanceNumber")
+        >>> scans = [dr.load(dcm_dir) for dcm_dir in ["/dicom/dir1", "/dicom/dir2", "/dicom/dir3"]]
     """
 
     data_format_code = ImageDataFormat.dicom
 
-    def __init__(self, num_workers: int = 0, verbose: bool = False):
+    def __init__(
+        self,
+        num_workers: int = 0,
+        verbose: bool = False,
+        group_by: Union[str, int, Sequence[Union[str, int]]] = "EchoNumbers",
+        sort_by: Union[str, int, Sequence[Union[str, int]]] = None,
+        ignore_ext: bool = False,
+    ):
         """
         Args:
             num_workers (int, optional): Number of workers to use for loading.
+            verbose (bool, optional): If ``True``, show loading progress bar.
+            group_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+                to group dicoms. This can be the attribute tag name (str) or tag
+                number (int).
+            sort_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+                to sort dicoms. This sorting is done after sorting files in alphabetical
+                order.
+            ignore_ext (bool, optional): If ``True``, ignore extension (``".dcm"``)
+                when loading dicoms from directory.
         """
         self.num_workers = num_workers
         self.verbose = verbose
+        self.group_by = group_by
+        self.sort_by = sort_by
+        self.ignore_ext = ignore_ext
 
     def get_files(
         self,
         path,
         include: Union[str, Sequence[str]] = None,
         exclude: Union[str, Sequence[str]] = None,
-        ignore_ext: bool = False,
         ignore_hidden: bool = True,
+        ignore_ext: bool = np._NoValue,
     ):
         """Get dicom files from directory.
 
@@ -74,7 +118,7 @@ class DicomReader(DataReader):
             ignore_ext (bool, optional): If ``True``, ignore extension (`.dcm`)
                 when loading dicoms from directory.
             ignore_hidden (bool, optional): If ``True``, ignores hidden
-                files (files starting with ``"."``).
+                files (files starting with ``"."``). Defaults to ``self.ignore_ext``.
 
         Returns:
             List[str]: Dicom file paths (in natsort order)
@@ -84,6 +128,8 @@ class DicomReader(DataReader):
         """
         if not os.path.isdir(path):
             raise NotADirectoryError("`path` must be path to directory with dicoms.")
+
+        ignore_ext = ignore_ext if ignore_ext != np._NoValue else self.ignore_ext
 
         include = _wrap_as_tuple(include, default=())
         exclude = _wrap_as_tuple(exclude, default=())
@@ -112,9 +158,9 @@ class DicomReader(DataReader):
     def load(
         self,
         path: Union[str, Sequence[str]],
-        group_by: Union[str, int, Sequence[Union[str, int]]] = "EchoNumbers",
-        sort_by: Union[str, int, Sequence[Union[str, int]]] = None,
-        ignore_ext: bool = False,
+        group_by: Union[str, int, Sequence[Union[str, int]]] = np._NoValue,
+        sort_by: Union[str, int, Sequence[Union[str, int]]] = np._NoValue,
+        ignore_ext: bool = np._NoValue,
     ):
         """Load dicoms into ``MedicalVolume``s grouped by ``group_by`` tag(s).
 
@@ -126,12 +172,12 @@ class DicomReader(DataReader):
             path (`str(s)`): Directory with dicom files or dicom file(s).
             group_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
                 to group dicoms. This can be the attribute tag name (str) or tag
-                number (int). Defaults to ``EchoNumbers``.
+                number (int). Defaults to ``self.group_by``.
             sort_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
                 to sort dicoms. This sorting is done after sorting files in alphabetical
-                order.
+                order. Defaults to ``self.sort_by``.
             ignore_ext (bool, optional): If ``True``, ignore extension (``".dcm"``)
-                when loading dicoms from directory.
+                when loading dicoms from directory. Defaults to ``self.ignore_ext``.
 
         Returns:
             list[MedicalVolume]: Different volumes grouped by the `group_by` DICOM tag.
@@ -146,12 +192,16 @@ class DicomReader(DataReader):
             For best performance, specify ``group_by`` based on the attribute(s) differentiating
             different volumes in the scan.
         """
+        group_by = group_by if group_by != np._NoValue else self.group_by
+        sort_by = sort_by if sort_by != np._NoValue else self.sort_by
+        ignore_ext = ignore_ext if ignore_ext != np._NoValue else self.ignore_ext
+
         group_by = _wrap_as_tuple(group_by, default=())
         sort_by = _wrap_as_tuple(sort_by, default=())
 
         if isinstance(path, str):
             if os.path.isdir(path):
-                lstFilesDCM = self.get_files(path, ignore_ext=ignore_ext, ignore_hidden=True)
+                lstFilesDCM = self.get_files(path, ignore_hidden=True, ignore_ext=ignore_ext)
             elif os.path.isfile(path):
                 lstFilesDCM = [path]
             else:
@@ -225,24 +275,55 @@ class DicomReader(DataReader):
 
 class DicomWriter(DataWriter):
     """A class for writing volumes in DICOM format.
+
+    Attributes:
+        num_workers (int, optional): Number of workers to use for writing.
+        verbose (bool, optional): If ``True``, show writing progress bar.
+        fname_fmt (str, optional): Formatting string for filenames.
+        sort_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+            to define ordering of slices prior to writing. If not specified, this ordering
+            will be defined by the order of blocks in ``volume``.
+
+    Examples:
+        >>> # Save MedicalVolume mv
+        >>> dw = DicomWriter()
+        >>> dw.save(mv, "/path/to/save/folder")
+
+        >>> dw = DicomWriter(fname_fmt="I%05d.dcm", sort_by="InstanceNumber")
+        >>> dw.save(mv, "/path/to/save/folder")
     """
 
     data_format_code = ImageDataFormat.dicom
 
-    def __init__(self, num_workers: int = 0, verbose: bool = False):
+    def __init__(
+        self,
+        num_workers: int = 0,
+        verbose: bool = False,
+        fname_fmt: str = None,
+        sort_by: Union[str, int, Sequence[Union[str, int]]] = None,
+    ):
         """
         Args:
             num_workers (int, optional): Number of workers to use for writing.
+            verbose (bool, optional): If ``True``, show writing progress bar.
+            fname_fmt (str, optional): Formatting string for filenames. Must contain ``%d``,
+                which correspopnds to slice number. Defaults to
+                ``"I%0{max(4, ceil(log10(num_slices)))}d.dcm"`` (e.g. ``"I0001.dcm"``).
+            sort_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+                to define ordering of slices prior to writing. If not specified, this ordering
+                will be defined by the order of blocks in ``volume``.
         """
         self.num_workers = num_workers
         self.verbose = verbose
+        self.fname_fmt = fname_fmt
+        self.sort_by = sort_by
 
     def save(
         self,
         volume: MedicalVolume,
         dir_path: str,
-        fname_fmt: str = None,
-        sort_by: Union[str, int, Sequence[Union[str, int]]] = None,
+        fname_fmt: str = np._NoValue,
+        sort_by: Union[str, int, Sequence[Union[str, int]]] = np._NoValue,
     ):
         """Save `medical volume` in dicom format.
 
@@ -262,16 +343,19 @@ class DicomWriter(DataWriter):
             dir_path: Directory path to store dicom files. Dicoms are stored in directories,
                 as multiple files are needed to store the volume.
             fname_fmt (str, optional): Formatting string for filenames. Must contain ``%d``,
-                which correspopnds to slice number. Defaults to
-                ``"I%0{max(4, ceil(log10(num_slices)))}d.dcm"`` (e.g. ``"I0001.dcm"``).
+                which correspopnds to slice number. Defaults to ``self.fname_fmt``.
             sort_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
-                to define ordering of slices prior to writing. If not specified, this ordering
-                will be defined by the order of blocks in ``volume``.
+                to define ordering of slices prior to writing. If ``None``, this ordering
+                will be defined by the order of blocks in ``volume``. Defaults to
+                ``self.sort_by``.
 
         Raises:
             ValueError: If `im` does not have initialized headers. Or if `im` was flipped across
                 any axis. Flipping changes scanner origin, which is currently not handled.
         """
+        fname_fmt = fname_fmt if fname_fmt != np._NoValue else self.fname_fmt
+        sort_by = sort_by if sort_by != np._NoValue else self.sort_by
+
         # Get orientation indicated by headers.
         headers = volume.headers()
         if headers is None:
