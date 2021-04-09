@@ -453,6 +453,26 @@ class TestDicomIO(unittest.TestCase):
 
         assert e1.is_identical(e1_expected)
 
+    def test_init_params(self):
+        """Test reading/writing works with passing values to constructor."""
+        dp = ututils.get_scan_dirpath("qdess")
+        # Echo 1 only
+        fp = ututils.get_read_paths(dp, self.data_format)[0]
+
+        e1_expected = self.dr.load(fp, group_by=None, sort_by="InstanceNumber", ignore_ext=False)[0]
+        dr = DicomReader(group_by=None, sort_by="InstanceNumber", ignore_ext=False)
+        e1 = dr.load(fp)[0]
+        e1_expected.orientation
+
+        assert e1.is_identical(e1_expected)
+
+        write_path = os.path.join(ututils.get_write_path(dp, self.data_format), "out-init-params")
+        dw = DicomWriter(fname_fmt="I%05d.dcm", sort_by="InstanceNumber")
+        dw.save(e1_expected, write_path, sort_by="InstanceNumber")
+
+        files = [_f for _f in os.listdir(write_path) if _f.endswith(".dcm")]
+        assert len(files) == e1_expected.shape[-1]
+
 
 class TestInterIO(unittest.TestCase):
     nr = NiftiReader()
