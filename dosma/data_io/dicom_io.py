@@ -41,6 +41,31 @@ TOTAL_NUM_ECHOS_KEY = (0x19, 0x107E)
 
 class DicomReader(DataReader):
     """A class for reading DICOM files.
+
+    Attributes:
+        num_workers (int, optional): Number of workers to use for loading.
+        verbose (bool, optional): If ``True``, show loading progress bar.
+        group_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+            to group dicoms. This can be the attribute tag name (str) or tag
+            number (int).
+        sort_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+            to sort dicoms. This sorting is done after sorting files in alphabetical
+            order.
+        ignore_ext (bool, optional): If ``True``, ignore extension (``".dcm"``)
+            when loading dicoms from directory.
+
+    Examples:
+        >>> # Load single dicom
+        >>> dr = DicomReader()
+        >>> mv = dr.load("/path/to/dicom/file", group_by=None)[0]
+
+        >>> # Load multi-echo MRI data
+        >>> dr = DicomReader(num_workers=0, verbose=True)
+        >>> mvs = dr.load("/dicoms/directory", group_by="EchoTime", sort_by="InstanceNumber")
+
+        >>> # Use the same loader for multiple multi-echo MRI scans
+        >>> dr = DicomReader(group_by="EchoTime", sort_by="InstanceNumber")
+        >>> scans = [dr.load(dcm_dir) for dcm_dir in ["/dicom/dir1", "/dicom/dir2", "/dicom/dir3"]]
     """
 
     data_format_code = ImageDataFormat.dicom
@@ -250,6 +275,22 @@ class DicomReader(DataReader):
 
 class DicomWriter(DataWriter):
     """A class for writing volumes in DICOM format.
+
+    Attributes:
+        num_workers (int, optional): Number of workers to use for writing.
+        verbose (bool, optional): If ``True``, show writing progress bar.
+        fname_fmt (str, optional): Formatting string for filenames.
+        sort_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+            to define ordering of slices prior to writing. If not specified, this ordering
+            will be defined by the order of blocks in ``volume``.
+
+    Examples:
+        >>> # Save MedicalVolume mv
+        >>> dw = DicomWriter()
+        >>> dw.save(mv, "/path/to/save/folder")
+
+        >>> dw = DicomWriter(fname_fmt="I%05d.dcm", sort_by="InstanceNumber")
+        >>> dw.save(mv, "/path/to/save/folder")
     """
 
     data_format_code = ImageDataFormat.dicom
