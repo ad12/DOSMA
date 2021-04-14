@@ -548,7 +548,9 @@ def _decode_inplane_direction(headers: Sequence[pydicom.FileDataset], default_or
     ):
         # Decoder: patient orientation.
         # Patient orientation is only decoded along principal direction (e.g. "FR" -> "F").
-        ornt = [_patient_ornt_to_nib.get(k[:1], k) for k in headers[0].PatientOrientation]  # (x,y)
+        ornt = [
+            _patient_ornt_to_nib.get(k[:1], k[:1]) for k in headers[0].PatientOrientation
+        ]  # (x,y)
         ornt = stdo.orientation_nib_to_standard(ornt)
         affine = stdo.to_affine(ornt)
         affine[:2, :] = -1 * affine[:2, :]
