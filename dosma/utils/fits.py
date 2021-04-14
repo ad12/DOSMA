@@ -4,7 +4,7 @@ import warnings
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import partial
-from typing import Callable, List, Sequence, Tuple, Union
+from typing import Callable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from scipy import optimize as sop
@@ -14,9 +14,21 @@ from tqdm.contrib.concurrent import process_map
 from dosma import defaults
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.defaults import preferences
-from dosma.utils.device import cpu_device, get_device
+from dosma.utils import env
+from dosma.utils.device import cpu_device, get_array_module, get_device
 
-__all__ = ["CurveFitter", "MonoExponentialFit", "curve_fit", "monoexponential", "biexponential"]
+if env.cupy_available():
+    import cupy as cp
+
+__all__ = [
+    "CurveFitter",
+    "PolyFitter",
+    "MonoExponentialFit",
+    "curve_fit",
+    "polyfit",
+    "monoexponential",
+    "biexponential",
+]
 
 
 class _Fit(ABC):
@@ -33,10 +45,178 @@ class _Fit(ABC):
             tuple[MedicalVolume, MedicalVolume]: Quantitative value volume and
                 r-squared goodness of fit volume.
         """
-        pass
+        pass  # pragma: no cover
 
 
-class CurveFitter:
+class _Fitter(ABC):
+    # This is just a summary on variables used in this abstract class,
+    # the proper values/initialization should be done in child class.
+    nan_to_num: Optional[float]
+    out_ufuncs: Optional[Union[Callable, Sequence[Callable]]]
+    out_bounds: np.ndarray  # array-like
+    r2_threshold: float
+    y_bounds: Optional[Tuple[float]]
+
+    def _format_out_ufuncs(self, _out_ufuncs, _func_nparams):
+        if not isinstance(_out_ufuncs, Callable) and not all(
+            isinstance(ufunc, Callable) or ufunc is None for ufunc in _out_ufuncs
+        ):
+            raise TypeError(
+                f"`out_ufuncs` must be callable or sequence of callables. Got {_out_ufuncs}"
+            )
+
+        if isinstance(_out_ufuncs, Sequence):
+            if len(_out_ufuncs) > _func_nparams:
+                warnings.warn(
+                    f"len(out_ufuncs)={len(_out_ufuncs)}, but only {_func_nparams} parameters. "
+                    f"Extra ufuncs will be ignored."
+                )
+
+        return _out_ufuncs
+
+    def _format_out_bounds(self, _out_bounds):
+        out_bounds = np.asarray(_out_bounds)
+        if out_bounds.shape[-1] != 2 or out_bounds.ndim > 2:
+            raise ValueError("Invalid `out_bounds` - shape must be ([num_params,] 2)")
+        if np.any(out_bounds[..., 0] > out_bounds[..., 1]):
+            raise ValueError("Invalid `out_bounds` - lower bound must be <= upper bound")
+        return out_bounds
+
+    def _format_r2_threshold(self, _r2_threshold):
+        if isinstance(_r2_threshold, str):
+            if _r2_threshold != "preferences":
+                raise ValueError(
+                    f"Invalid value r2_threshold='{_r2_threshold}'. "
+                    f"Expected `None`, a number between [0, 1], or 'preferences'."
+                )
+            _r2_threshold = preferences.fitting_r2_threshold
+        return _r2_threshold
+
+    def _process_mask(self, mask, y: MedicalVolume):
+        """Process mask into appropriate shape."""
+        arr_types = (np.ndarray, cp.ndarray) if env.cupy_available() else (np.ndarray,)
+        if isinstance(mask, arr_types):
+            mask = y._partial_clone(volume=mask, headers=None)
+        elif not isinstance(mask, MedicalVolume):
+            raise TypeError("`mask` must be a MedicalVolume or ndarray")
+
+        mask = mask.reformat_as(y)
+        if not mask.is_same_dimensions(y, defaults.AFFINE_DECIMAL_PRECISION):
+            raise RuntimeError("`mask` and `y` dimension mismatch")
+
+        return (mask > 0).astype(mask.dtype)
+
+    def _process_params(self, x, r_squared):
+        """
+        Applies ``self.out_ufuncs`` and ``self.out_bounds``, in that order.
+        Input is modified in place.
+
+        Returns:
+            ndarray: Values outside of ``self.out_bounds`` will be set to np.nan.
+        """
+        nan_to_num = self.nan_to_num
+        out_ufuncs = self.out_ufuncs
+        out_bounds = self.out_bounds
+        r2_threshold = self.r2_threshold
+        nparams = x.shape[-1]
+
+        if isinstance(out_ufuncs, Callable):
+            x = out_ufuncs(x)
+        elif isinstance(out_ufuncs, Sequence):
+            for i in range(min(nparams, len(out_ufuncs))):
+                if out_ufuncs[i] is not None:
+                    x[..., i] = out_ufuncs[i](x[..., i])
+
+        if out_bounds is not None:
+            if out_bounds.ndim == 2:
+                extra_bounds = [(-np.inf, np.inf) for _ in range(nparams - out_bounds.shape[0])]
+                if len(extra_bounds) > 0:
+                    extra_bounds = np.stack(extra_bounds, axis=0)
+                    out_bounds = np.concatenate([out_bounds, extra_bounds], axis=0)
+                out_bounds = out_bounds.T
+            lb, ub = out_bounds[0], out_bounds[1]
+            x[(x < lb) | (x > ub)] = np.nan
+
+        if r2_threshold is not None:
+            x[(r_squared < r2_threshold)] = np.nan
+
+        if nan_to_num is not None:
+            x = np.nan_to_num(x, nan=nan_to_num, copy=False)
+
+        return x
+
+    def _fit(self, x, y):
+        """Internal fitting function.
+
+        Returns:
+            tuple[array-like, array-like]: The fitted parameters and corresponding
+                goodness of fit (:math:`r^2`).
+        """
+        raise NotImplementedError  # pragma: no cover
+
+    def fit(self, x, y: Sequence[MedicalVolume], mask=None, **kwargs):
+        """
+        Args:
+            x (array-like): 1D array of independent variables corresponding to different ``y``.
+            y (list[MedicalVolumes]): Dependent variable (in order) corresponding to values of
+                independent variable ``x``. Data must be spatially aligned.
+            mask (``MedicalVolume`` or ``ndarray``, optional): If specified, only entries where
+                ``mask > 0`` will be fit.
+            kwargs: Optional keyword arguments to be passed to :func:`self._fit`.
+
+        Returns:
+            Tuple[MedicalVolume, MedicalVolume]: Tuple of fitted parameters (``popt``)
+            and goodness of fit (``r2``) values. Last axis of fitted parameters
+            corresponds to different parameters in order of appearance in ``self.func``.
+        """
+        svs = []
+        msk = None
+
+        # import pdb; pdb.set_trace()
+
+        if (not isinstance(y, (list, tuple))) or (
+            not all([isinstance(_y, MedicalVolume) for _y in y])
+        ):
+            raise TypeError("`y` must be sequence of MedicalVolumes.")
+
+        x = np.asarray(x)
+        if x.shape[-1] != len(y):
+            raise ValueError(
+                "Dimension mismatch: x.shape[-1]={:d}, but len(y)={:d}".format(x.shape[-1], len(y))
+            )
+
+        orientation = y[0].orientation
+        y = [_y.reformat(orientation) for _y in y]
+
+        if mask is not None:
+            msk = self._process_mask(mask, y[0])
+            msk = msk.volume.reshape(1, -1)
+
+        original_shape = y[0].shape
+        svs = np.concatenate([_y.volume.reshape((1, -1)) for _y in y], axis=0)
+        if msk is not None:
+            svs *= msk
+
+        popt, r_squared = self._fit(x, svs, **kwargs)
+        popt = self._process_params(popt, r_squared)
+        popt = popt.reshape(original_shape + popt.shape[-1:])
+        r_squared = r_squared.reshape(original_shape)
+
+        # For parameters, headers have to be deep copied and expanded to follow
+        # broadcasting dimensions.
+        headers = y[0].headers()
+        if headers is not None:
+            headers = deepcopy(headers)
+            if popt.ndim > y[0].volume.ndim:
+                axis = tuple(-i for i in range(1, popt.ndim - y[0].volume.ndim + 1))
+                headers = np.expand_dims(headers, axis=axis)
+        popt = y[0]._partial_clone(volume=popt, headers=headers)
+        rsquared_volume = y[0]._partial_clone(volume=r_squared, headers=True)
+
+        return popt, rsquared_volume
+
+
+class CurveFitter(_Fitter):
     """The class using non-linear least squares to fit a function to data.
 
     This class is a wrapper around the :func:`dosma.utils.fits.curve_fit` function
@@ -122,34 +302,12 @@ class CurveFitter:
         func_nparams = len(func_args) - 2 if "self" in func_args else len(func_args) - 1
 
         if out_ufuncs is not None:
-            if not isinstance(out_ufuncs, Callable) and not all(
-                isinstance(ufunc, Callable) or ufunc is None for ufunc in out_ufuncs
-            ):
-                raise TypeError(
-                    f"`out_ufuncs` must be callable or sequence of callables. Got {out_ufuncs}"
-                )
-
-            if isinstance(out_ufuncs, Sequence):
-                if len(out_ufuncs) > func_nparams:
-                    warnings.warn(
-                        f"len(out_ufuncs)={len(out_ufuncs)}, but only {func_nparams} parameters. "
-                        f"Extra ufuncs will be ignored."
-                    )
+            out_ufuncs = self._format_out_ufuncs(out_ufuncs, func_nparams)
 
         if out_bounds is not None:
-            out_bounds = np.asarray(out_bounds)
-            if out_bounds.shape[-1] != 2 or out_bounds.ndim > 2:
-                raise ValueError("Invalid `out_bounds` - shape must be ([num_params,] 2)")
-            if np.any(out_bounds[..., 0] > out_bounds[..., 1]):
-                raise ValueError("Invalid `out_bounds` - lower bound must be <= upper bound")
+            out_bounds = self._format_out_bounds(out_bounds)
 
-        if isinstance(r2_threshold, str):
-            if r2_threshold != "preferences":
-                raise ValueError(
-                    f"Invalid value r2_threshold='{r2_threshold}'. "
-                    f"Expected `None`, a number, or 'preferences'."
-                )
-            r2_threshold = preferences.fitting_r2_threshold
+        r2_threshold = self._format_r2_threshold(r2_threshold)
 
         self._func = func
         self._func_name = func_name
@@ -164,94 +322,32 @@ class CurveFitter:
         self.verbose = verbose
         self.kwargs = kwargs
 
-    def _process_params(self, x):
-        """
-        Applies ``self.out_ufuncs`` and ``self.out_bounds``, in that order.
-        Input is modified in place.
-
-        Returns:
-            ndarray: Values outside of ``self.out_bounds`` will be set to np.nan.
-        """
-        out_ufuncs = self.out_ufuncs
-        out_bounds = self.out_bounds
-        nparams = x.shape[-1]
-
-        if isinstance(out_ufuncs, Callable):
-            x = out_ufuncs(x)
-        elif isinstance(out_ufuncs, Sequence):
-            for i in range(min(nparams, len(out_ufuncs))):
-                if out_ufuncs[i] is not None:
-                    x[..., i] = out_ufuncs[i](x[..., i])
-
-        if out_bounds is not None:
-            if out_bounds.ndim == 2:
-                extra_bounds = [(-np.inf, np.inf) for _ in range(nparams - out_bounds.shape[0])]
-                if len(extra_bounds) > 0:
-                    extra_bounds = np.stack(extra_bounds, axis=0)
-                    out_bounds = np.concatenate([out_bounds, extra_bounds], axis=0)
-                out_bounds = out_bounds.T
-            lb, ub = out_bounds[0], out_bounds[1]
-            x[(x < lb) | (x > ub)] = np.nan
-
-        return x
-
-    def fit(self, x, y: Sequence[MedicalVolume], mask: MedicalVolume = None):
+    def fit(self, x, y: Sequence[MedicalVolume], mask=None):
         """
         Args:
             x (array-like): 1D array of independent variables corresponding to different ``y``.
             y (list[MedicalVolumes]): Dependent variable (in order) corresponding to values of
                 independent variable ``x``. Data must be spatially aligned.
-            mask (MedicalVolume, optional): If specified, only entries where ``mask > 0``
-                will be fit.
+            mask (``MedicalVolume`` or ``ndarray``, optional): If specified, only entries where
+                ``mask > 0`` will be fit.
 
         Returns:
             Tuple[MedicalVolume, MedicalVolume]: Tuple of fitted parameters (``popt``)
             and goodness of fit (``r2``) values. Last axis of fitted parameters
             corresponds to different parameters in order of appearance in ``self.func``.
         """
-        svs = []
-        msk = None
+        if get_device(x) != cpu_device:
+            raise RuntimeError("`x` must be on the CPU")
+        if any(get_device(_y) != cpu_device for _y in y):
+            raise RuntimeError("All elements in `y` must be on the CPU")
 
-        if (not isinstance(y, (list, tuple))) or (
-            not all([isinstance(_y, MedicalVolume) for _y in y])
-        ):
-            raise TypeError("`y` must be sequence of MedicalVolumes.")
-        if any(_y.device != cpu_device for _y in y):
-            raise RuntimeError("`y` must be on the CPU")
-        if mask is not None and not isinstance(mask, MedicalVolume):
-            raise TypeError("`mask` must be a MedicalVolume")
+        return super().fit(x, y, mask=mask)
 
-        x = np.asarray(x)
-        if x.shape[-1] != len(y):
-            raise ValueError(
-                "Dimension mismatch: x.shape[-1]={:d}, but len(y)={:d}".format(x.shape[-1], len(y))
-            )
-
-        orientation = y[0].orientation
-        y = [_y.reformat(orientation) for _y in y]
-
-        if mask is not None:
-            mask = mask.reformat_as(y[0])
-            if not mask.is_same_dimensions(mask, defaults.AFFINE_DECIMAL_PRECISION):
-                raise RuntimeError("`mask` and `y` dimension mismatch")
-            msk = mask.volume
-            msk = (msk > 0).astype(msk.dtype)
-            msk = msk.reshape(1, -1)
-
-        original_shape = y[0].shape
-        for i in range(len(y)):
-            sv = y[i].volume
-            svr = sv.reshape((1, -1))
-            if msk is not None:
-                svr = svr * msk
-            svs.append(svr)
-
-        svs = np.concatenate(svs)
-
-        popt, r_squared = curve_fit(
+    def _fit(self, x, y):
+        return curve_fit(
             self._func,
             x,
-            svs,
+            y,
             self.y_bounds,
             p0=self.p0,
             show_pbar=self.verbose,
@@ -259,29 +355,6 @@ class CurveFitter:
             chunksize=self.chunksize,
             **self.kwargs,
         )
-
-        popt = self._process_params(popt)
-        if self.r2_threshold is not None:
-            popt[(r_squared < self.r2_threshold)] = np.nan
-
-        popt = popt.reshape(original_shape + popt.shape[-1:])
-        r_squared = r_squared.reshape(original_shape)
-
-        if self.nan_to_num is not None:
-            popt = np.nan_to_num(popt, nan=self.nan_to_num, copy=False)
-
-        # For parameters, headers have to be deep copied and expanded to follow
-        # broadcasting dimensions.
-        headers = y[0].headers()
-        if headers is not None:
-            headers = deepcopy(headers)
-            if popt.ndim > y[0].volume.ndim:
-                axis = tuple(-i for i in range(1, popt.ndim - y[0].volume.ndim + 1))
-                headers = np.expand_dims(headers, axis=axis)
-        popt = y[0]._partial_clone(volume=popt, headers=headers)
-        rsquared_volume = y[0]._partial_clone(volume=r_squared, headers=True)
-
-        return popt, rsquared_volume
 
     def __str__(self) -> str:
         chunk_size = 1
@@ -298,6 +371,149 @@ class CurveFitter:
         vals = [f"func={self._func_name}"]
         vals += [f"{k}={getattr(self, k)}" for k in attrs]
         vals += [f"{k}={v}" for k, v in self.kwargs.items()]
+        val_str = "\n\t".join(
+            [
+                ", ".join(vals[i * chunk_size : (i + 1) * chunk_size]) + ","
+                for i in range(int(np.ceil(len(vals) / chunk_size)))
+            ]
+        )
+        return f"{self.__class__.__name__}(\n\t" + val_str + "\n)"
+
+
+class PolyFitter(_Fitter):
+    """The class using linear least squares to fit a polynomial to data.
+
+    This class is a wrapper around the :func:`dosma.utils.fits.polyfit` function
+    that handles :class:`MedicalVolume` data and supports additional post-processing
+    on fitted parameters. Most attributes are shared with :class:`dosma.utils.fits.CurveFitter`.
+    See that class for details.
+
+    Unlike non-linear curve fitting, polynomial fitting can be done for multiple data sequences
+    (i.e. multiple pixels/voxels) as a single least squares problem, which is the default in
+    :mod:`numpy`. However, poor matrix conditioning can result in poor parameter estimates.
+    As a result, this class also supports fitting each data sequence separately.
+    If ``num_workers = None``, data sequences will be fit as a single least squares problem.
+    If ``num_workers = 0``, data sequences will be fit separately and sequentially.
+    If ``num_workers > 0``, multiprocessing will be used to fit each data sequence separately
+    and in parallel.
+
+    Args:
+        deg (int): Degree of the fitting polynomial. See :func:`numpy.polyfit`.
+        rcond (float, optional): Relative condition number of the fit. See :func:`numpy.polyfit`.
+        y_bounds (tuple, optional): Same as :class:`CurveFitter`.
+        out_ufuncs (Callable, Sequence[Callable]): Same as :class:`CurveFitter`.
+        out_bounds (array-like, optional): Same as :class:`CurveFitter`.
+        r2_threshold (float): Same as :class:`CurveFitter`.
+        nan_to_num (float, optional): Same as :class:`CurveFitter`.
+        num_workers (int, optional): Maximum number of workers to use for fitting.
+            If ``None``, all data sequences should be solved as a single least squares problem.
+            If ``0``, each data sequence will be fit separately from one another.
+            Defaults to ``None``.
+        chunksize (int, optional): Same as :class:`CurveFitter`.
+        verbose (bool, optional): Same as :class:`CurveFitter`.
+
+    Examples:
+        Fitting polynomial of degree 1 (:math:`y = a*x + b`) to to independent variables ``x``
+        and dependent variables ``y``.
+
+        >>> fitter = PolyFitter(deg=1)
+        >>> popt, r2 = fitter.fit(x, y)
+        >>> a_hat, b_hat = popt[..., 0], popt[..., 1]
+
+        Post-process ``b`` by taking the absolute value of ``b`` (i.e. :math:`|b|`).
+        Set all values not in domain :math:`0 \\leq |b| \\leq 100` or with a goodness of fit
+        less than 0.9 (:math:`r^2` < 0.9) to ``np.nan``:
+
+        >>> ufunc = lambda x: np.abs(x)
+        >>> out_bounds = ((-np.inf, np.inf), (0, 100))
+        >>> fitter = CurveFitter(
+        ...     monoexponential, p0=(1.0, -0.2), out_ufuncs=[None, ufunc], out_bounds=out_bounds)
+        >>> popt, r2 = fitter.fit(x, y)
+        >>> a_hat, abs_b_hat = popt[..., 0], popt[..., 1]
+    """
+
+    def __init__(
+        self,
+        deg: int,
+        rcond: float = None,
+        y_bounds: Tuple[float] = None,
+        out_ufuncs: Union[Callable, Sequence[Callable]] = None,
+        out_bounds=None,
+        r2_threshold: float = "preferences",
+        nan_to_num: float = None,
+        num_workers: int = None,
+        chunksize: int = None,
+        verbose: bool = False,
+    ):
+        if out_ufuncs is not None:
+            out_ufuncs = self._format_out_ufuncs(out_ufuncs, deg + 1)
+
+        if out_bounds is not None:
+            out_bounds = self._format_out_bounds(out_bounds)
+
+        r2_threshold = self._format_r2_threshold(r2_threshold)
+
+        self.deg = deg
+        self.rcond = rcond
+
+        self.y_bounds = y_bounds
+        self.out_ufuncs = out_ufuncs
+        self.out_bounds = out_bounds
+        self.r2_threshold = r2_threshold
+        self.nan_to_num = nan_to_num
+        self.num_workers = num_workers
+        self.chunksize = chunksize
+        self.verbose = verbose
+
+    def fit(self, x, y: Sequence[MedicalVolume], mask=None):
+        """
+        Args:
+            x (array-like): Same as `CurveFitter.fit`.
+            y (Sequence[MedicalVolume]): Same as `CurveFitter.fit`.
+            mask (MedicalVolume or ndarray): Same as `CurveFitter.fit`.
+
+        Returns:
+            Tuple[MedicalVolume, MedicalVolume]: Tuple of fitted parameters (``popt``)
+                and goodness of fit (``r2``) values (same as `CurveFitter.fit`). The last
+                axis of ``popt`` corresponds to different polynomial parameters in order
+                ``y = popt[..., 0] * x ** self.deg + ... + popt[..., self.deg-1]``.
+        """
+        device = get_device(x)
+        y_devices = [get_device(_y) for _y in y]
+        if any(_y_device != device for _y_device in y_devices):
+            raise RuntimeError(
+                f"All elements in `y` must be on the same device as `x` ({device}). "
+                f"Got {y_devices}."
+            )
+
+        return super().fit(x, y, mask=mask)
+
+    def _fit(self, x, y):
+        return polyfit(
+            x,
+            y,
+            deg=self.deg,
+            rcond=self.rcond,
+            y_bounds=self.y_bounds,
+            show_pbar=self.verbose,
+            num_workers=self.num_workers,
+            chunksize=self.chunksize,
+        )
+
+    def __str__(self) -> str:
+        chunk_size = 1
+        attrs = [
+            "deg",
+            "rcond",
+            "y_bounds",
+            "out_bounds",
+            "r2_threshold",
+            "nan_to_num",
+            "num_workers",
+            "chunksize",
+            "verbose",
+        ]
+        vals = [f"{k}={getattr(self, k)}" for k in attrs]
         val_str = "\n\t".join(
             [
                 ", ".join(vals[i * chunk_size : (i + 1) * chunk_size]) + ","
@@ -531,6 +747,140 @@ def curve_fit(
     return np.stack(popts, axis=0), np.asarray(r_squared)
 
 
+def polyfit(
+    x,
+    y,
+    deg: int,
+    rcond=None,
+    full=False,
+    w=None,
+    cov=False,
+    eps=1e-8,
+    y_bounds=None,
+    show_pbar=False,
+    num_workers=None,
+    chunksize: int = None,
+):
+    """Use linear least squares to fit a polynomial of degree ``deg`` to data.
+
+    This function is a wrapper around the :func:`numpy.polyfit` and :func:`cupy.polyfit`
+    functions.
+
+    In addition to standard polyfit functionality, this function also supports
+    multiprocessing of the data using multiple workers. When multiprocessing is enabled,
+    each data sequence is fit using a separate worker.
+
+    In most cases, multiprocessing is not needed for linear least squares as most
+    computations can be done quickly via matrix decomposition. However, there are cases
+    where ``y`` values can cause low condition numbers and/or invalid outputs. In these cases,
+    solving for each data sequence separately can be beneficial.
+
+    Solving each data sequence separately without multiprocessing can also be done by setting
+    ``num_workers=0``.
+
+    TODO: Add documentation
+    """
+
+    def _compute_r2_matrix(_x, _y, _popts):
+        """
+        Here, ``M`` refers to # sample points, ``K`` refers to # sequences
+        This function needs to be run under the correct context
+        Args:
+            _x: array_like, shape (M,)
+            _y: array_like, shape (M, K)
+            _popts (array-like): Shape (deg+1, K)
+        """
+        xp = get_array_module(_y)
+
+        _x = _x.flatten()
+        _xs = xp.stack([_x ** i for i in range(len(_popts) - 1, -1, -1)], axis=-1)
+        yhat = _xs @ _popts  # (M, K)
+
+        residuals = yhat - _y
+        ss_res = xp.sum(residuals ** 2, axis=0)
+        ss_tot = xp.sum((_y - xp.mean(_y, axis=0, keepdims=True)) ** 2, axis=0)
+        return 1 - (ss_res / (ss_tot))
+
+    x_device, y_device = get_device(x), get_device(y)
+    if x_device != y_device:
+        raise ValueError(f"`x` ({x_device}) and `y` ({x_device}) must be on the same device")
+
+    scatter_data = num_workers is not None
+    if (cov or full) and scatter_data:
+        raise ValueError("`cov` or `full` cannot be used with multiprocessing")
+
+    xp = get_array_module(x)
+
+    x = xp.asarray(x)
+    y = xp.asarray(y)
+    if y.ndim == 1:
+        y = y.reshape(y.shape + (1,))
+    N = y.shape[-1]
+
+    num_workers = min(num_workers, N) if num_workers is not None else None
+
+    oob = y_bounds is not None and ((y < y_bounds[0]).any() or (y > y_bounds[1]).any())
+    if oob:
+        warnings.warn("Out of bounds values found. Failure in fit will result in np.nan")
+
+    fitter = partial(
+        _polyfit, x=x, deg=deg, y_bounds=y_bounds, rcond=rcond, w=w, eps=eps, xp=xp.__name__
+    )
+
+    residuals, rank, singular_values, rcond, V = None, None, None, None, None
+    with x_device:
+        if not scatter_data:
+            # Fit all sequences as one least squares problem.
+            out = xp.polyfit(x, y, deg, rcond=rcond, full=full, w=w, cov=cov)
+            if full:
+                popts, residuals, rank, singular_values, rcond = out
+            elif cov:
+                popts, V = out
+            else:
+                popts = out
+            r_squared = _compute_r2_matrix(x, y, popts)
+            popts = popts.T
+        elif num_workers == 0:
+            # Fit each sequence separately
+            popts = []
+            r_squared = []
+            for i in tqdm(range(N), disable=not show_pbar):
+                popt_, r2_ = fitter(y[:, i])
+                popts.append(popt_)
+                r_squared.append(r2_)
+            popts = xp.stack(popts, axis=0)
+        else:
+            # Multiprocessing - fits each sequence separately
+            if show_pbar:
+                tqdm_kwargs = {"chunksize": chunksize}
+                tqdm_kwargs = {k: v for k, v in tqdm_kwargs.items() if v is not None}
+                data = process_map(fitter, y.T, max_workers=num_workers, **tqdm_kwargs)
+            else:
+                with mp.Pool(num_workers) as p:
+                    data = p.map(fitter, y.T, chunksize=chunksize)
+            popts, r_squared = [x[0] for x in data], [x[1] for x in data]
+            popts = xp.stack(popts, axis=0)
+
+        r_squared = xp.asarray(r_squared)
+
+    if full:
+        return popts, r_squared, residuals, rank, singular_values, rcond
+    elif cov:
+        return popts, r_squared, V
+    else:
+        return popts, r_squared
+
+
+def monoexponential(x, a, b):
+    """Function: :math:`f(x) = a * e^{b*x}`."""
+    return a * np.exp(b * x)
+
+
+def biexponential(x, a1, b1, a2, b2):
+    """Function: :math:`f(x) = a1*e^{b1*x} + a2*e^{b2*x}`."""
+    return a1 * np.exp(b1 * x) + a2 * np.exp(b2 * x)
+
+
 def _curve_fit(y, x, func, y_bounds=None, p0=None, ftol=1e-5, eps=1e-8, nparams=None, **kwargs):
     def _fit_internal(_x, _y):
         popt, _ = sop.curve_fit(func, _x, _y, p0=p0, ftol=ftol, **kwargs)
@@ -558,17 +908,37 @@ def _curve_fit(y, x, func, y_bounds=None, p0=None, ftol=1e-5, eps=1e-8, nparams=
     return popt_, r2_
 
 
-def monoexponential(x, a, b):
-    """Function: :math:`f(x) = a * e^{b*x}`."""
-    return a * np.exp(b * x)
+def _polyfit(y, x, deg, y_bounds=None, xp=None, rcond=None, w=None, eps=1e-8):
+    def _fit_internal(_x, _y):
+        popt = xp.polyfit(_x, _y, deg, rcond=rcond, w=w)
+
+        residuals = _y - xp.polyval(popt, _x)
+        ss_res = xp.sum(residuals ** 2)
+        ss_tot = xp.sum((_y - xp.mean(_y)) ** 2)
+        r_squared = 1 - (ss_res / (ss_tot + eps))
+
+        return popt, r_squared
+
+    if xp in ["np", "numpy"]:
+        xp = np
+    elif xp in ["cp", "cupy"]:
+        xp = cp
+    else:
+        raise ValueError("Cannot determine array module")
+
+    nparams = deg + 1
+    oob = y_bounds is not None and ((y < y_bounds[0]).any() or (y > y_bounds[1]).any())
+    if oob or (y == 0).all():
+        return (xp.nan,) * nparams, 0
+
+    try:
+        popt_, r2_ = _fit_internal(x, y)
+    except RuntimeError:
+        popt_, r2_ = (xp.nan,) * nparams, 0
+    return popt_, r2_
 
 
-def biexponential(x, a1, b1, a2, b2):
-    """Function: :math:`f(x) = a1*e^{b1*x} + a2*e^{b2*x}`."""
-    return a1 * np.exp(b1 * x) + a2 * np.exp(b2 * x)
-
-
-def __fit_mono_exp__(x, y, p0=None):
+def __fit_mono_exp__(x, y, p0=None):  # pragma: no cover
     def func(t, a, b):
         exp = np.exp(b * t)
         return a * exp
@@ -593,7 +963,7 @@ def __fit_mono_exp__(x, y, p0=None):
     return popt, r_squared
 
 
-def __fit_monoexp_tc__(x, ys, tc0, show_pbar=False):
+def __fit_monoexp_tc__(x, ys, tc0, show_pbar=False):  # pragma: no cover
     warnings.warn(
         "__fit_monoexp_tc__ is deprecated since v0.12 and will no longer be "
         "supported in v0.13. Use `curve_fit` instead.",

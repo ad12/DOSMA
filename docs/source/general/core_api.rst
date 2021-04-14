@@ -72,6 +72,7 @@ General fitting functions:
    :nosignatures:
 
    dosma.utils.fits.curve_fit
+   dosma.utils.fits.polyfit
    dosma.utils.fits.monoexponential
    dosma.utils.fits.biexponential
 
@@ -82,5 +83,6 @@ Fitter classes:
    :nosignatures:
 
    dosma.utils.fits.CurveFitter
+   dosma.utils.fits.PolyFitter
    dosma.utils.fits.MonoExponentialFit
 

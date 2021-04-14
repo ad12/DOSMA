@@ -41,6 +41,21 @@ on the fitted parameters. The commands below using ``CurveFitter`` and ``curve_f
 >>> from dosma.utils.fits import curve_fit
 >>> curve_fit(monoexponential, echo_times, [x.volume for x in images], p0=(1.0, -1/tc0), num_workers=4)
 
+Non-linear curve fitting often requires carefully selected parameter initialization. In cases where
+non-linear curve fitting fails, polynomial fitting may be more effective. Polynomials can be fit to
+the data using :func:`dosma.utils.fits.polyfit` or :class:`dosma.utils.fits.PolyFitter` (recommended),
+which is the polynomial fitting equivalent of ``CurveFitter``. Because polynomial fitting can also be
+done as a single least squares problem, it may also often be faster than standard curve fitting.
+The commands below use ``PolyFitter`` to fit to the log-linearized monoexponential fit
+(i.e. ``log(y) = log(a) + b*x`` to some image data:
+
+>>> from dosma.utils.fits import PolyFitter
+>>> echo_times = np.asarray([10.0, 20.0, 50.0])
+>>> pfitter = PolyFitter(deg=1, nan_to_num=0, out_ufuncs=[None, lambda x: -1/x], out_bounds=(0, 100))
+>>> log_images = [np.log(img) for img in images]
+>>> popt, r2_map = pfitter.fit(echo_times, log_images)
+>>> quant_map = popt[..., 0]  # note ordering of parameters - see numpy.polyfit for more details.
+
 .. Substitutions
 .. |T2| replace:: T\ :sub:`2`
 .. |T1| replace:: T\ :sub:`1`
