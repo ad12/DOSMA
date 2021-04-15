@@ -3,7 +3,14 @@ import unittest
 import numpy as np
 
 from dosma.data_io.med_volume import MedicalVolume
-from dosma.utils.fits import CurveFitter, MonoExponentialFit, curve_fit, monoexponential
+from dosma.utils.fits import (
+    CurveFitter,
+    MonoExponentialFit,
+    PolyFitter,
+    curve_fit,
+    monoexponential,
+    polyfit,
+)
 
 from .. import util
 
@@ -11,6 +18,8 @@ from .. import util
 def _generate_monoexp_data(shape=None, x=None, a=1.0, b=None):
     """Generate sample monoexponetial data.
     ``a=1.0``, ``b`` is randomly generated in interval [0.1, 1.1).
+
+    The equation is :math:`y =  a * \\exp (b*x)`.
     """
     if b is None:
         b = np.random.rand(*shape) + 0.1
@@ -20,6 +29,24 @@ def _generate_monoexp_data(shape=None, x=None, a=1.0, b=None):
         x = np.asarray([0.5, 1.0, 2.0, 4.0])
     y = [MedicalVolume(monoexponential(t, a, b), affine=np.eye(4)) for t in x]
     return x, y, b
+
+
+def _generate_affine(shape=None, x=None, a=None, b=1.0, as_med_vol=False):
+    """Generate data of the form :math:`y = a*x + b`."""
+    if a is None:
+        a = np.random.rand(*shape) + 0.1
+    else:
+        shape = a.shape
+    if x is None:
+        x = np.asarray([0.5, 1.0, 2.0, 4.0])
+    if b is None:
+        b = np.random.rand(*shape)
+
+    if as_med_vol:
+        y = [MedicalVolume(a * t + b, affine=np.eye(4)) for t in x]
+    else:
+        y = [a * t + b for t in x]
+    return x, y, a, b
 
 
 def _linear(x, a):
@@ -55,6 +82,62 @@ class TestCurveFit(unittest.TestCase):
             monoexponential, x, ys, num_workers=util.num_workers(), show_pbar=True
         )
         assert np.allclose(popt, popt_mw)
+
+
+class TestPolyFit(unittest.TestCase):
+    """Test :func:`dosma.utils.fits.polyfit`."""
+
+    def test_joint_optimization(self):
+        x, y, a, b = _generate_affine((1000,), a=None, b=None, as_med_vol=False)
+        popt_expected = np.polyfit(x, y, deg=1)
+        popt, _ = polyfit(x, y, deg=1, num_workers=None)
+        assert np.allclose(popt.T, popt_expected)
+        assert np.allclose(popt[..., 0], a)
+        assert np.allclose(popt[..., 1], b)
+
+    def test_multiple_workers(self):
+        x, y, _, _ = _generate_affine((1000,), a=None, b=None, as_med_vol=False)
+
+        popt, _ = polyfit(x, y, deg=1, num_workers=0)
+        popt_mw, _ = polyfit(x, y, deg=1, num_workers=util.num_workers())
+        assert np.allclose(popt, popt_mw)
+
+        popt_mw, _ = polyfit(x, y, deg=1, num_workers=util.num_workers(), show_pbar=True)
+        assert np.allclose(popt, popt_mw)
+
+    def test_polyfit_args(self):
+        """Test that standard :func:`np.polyfit` args work."""
+        x, y, _, _ = _generate_affine((1000,), a=None, b=None, as_med_vol=False)
+
+        popt_exp, residuals_exp, rank_exp, singular_values_exp, rcond_exp = np.polyfit(
+            x, y, deg=1, full=True
+        )
+        popt, _, residuals, rank, singular_values, rcond = polyfit(x, y, deg=1, full=True)
+
+        assert np.allclose(popt, popt_exp.T)
+        assert np.allclose(residuals, residuals_exp)
+        assert np.allclose(rank, rank_exp)
+        assert np.allclose(singular_values, singular_values_exp)
+        assert np.allclose(rcond, rcond_exp)
+
+        popt_exp, V_exp = np.polyfit(x, y, deg=1, cov=True)
+        popt, _, V = polyfit(x, y, deg=1, cov=True)
+
+        assert np.allclose(popt, popt_exp.T)
+        assert np.allclose(V, V_exp)
+
+    # @util.requires_packages("cupy")
+    # def test_cupy(self):
+    #     # TODO: Uncomment when cupy 9.0.0 is available.
+    #     import cupy as cp
+
+    #     x, y, _, _ = _generate_affine((1000,), a=None, b=None, as_med_vol=False)
+    #     x_gpu = cp.asarray(x)
+    #     y_gpu = cp.asarray(y)
+
+    #     popt, _ = polyfit(x_gpu, y_gpu, deg=1)
+    #     popt_expected = cp.polyfit(x_gpu, y_gpu, deg=1)
+    #     assert cp.allclose(popt, popt_expected.T)
 
 
 class TestMonoExponentialFit(unittest.TestCase):
@@ -105,6 +188,13 @@ class TestCurveFitter(unittest.TestCase):
 
         fitter = CurveFitter(monoexponential)
         popt = fitter.fit(x, y, mask=mask)[0]
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+
+        assert np.allclose(a_hat.volume[mask_arr != 0], 1.0)
+        assert np.allclose(b_hat.volume[mask_arr != 0], b[mask_arr != 0])
+
+        fitter = CurveFitter(monoexponential)
+        popt = fitter.fit(x, y, mask=mask_arr)[0]
         a_hat, b_hat = popt[..., 0], popt[..., 1]
 
         assert np.allclose(a_hat.volume[mask_arr != 0], 1.0)
@@ -231,6 +321,95 @@ class TestCurveFitter(unittest.TestCase):
         a_hat = popt[..., 0]
 
         assert np.allclose(a_hat.volume, a)
+
+    def test_str(self):
+        fitter = CurveFitter(
+            monoexponential,
+            p0=(1.0, -1 / 30),
+            out_ufuncs=[None, lambda x: 1 / np.abs(x)],
+            out_bounds=(0, 100),
+            nan_to_num=0,
+        )
+        _ = str(fitter)
+
+
+class TestPolyFitter(unittest.TestCase):
+    """Tests for ``dosma.utils.fits.PolyFitter``."""
+
+    def test_basic(self):
+        x, y, a, b = _generate_affine((10, 10, 20), as_med_vol=True)
+        fitter = PolyFitter(deg=1)
+        popt, r2 = fitter.fit(x, y)
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+
+        assert np.allclose(a_hat.volume, a)
+        assert np.allclose(b_hat.volume, b)
+
+        assert np.all(popt.affine == y[0].affine)
+        assert np.all(r2.affine == y[0].affine)
+
+    def test_mask(self):
+        x, y, a, b = _generate_affine((10, 10, 20), as_med_vol=True)
+        mask_arr = np.random.rand(*y[0].shape) > 0.5
+        mask = MedicalVolume(mask_arr, y[0].affine)
+
+        fitter = PolyFitter(deg=1)
+        popt = fitter.fit(x, y, mask=mask)[0]
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+
+        assert np.allclose(a_hat.volume[mask_arr != 0], a[mask_arr != 0])
+        assert np.allclose(b_hat.volume[mask_arr != 0], b)
+
+        fitter = PolyFitter(deg=1)
+        popt = fitter.fit(x, y, mask=mask_arr)[0]
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+
+        assert np.allclose(a_hat.volume[mask_arr != 0], a[mask_arr != 0])
+        assert np.allclose(b_hat.volume[mask_arr != 0], b)
+
+    def test_headers(self):
+        """Test curve fitter does not fail with volumes with headers."""
+        x, y, a, b = _generate_affine((10, 10, 20, 4), as_med_vol=True)
+        for idx, _y in enumerate(y):
+            _y._headers = util.build_dummy_headers(
+                (1, 1) + _y.shape[2:], fields={"EchoNumbers": idx}
+            )
+
+        fitter = PolyFitter(deg=1)
+        popt, _ = fitter.fit(x, y)
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+
+        assert np.allclose(a_hat.volume, a)
+        assert np.allclose(b_hat.volume, b)
+
+        # Test header with single parameter to fit
+        x, y, a, _ = _generate_affine((10, 10, 20, 4), b=0.0, as_med_vol=True)
+
+        fitter = PolyFitter(deg=1)
+        popt, _ = fitter.fit(x, y)
+        a_hat = popt[..., 0]
+
+        assert np.allclose(a_hat.volume, a)
+
+    def test_nan_to_num(self):
+        shape = (10, 10, 20)
+        a = np.ones(shape)
+        a[5:] = 1.5
+        b = np.random.rand(*shape) + 0.1
+        b[:5] = 1.5
+
+        x, y, _, _ = _generate_affine(a=a, b=b, as_med_vol=True)
+
+        out_bounds = (0, 1.2)
+        fitter = PolyFitter(deg=1, out_bounds=out_bounds, nan_to_num=0.0)
+        popt, _ = fitter.fit(x, y)
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+        assert np.allclose(a_hat[:5].volume, 1.0) and np.allclose(a_hat[5:].volume, 0.0)
+        assert np.allclose(b_hat[5:].volume, b[5:]) and np.allclose(b_hat[:5].volume, 0.0)
+
+    def test_str(self):
+        fitter = PolyFitter(deg=2, rcond=0.5, y_bounds=(0, 200), r2_threshold=0.9, chunksize=1000)
+        _ = str(fitter)
 
 
 if __name__ == "__main__":

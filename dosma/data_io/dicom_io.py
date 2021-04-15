@@ -20,7 +20,7 @@ import multiprocessing as mp
 import os
 import re
 from math import ceil, log10
-from typing import List, Sequence, Union
+from typing import List, Sequence, Tuple, Union
 
 import nibabel as nib
 import numpy as np
@@ -53,6 +53,9 @@ class DicomReader(DataReader):
             order.
         ignore_ext (bool, optional): If ``True``, ignore extension (``".dcm"``)
             when loading dicoms from directory.
+        default_ornt (Tuple[str, str], optional): Default in-plane orientation to use if
+            orientation cannot be determined from DICOM header. If not specified
+            and orientation cannot be determined, error will be raised.
 
     Examples:
         >>> # Load single dicom
@@ -77,6 +80,7 @@ class DicomReader(DataReader):
         group_by: Union[str, int, Sequence[Union[str, int]]] = "EchoNumbers",
         sort_by: Union[str, int, Sequence[Union[str, int]]] = None,
         ignore_ext: bool = False,
+        default_ornt: Tuple[str, str] = None,
     ):
         """
         Args:
@@ -90,12 +94,16 @@ class DicomReader(DataReader):
                 order.
             ignore_ext (bool, optional): If ``True``, ignore extension (``".dcm"``)
                 when loading dicoms from directory.
+            default_ornt (Tuple[str, str], optional): Default in-plane orientation to use if
+                orientation cannot be determined from DICOM header. If not specified
+                and orientation cannot be determined, error will be raised.
         """
         self.num_workers = num_workers
         self.verbose = verbose
         self.group_by = group_by
         self.sort_by = sort_by
         self.ignore_ext = ignore_ext
+        self.default_ornt = default_ornt
 
     def get_files(
         self,
@@ -161,6 +169,7 @@ class DicomReader(DataReader):
         group_by: Union[str, int, Sequence[Union[str, int]]] = np._NoValue,
         sort_by: Union[str, int, Sequence[Union[str, int]]] = np._NoValue,
         ignore_ext: bool = np._NoValue,
+        default_ornt: Tuple[str, str] = np._NoValue,
     ):
         """Load dicoms into ``MedicalVolume``s grouped by ``group_by`` tag(s).
 
@@ -178,6 +187,10 @@ class DicomReader(DataReader):
                 order. Defaults to ``self.sort_by``.
             ignore_ext (bool, optional): If ``True``, ignore extension (``".dcm"``)
                 when loading dicoms from directory. Defaults to ``self.ignore_ext``.
+            default_ornt (Tuple[str, str], optional): Default in-plane orientation to use if
+                orientation cannot be determined from DICOM header. If not specified
+                and orientation cannot be determined, error will be raised.
+                Defaults to ``self.default_ornt``.
 
         Returns:
             list[MedicalVolume]: Different volumes grouped by the `group_by` DICOM tag.
@@ -195,11 +208,12 @@ class DicomReader(DataReader):
         group_by = group_by if group_by != np._NoValue else self.group_by
         sort_by = sort_by if sort_by != np._NoValue else self.sort_by
         ignore_ext = ignore_ext if ignore_ext != np._NoValue else self.ignore_ext
+        default_ornt = default_ornt if default_ornt != np._NoValue else self.default_ornt
 
         group_by = _wrap_as_tuple(group_by, default=())
         sort_by = _wrap_as_tuple(sort_by, default=())
 
-        if isinstance(path, str):
+        if isinstance(path, str) or not isinstance(path, Sequence):
             if os.path.isdir(path):
                 lstFilesDCM = self.get_files(path, ignore_hidden=True, ignore_ext=ignore_ext)
             elif os.path.isfile(path):
@@ -265,7 +279,7 @@ class DicomReader(DataReader):
                 continue
             arr = np.stack(dd["arr"], axis=-1)
 
-            affine = to_RAS_affine(headers)
+            affine = to_RAS_affine(headers, default_ornt=default_ornt)
 
             vol = MedicalVolume(arr, affine, headers=headers)
             vols.append(vol)
@@ -437,7 +451,7 @@ class DicomWriter(DataWriter):
                 _write_dicom_file(volume_arr[..., s], headers[s], filepaths[s])
 
 
-def to_RAS_affine(headers: List[pydicom.FileDataset]):
+def to_RAS_affine(headers: List[pydicom.FileDataset], default_ornt: Tuple[str, str] = None):
     """Convert from LPS+ orientation (default for DICOM) to RAS+ standardized orientation.
 
     Args:
@@ -450,10 +464,19 @@ def to_RAS_affine(headers: List[pydicom.FileDataset]):
     try:
         im_dir = headers[0].ImageOrientationPatient
     except AttributeError:
-        im_dir = _decode_inplane_direction(headers)
+        im_dir = _decode_inplane_direction(headers, default_ornt=default_ornt)
         if im_dir is None:
             raise RuntimeError("Could not determine in-plane directions from headers.")
-    in_plane_pixel_spacing = headers[0].PixelSpacing
+    try:
+        in_plane_pixel_spacing = headers[0].PixelSpacing
+    except AttributeError:
+        try:
+            in_plane_pixel_spacing = headers[0].ImagerPixelSpacing
+        except AttributeError:
+            raise RuntimeError(
+                "Could not determine in-plane pixel spacing from headers. "
+                "Neither attribute 'PixelSpacing' nor 'ImagerPixelSpacing' found."
+            )
 
     orientation = np.zeros([3, 3])
 
@@ -504,7 +527,7 @@ def to_RAS_affine(headers: List[pydicom.FileDataset]):
     return affine
 
 
-def _decode_inplane_direction(headers: Sequence[pydicom.FileDataset]):
+def _decode_inplane_direction(headers: Sequence[pydicom.FileDataset], default_ornt=None):
     """Helper function to decode in-plane direction from header(s).
 
     Recall the direction in dicoms are in cartesian order ``(x,y)``,
@@ -518,12 +541,23 @@ def _decode_inplane_direction(headers: Sequence[pydicom.FileDataset]):
     """
     _patient_ornt_to_nib = {"H": "S", "F": "I"}
 
-    if len(headers) == 1 and hasattr(headers[0], "PatientOrientation"):
+    if (
+        len(headers) == 1
+        and hasattr(headers[0], "PatientOrientation")
+        and headers[0].PatientOrientation
+    ):
         # Decoder: patient orientation.
         # Patient orientation is only decoded along principal direction (e.g. "FR" -> "F").
-        ornt = [_patient_ornt_to_nib.get(k[:1], k) for k in headers[0].PatientOrientation]  # (x,y)
+        ornt = [
+            _patient_ornt_to_nib.get(k[:1], k[:1]) for k in headers[0].PatientOrientation
+        ]  # (x,y)
         ornt = stdo.orientation_nib_to_standard(ornt)
         affine = stdo.to_affine(ornt)
+        affine[:2, :] = -1 * affine[:2, :]
+        return np.concatenate([affine[:3, 0], affine[:3, 1]], axis=0)
+
+    if default_ornt:
+        affine = stdo.to_affine(default_ornt)
         affine[:2, :] = -1 * affine[:2, :]
         return np.concatenate([affine[:3, 0], affine[:3, 1]], axis=0)
 
