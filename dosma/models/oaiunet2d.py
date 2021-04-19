@@ -9,7 +9,6 @@ from copy import deepcopy
 import numpy as np
 
 try:
-    import keras.backend as K
     from keras.layers import BatchNormalization as BN
     from keras.layers import Concatenate, Conv2D, Conv2DTranspose, Dropout, Input, MaxPooling2D
     from keras.models import Model
@@ -167,8 +166,6 @@ class OAIUnet2D(KerasSegModel):
         # reshape mask to be (x, y, slice)
         mask = np.transpose(np.squeeze(mask, axis=-1), (1, 2, 0))
 
-        K.clear_session()
-
         vol_copy.volume = mask
 
         # reorient to match with original volume
@@ -313,8 +310,6 @@ class IWOAIOAIUnet2D(OAIUnet2D):
 
         # reshape mask to be (x, y, slice, classes)
         mask = np.transpose(mask, (1, 2, 0, 3))
-
-        K.clear_session()
 
         vols = {}
         for i, category in enumerate(["fc", "tc", "pc", "men"]):

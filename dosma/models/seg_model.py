@@ -11,6 +11,11 @@ import numpy as np
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.defaults import preferences
 
+try:
+    import keras.backend as K
+except ImportError:  # pragma: no-cover
+    pass
+
 
 class SegModel(ABC):
     """
@@ -98,6 +103,9 @@ class KerasSegModel(SegModel):
         :return: a Keras model
         """
         pass
+
+    def __del__(self):
+        K.clear_session()
 
 
 # ============================ Preprocessing utils ============================
