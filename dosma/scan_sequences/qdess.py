@@ -56,13 +56,13 @@ class QDess(ScanSequence):
         """
         return len(self.volumes) == self.__NUM_ECHOS__
 
-    def segment(self, model: SegModel, tissue: Tissue, use_rms: bool = False):
+    def segment(self, model: SegModel, tissue: Tissue, use_rss: bool = False):
         """Segment tissue in scan.
 
         Args:
             model (SegModel): Model to use for segmenting scans.
             tissue (Tissue): The tissue to segment.
-            use_rms (`bool`, optional): If ``True``, use root-mean-square of
+            use_rss (`bool`, optional): If ``True``, use root-sum-of-squares (RSS) of
                 echos for segmentation (preferred for built-in methods).
                 If ``False``, use first echo for segmentation.
 
@@ -76,8 +76,8 @@ class QDess(ScanSequence):
         )
         logging.info(f"Segmenting {tissue_names}...")
 
-        if use_rms:
-            segmentation_volume = self.calc_rms()
+        if use_rss:
+            segmentation_volume = self.calc_rss()
         else:
             # Use first echo for segmentation.
             segmentation_volume = self.volumes[0]
@@ -237,8 +237,21 @@ class QDess(ScanSequence):
 
         return t2_map_wrapped
 
-    def calc_rms(self):
-        """Calculate root-mean-square (RMS) of two echos.
+    def calc_rss(self):
+        """Calculate root-sum-of-squares (RSS) of two echos.
+
+        Returns:
+            MedicalVolume: Volume corresponding to RSS of two echos.
+        """
+        return self._combine_echoes("rss")
+
+    def _combine_echoes(self, method="rss"):
+        """Combine two echoes.
+
+        Args:
+            method (str, optional): Supported combination methods are:
+                * ``"rss"`` (default): The root-sum-of-squares of two echoes.
+                * ``"rms"``: The root-mean-square of two echoes.
 
         Returns:
             MedicalVolume: Volume with RMS of two echos.
@@ -255,14 +268,15 @@ class QDess(ScanSequence):
 
         assert (~xp.iscomplex(echo1)).all() and (~xp.iscomplex(echo2)).all()
 
-        sq_sum = echo1 ** 2 + echo2 ** 2
-
-        assert (sq_sum >= 0).all()
-
-        rms = xp.sqrt(echo1 ** 2 + echo2 ** 2)
+        if method == "rss":
+            vol = xp.sqrt(echo1 ** 2 + echo2 ** 2)
+        elif method == "rms":
+            vol = xp.sqrt((echo1 ** 2 + echo2 ** 2) / 2)
+        else:
+            raise ValueError(f"`method={method}` is not supported")
 
         mv = deepcopy(self.volumes[0])
-        mv.volume = rms
+        mv.volume = vol
 
         return mv
 
@@ -281,8 +295,8 @@ class QDess(ScanSequence):
         segment_action = ActionWrapper(
             name=cls.segment.__name__,
             help="generate automatic segmentation",
-            param_help={"use_rms": "use root mean square (rms) of two echos for segmentation"},
-            alternative_param_names={"use_rms": ["rms"]},
+            param_help={"use_rss": "use root sum of squares (RSS) of two echos for segmentation"},
+            alternative_param_names={"use_rss": ["rss"]},
         )
         generate_t2_map_action = ActionWrapper(
             name=cls.generate_t2_map.__name__,

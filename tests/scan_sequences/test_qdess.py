@@ -26,7 +26,7 @@ class QDessTest(util.ScanTest):
         model = get_model(
             SEGMENTATION_MODEL, input_shape=input_shape, weights_path=tissue.weights_file_path
         )
-        scan.segment(model, tissue, use_rms=True)
+        scan.segment(model, tissue, use_rss=True)
 
     #
     # def test_t2_map(self):
@@ -55,7 +55,7 @@ class QDessTest(util.ScanTest):
         cmdline_str = (
             f"--d {self.dicom_dirpath} --s {self.data_dirpath} qdess --fc "
             f"segment --weights_dir {SEGMENTATION_WEIGHTS_FOLDER} "
-            f"--model {SEGMENTATION_MODEL} --use_rms"
+            f"--model {SEGMENTATION_MODEL} --use_rss"
         )
         self.__cmd_line_helper__(cmdline_str)
 
