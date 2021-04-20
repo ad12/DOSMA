@@ -223,15 +223,15 @@ class CommandLineScanContainer:
         folder_id = scan_type.NAME
 
         name_len = len(folder_id) + 2  # buffer
-        if scan_type.NAME in dir_path[-name_len:]:
+        if scan_type.NAME not in dir_path[-name_len:]:
             scan_dirpath = os.path.join(dir_path, folder_id)
         else:
             scan_dirpath = dir_path
 
-        scan_dirpath = os.path.join(scan_dirpath, folder_id)
+        # scan_dirpath = os.path.join(scan_dirpath, folder_id)
 
         if create_dir:
-            scan_dirpath = io_utils.mkdirs(scan_dirpath)
+            os.makedirs(scan_dirpath, exist_ok=True)
 
         return scan_dirpath
 
@@ -242,6 +242,7 @@ class CommandLineScanContainer:
         image_data_format: ImageDataFormat = None,
         num_workers: int = 0,
     ):
+        path = self._save_dir(path, create_dir=True)
         return self.scan.save(path, save_custom, image_data_format, num_workers)
 
 
