@@ -6,6 +6,7 @@ This module contains NIfTI input/output helpers.
 """
 
 import os
+from typing import Collection
 
 import nibabel as nib
 import numpy as np
@@ -74,6 +75,9 @@ class NiftiReader(DataReader):
 
         return MedicalVolume(np_img, nib_img_affine)
 
+    def __serializable_variables__(self) -> Collection[str]:
+        return self.__dict__.keys()
+
 
 class NiftiWriter(DataWriter):
     """A class for writing volumes in NIfTI format.
@@ -104,3 +108,6 @@ class NiftiWriter(DataWriter):
         nib_img = nib.Nifti1Image(np_im, nib_affine)
 
         nib.save(nib_img, file_path)
+
+    def __serializable_variables__(self) -> Collection[str]:
+        return self.__dict__.keys()

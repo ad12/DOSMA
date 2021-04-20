@@ -9,6 +9,7 @@ Attributes:
 import enum
 import os
 from abc import ABC, abstractmethod
+from typing import Any, Collection, Dict
 
 __all__ = ["ImageDataFormat", "DataReader", "DataWriter", "SUPPORTED_VISUALIZATION_FORMATS"]
 
@@ -89,7 +90,56 @@ class ImageDataFormat(enum.Enum):
         raise ValueError("Unknown data format for %s" % file_or_dir_path)
 
 
-class DataReader(ABC):
+class _StateMixin(ABC):
+    """Temporary mixin that supports fetching and loading from state dictionaries.
+
+    Note:
+        This functionality is not well supported and will likely undergo changes
+        in the alpha development process. Use with caution.
+    """
+
+    @abstractmethod
+    def __serializable_variables__(self) -> Collection[str]:
+        """Collection of serializable variables (i.e. state keys).
+
+        This method should be implemented by subclasses and should
+        return what parameters can be serialized. The values should
+        typically be of a raw type.
+
+        Returns:
+            Collection[str]: Serializable variables.
+        """
+        raise NotImplementedError
+
+    def state_dict(self) -> Dict[str, Any]:
+        """Returns the state dictionary for an object.
+
+        Keys for this dictionary are specified by the object's
+        :func:`self.__serializable_variables__()` method.
+
+        Returns:
+            Dict[str, Any]: The state dictionary.
+        """
+        return {k: self.__dict__[k] for k in self.__serializable_variables__()}
+
+    def load_state_dict(self, state_dict: Dict[str, Any]):
+        """Loads the state dictionary into the object.
+
+        Args:
+            state_dict (Dict[str, Any]): The state dictionary created using
+                :func:`self.state_dict()`.
+
+        Raises:
+            AttributeError: If any key in ``state_dict`` is not an attribute in
+                ``self``.
+        """
+        for k, v in state_dict.items():
+            if not hasattr(self, k):
+                raise AttributeError(f"{type(self)} does not have attribute '{k}'")
+            setattr(self, k, v)
+
+
+class DataReader(_StateMixin):
     """Abstract class for reading medical data.
 
     Format-specific readers should inherit from this class.
@@ -113,7 +163,7 @@ class DataReader(ABC):
         pass
 
 
-class DataWriter(ABC):
+class DataWriter(_StateMixin):
     """Abstract class for writing medical data.
 
     Format-specific writers should inherit from this class.

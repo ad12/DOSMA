@@ -9,6 +9,8 @@ from dosma.models.oaiunet2d import IWOAIOAIUnet2D, IWOAIOAIUnet2DNormalized
 from dosma.models.seg_model import whiten_volume
 from dosma.tissues.femoral_cartilage import FemoralCartilage
 
+import keras.backend as K
+
 from .. import util
 
 
@@ -32,6 +34,7 @@ class TestIWOAIOAIUnet2D(unittest.TestCase):
         input_shape = (dims[0], dims[1], 1)
         model = IWOAIOAIUnet2D(input_shape=input_shape, weights_path=tissue.weights_file_path)
         masks = model.generate_mask(scan)
+        K.clear_session()
 
         for i, tissue in enumerate(classes):
             assert np.all(masks[tissue].volume == expected_seg[..., i])
@@ -124,6 +127,7 @@ class TestIWOAIOAIUnet2DNormalized(unittest.TestCase):
             input_shape=input_shape, weights_path=tissue.weights_file_path
         )
         masks = model.generate_mask(scan)
+        K.clear_session()
 
         for i, tissue in enumerate(classes):
             pred = masks[tissue].volume.astype(np.bool)
