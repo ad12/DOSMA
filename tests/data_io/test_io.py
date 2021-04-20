@@ -52,6 +52,28 @@ class TestNiftiIO(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     self.nw.save(mv, os.path.join(ututils.TEMP_PATH, "eg.dcm"))
 
+    def test_state(self):
+        nr1 = NiftiReader()
+        state_dict = nr1.state_dict()
+        state_dict = {k: "foo" for k in state_dict}
+
+        nr2 = NiftiReader()
+        nr2.load_state_dict(state_dict)
+        for k in state_dict:
+            assert getattr(nr2, k) == "foo"
+
+        nw1 = NiftiWriter()
+        state_dict = nw1.state_dict()
+        state_dict = {k: "bar" for k in state_dict}
+
+        nw2 = NiftiWriter()
+        nw2.load_state_dict(state_dict)
+        for k in state_dict:
+            assert getattr(nw2, k) == "bar"
+
+        with self.assertRaises(AttributeError):
+            nw2.load_state_dict({"foobar": "delta"})
+
 
 class TestDicomIO(unittest.TestCase):
     dr = DicomReader()
@@ -472,6 +494,28 @@ class TestDicomIO(unittest.TestCase):
 
         files = [_f for _f in os.listdir(write_path) if _f.endswith(".dcm")]
         assert len(files) == e1_expected.shape[-1]
+
+    def test_state(self):
+        dr1 = DicomReader()
+        state_dict = dr1.state_dict()
+        state_dict.update({"num_workers": 8, "group_by": None})
+
+        dr1.num_workers = 5
+        dr1.group_by = "foo"
+
+        dr2 = DicomReader()
+        state_dict = dr2.load_state_dict(state_dict)
+        assert dr2.num_workers == 8
+        assert dr2.group_by is None
+
+        dw1 = DicomWriter()
+        state_dict = dw1.state_dict()
+        state_dict.update({"num_workers": 8, "sort_by": "InstanceNumber"})
+
+        dw2 = DicomWriter()
+        state_dict = dw2.load_state_dict(state_dict)
+        assert dw2.num_workers == 8
+        assert dw2.sort_by == "InstanceNumber"
 
 
 class TestInterIO(unittest.TestCase):
