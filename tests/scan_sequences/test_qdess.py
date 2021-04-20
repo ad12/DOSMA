@@ -5,6 +5,8 @@ from dosma.models.util import get_model
 from dosma.scan_sequences.qdess import QDess
 from dosma.tissues.femoral_cartilage import FemoralCartilage
 
+import keras.backend as K
+
 from .. import util
 
 SEGMENTATION_WEIGHTS_FOLDER = os.path.join(
@@ -27,6 +29,10 @@ class QDessTest(util.ScanTest):
             SEGMENTATION_MODEL, input_shape=input_shape, weights_path=tissue.weights_file_path
         )
         scan.segment(model, tissue, use_rss=True)
+
+        # This should call __del__ in KerasSegModel
+        model = None
+        K.clear_session()
 
     #
     # def test_t2_map(self):

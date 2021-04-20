@@ -20,7 +20,7 @@ import multiprocessing as mp
 import os
 import re
 from math import ceil, log10
-from typing import List, Sequence, Tuple, Union
+from typing import Collection, List, Sequence, Tuple, Union
 
 import nibabel as nib
 import numpy as np
@@ -286,6 +286,9 @@ class DicomReader(DataReader):
 
         return vols
 
+    def __serializable_variables__(self) -> Collection[str]:
+        return self.__dict__.keys()
+
 
 class DicomWriter(DataWriter):
     """A class for writing volumes in DICOM format.
@@ -449,6 +452,9 @@ class DicomWriter(DataWriter):
         else:
             for s in tqdm(range(num_slices), disable=not self.verbose):
                 _write_dicom_file(volume_arr[..., s], headers[s], filepaths[s])
+
+    def __serializable_variables__(self) -> Collection[str]:
+        return self.__dict__.keys()
 
 
 def to_RAS_affine(headers: List[pydicom.FileDataset], default_ornt: Tuple[str, str] = None):
