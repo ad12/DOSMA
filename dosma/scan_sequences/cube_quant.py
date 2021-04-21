@@ -1,20 +1,19 @@
 import logging
 import os
+from typing import Sequence
 
 import numpy as np
-from natsort import natsorted
-from nipype.interfaces.elastix import Registration
 
 from dosma import file_constants as fc
 from dosma import quant_vals as qv
-from dosma.data_io import ImageDataFormat, NiftiReader
+from dosma.data_io import NiftiReader
 from dosma.data_io import format_io_utils as fio_utils
-from dosma.defaults import preferences
+from dosma.data_io.med_volume import MedicalVolume
 from dosma.scan_sequences.scans import NonTargetSequence
 from dosma.tissues.tissue import Tissue
-from dosma.utils import io_utils
 from dosma.utils.cmd_line_utils import ActionWrapper
 from dosma.utils.fits import MonoExponentialFit
+from dosma.utils.registration import apply_warp, register
 
 __all__ = ["CubeQuant"]
 
@@ -42,73 +41,92 @@ class CubeQuant(NonTargetSequence):
 
     NAME = "cubequant"
 
-    def __init__(self, dicom_path=None, load_path=None, **kwargs):
-        self.subvolumes = None
-        self.spin_lock_times = None
-        self.intraregistered_data = None
-        super().__init__(dicom_path=dicom_path, load_path=load_path, **kwargs)
+    def __init__(self, volumes: Sequence[MedicalVolume], spin_lock_times: Sequence[float] = None):
+        super().__init__(volumes=volumes)
 
-        if dicom_path is not None:
-            self.subvolumes, self.spin_lock_times = self.__split_volumes__(
-                __EXPECTED_NUM_SPIN_LOCK_TIMES__
-            )
-            self.intraregistered_data = self.__intraregister__(self.subvolumes)
+        if spin_lock_times is None:
+            try:
+                if all(x.headers() is not None for x in self.volumes):
+                    spin_lock_times = [x.get_metadata("EchoTime", float) for x in self.volumes]
+            except (KeyError, AttributeError, RuntimeError) as e:
+                raise ValueError(
+                    f"Could not extract spin lock times from header. "
+                    f"Please specify `spin_lock_times` argument - {e}"
+                )
+        self.spin_lock_times = spin_lock_times
 
-        if self.subvolumes is None:
-            raise ValueError("Either dicom_path or load_path must be specified")
+    def intraregister(self):
+        """Intra-register volumes.
 
-    def __validate_scan__(self):
-        return True
+        Alias for :func:`self.__intraregister__`.
+        """
+        self.__intraregister__()
 
     def interregister(self, target_path: str, target_mask_path: str = None):
-        base_spin_lock_time, base_image = self.intraregistered_data["BASE"]
-        files = self.intraregistered_data["FILES"]
+        volumes = self.volumes
+        spin_lock_times = self.spin_lock_times
+        idxs = np.argsort(spin_lock_times)
 
-        temp_interregistered_dirpath = io_utils.mkdirs(
-            os.path.join(self.temp_path, "interregistered")
-        )
+        spin_lock_times = [spin_lock_times[i] for i in idxs]
+        volumes = [volumes[i] for i in idxs]
+        nr = NiftiReader()
+        out_path = os.path.join(self.temp_path, "interregistered")
+        os.makedirs(out_path, exist_ok=True)
 
-        logging.info("")
-        logging.info("==" * 40)
-        logging.info("Interregistering...")
-        logging.info("Target: {}".format(target_path))
-        if target_mask_path is not None:
-            logging.info("Mask: {}".format(target_mask_path))
-        logging.info("==" * 40)
+        # TODO: Make these into parameters
+        num_threads = 2
+        num_workers = 0
+        verbose = True
+
+        base_image = volumes[0]
+        moving = volumes[1:]
+
+        if verbose:
+            logging.info("")
+            logging.info("==" * 40)
+            logging.info("Interregistering...")
+            logging.info("Target: {}".format(target_path))
+            if target_mask_path is not None:
+                logging.info("Mask: {}".format(target_mask_path))
+            logging.info("==" * 40)
 
         if not target_mask_path:
             parameter_files = [fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE]
+            use_mask = None
         else:
+            target_mask_path = self.__dilate_mask__(target_mask_path, out_path)
             parameter_files = [
                 fc.ELASTIX_RIGID_INTERREGISTER_PARAMS_FILE,
                 fc.ELASTIX_AFFINE_INTERREGISTER_PARAMS_FILE,
             ]
+            use_mask = [False, True]
 
-        warped_file, transformation_files = self.__interregister_base_file__(
-            (base_image, base_spin_lock_time),
+        out_reg, _ = register(
             target_path,
-            temp_interregistered_dirpath,
-            mask_path=target_mask_path,
-            parameter_files=parameter_files,
+            base_image,
+            parameters=parameter_files,
+            output_path=out_path,
+            sequential=True,
+            collate=True,
+            num_workers=num_workers,
+            num_threads=num_threads,
+            return_volumes=False,
+            target_mask=target_mask_path,
+            use_mask=use_mask,
+            rtype=tuple,
+            show_pbar=True,
         )
-        warped_files = [(base_spin_lock_time, warped_file)]
+        out_reg = out_reg[0]
 
-        nifti_reader = NiftiReader()
+        reg_vols = [nr.load(out_reg.warped_file)]
+        for mvg in moving:
+            reg_vols.append(apply_warp(mvg, out_reg.transform))
 
-        # Load the transformation file. Apply same transform to the remaining images
-        for spin_lock_time, filename in files:
-            warped_file = self.__apply_transform__(
-                (filename, spin_lock_time), transformation_files, temp_interregistered_dirpath
-            )
-            # append the last warped file - this has all the transforms applied
-            warped_files.append((spin_lock_time, warped_file))
+        # Undo sorting by spin lock time.
+        reverse_idxs = {v: i for i, v in enumerate(idxs)}
+        reg_vols = [reg_vols[reverse_idxs[k]] for k in sorted(list(reverse_idxs.keys()))]
 
-        # copy each of the interregistered warped files to their own output
-        subvolumes = dict()
-        for spin_lock_time, warped_file in warped_files:
-            subvolumes[spin_lock_time] = nifti_reader.load(warped_file)
-
-        self.subvolumes = subvolumes
+        self.volumes = reg_vols
 
     def generate_t1_rho_map(self, tissue: Tissue, mask_path: str = None, num_workers: int = 0):
         """
@@ -129,8 +147,8 @@ class CubeQuant(NonTargetSequence):
         Raises:
             ValueError: If `mask_path` specifies non-binary volume.
         """
-        spin_lock_times = []
-        subvolumes_list = []
+        spin_lock_times = self.spin_lock_times
+        subvolumes_list = self.volumes
 
         # only calculate for focused region if a mask is available, this speeds up computation
         mask = tissue.get_mask()
@@ -138,11 +156,6 @@ class CubeQuant(NonTargetSequence):
             mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
             if tuple(np.unique(mask.volume)) != (0, 1):
                 raise ValueError("`mask_path` must reference binary segmentation volume")
-
-        sorted_keys = natsorted(list(self.subvolumes.keys()))
-        for spin_lock_time_index in sorted_keys:
-            subvolumes_list.append(self.subvolumes[spin_lock_time_index])
-            spin_lock_times.append(self.spin_lock_times[spin_lock_time_index])
 
         mef = MonoExponentialFit(
             spin_lock_times,
@@ -163,7 +176,7 @@ class CubeQuant(NonTargetSequence):
 
         return quant_val_map
 
-    def __intraregister__(self, subvolumes):
+    def __intraregister__(self):
         """Intra-register volumes.
 
         Patient could have moved between acquisition of different volumes,
@@ -173,119 +186,69 @@ class CubeQuant(NonTargetSequence):
         Volumes corresponding to the other spin lock times are registered to the target.
 
         Affine registration is done using Elastix.
-
-        Args:
-            subvolumes (Dict[int, MedicalVolume]): Dictionary of spin lock time index -> volume.
-                E.g. ``{0: MedicalVolume A, 1: B}``.
-
-        Returns:
-            Dict[int, str]: Dictionary of base, other files
-                spin-lock index -> output nifti file path.
         """
+        volumes = self.volumes
+        spin_lock_times = self.spin_lock_times
+        idxs = np.argsort(spin_lock_times)
 
-        if subvolumes is None:
-            raise TypeError("subvolumes must be dict")
+        spin_lock_times = [spin_lock_times[i] for i in idxs]
+        volumes = [volumes[i] for i in idxs]
+        out_path = os.path.join(self.temp_path, "interregistered")
+        os.makedirs(out_path, exist_ok=True)
 
-        logging.info("")
-        logging.info("==" * 40)
-        logging.info("Intraregistering...")
-        logging.info("==" * 40)
+        # TODO: Make these into parameters
+        num_threads = 2
+        num_workers = 0
+        verbose = True
 
-        # temporarily save subvolumes as nifti file
-        ordered_spin_lock_time_indices = natsorted(list(subvolumes.keys()))
-        raw_volumes_base_path = io_utils.mkdirs(os.path.join(self.temp_path, "raw"))
+        if verbose:
+            logging.info("")
+            logging.info("==" * 40)
+            logging.info("Intraregistering...")
+            logging.info("==" * 40)
 
-        # Use first spin lock time as a basis for registration
-        spin_lock_nii_files = []
-        for spin_lock_time_index in ordered_spin_lock_time_indices:
-            filepath = os.path.join(
-                raw_volumes_base_path, "{:03d}.nii.gz".format(spin_lock_time_index)
-            )
-            spin_lock_nii_files.append(filepath)
+        out_path = os.path.join(self.temp_path, "intraregister")
+        _, reg_vols = register(
+            volumes[0],
+            volumes[1:],
+            fc.ELASTIX_AFFINE_PARAMS_FILE,
+            out_path,
+            num_workers=num_workers,
+            num_threads=num_threads,
+            return_volumes=True,
+            rtype=tuple,
+            show_pbar=verbose,
+        )
+        reg_vols = [volumes[0]] + list(reg_vols)
 
-            subvolumes[spin_lock_time_index].save_volume(filepath)
+        # Transfer header information
+        reg_vols = [
+            reg._partial_clone(volume=False, headers=vol.headers())
+            for (reg, vol) in zip(reg_vols, volumes)
+        ]
 
-        target_filepath = spin_lock_nii_files[0]
+        # Undo sorting by spin lock time.
+        reverse_idxs = {v: i for i, v in enumerate(idxs)}
+        reg_vols = [reg_vols[reverse_idxs[k]] for k in sorted(list(reverse_idxs.keys()))]
 
-        intraregistered_files = []
-        for i in range(1, len(spin_lock_nii_files)):
-            spin_file = spin_lock_nii_files[i]
-            spin_lock_time_index = ordered_spin_lock_time_indices[i]
+        self.volumes = reg_vols
 
-            reg = Registration()
-            reg.inputs.fixed_image = target_filepath
-            reg.inputs.moving_image = spin_file
-            reg.inputs.output_path = io_utils.mkdirs(
-                os.path.join(
-                    self.temp_path, "intraregistered", "{:03d}".format(spin_lock_time_index)
-                )
-            )
-            reg.inputs.parameters = [fc.ELASTIX_AFFINE_PARAMS_FILE]
-            reg.terminal_output = fc.NIPYPE_LOGGING
-            logging.info(
-                "Registering {} -> {}".format(
-                    str(spin_lock_time_index), str(ordered_spin_lock_time_indices[0])
-                )
-            )
-            tmp = reg.run()
+    def _save(self, metadata, save_dir: str, fname_fmt=None, **kwargs):
+        default_fmt = {MedicalVolume: "echo-{}"}
+        default_fmt.update(fname_fmt if fname_fmt else {})
+        return super()._save(metadata, save_dir, fname_fmt=default_fmt, **kwargs)
 
-            warped_file = tmp.outputs.warped_file
-            intraregistered_files.append((spin_lock_time_index, warped_file))
+    @classmethod
+    def from_dict(cls, data, force: bool = False):
+        interregistered_dirpath = None
+        if "subvolumes" in data:
+            interregistered_dirpath = os.path.dirpath(data.pop("subvolumes")[0])
+        scan = super().from_dict(data, force=force)
+        if interregistered_dirpath is not None:
+            subvolumes = scan.__load_interregistered_files__(interregistered_dirpath)
+            cls.volumes = [subvolumes[k] for k in sorted(list(subvolumes.keys()))]
 
-        return {
-            "BASE": (ordered_spin_lock_time_indices[0], spin_lock_nii_files[0]),
-            "FILES": intraregistered_files,
-        }
-
-    def save_data(
-        self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format
-    ):
-        """Save data to disk.
-
-        Data will be saved in the directory '`base_save_dirpath`/cubequant/'.
-
-        Serializes variables specified in by self.__serializable_variables__().
-
-        Args:
-            base_save_dirpath (str): Directory path where all data is stored.
-            data_format (ImageDataFormat): Format to save data.
-        """
-        super().save_data(base_save_dirpath, data_format=data_format)
-        base_save_dirpath = self.__save_dir__(base_save_dirpath)
-
-        # Save interregistered files
-        interregistered_dirpath = os.path.join(base_save_dirpath, "interregistered")
-
-        for spin_lock_time_index in self.subvolumes.keys():
-            nii_filepath = os.path.join(
-                interregistered_dirpath, "{:03d}.nii.gz".format(spin_lock_time_index)
-            )
-            filepath = fio_utils.convert_image_data_format(nii_filepath, data_format)
-
-            self.subvolumes[spin_lock_time_index].save_volume(filepath)
-
-    def load_data(self, base_load_dirpath: str):
-        """Load data from disk.
-
-        Data will be loaded from the directory '`base_load_dirpath`/cubequant'.
-
-        Args:
-           base_load_dirpath (str): Directory path where all data is stored.
-
-        Raises:
-           NotADirectoryError: if `base_load_dirpath`/cubequant/ does not exist.
-        """
-        super().load_data(base_load_dirpath)
-        base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
-
-        interregistered_dirpath = os.path.join(base_load_dirpath, "interregistered")
-
-        self.subvolumes = self.__load_interregistered_files__(interregistered_dirpath)
-
-    def __serializable_variables__(self):
-        var_names = super().__serializable_variables__()
-        var_names.extend(["spin_lock_times"])
-        return var_names
+        return scan
 
     @classmethod
     def cmd_line_actions(cls):
@@ -293,7 +256,9 @@ class CubeQuant(NonTargetSequence):
         Provide command line information (such as name, help strings, etc)
         as list of dictionary.
         """
-
+        intraregister_action = ActionWrapper(
+            name=cls.intraregister.__name__, help="register volumes within this scan"
+        )
         interregister_action = ActionWrapper(
             name=cls.interregister.__name__,
             help="register to another scan",
@@ -316,6 +281,7 @@ class CubeQuant(NonTargetSequence):
         )
 
         return [
+            (cls.intraregister, intraregister_action),
             (cls.interregister, interregister_action),
             (cls.generate_t1_rho_map, generate_t1rho_map_action),
         ]

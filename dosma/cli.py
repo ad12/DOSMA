@@ -21,14 +21,17 @@ Hint:
 
 import argparse
 import ast
+import functools
 import inspect
 import logging
 import os
 import time
+import warnings
 from collections import defaultdict
 from typing import Sequence
 
 from dosma import file_constants as fc
+from dosma.data_io.format_io import ImageDataFormat
 from dosma.defaults import preferences
 from dosma.models.seg_model import SegModel
 from dosma.models.util import SUPPORTED_MODELS, get_model, model_from_config
@@ -53,6 +56,7 @@ IGNORE_EXT_KEY = "ignore_ext"
 SPLIT_BY_KEY = "split_by"
 
 GPU_KEY = "gpu"
+NUM_WORKERS_KEY = "num-workers"
 
 SCAN_KEY = "scan"
 SCAN_ACTION_KEY = "scan_action"
@@ -66,6 +70,180 @@ TISSUES_KEY = "tissues"
 
 SUPPORTED_SCAN_TYPES = [Cones, CubeQuant, Mapss, QDess]
 BASIC_TYPES = [bool, str, float, int, list, tuple]
+
+
+class CommandLineScanContainer:
+    def __init__(
+        self,
+        scan_type: type,
+        dicom_path,
+        load_path,
+        ignore_ext: bool = False,
+        group_by=None,
+        num_workers=0,
+        **kwargs,
+    ):
+        """The class for command-line handling around :class:`ScanSequence`.
+
+        The command line interface for :class:`ScanSequence` data is highly structured,
+        particularly in data saving and loading to support easy and accurate command-line
+        compatibility.
+
+        This class overloads some standard functionality in :class:`ScanSequence`
+        (:func:`save`, :func:`load`). When methods are not implemented, this class provides
+        access directly to attributes/methods of the underlying scan instantiation.
+        For example, if ``scan_type=QDess``, the following will call
+        :func:`QDess.generate_t2_map`:
+
+        >>> cli_scan = CommandLineScanContainer(QDess, dicom_path="/path/to/qdess/scan")
+        >>> cli_scan.generate_t2_map(...)  # this calls cli_scan.scan.generate_t2_map
+
+        Data is loaded either from the ``dicom_path`` or the ``load_path``. If both are specified,
+        the data is loaded from the ``dicom_path``.
+
+        Args:
+            scan_type (type): A scan type. Should be subclass of `ScanSequence`.
+            dicom_path (str): The dicom path. This value can be ``None``, but must
+                be explicitly set.
+            load_path (str): The load path. This value can be ``None``, but must be
+                explicitly set.
+            ignore_ext (bool, optional): If ``True``, ignore extensions when loading
+                dicom data. See :func:`DicomReader.load` for details.
+            group_by (optional): The value(s) to group dicoms by. See :func:`DicomReader.load`
+                for details.
+            num_workers (int, optional): Number of works for loading scan.
+
+        Attributes:
+            scan_type (type): The scan type to instantiate.
+            scan (ScanSequence): The instantiated scan.
+            generic_args (Dict[str, Any]): Generic duck typed parameter names and values.
+                If parameters with this name are part of the method signature, they will
+                automatically be set to the values in this dictionary. Keys include:
+                    * "num_workers": Number of cpu workers to use.
+                    * "max_workers": Alias for "num_workers" in some functions
+                    * "verbose": Verbosity
+                    * "show_pbar": Show progress bar.
+
+        Raises:
+            NotADirectoryError: If ``dicom_path`` is not a path to a directory.
+        """
+        self.scan_type = scan_type
+
+        if (dicom_path is not None) and (not os.path.isdir(dicom_path)):
+            if load_path is not None:
+                warnings.warn(
+                    "Dicom_path {} not found. Will load data from {}".format(dicom_path, load_path)
+                )
+            else:
+                raise NotADirectoryError("{} is not a directory".format(dicom_path))
+
+        # Only use dicoms if the path exists and path contains files.
+        is_dicom_available = (dicom_path is not None) and (os.path.isdir(dicom_path))
+
+        # If dicom_path is specified and exists, assume user wants to start from scratch with the
+        # dicoms. load_path is ignored.
+        group_by = group_by if group_by is not None else scan_type.__DEFAULT_SPLIT_BY__
+        if is_dicom_available:
+            scan = scan_type.from_dicom(
+                dicom_path, group_by=group_by, ignore_ext=ignore_ext, num_workers=num_workers
+            )
+        else:
+            scan = self.load(load_path, num_workers=num_workers)
+
+        self.scan = scan
+        self.generic_args = {
+            "num_workers": num_workers,
+            "max_workers": num_workers,
+            "verbose": True,
+            "show_pbar": True,
+        }
+
+    def __getattr__(self, name):
+        attr = getattr(self.scan, name)
+        if callable(attr):
+            params = inspect.signature(attr).parameters
+            params = params.keys() & self.generic_args.keys()
+            kwargs = {k: self.generic_args[k] for k in params}
+            if len(kwargs):
+                attr = functools.partial(attr, **kwargs)
+        return attr
+
+    def load(self, path: str, num_workers: int = 0):
+        """Command line interface loading scan data.
+
+        ``self.scan_type`` must be set before calling this function.
+
+        Args
+            path (str): Path to pickle file or directory where data is stored.
+            num_workers (int, optional): Number of workers to use to load data.
+
+        Returns:
+            ScanSequence: Scan of type ``self.scan_type``.
+
+        Raises:
+            ValueError: If path to load data from cannot be determined.
+
+        Examples:
+            >>> cli_scan.load("/path/to/pickle/file")  # load data from pickle file
+            >>> cli_scan.load("/path/to/directory")  # load data from directory
+        """
+        scan_type = self.scan_type
+
+        file_path = None
+        if os.path.isfile(path):
+            file_path = path
+        elif os.path.isdir(path) and scan_type.NAME:
+            fname = f"{scan_type.NAME}.data"
+            _paths = (
+                os.path.join(path, fname),
+                os.path.join(self._save_dir(path, create_dir=False), fname),
+            )
+            for _path in _paths:
+                if os.path.isfile(_path):
+                    file_path = _path
+                    break
+        if file_path is None:
+            raise ValueError(f"Cannot load {scan_type.__name__} data from path '{path}'")
+
+        return scan_type.load(file_path, num_workers)
+
+    def _save_dir(self, dir_path: str, create_dir: bool = True):
+        """Returns directory path specific to this scan.
+
+        Formatted as '`base_load_dirpath`/`scan.NAME`'.
+
+        Args:
+            dir_path (str): Directory path where all data is stored.
+            create_dir (`bool`, optional): If `True`, creates directory if it doesn't exist.
+
+        Returns:
+            str: Data directory path for this scan.
+        """
+        scan_type = self.scan_type
+        folder_id = scan_type.NAME
+
+        name_len = len(folder_id) + 2  # buffer
+        if scan_type.NAME not in dir_path[-name_len:]:
+            scan_dirpath = os.path.join(dir_path, folder_id)
+        else:
+            scan_dirpath = dir_path
+
+        # scan_dirpath = os.path.join(scan_dirpath, folder_id)
+
+        if create_dir:
+            os.makedirs(scan_dirpath, exist_ok=True)
+
+        return scan_dirpath
+
+    def save(
+        self,
+        path: str,
+        save_custom: bool = True,
+        image_data_format: ImageDataFormat = None,
+        num_workers: int = 0,
+    ):
+        path = self._save_dir(path, create_dir=True)
+        return self.scan.save(path, save_custom, image_data_format, num_workers)
 
 
 def get_nargs_for_basic_type(base_type: type):
@@ -215,7 +393,14 @@ def add_base_argument(
     param_help,
     additional_param_names: list = [],
 ):
-    assert param_type in BASIC_TYPES, "type %s not in BASIC_TYPES" % param_type
+    # TODO: Clean up this code block to properly do syntax parsing.
+    try:
+        if param_type not in BASIC_TYPES:
+            param_type = extract_basic_type(param_type)
+    except (AttributeError, TypeError):
+        raise TypeError(
+            "Parameter '{}' - type '{}' not in BASIC_TYPES".format(param_name, param_type)
+        )
 
     # add default value to param help
     has_default = param_default is not inspect._empty
@@ -237,7 +422,7 @@ def add_base_argument(
             *param_names,
             action="store_%s" % (str(not param_default).lower()),
             dest=param_name,
-            help=param_help
+            help=param_help,
         )
         return
 
@@ -251,11 +436,14 @@ def add_base_argument(
         default=param_default if has_default else None,
         dest=param_name,
         help=param_help,
-        required=not has_default
+        required=not has_default,
     )
 
 
 def parse_basic_type(val, param_type):
+    if param_type not in BASIC_TYPES:
+        param_type = extract_basic_type(param_type)
+
     if type(val) is param_type:
         return val
 
@@ -266,6 +454,24 @@ def parse_basic_type(val, param_type):
     if type(val) is list and nargs == 1:
         return val[0]
     return param_type(val) if val else val
+
+
+def extract_basic_type(param_type):
+    """Extracts basic types from ``typing`` aliases.
+
+    Args:
+        param_type (typing._GenericAlias): A generic alias
+            (e.g. ``typing.Tuple``, ``typing.List``).
+
+    Returns:
+        type: The basic type.
+    """
+    try:
+        # Python 3.5 / 3.6
+        return param_type.__extra__
+    except AttributeError:
+        # Python 3.7/3.8/3.9
+        return param_type.__origin__
 
 
 def add_scans(dosma_subparser):
@@ -385,11 +591,13 @@ def handle_scan(vargin):
             scan = p_scan
             break
 
-    scan = scan(
+    scan = CommandLineScanContainer(
+        scan,
         dicom_path=vargin[DICOM_KEY],
         load_path=vargin[LOAD_KEY],
         ignore_ext=vargin[IGNORE_EXT_KEY],
         split_by=vargin[SPLIT_BY_KEY] if vargin[SPLIT_BY_KEY] else scan.__DEFAULT_SPLIT_BY__,
+        num_workers=vargin[NUM_WORKERS_KEY],
     )
 
     tissues = vargin["tissues"]
@@ -405,7 +613,7 @@ def handle_scan(vargin):
     action = p_action
 
     if action is None:
-        scan.save_data(vargin[SAVE_KEY], data_format=preferences.image_data_format)
+        scan.save(vargin[SAVE_KEY], image_data_format=preferences.image_data_format)
         return
 
     func_signature = inspect.signature(action)
@@ -416,13 +624,13 @@ def handle_scan(vargin):
             if len(seg_tissues) == 1:
                 seg_tissues = seg_tissues[0]
             param_dict = _build_params(vargin, scan, parameters, seg_tissues)
-            scan.__getattribute__(action.__name__)(**param_dict)
+            getattr(scan, action.__name__)(**param_dict)
     else:
         for tissue in tissues:
             param_dict = _build_params(vargin, scan, parameters, tissue)
-            scan.__getattribute__(action.__name__)(**param_dict)
+            getattr(scan, action.__name__)(**param_dict)
 
-    scan.save_data(vargin[SAVE_KEY], data_format=preferences.image_data_format)
+    scan.save(vargin[SAVE_KEY], image_data_format=preferences.image_data_format)
     for tissue in tissues:
         tissue.save_data(vargin[SAVE_KEY], data_format=preferences.image_data_format)
 
@@ -510,6 +718,15 @@ def parse_args(f_input=None):
         nargs="?",
         dest=GPU_KEY,
         help="gpu id. Default: None",
+    )
+
+    parser.add_argument(
+        "--%s" % NUM_WORKERS_KEY,
+        metavar="G",
+        type=int,
+        default=0,
+        dest=NUM_WORKERS_KEY,
+        help="num cpu workers. Default: 0",
     )
 
     # Add preferences

@@ -1,7 +1,6 @@
 import os
 
 from dosma.data_io import NiftiReader
-from dosma.models.util import get_model
 from dosma.scan_sequences import Mapss
 from dosma.tissues.femoral_cartilage import FemoralCartilage
 
@@ -21,26 +20,9 @@ MANUAL_SEGMENTATION_MASK_PATH = os.path.join(
 class MapssTest(util.ScanTest):
     SCAN_TYPE = Mapss
 
-    def test_segmentation(self):
-        """Test automatic segmentation
-           Expected: NotImplementedError
-        """
-        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
-        tissue = FemoralCartilage()
-        tissue.find_weights(SEGMENTATION_WEIGHTS_FOLDER)
-        dims = scan.get_dimensions()
-        input_shape = (dims[0], dims[1], 1)
-        model = get_model(
-            SEGMENTATION_MODEL, input_shape=input_shape, weights_path=tissue.weights_file_path
-        )
-
-        # automatic segmentation currently not implemented
-        with self.assertRaises(NotImplementedError):
-            scan.segment(model, tissue)
-
     def test_quant_val_fitting(self):
         """Test quantitative fitting (T1-rho, T2)"""
-        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
+        scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
 
         actions = [scan.generate_t1_rho_map, scan.generate_t2_map]
         for action in actions:
@@ -59,15 +41,18 @@ class MapssTest(util.ScanTest):
             ), "%s: map1 and map2 should be identical" % str(action)
 
     def test_cmd_line(self):
+        # Intraregister
+        cmdline_str = "--d %s --s %s mapss intraregister" % (self.dicom_dirpath, self.data_dirpath)
+        self.__cmd_line_helper__(cmdline_str)
+
         # Estimate T1-rho for femoral cartilage.
-        cmdline_str = "--d %s --s %s mapss --fc t1_rho --mask %s" % (
-            self.dicom_dirpath,
+        cmdline_str = "--l %s mapss --fc t1_rho --mask %s" % (
             self.data_dirpath,
             MANUAL_SEGMENTATION_MASK_PATH,
         )
         self.__cmd_line_helper__(cmdline_str)
 
-        # Generate T1rho map for femoral cartilage, tibial cartilage, and meniscus via command line
+        # Generate T2 map for femoral cartilage, tibial cartilage, and meniscus via command line
         cmdline_str = "--l %s mapss --fc t2 --mask %s" % (
             self.data_dirpath,
             MANUAL_SEGMENTATION_MASK_PATH,

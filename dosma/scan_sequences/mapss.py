@@ -12,10 +12,8 @@ from dosma.data_io import format_io_utils as fio_utils
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.data_io.nifti_io import NiftiReader
-from dosma.defaults import preferences
-from dosma.models.seg_model import SegModel
 from dosma.quant_vals import QuantitativeValueType
-from dosma.scan_sequences.scans import TargetSequence
+from dosma.scan_sequences.scans import ScanSequence
 from dosma.tissues.tissue import Tissue
 from dosma.utils import io_utils
 from dosma.utils.cmd_line_utils import ActionWrapper
@@ -36,7 +34,7 @@ __DECIMAL_PRECISION__ = 3
 __all__ = ["Mapss"]
 
 
-class Mapss(TargetSequence):
+class Mapss(ScanSequence):
     """MAPSS MRI sequence.
 
     Magnetization‐prepared angle‐modulated partitioned k‐space spoiled gradient echo snapshots
@@ -56,28 +54,26 @@ class Mapss(TargetSequence):
 
     NAME = "mapss"
 
-    def __init__(self, dicom_path=None, load_path=None, **kwargs):
-        self.echo_times = None
-        self.raw_volumes = None
+    def __init__(self, volumes: Sequence[MedicalVolume], echo_times: Sequence[float] = None):
+        if not isinstance(volumes, Sequence):
+            raise ValueError("`volumes` must be sequence of MedicalVolumes.")
 
-        super().__init__(dicom_path=dicom_path, load_path=load_path, **kwargs)
+        super().__init__(volumes)
 
-        if dicom_path is not None:
-            self.__intraregister__(self.volumes)
+        if echo_times is None:
+            try:
+                if all(x.headers() is not None for x in self.volumes):
+                    echo_times = [x.get_metadata("EchoTime", float) for x in self.volumes]
+            except (KeyError, AttributeError, RuntimeError) as e:
+                raise ValueError(
+                    f"Could not extract echo times from header. "
+                    f"Please specify `echo_times` argument - {e}"
+                )
 
-    def __load_dicom__(self):
-        super().__load_dicom__()
-        self.echo_times = [float(x.get_metadata("EchoTime")) for x in self.volumes]
+        self.echo_times = echo_times
 
     def __validate_scan__(self):
         return len(self.volumes) == 7
-
-    def segment(self, model: SegModel, tissue: Tissue):
-        """Currently not implemented."""
-        raise NotImplementedError(
-            "This method is currently not implemented. "
-            "Automatic segmentation model is currently being trained"
-        )
 
     def __intraregister__(self, volumes: List[MedicalVolume]):
         """Intraregister volumes.
@@ -147,8 +143,11 @@ class Mapss(TargetSequence):
 
             intraregistered_volumes.append(intrareg_vol)
 
-        self.raw_volumes = deepcopy(volumes)
         self.volumes = intraregistered_volumes
+
+    def intraregister(self):
+        """Intra-register volumes."""
+        self.__intraregister__(self.volumes)
 
     def generate_t1_rho_map(
         self, tissue: Tissue = None, mask_path: str = None, num_workers: int = 0
@@ -246,60 +245,10 @@ class Mapss(TargetSequence):
 
         return quant_val_map
 
-    def save_data(
-        self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format
-    ):
-        """Save data to disk.
-
-        Data will be saved in the directory '`base_save_dirpath`/mapss/'.
-
-        Serializes variables specified in by self.__serializable_variables__().
-
-        Args:
-            base_save_dirpath (str): Directory path where all data is stored.
-            data_format (ImageDataFormat): Format to save data.
-        """
-        super().save_data(base_save_dirpath, data_format=data_format)
-
-        base_save_dirpath = self.__save_dir__(base_save_dirpath)
-
-        # Write echos.
-        for i in range(len(self.volumes)):
-            nii_registration_filepath = os.path.join(
-                base_save_dirpath, "echo{:d}.nii.gz".format(i + 1)
-            )
-            filepath = fio_utils.convert_image_data_format(nii_registration_filepath, data_format)
-            self.volumes[i].save_volume(filepath, data_format=data_format)
-
-    def load_data(self, base_load_dirpath):
-        """Load data from disk.
-
-        Data will be loaded from the directory '`base_load_dirpath`/mapss'.
-
-        Args:
-           base_load_dirpath (str): Directory path where all data is stored.
-
-        Raises:
-           NotADirectoryError: if `base_load_dirpath`/mapss/ does not exist.
-        """
-        super().load_data(base_load_dirpath)
-
-        base_load_dirpath = self.__save_dir__(base_load_dirpath, create_dir=False)
-
-        self.volumes = []
-
-        # Load subvolumes from nifti file.
-        for i in range(__EXPECTED_NUM_ECHO_TIMES__):
-            nii_registration_filepath = os.path.join(
-                base_load_dirpath, "echo{:d}.nii.gz".format(i + 1)
-            )
-            subvolume = NiftiReader().load(nii_registration_filepath)
-            self.volumes.append(subvolume)
-
-    def __serializable_variables__(self):
-        var_names = super().__serializable_variables__()
-        var_names.extend(["echo_times"])
-        return var_names
+    def _save(self, metadata, save_dir, fname_fmt=None, **kwargs):
+        default_fmt = {MedicalVolume: "echo-{}"}
+        default_fmt.update(fname_fmt if fname_fmt else {})
+        return super()._save(metadata, save_dir, fname_fmt=default_fmt, **kwargs)
 
     @classmethod
     def cmd_line_actions(cls):
@@ -307,7 +256,9 @@ class Mapss(TargetSequence):
         Provide command line information (such as name, help strings, etc)
         as list of dictionary.
         """
-
+        intraregister_action = ActionWrapper(
+            name=cls.intraregister.__name__, help="register volumes within this scan"
+        )
         generate_t1_rho_map_action = ActionWrapper(
             name=cls.generate_t1_rho_map.__name__,
             aliases=["t1_rho"],
@@ -334,6 +285,7 @@ class Mapss(TargetSequence):
         )
 
         return [
+            (cls.intraregister, intraregister_action),
             (cls.generate_t1_rho_map, generate_t1_rho_map_action),
             (cls.generate_t2_map, generate_t2_map_action),
         ]

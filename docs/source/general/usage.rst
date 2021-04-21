@@ -126,8 +126,8 @@ Analyze patient01's femoral cartilage |T2| properties using qDESS sequence*::
     # 1. Calculate 3D T2 map - suppress fat and fluid to reduce noise
     $ python -m dosma.cli --dicom research_data/patient01/dess --save research_data/patient01/data qdess --fc t2 --suppress_fat --suppress_fluid
 
-    # 2. Segment femoral cartilage on root mean square (RMS) of two echo qDESS echos using OAI 2D U-Net model.
-    $ python -m dosma.cli --dicom research_data/patient01/dess --save research_data/patient01/data qdess --fc segment --rms --weights_dir weights/oai_unet2d --model oai-unet2d
+    # 2. Segment femoral cartilage on root sum of squares (RSS) of two echo qDESS echos using OAI 2D U-Net model.
+    $ python -m dosma.cli --dicom research_data/patient01/dess --save research_data/patient01/data qdess --fc segment --rss --weights_dir weights/oai_unet2d --model oai-unet2d
 
     # 3. Calculate/visualize T2 for femoral cartilage
     $ python -m dosma.cli --load research_data/patient01/data --save research_data/patient01/data knee --fc --t2
@@ -137,13 +137,16 @@ CubeQuant
 #########
 Analyze patient01 femoral cartilage |T1rho| properties using Cubequant sequence::
 
-    # 1. Register cubequant volume to first echo of qDESS sequence
-    $ python -m dosma.cli --dicom research_data/patient01/cubequant --save research_data/patient01/data cubequant --fc interregister --target_path research_data/patient01/data/dess/echo1.nii.gz --target_mask research_data/patient01/data/fc/fc.nii.gz
+    # 1. Register cubequant volumes (i.e. different spin-lock-times) to one another (intraregistration)
+    $ python -m dosma.cli --dicom research_data/patient01/cubequant --save research_data/patient01/data cubequant intraregister
 
-    # 2. Calculate 3D T1-rho map only for femoral cartilage region
+    # 2. Register cubequant volume to first echo of qDESS sequence
+    $ python -m dosma.cli --load research_data/patient01/data cubequant --fc interregister --target_path research_data/patient01/data/dess/echo1.nii.gz --target_mask research_data/patient01/data/fc/fc.nii.gz
+
+    # 3. Calculate 3D T1-rho map only for femoral cartilage region
     $ python -m dosma.cli --load research_data/patient01/data cubequant --fc t1_rho  --mask_path research_data/patient01/data/fc/fc.nii.gz
 
-    # 3. Calculate/visualize T1-rho for femoral cartilage
+    # 4. Calculate/visualize T1-rho for femoral cartilage
     $ python -m dosma.cli --load research_data/patient01/data --fc --t1_rho
 
 

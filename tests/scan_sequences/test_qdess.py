@@ -20,7 +20,7 @@ class QDessTest(util.ScanTest):
 
     def test_segmentation_multiclass(self):
         """Test support for multiclass segmentation."""
-        scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
+        scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         tissue = FemoralCartilage()
         tissue.find_weights(SEGMENTATION_WEIGHTS_FOLDER),
         dims = scan.get_dimensions()
@@ -28,7 +28,7 @@ class QDessTest(util.ScanTest):
         model = get_model(
             SEGMENTATION_MODEL, input_shape=input_shape, weights_path=tissue.weights_file_path
         )
-        scan.segment(model, tissue, use_rms=True)
+        scan.segment(model, tissue, use_rss=True)
 
         # This should call __del__ in KerasSegModel
         model = None
@@ -61,7 +61,7 @@ class QDessTest(util.ScanTest):
         cmdline_str = (
             f"--d {self.dicom_dirpath} --s {self.data_dirpath} qdess --fc "
             f"segment --weights_dir {SEGMENTATION_WEIGHTS_FOLDER} "
-            f"--model {SEGMENTATION_MODEL} --use_rms"
+            f"--model {SEGMENTATION_MODEL} --use_rss"
         )
         self.__cmd_line_helper__(cmdline_str)
 
