@@ -10,7 +10,7 @@ test:
 
 build-docs:
 	set -e
-	rm -rf docs/build/generated
+	rm -rf docs/build
 	cd docs && make html
 
 dev:
