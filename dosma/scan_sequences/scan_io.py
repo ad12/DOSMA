@@ -244,9 +244,10 @@ class ScanIOMixin(ABC):
     def save_data(
         self, base_save_dirpath: str, data_format: ImageDataFormat = preferences.image_data_format
     ):
+        """Deprecated: Alias for :func:`self.save`."""
         warnings.warn(
             "save_data is deprecated since v0.0.13 and will no longer be "
-            "supported in v0.1. Use `save` instead.",
+            "available in v0.1. Use `save` instead.",
             DeprecationWarning,
         )
         return self.save(base_save_dirpath, data_format)

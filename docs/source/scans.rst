@@ -21,6 +21,7 @@ Each scan implements a subset of the following actions:
 .. autosummary::
    :toctree: generated
 
+   dosma.scan_sequences.ScanSequence
    dosma.scan_sequences.QDess
    dosma.scan_sequences.CubeQuant
    dosma.scan_sequences.Mapss

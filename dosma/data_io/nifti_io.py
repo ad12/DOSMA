@@ -21,6 +21,9 @@ __all__ = ["NiftiReader", "NiftiWriter"]
 
 class NiftiReader(DataReader):
     """A class for reading NIfTI files.
+
+    Attributes:
+        data_format_code (ImageDataFormat): The supported image data format.
     """
 
     data_format_code = ImageDataFormat.nifti
@@ -81,6 +84,9 @@ class NiftiReader(DataReader):
 
 class NiftiWriter(DataWriter):
     """A class for writing volumes in NIfTI format.
+
+    Attributes:
+        data_format_code (ImageDataFormat): The supported image data format.
     """
 
     data_format_code = ImageDataFormat.nifti
