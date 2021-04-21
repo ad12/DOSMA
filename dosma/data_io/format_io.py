@@ -162,6 +162,10 @@ class DataReader(_StateMixin):
         """
         pass
 
+    def __call__(self, *args, **kwargs):
+        """Alias for :meth:`self.load`."""
+        return self.load(*args, **kwargs)
+
 
 class DataWriter(_StateMixin):
     """Abstract class for writing medical data.
@@ -183,3 +187,7 @@ class DataWriter(_StateMixin):
             file_path (str): File path to save volume to.
         """
         pass
+
+    def __call__(self, *args, **kwargs):
+        """Alias for :meth:`self.save`."""
+        return self.save(*args, **kwargs)
