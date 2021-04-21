@@ -56,6 +56,8 @@ extensions = [
     "sphinx_rtd_theme",
     "sphinx.ext.githubpages",
 ]
+autosummary_generate = True
+autosummary_imported_members = True
 
 # Bibtex files
 bibtex_bibfiles = ["references.bib"]
@@ -93,6 +95,12 @@ html_static_path = ["_static"]
 
 # Intersphinx mappings
 intersphinx_mapping = {"numpy": ("https://numpy.org/doc/stable/", None)}
+
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+#
+html_theme_options = {"navigation_depth": 2}
 
 # Documentation to include
 todo_include_todos = True

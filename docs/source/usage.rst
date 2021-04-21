@@ -1,4 +1,4 @@
-.. _usage:
+.. _usage_cli:
 
 Usage
 ================================================================================
@@ -47,8 +47,6 @@ followed by the action to execute and corresponding arguments. For example, the 
 cartilage (fc) and patellar cartilage (pc) from qDESS scans::
 
     $ python -m dosma.cli --dicom subject01/dicoms/qdess --save subject01/data qdess --fc --pc generate_t2_map
-
-A more exhaustive coverage of supported actions and analyses for different scans are available in the :ref:`command line documentation <cli>`
 
 Scans
 ^^^^^

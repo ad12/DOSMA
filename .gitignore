@@ -43,6 +43,9 @@ build/
 **/dist
 *.spec
 
+# Generated docs
+docs/source/generated
+
 # ignore preferences file
 **/preferences.*
 
