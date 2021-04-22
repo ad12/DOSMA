@@ -9,7 +9,8 @@ Attributes:
 import enum
 import os
 from abc import ABC, abstractmethod
-from typing import Any, Collection, Dict
+from pathlib import Path
+from typing import Any, Collection, Dict, Union
 
 __all__ = ["ImageDataFormat", "DataReader", "DataWriter", "SUPPORTED_VISUALIZATION_FORMATS"]
 
@@ -46,7 +47,7 @@ class ImageDataFormat(enum.Enum):
         obj.extensions = extensions
         return obj
 
-    def is_filetype(self, file_path: str) -> bool:
+    def is_filetype(self, file_path: Union[str, Path, os.PathLike]) -> bool:
         """Verify if file path matches the file type specified by ImageDataFormat.
 
         This method checks to make sure the extensions are appropriate.
@@ -57,12 +58,13 @@ class ImageDataFormat(enum.Enum):
         Returns:
             bool: True if file_path has valid extension, False otherwise.
         """
+        file_path = str(file_path)
         bool_list = [file_path.endswith(".%s" % ext) for ext in self.extensions]
 
         return bool(sum(bool_list))
 
     @classmethod
-    def get_image_data_format(cls, file_or_dir_path: str):
+    def get_image_data_format(cls, file_or_dir_path: Union[str, Path, os.PathLike]):
         """Get the `ImageDataFormat` that corresponds to the file path.
 
         Matches extension to file path. If input is a directory path, then
@@ -82,12 +84,14 @@ class ImageDataFormat(enum.Enum):
                 return im_data_format
 
         # if no extension found, assume the name corresponds to a directory
-        # and assume that format is dicom
+        # and assume that format is dicom.
+        # We cannot check if the path is a directory path because it may not
+        # have been created yet.
         filename_base, ext = os.path.splitext(file_or_dir_path)
         if filename_base == file_or_dir_path:
             return ImageDataFormat.dicom
 
-        raise ValueError("Unknown data format for %s" % file_or_dir_path)
+        raise ValueError(f"Unknown data format for {file_or_dir_path}")
 
 
 class _StateMixin(ABC):
