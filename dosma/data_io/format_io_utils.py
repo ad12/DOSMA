@@ -2,6 +2,8 @@
 """
 
 import os
+from pathlib import Path
+from typing import Union
 
 from dosma.data_io.dicom_io import DicomReader, DicomWriter
 from dosma.data_io.format_io import DataReader, DataWriter, ImageDataFormat
@@ -43,7 +45,9 @@ def get_writer(data_format: ImageDataFormat) -> DataWriter:
     return _WRITERS[data_format]()
 
 
-def convert_image_data_format(file_or_dir_path: str, new_data_format: ImageDataFormat) -> str:
+def convert_image_data_format(
+    file_or_dir_path: Union[str, Path, os.PathLike], new_data_format: ImageDataFormat
+) -> str:
     """Change a file or directory name to convention of another data format.
 
     Args:
@@ -78,7 +82,7 @@ def convert_image_data_format(file_or_dir_path: str, new_data_format: ImageDataF
     )
 
 
-def get_filepath_variations(file_or_dir_path: str):
+def get_filepath_variations(file_or_dir_path: Union[str, Path, os.PathLike]):
     """Get file paths using convention for all different image data formats.
 
     Args:
@@ -93,7 +97,7 @@ def get_filepath_variations(file_or_dir_path: str):
     return filepath_variations
 
 
-def generic_load(file_or_dir_path: str, expected_num_volumes: int = None):
+def generic_load(file_or_dir_path: Union[str, Path, os.PathLike], expected_num_volumes: int = None):
     """Load MedicalVolume(s) from a file or directory without knowing data format.
 
     Args:
