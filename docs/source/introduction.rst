@@ -15,7 +15,7 @@ For example, the analysis workflow for a combination
 of quantitative DESS, CubeQuant (3D fast spin echo), and ultra-short echo time Cones scans for multiple patients
 (shown below) can be done in 7 lines of code:
 
-.. figure:: ../figures/workflow.png
+.. figure:: figures/workflow.png
    :align: center
    :alt: Example workflow for analyzing multiple scans per patient
    :figclass: align-center

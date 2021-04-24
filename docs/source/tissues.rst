@@ -24,6 +24,7 @@ differences for analysis of each tissue.
    dosma.tissues
 
 .. autosummary::
+   :toctree: generated
    :nosignatures:
 
    dosma.tissues.FemoralCartilage
@@ -48,7 +49,7 @@ To analyze differences in these regions, |T2| maps can be unrolled onto a 2D pla
 DOSMA supports automatic division of femoral cartilage into these regions and unrolling of these regions.
 Unrolled maps are produced for deep, superficial, and total (combined deep and superficial) layers as seen below.
 
-.. figure:: ../figures/unrolled_fc.png
+.. figure:: figures/unrolled_fc.png
    :align: center
    :alt: Unrolled femoral cartilage |T2| maps
    :figclass: align-center

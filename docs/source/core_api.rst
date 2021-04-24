@@ -8,7 +8,7 @@ MedicalVolume
 .. _core_api_medicalvolume:
 
 .. autosummary::
-   :toctree:
+   :toctree: generated
    :nosignatures:
 
    dosma.data_io.MedicalVolume
@@ -17,7 +17,7 @@ MedicalVolume
 Image I/O
 ---------------------------
 .. autosummary::
-   :toctree:
+   :toctree: generated
    :nosignatures:
 
    dosma.data_io.NiftiReader
@@ -32,7 +32,7 @@ Image Orientation
    dosma.data_io.orientation
 
 .. autosummary::
-   :toctree:
+   :toctree: generated
    :nosignatures:
 
    dosma.data_io.orientation.get_transpose_inds
@@ -49,7 +49,7 @@ For details on using registration, see the :ref:`Registration Guide <guide_regis
    dosma.utils.registration
 
 .. autosummary::
-   :toctree:
+   :toctree: generated
    :nosignatures:
 
    dosma.utils.registration.register
@@ -68,7 +68,7 @@ For details on using fitting functions, see the :ref:`Fitting Guide <guide_fitti
 General fitting functions:
 
 .. autosummary::
-   :toctree:
+   :toctree: generated
    :nosignatures:
 
    dosma.utils.fits.curve_fit
@@ -79,7 +79,7 @@ General fitting functions:
 Fitter classes:
 
 .. autosummary::
-   :toctree:
+   :toctree: generated
    :nosignatures:
 
    dosma.utils.fits.CurveFitter
