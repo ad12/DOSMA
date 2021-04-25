@@ -56,6 +56,7 @@ class DicomReader(DataReader):
         default_ornt (Tuple[str, str], optional): Default in-plane orientation to use if
             orientation cannot be determined from DICOM header. If not specified
             and orientation cannot be determined, error will be raised.
+        data_format_code (ImageDataFormat): The supported image data format.
 
     Examples:
         >>> # Load single dicom
@@ -86,10 +87,10 @@ class DicomReader(DataReader):
         Args:
             num_workers (int, optional): Number of workers to use for loading.
             verbose (bool, optional): If ``True``, show loading progress bar.
-            group_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+            group_by (:obj:`str(s)` or :obj:`int(s)`, optional): DICOM attribute(s) used
                 to group dicoms. This can be the attribute tag name (str) or tag
                 number (int).
-            sort_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+            sort_by (:obj:`str(s)` or :obj:`int(s)`, optional): DICOM attribute(s) used
                 to sort dicoms. This sorting is done after sorting files in alphabetical
                 order.
             ignore_ext (bool, optional): If ``True``, ignore extension (``".dcm"``)
@@ -179,10 +180,10 @@ class DicomReader(DataReader):
 
         Args:
             path (`str(s)`): Directory with dicom files or dicom file(s).
-            group_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+            group_by (:obj:`str(s)` or :obj:`int(s)`, optional): DICOM attribute(s) used
                 to group dicoms. This can be the attribute tag name (str) or tag
                 number (int). Defaults to ``self.group_by``.
-            sort_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+            sort_by (:obj:`str(s)` or :obj:`int(s)`, optional): DICOM attribute(s) used
                 to sort dicoms. This sorting is done after sorting files in alphabetical
                 order. Defaults to ``self.sort_by``.
             ignore_ext (bool, optional): If ``True``, ignore extension (``".dcm"``)
@@ -297,9 +298,10 @@ class DicomWriter(DataWriter):
         num_workers (int, optional): Number of workers to use for writing.
         verbose (bool, optional): If ``True``, show writing progress bar.
         fname_fmt (str, optional): Formatting string for filenames.
-        sort_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+        sort_by (:obj:`str(s)` or :obj:`int(s)`, optional): DICOM attribute(s) used
             to define ordering of slices prior to writing. If not specified, this ordering
             will be defined by the order of blocks in ``volume``.
+        data_format_code (ImageDataFormat): The supported image data format.
 
     Examples:
         >>> # Save MedicalVolume mv

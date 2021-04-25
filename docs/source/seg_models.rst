@@ -13,6 +13,7 @@ If you use these models, please reference both DOSMA and the original work.
    dosma.models
 
 .. autosummary::
+   :toctree: generated
    :nosignatures:
 
    dosma.models.OAIUnet2D

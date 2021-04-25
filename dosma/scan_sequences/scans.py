@@ -35,6 +35,8 @@ from dosma.scan_sequences.scan_io import ScanIOMixin
 from dosma.tissues.tissue import Tissue
 from dosma.utils import io_utils
 
+__all__ = ["ScanSequence"]
+
 
 class ScanSequence(ScanIOMixin):
     """The class for scan sequences and corresponding analysis.

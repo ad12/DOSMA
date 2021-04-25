@@ -579,7 +579,16 @@ class MedicalVolume(NDArrayOperatorsMixin):
             else:
                 h[key].value = value
 
-    def round(self, decimals=0, affine=False):
+    def round(self, decimals=0, affine=False) -> "MedicalVolume":
+        """Round array (and optionally affine matrix).
+
+        Args:
+            decimals (int, optional): Number of decimals to round to.
+            affine (bool, optional): The rounded medical volume.
+
+        Returns:
+            MedicalVolume: MedicalVolume with rounded.
+        """
         return around(self, decimals, affine)
 
     def sum(
@@ -590,15 +599,49 @@ class MedicalVolume(NDArrayOperatorsMixin):
         keepdims=False,
         initial=np._NoValue,
         where=np._NoValue,
-    ):
-        """Identical to :method:``sum_np``."""
+    ) -> "MedicalVolume":
+        """Compute the arithmetic sum along the specified axis. Identical to :meth:`sum_np`.
+
+        See :meth:`sum_np` for more information.
+
+        Args:
+            axis: Same as :meth:`sum_np`.
+            dtype: Same as :meth:`sum_np`.
+            out: Same as :meth:`sum_np`.
+            keepdims: Same as :meth:`sum_np`.
+            initial: Same as :meth:`sum_np`.
+            where: Same as :meth:`sum_np`.
+
+        Returns:
+            Union[Number, MedicalVolume]: If ``axis=None``, returns a number or a scalar type of
+                the underlying ndarray. Otherwise, returns a medical volume containing sum
+                values.
+        """
         # `out` is required for cupy arrays because of how cupy calls array.
         if out is not None:
             raise ValueError("`out` must be None")
         return sum_np(self, axis=axis, dtype=dtype, keepdims=keepdims, initial=initial, where=where)
 
-    def mean(self, axis=None, dtype=None, out=None, keepdims=False, where=np._NoValue):
-        """Identical to :method:``mean_np``."""
+    def mean(
+        self, axis=None, dtype=None, out=None, keepdims=False, where=np._NoValue
+    ) -> Union[Number, "MedicalVolume"]:
+        """Compute the arithmetic mean along the specified axis. Identical to :meth:`mean_np`.
+
+        See :meth:`mean_np` for more information.
+
+        Args:
+            axis: Same as :meth:`mean_np`.
+            dtype: Same as :meth:`mean_np`.
+            out: Same as :meth:`mean_np`.
+            keepdims: Same as :meth:`mean_np`.
+            initial: Same as :meth:`mean_np`.
+            where: Same as :meth:`mean_np`.
+
+        Returns:
+            Union[Number, MedicalVolume]: If ``axis=None``, returns a number or a scalar type of
+            the underlying ndarray. Otherwise, returns a medical volume containing mean
+            values.
+        """
         # `out` is required for cupy arrays because of how cupy calls array.
         if out is not None:
             raise ValueError("`out` must be None")
@@ -606,9 +649,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
     @property
     def A(self):
-        """The pixel array.
-
-        Same as ``self.volume``.
+        """The pixel array. Same as ``self.volume``.
 
         Examples:
             >>> mv = MedicalVolume([[[1,2],[3,4]]], np.eye(4))
@@ -620,7 +661,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
     @property
     def volume(self):
-        """ndarray: 3D ndarray representing volume values."""
+        """ndarray: ndarray representing volume values."""
         return self._volume
 
     @volume.setter
@@ -671,15 +712,18 @@ class MedicalVolume(NDArrayOperatorsMixin):
         return self._affine
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple[int, ...]:
+        """The shape of the underlying ndarray."""
         return self._volume.shape
 
     @property
-    def device(self):
+    def device(self) -> Device:
+        """The device the object is on."""
         return get_device(self._volume)
 
     @property
     def dtype(self):
+        """The ``dtype`` of the ndarray. Same as ``self.volume.dtype``."""
         return self._volume.dtype
 
     @classmethod
