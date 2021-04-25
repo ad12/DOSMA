@@ -83,6 +83,62 @@ class TestCurveFit(unittest.TestCase):
         )
         assert np.allclose(popt, popt_mw)
 
+    def test_p0(self):
+        """Test different p0 configurations."""
+        x = np.asarray([1, 2, 3, 4])
+        num = 50
+        ys = np.stack(
+            [monoexponential(x, np.random.random(), np.random.random()) for _ in range(num)],
+            axis=-1,
+        )
+
+        # Expected
+        popt_1_1, _ = curve_fit(monoexponential, x, ys)
+        popt_1_50, _ = curve_fit(monoexponential, x, ys, p0=(1.0, 50.0))
+
+        # Scalar or empty value for each argument
+        popt_seq, _ = curve_fit(monoexponential, x, ys, p0=(1.0, 1.0))
+        assert np.allclose(popt_seq, popt_1_1)
+        popt_seq, _ = curve_fit(monoexponential, x, ys, p0=(None, 1.0))
+        assert np.allclose(popt_seq, popt_1_1)
+        popt_seq, _ = curve_fit(monoexponential, x, ys, p0=(1.0, None))
+        assert np.allclose(popt_seq, popt_1_1)
+
+        # Dictionary of scalar values
+        popt_dict, _ = curve_fit(monoexponential, x, ys, p0={"a": 1.0, "b": 1.0})
+        assert np.allclose(popt_dict, popt_1_1)
+
+        popt_dict, _ = curve_fit(monoexponential, x, ys, p0={"b": 50.0})
+        assert np.allclose(popt_dict, popt_1_50)
+
+        # Numpy array
+        popt_arr, _ = curve_fit(monoexponential, x, ys, p0=np.ones((num, 2)))
+        assert np.allclose(popt_arr, popt_1_1)
+
+        p0 = np.stack([np.ones(num), 50 * np.ones(num)], axis=-1)
+        popt_arr, _ = curve_fit(monoexponential, x, ys, p0=p0)
+        assert np.allclose(popt_arr, popt_1_50)
+
+        # Mix of array and scalar
+        popt_arr, _ = curve_fit(monoexponential, x, ys, p0=[np.ones(num), 50])
+        assert np.allclose(popt_arr, popt_1_50)
+
+        # Multiprocessing
+        popt_mw, _ = curve_fit(
+            monoexponential, x, ys, p0=[np.ones(num), 50], num_workers=util.num_workers()
+        )
+        assert np.allclose(popt_mw, popt_1_50)
+
+        popt_mw, _ = curve_fit(
+            monoexponential,
+            x,
+            ys,
+            p0=[np.ones(num), 50],
+            num_workers=util.num_workers(),
+            show_pbar=True,
+        )
+        assert np.allclose(popt_mw, popt_1_50)
+
 
 class TestPolyFit(unittest.TestCase):
     """Test :func:`dosma.utils.fits.polyfit`."""
@@ -321,6 +377,47 @@ class TestCurveFitter(unittest.TestCase):
         a_hat = popt[..., 0]
 
         assert np.allclose(a_hat.volume, a)
+
+    def test_p0(self):
+        x, y, b = _generate_monoexp_data((10, 10, 20))
+
+        fitter = CurveFitter(monoexponential, p0=(1.0, b))
+        popt, _ = fitter.fit(x, y)
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+        assert np.allclose(a_hat.volume, 1.0)
+        assert np.allclose(b_hat.volume, b)
+
+        fitter = CurveFitter(monoexponential, p0={"a": 1.0, "b": b})
+        popt, _ = fitter.fit(x, y)
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+        assert np.allclose(a_hat.volume, 1.0)
+        assert np.allclose(b_hat.volume, b)
+
+        fitter = CurveFitter(
+            monoexponential, p0={"a": 1.0, "b": MedicalVolume(b, affine=y[0].affine)}
+        )
+        popt, _ = fitter.fit(x, y)
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+        assert np.allclose(a_hat.volume, 1.0)
+        assert np.allclose(b_hat.volume, b)
+
+        fitter = CurveFitter(monoexponential)
+        popt, _ = fitter.fit(x, y, p0=(1.0, b))
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+        assert np.allclose(a_hat.volume, 1.0)
+        assert np.allclose(b_hat.volume, b)
+
+        fitter = CurveFitter(monoexponential)
+        popt, _ = fitter.fit(x, y, p0={"a": 1.0, "b": b})
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+        assert np.allclose(a_hat.volume, 1.0)
+        assert np.allclose(b_hat.volume, b)
+
+        fitter = CurveFitter(monoexponential)
+        popt, _ = fitter.fit(x, y, p0={"a": 1.0, "b": MedicalVolume(b, affine=y[0].affine)})
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+        assert np.allclose(a_hat.volume, 1.0)
+        assert np.allclose(b_hat.volume, b)
 
     def test_str(self):
         fitter = CurveFitter(

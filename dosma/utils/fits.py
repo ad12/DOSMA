@@ -4,7 +4,8 @@ import warnings
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import partial
-from typing import Callable, List, Optional, Sequence, Tuple, Union
+from numbers import Number
+from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from scipy import optimize as sop
@@ -311,7 +312,7 @@ class CurveFitter(_Fitter):
 
         self._func = func
         self._func_name = func_name
-        self.p0 = p0
+        self.p0 = self._format_p0(p0)
         self.y_bounds = y_bounds
         self.out_ufuncs = out_ufuncs
         self.out_bounds = out_bounds
@@ -322,7 +323,38 @@ class CurveFitter(_Fitter):
         self.verbose = verbose
         self.kwargs = kwargs
 
-    def fit(self, x, y: Sequence[MedicalVolume], mask=None):
+    def _format_p0(self, p0, ref: MedicalVolume = None, flatten: bool = False, depth: int = 0):
+        if p0 is None or isinstance(p0, Number):
+            return p0
+        elif isinstance(p0, MedicalVolume) and depth > 0:
+            if ref is not None:
+                p0 = p0.reformat_as(ref)
+                assert p0.is_same_dimensions(ref, err=True)
+            if flatten:
+                p0 = p0.A.flatten()
+            return p0
+        elif isinstance(p0, np.ndarray) and depth > 0:
+            if ref is not None and p0.shape != ref.shape:
+                raise ValueError(f"Got p0.shape={p0.shape}, but y.shape={ref.shape}")
+            if flatten:
+                p0 = p0.flatten()
+            return p0
+
+        if isinstance(p0, Mapping):
+            return {k: self._format_p0(v, ref, flatten, depth + 1) for k, v in p0.items()}
+        elif isinstance(p0, Sequence):
+            return tuple(self._format_p0(v, ref, flatten, depth + 1) for v in p0)
+        elif isinstance(p0, (np.ndarray, MedicalVolume)):
+            # If a single numpy array is provided as the parameter input, the
+            # last axis is considered to be the parameter axis. Note, this may
+            # change in the future.
+            return tuple(
+                self._format_p0(p0[..., i], ref, flatten, depth + 1) for i in range(p0.shape[-1])
+            )
+
+        raise ValueError(f"p0={p0} not supported")
+
+    def fit(self, x, y: Sequence[MedicalVolume], mask=None, p0=np._NoValue):
         """
         Args:
             x (array-like): 1D array of independent variables corresponding to different ``y``.
@@ -330,6 +362,8 @@ class CurveFitter(_Fitter):
                 independent variable ``x``. Data must be spatially aligned.
             mask (``MedicalVolume`` or ``ndarray``, optional): If specified, only entries where
                 ``mask > 0`` will be fit.
+            p0 (Sequence, optional): Initial guess for the parameters.
+                Defaults to ``self.p0``.
 
         Returns:
             Tuple[MedicalVolume, MedicalVolume]: Tuple of fitted parameters (``popt``)
@@ -341,15 +375,21 @@ class CurveFitter(_Fitter):
         if any(get_device(_y) != cpu_device for _y in y):
             raise RuntimeError("All elements in `y` must be on the CPU")
 
-        return super().fit(x, y, mask=mask)
+        if p0 is np._NoValue:
+            p0 = self.p0
+        p0 = self._format_p0(p0, ref=y[0], flatten=True)
 
-    def _fit(self, x, y):
+        return super().fit(x, y, mask=mask, p0=p0)
+
+    def _fit(self, x, y, p0=np._NoValue):
+        assert p0 is not np._NoValue
+
         return curve_fit(
             self._func,
             x,
             y,
             self.y_bounds,
-            p0=self.p0,
+            p0=p0,
             show_pbar=self.verbose,
             num_workers=self.num_workers,
             chunksize=self.chunksize,
@@ -676,9 +716,10 @@ def curve_fit(
             an (M,N)-shaped array for N different sequences.
         y_bounds (tuple, optional): Lower and upper bound on y values. Defaults to no bounds.
             Sequences with observations out of this range will not be processed.
-        p0 (Sequence, optional): Initial guess for the parameters (length N). If None, then
-            the initial values will all be 1 (if the number of parameters for the
-            function can be determined using introspection, otherwise a ValueError is raised).
+        p0 (Number | Sequence[Number] | ndarray | Dict, optional): Initial guess for the parameters.
+            If sequence (e.g. list, tuple, 1d ndarray), it should have length P, which is the
+            number of parameters. If this is a 2D numpy array, it should have a shape ``(N, P)``.
+            If ``None``, then the initial values will all be 1.
         maxfev (int, optional): Maximum number of function evaluations before the termination.
             If `bounds` argument for `scipy.optimize.curve_fit` is specified, this corresponds
             to the `max_nfev` in the least squares algorithm
@@ -692,6 +733,11 @@ def curve_fit(
             ``num_workers > 0``. When ``show_pbar=True``, this defaults to the standard
             value in :func:`tqdm.concurrent.process_map`.
         kwargs: Keyword args for `scipy.optimize.curve_fit`.
+
+    Returns:
+        popts (ndarray): A NxP matrix of fitted values. The last dimension (``axis=-1``)
+            corresponds to the different parameters (in order).
+        rsquared (ndarray): A (N,) length matrix of r-squared goodness-of-fit values.
     """
     if (get_device(x) != cpu_device) or (get_device(y) != cpu_device):
         raise RuntimeError("`x` and `y` must be on CPU")
@@ -704,6 +750,12 @@ def curve_fit(
 
     func_args = [p for p in inspect.signature(func).parameters]
     nparams = len(func_args) - 2 if "self" in func_args else len(func_args) - 1
+    param_args = func_args[2:] if "self" in func_args else func_args[1:]
+
+    if p0 is None:
+        p0_scalars, p0_seq = None, None
+    else:
+        p0_scalars, p0_seq = _format_p0(p0, param_args, N)
 
     if "bounds" not in kwargs:
         kwargs["maxfev"] = maxfev
@@ -716,7 +768,7 @@ def curve_fit(
         x=x,
         func=func,
         y_bounds=y_bounds,
-        p0=p0,
+        p0=p0_scalars,
         ftol=ftol,
         eps=eps,
         nparams=nparams,
@@ -727,21 +779,25 @@ def curve_fit(
     if oob:
         warnings.warn("Out of bounds values found. Failure in fit will result in np.nan")
 
+    y_T = y.T
+    if p0_seq:
+        y_T = [{"y": y_T[i], "p0": {k: v[i] for k, v in p0_seq.items()}} for i in range(N)]
+
     popts = []
     r_squared = []
     if not num_workers:
         for i in tqdm(range(N), disable=not show_pbar):
-            popt_, r2_ = fitter(y[:, i])
+            popt_, r2_ = fitter(y_T[i])
             popts.append(popt_)
             r_squared.append(r2_)
     else:
         if show_pbar:
             tqdm_kwargs = {"chunksize": chunksize}
             tqdm_kwargs = {k: v for k, v in tqdm_kwargs.items() if v is not None}
-            data = process_map(fitter, y.T, max_workers=num_workers, **tqdm_kwargs)
+            data = process_map(fitter, y_T, max_workers=num_workers, **tqdm_kwargs)
         else:
             with mp.Pool(num_workers) as p:
-                data = p.map(fitter, y.T, chunksize=chunksize)
+                data = p.map(fitter, y_T, chunksize=chunksize)
         popts, r_squared = [x[0] for x in data], [x[1] for x in data]
 
     return np.stack(popts, axis=0), np.asarray(r_squared)
@@ -799,7 +855,7 @@ def polyfit(
         residuals = yhat - _y
         ss_res = xp.sum(residuals ** 2, axis=0)
         ss_tot = xp.sum((_y - xp.mean(_y, axis=0, keepdims=True)) ** 2, axis=0)
-        return 1 - (ss_res / (ss_tot))
+        return 1 - (ss_res / (ss_tot + eps))
 
     x_device, y_device = get_device(x), get_device(y)
     if x_device != y_device:
@@ -881,7 +937,9 @@ def biexponential(x, a1, b1, a2, b2):
     return a1 * np.exp(b1 * x) + a2 * np.exp(b2 * x)
 
 
-def _curve_fit(y, x, func, y_bounds=None, p0=None, ftol=1e-5, eps=1e-8, nparams=None, **kwargs):
+def _curve_fit(
+    y_or_dict, x, func, y_bounds=None, p0=None, ftol=1e-5, eps=1e-8, nparams=None, **kwargs
+):
     def _fit_internal(_x, _y):
         popt, _ = sop.curve_fit(func, _x, _y, p0=p0, ftol=ftol, **kwargs)
 
@@ -892,9 +950,31 @@ def _curve_fit(y, x, func, y_bounds=None, p0=None, ftol=1e-5, eps=1e-8, nparams=
 
         return popt, r_squared
 
+    def _parse_p0(_dict):
+        if "p0" not in _dict or _dict["p0"] in [None, {}]:
+            return p0
+        _p0_dict = _dict["p0"]
+        if p0 is None:
+            return tuple(_p0_dict.values())
+        elif isinstance(p0, Dict):
+            # In Python>=3.6 dictionary key/value pairs are ordered by default.
+            # The order of the keys should reflect the order of the parameters
+            # in the target function.
+            p0_copy = p0.copy()
+            p0_copy.update(_p0_dict)
+            return tuple(p0_copy.values())
+        else:
+            assert False  # p0 must be None or a mapping
+
     if nparams is None:
         func_args = inspect.getargspec(func).args
         nparams = len(func_args) - 2 if "self" in func_args else len(func_args) - 1
+
+    if isinstance(y_or_dict, dict):
+        y = y_or_dict["y"]
+        p0 = _parse_p0(y_or_dict)
+    else:
+        y = y_or_dict
 
     # import pdb; pdb.set_trace()
     oob = y_bounds is not None and ((y < y_bounds[0]).any() or (y > y_bounds[1]).any())
@@ -936,6 +1016,64 @@ def _polyfit(y, x, deg, y_bounds=None, xp=None, rcond=None, w=None, eps=1e-8):
     except RuntimeError:
         popt_, r2_ = (xp.nan,) * nparams, 0
     return popt_, r2_
+
+
+def _format_p0(p0, param_args, N):
+    """Formats the p0 values for :func:`curve_fit`.
+
+    Args:
+        p0: The initialization values for the parameters.
+        param_args (Sequence[str]): The parameter names.
+        N (int): The number of sequences.
+
+    Returns:
+        p0_scalars (Dict[str, Optional[Number]]): The dictionary of
+            all paramters and their scalar initializations. If parameter
+            does not have a scalar value, the value for that key will be
+            ``None``.
+        p0_seq (Dict[str, Union[Sequence, ndarray]]): The dictionary of
+            partial parameters that have a sequence-like structure.
+    """
+    nparams = len(param_args)
+
+    if isinstance(p0, Number):
+        p0 = (p0,) * nparams
+    elif isinstance(p0, np.ndarray) and p0.ndim > 1:
+        p0 = tuple(p0[..., i] for i in range(p0.shape[-1]))
+
+    if isinstance(p0, (np.ndarray, Sequence)):
+        if len(p0) != nparams:
+            raise ValueError(f"`p0` has length {len(p0)} but function has {nparams} parameters")
+        p0 = {param_args[i]: p0[i] for i in range(nparams)}
+    elif isinstance(p0, Mapping):
+        extra_keys = set(p0) - set(param_args)
+        if len(extra_keys) > 0:
+            raise ValueError(
+                f"`p0` has unknown keys: {extra_keys}. "
+                f"Function signature has parameters {param_args}."
+            )
+        p0_default = {p: 1.0 for p in param_args}
+        # Update p0_default to keep the parameter keys in order.
+        p0_default.update(p0)
+        p0 = p0_default
+
+    if p0 is not None:
+        p0.update({k: 1.0 for k, v in p0.items() if v is None})
+
+        p0_scalars = {k: v if not isinstance(v, np.ndarray) else None for k, v in p0.items()}
+        p0_seq = {k: v for k, v in p0.items() if isinstance(v, np.ndarray)}
+        for k, v in p0_seq.items():
+            if len(v) != N:
+                raise ValueError(f"Got {len(v)} values for param '{k}'. Expected {N}")
+        if not p0_scalars:
+            p0_scalars = None
+        if not p0_seq:
+            p0_scalars = tuple(p0_scalars.values())
+            p0_seq = None
+    else:
+        p0_scalars, p0_seq = None, None
+
+    return p0_scalars, p0_seq
 
 
 def __fit_mono_exp__(x, y, p0=None):  # pragma: no cover
