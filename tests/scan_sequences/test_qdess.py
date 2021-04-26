@@ -2,7 +2,7 @@ import os
 import unittest
 
 from dosma.models.util import get_model
-from dosma.scan_sequences.qdess import QDess
+from dosma.scan_sequences.mri.qdess import QDess
 from dosma.tissues.femoral_cartilage import FemoralCartilage
 
 import keras.backend as K

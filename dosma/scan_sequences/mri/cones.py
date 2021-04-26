@@ -184,7 +184,7 @@ class Cones(NonTargetSequence):
     def from_dict(cls, data, force: bool = False):
         interregistered_dirpath = None
         if "subvolumes" in data:
-            interregistered_dirpath = os.path.dirpath(data.pop("subvolumes")[0])
+            interregistered_dirpath = os.path.dirname(data.pop("subvolumes")[0])
         scan = super().from_dict(data, force=force)
         if interregistered_dirpath is not None:
             subvolumes = scan.__load_interregistered_files__(interregistered_dirpath)

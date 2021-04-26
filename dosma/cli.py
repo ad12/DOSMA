@@ -36,10 +36,10 @@ from dosma.models.seg_model import SegModel
 from dosma.models.util import SUPPORTED_MODELS, get_model, model_from_config
 from dosma.msk import knee
 from dosma.quant_vals import QuantitativeValueType as QV
-from dosma.scan_sequences.cones import Cones
-from dosma.scan_sequences.cube_quant import CubeQuant
-from dosma.scan_sequences.mapss import Mapss
-from dosma.scan_sequences.qdess import QDess
+from dosma.scan_sequences.mri.cones import Cones
+from dosma.scan_sequences.mri.cube_quant import CubeQuant
+from dosma.scan_sequences.mri.mapss import Mapss
+from dosma.scan_sequences.mri.qdess import QDess
 from dosma.scan_sequences.scans import ScanSequence
 from dosma.tissues.tissue import Tissue
 from dosma.utils import env, io_utils
