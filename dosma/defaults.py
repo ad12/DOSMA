@@ -7,8 +7,11 @@ Please change depending on your preferences.
 """
 import os
 import shutil
+import warnings
 import yaml
-from typing import Any
+from typing import Any, Mapping
+
+from dosma.utils import env
 
 import matplotlib
 import nested_lookup
@@ -16,15 +19,13 @@ import nested_lookup
 __all__ = ["preferences"]
 
 # Parse preferences file
-_file_dirpath = os.path.dirname(os.path.abspath(__file__))
-_internal_preferences_template_filepath = os.path.join(
-    _file_dirpath, "resources/templates/.preferences.yml"
-)
+_resources_dir = env.resources_dir()
+_internal_preferences_template_filepath = os.path.join(_resources_dir, "templates/.preferences.yml")
 _preferences_cmd_line_filepath = os.path.join(
-    _file_dirpath, "resources/templates/.preferences_cmd_line_schema.yml"
+    _resources_dir, "templates/.preferences_cmd_line_schema.yml"
 )
 
-__preferences_filepath__ = os.path.join(_file_dirpath, "resources/preferences.yml")
+__preferences_filepath__ = os.path.join(_resources_dir, "preferences.yml")
 
 if not os.path.isfile(__preferences_filepath__):
     shutil.copyfile(_internal_preferences_template_filepath, __preferences_filepath__)
@@ -40,7 +41,7 @@ DEFAULT_TEXT_SPACING = DEFAULT_FONT_SIZE * 0.01
 class _Preferences(object):
     """A pseudo-Singleton class implementation to track preferences.
 
-    Do not instantiate this class. To modify/update preferences use the preferences
+    Do not instantiate this class. To modify/update preferences use the ``preferences``
     module variable defined below.
 
     However, in the case this class is instantiated, a new object will be created,
@@ -48,6 +49,7 @@ class _Preferences(object):
     the config in one instance will impact the preferences state in another instance.
     """
 
+    _template_filepath = _internal_preferences_template_filepath
     _preferences_filepath = __preferences_filepath__
     __config = {}
     __key_list = []
@@ -56,11 +58,52 @@ class _Preferences(object):
         # Load config and set information if config has not been initialized.
         if not self.__config:
             with open(self._preferences_filepath, "r") as f:
-                self.__config = yaml.load(f)
+                self.__config = yaml.safe_load(f)
+            with open(self._template_filepath, "r") as f:
+                template = yaml.safe_load(f)
+
+            self.__config = self._merge_dicts(self.__config, template)
+
             matplotlib.rcParams.update(self.__config["visualization"]["matplotlib"]["rcParams"])
 
             # Store all preference keys.
             self.__key_list = self._unroll_keys(self.config, "")
+
+    def _merge_dicts(self, target, base, prefix=""):
+        """Merges dicts from target onto base."""
+        target_keys = target.keys()
+        base_keys = base.keys()
+        all_keys = target_keys | base_keys
+
+        for k in all_keys:
+            prefix_k = f"{prefix}/{k}" if prefix else k
+
+            if k in target_keys and k not in base_keys:
+                # Allow target config to specify parameters not in the base config.
+                # Note this may change in the future.
+                pass
+            elif k not in target_keys and k in base_keys:
+                warnings.warn(
+                    "Your preferences file may be outdated. "
+                    "Run `preferences.save()` to save your updated preferences."
+                )
+                target[k] = base[k]
+            else:
+                target_v = target[k]
+                template_v = base[k]
+
+                if isinstance(target_v, Mapping) and isinstance(template_v, Mapping):
+                    target[k] = self._merge_dicts(target_v, template_v, prefix=prefix_k)
+                elif isinstance(template_v, Mapping):
+                    raise ValueError(
+                        f"{prefix_k}: Got target type '{type(target_v)}', "
+                        f"but base config type is '{type(template_v)}'"
+                    )
+                else:
+                    # If both are not mapping, keep the target value.
+                    pass
+
+        return target
 
     def _unroll_keys(self, subdict: dict, prefix: str) -> list:
         """Recursive method to unroll keys."""
@@ -188,6 +231,7 @@ class _Preferences(object):
     # Make certain preferences easily accessible through this class.
     @property
     def segmentation_batch_size(self) -> int:
+        """int: Batch size for segmentation models."""
         return self.get("/segmentation/batch.size")
 
     @property
@@ -196,21 +240,34 @@ class _Preferences(object):
 
     @property
     def mask_dilation_rate(self) -> float:
+        """float: rate for mask dilation."""
         return self.get("/registration/mask/dilation.rate")
 
     @property
     def mask_dilation_threshold(self) -> float:
+        """float: threshold for mask dilation."""
         return self.get("/registration/mask/dilation.threshold")
 
     @property
-    def fitting_r2_threshold(self):
+    def fitting_r2_threshold(self) -> float:
+        """float: r2 threshold for fitting"""
         return self.get("/fitting/r2.threshold")
 
     @property
     def image_data_format(self):
+        """ImageDataFormat: Format for images (e.g. png, eps, etc.)."""
         from dosma.data_io.format_io import ImageDataFormat
 
         return ImageDataFormat[self.get("/data/format")]
+
+    @property
+    def nipype_logging(self) -> str:
+        """str: nipype library logging mode."""
+        # TODO: Remove this try/except clause when schema is well defined.
+        try:
+            return self.get("/logging/nipype")
+        except KeyError:
+            return "file_stderr"
 
     def cmd_line_flags(self) -> dict:
         """Provide command line flags for changing preferences via command line.

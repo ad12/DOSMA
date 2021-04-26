@@ -10,6 +10,7 @@ import dosma.file_constants as fc
 from dosma.data_io.dicom_io import DicomReader
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.scan_sequences import CubeQuant, QDess
+from dosma.utils import env
 from dosma.utils.registration import apply_warp, register
 
 from .. import util
@@ -23,7 +24,7 @@ class TestRegister(unittest.TestCase):
         dr = DicomReader(num_workers=util.num_workers())
         cq_dicoms = util.get_dicoms_path(os.path.join(util.UNITTEST_SCANDATA_PATH, CubeQuant.NAME))
         cq = dr.load(cq_dicoms)
-        data_dir = os.path.join(fc.TEMP_FOLDER_PATH, "test-register-mp")
+        data_dir = os.path.join(env.temp_dir(), "test-register-mp")
 
         out_path = os.path.join(data_dir, "expected")
         _, expected = register(
@@ -64,7 +65,7 @@ class TestApplyWarp(unittest.TestCase):
         dr = DicomReader(num_workers=util.num_workers())
         cq_dicoms = util.get_dicoms_path(os.path.join(util.UNITTEST_SCANDATA_PATH, CubeQuant.NAME))
         cq = dr.load(cq_dicoms)
-        out_path = os.path.join(fc.TEMP_FOLDER_PATH, "test-register")
+        out_path = os.path.join(env.temp_dir(), "test-register")
         out, _ = register(
             cq[0],
             cq[1],

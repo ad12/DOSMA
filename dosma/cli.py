@@ -30,7 +30,6 @@ import warnings
 from collections import defaultdict
 from typing import Sequence
 
-from dosma import file_constants as fc
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.defaults import preferences
 from dosma.models.seg_model import SegModel
@@ -43,7 +42,7 @@ from dosma.scan_sequences.mapss import Mapss
 from dosma.scan_sequences.qdess import QDess
 from dosma.scan_sequences.scans import ScanSequence
 from dosma.tissues.tissue import Tissue
-from dosma.utils import io_utils
+from dosma.utils import env, io_utils
 
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
@@ -752,12 +751,12 @@ def parse_args(f_input=None):
 
         # Only initialize logger if called from command line.
         # If UI is using it, the logger should be initialized by the UI.
-        io_utils.init_logger(fc.LOG_FILE_PATH, args.debug)
+        io_utils.init_logger(env.log_file_path(), args.debug)
 
     vargin = vars(args)
 
     if vargin[DEBUG_KEY]:
-        fc.set_debug()
+        env.debug(True)
 
     gpu = vargin[GPU_KEY]
 

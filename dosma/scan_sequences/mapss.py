@@ -12,6 +12,7 @@ from dosma.data_io import format_io_utils as fio_utils
 from dosma.data_io.format_io import ImageDataFormat
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.data_io.nifti_io import NiftiReader
+from dosma.defaults import preferences
 from dosma.quant_vals import QuantitativeValueType
 from dosma.scan_sequences.scans import ScanSequence
 from dosma.tissues.tissue import Tissue
@@ -127,7 +128,7 @@ class Mapss(ScanSequence):
                 os.path.join(self.temp_path, "intraregistered", "{:03d}".format(echo_index))
             )
             reg.inputs.parameters = [fc.ELASTIX_AFFINE_PARAMS_FILE]
-            reg.terminal_output = fc.NIPYPE_LOGGING
+            reg.terminal_output = preferences.nipype_logging
             logging.info("Registering {} -> {}".format(str(echo_index), str(target_echo_index)))
             tmp = reg.run()
 

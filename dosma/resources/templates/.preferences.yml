@@ -2,6 +2,8 @@ data:
   format: 'nifti'
 fitting:
   r2.threshold: 0.9
+logging:
+  nipype: "file_stderr"
 registration:
   mask:
     dilation.rate: 9.0

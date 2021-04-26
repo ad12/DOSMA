@@ -13,7 +13,8 @@ To learn more about what scans and tissues are supported, see the pages below:
    core_api
    scans
    tissues
-   seg_models
+   models
+   utils_api
 
 For a brief overview of DOSMA command-line practices and examples, see :ref:`Command Line Usage <usage-cli>`.
 

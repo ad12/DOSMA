@@ -33,7 +33,7 @@ from dosma.data_io.nifti_io import NiftiReader
 from dosma.defaults import preferences
 from dosma.scan_sequences.scan_io import ScanIOMixin
 from dosma.tissues.tissue import Tissue
-from dosma.utils import io_utils
+from dosma.utils import env, io_utils
 
 __all__ = ["ScanSequence"]
 
@@ -73,7 +73,7 @@ class ScanSequence(ScanIOMixin):
         self._from_file_args = {}
 
         self.temp_path = os.path.join(
-            fc.TEMP_FOLDER_PATH, self.NAME, strftime("%Y-%m-%d-%H-%M-%S", localtime())
+            env.temp_dir(), self.NAME, strftime("%Y-%m-%d-%H-%M-%S", localtime())
         )
         self.tissues = []
         self._metadata = {}
@@ -386,7 +386,7 @@ class NonTargetSequence(ScanSequence):
                 fixed_mask_filepath = self.__dilate_mask__(mask_path, temp_path)
                 reg.inputs.fixed_mask = fixed_mask_filepath
 
-            reg.terminal_output = fc.NIPYPE_LOGGING
+            reg.terminal_output = preferences.nipype_logging
 
             reg_output = reg.run()
             reg_output = reg_output.outputs
@@ -421,7 +421,7 @@ class NonTargetSequence(ScanSequence):
             reg.inputs.output_path = io_utils.mkdirs(
                 os.path.join(temp_path, "{:03d}".format(image_id))
             )
-            reg.terminal_output = fc.NIPYPE_LOGGING
+            reg.terminal_output = preferences.nipype_logging
             reg_output = reg.run()
 
             warped_file = reg_output.outputs.warped_file

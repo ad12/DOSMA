@@ -1,8 +1,8 @@
 .. _seg_models:
 
-Segmentation Models (dosma.models)
+Models (dosma.models)
 ================================================================================
-DOSMA currently supports pre-trained models for segmenting, each described in detail below.
+DOSMA currently supports pre-trained deep learning models for segmenting, each described in detail below.
 Model aliases are string fields used to distinguish/specify particular models in DOSMA (command-line
 argument :code:`--model`).
 
