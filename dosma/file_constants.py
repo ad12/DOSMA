@@ -2,8 +2,6 @@
 
 import os
 
-DEBUG = 0
-
 # Elastix files
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
@@ -28,18 +26,3 @@ MAPSS_ELASTIX_AFFINE_INTERREGISTER_PARAMS_FILE = os.path.join(
 MAPSS_ELASTIX_RIGID_INTERREGISTER_PARAMS_FILE = os.path.join(
     __PATH_TO_ELASTIX_FOLDER__, "parameters-rigid-interregister.txt"
 )
-
-
-# Temporary file path
-TEMP_FOLDER_PATH = os.path.join(__OUT_DIR__, "temp")
-
-NIPYPE_LOGGING = "file_stderr"  # 'none'
-
-# Log file path
-LOG_FILE_PATH = os.path.join(__OUT_DIR__, "dosma.log")
-
-
-def set_debug():
-    global DEBUG, NIPYPE_LOGGING
-    DEBUG = 1
-    NIPYPE_LOGGING = "stream"

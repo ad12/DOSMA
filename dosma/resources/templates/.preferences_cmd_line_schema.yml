@@ -25,6 +25,14 @@ fitting:
     type: 'float'
     nargs: '?'
     help: 'r^2 threshold for goodness of fit. Range [0-1).'
+logging:
+  nipype:
+    name: 'nipype logging'
+    aliases: ['--nipype_logging']
+    type: str
+    nargs: '?'
+    choices: ['file', 'file_split', 'file_stdout', 'file_stderr', 'stream', 'allatonce', 'none']
+    help: 'nipype library logging'
 visualization:
   matplotlib:
     rcParams:

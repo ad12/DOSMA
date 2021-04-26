@@ -17,6 +17,8 @@ from tqdm.contrib.concurrent import process_map
 from dosma import file_constants as fc
 from dosma.data_io.med_volume import MedicalVolume
 from dosma.data_io.nifti_io import NiftiReader, NiftiWriter
+from dosma.defaults import preferences
+from dosma.utils import env
 from dosma.utils.device import cpu_device
 
 __all__ = ["register", "apply_warp", "symlink_elastix", "unlink_elastix"]
@@ -87,7 +89,7 @@ def register(
     assert issubclass(rtype, (Dict, Sequence))  # `rtype` must be dict or tuple
     has_output_path = bool(output_path)
     if not output_path:
-        output_path = os.path.join(fc.TEMP_FOLDER_PATH, "register")
+        output_path = os.path.join(env.temp_dir(), "register")
 
     moving = [moving] if isinstance(moving, (MedicalVolume, str)) else moving
     moving_masks = (
@@ -236,7 +238,7 @@ def apply_warp(
     if rtype == str and not has_output_path:
         raise ValueError("`output_path` must be specified when `rtype=str`")
     if not output_path:
-        output_path = os.path.join(fc.TEMP_FOLDER_PATH, f"apply_warp-{str(uuid.uuid1())}")
+        output_path = os.path.join(env.temp_dir(), f"apply_warp-{str(uuid.uuid1())}")
     output_path = os.path.abspath(output_path)
     os.makedirs(output_path, exist_ok=True)
 
@@ -258,7 +260,7 @@ def apply_warp(
         reg.inputs.moving_image = moving
         reg.inputs.transform_file = tf
         reg.inputs.output_path = output_path
-        reg.terminal_output = fc.NIPYPE_LOGGING
+        reg.terminal_output = preferences.nipype_logging
         reg.inputs.num_threads = num_threads
         reg_output = reg.run(cwd=cwd)
 
@@ -376,7 +378,7 @@ def _elastix_register(
         reg.inputs.moving_image = os.path.abspath(_moving)
         reg.inputs.parameters = [os.path.abspath(p) for p in _parameters]
         reg.inputs.output_path = os.path.abspath(_output_path)
-        reg.terminal_output = fc.NIPYPE_LOGGING
+        reg.terminal_output = preferences.nipype_logging
         if num_threads:
             reg.inputs.num_threads = num_threads
         if _use_mask and target_mask is not None:
