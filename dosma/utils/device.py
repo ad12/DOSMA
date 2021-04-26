@@ -18,8 +18,8 @@ __all__ = ["Device"]
 class Device(object):
     """Device class.
 
-    :cls:`dosma.Device` extends ``cupy.Device`` and can also be used to interface with
-    ``torch.Device`` and ``sigpy.Device``. The :cls:`dosma.Device` contains a device type
+    This class extends ``cupy.Device`` and can also be used to interface with
+    ``torch.Device`` and ``sigpy.Device``. This class contains a device type
     ('cpu' or 'cuda') and optional device ordinal (i.e. the id) for the device type.
     The :cls:`dosma.Device` can also be constructed using only the ordinal id, where id >= 0
     representing the id-th GPU, and id = -1 representing CPU. cupy must be installed to use GPUs.
@@ -44,7 +44,7 @@ class Device(object):
 
     Note:
         This class is heavily based on
-        :ref:`sigpy.Device <https://sigpy.readthedocs.io/en/latest/generated/sigpy.Device.html>_`.
+        `sigpy.Device <https://sigpy.readthedocs.io/en/latest/generated/sigpy.Device.html>`_.
 
     """
 
@@ -91,22 +91,27 @@ class Device(object):
 
     @property
     def id(self):
+        """int: The device ordinal."""
         return self._id
 
     @property
     def type(self):
+        """str: Type of device. Either ``"cpu"`` or ``"cuda"``."""
         return self._type
 
     @property
     def index(self):
+        """int: Alias for ``self.id``."""
         return self.id
 
     @property
     def cpdevice(self):
+        """cupy.Device: The equivalent ```cupy.Device```."""
         return self._cpdevice
 
     @property
     def ptdevice(self):
+        """torch.device: The equivalent ```torch.device```."""
         if not env.torch_available():
             raise RuntimeError("`torch` not installed.")
 
@@ -117,6 +122,7 @@ class Device(object):
 
     @property
     def spdevice(self):
+        """sigpy.Device: The equivalent ```sigpy.Device```."""
         if not env.sigpy_available():
             raise RuntimeError("`sigpy` not installed.")
         if self.id >= 0 and self.type != "cuda":
@@ -154,6 +160,8 @@ class Device(object):
                 return self.spdevice == other
             except RuntimeError:
                 return False
+        elif env.torch_available() and isinstance(other, torch.device):
+            return self.ptdevice == other
         else:
             return False
 

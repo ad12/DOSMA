@@ -1,8 +1,8 @@
 .. _usage_cli:
 
-Usage
+Application
 ================================================================================
-This page discusses general usage tips, best practices, and work arounds for both command line and graphical user interface (GUI).
+This page discusses general usage tips for both the command line and graphical user interface (GUI).
 Because the GUI is a wrapper around the command line and is typically easier to use, we will focus on detailing how to
 use DOSMA from the command line.
 

@@ -56,6 +56,18 @@ The commands below use ``PolyFitter`` to fit to the log-linearized monoexponenti
 >>> popt, r2_map = pfitter.fit(echo_times, log_images)
 >>> quant_map = popt[..., 0]  # note ordering of parameters - see numpy.polyfit for more details.
 
+We can also use the polyfit estimates to initialize the non-linear curve fit. For monoexponential
+fitting, we can do the following:
+
+>>> from dosma.utils.fits import CurveFitter, PolyFitter
+>>> echo_times = np.asarray([10.0, 20.0, 50.0])
+>>> pfitter = PolyFitter(deg=1, r2_threshold=0, num_workers=0)
+>>> log_images = [np.log(img) for img in images]
+>>> popt_pf, _ = pfitter.fit(echo_times, log_images)
+>>> cfitter = CurveFitter(monoexponential, r2_threshold=0.9, nan_to_num=0, out_ufuncs=[None, lambda x: -1/x], out_bounds=(0, 100))
+>>> popt, r2 = cfitter.fit(echo_times, images, p0={"a": popt_pf[..., 1], "b": popt_pf[..., 0]})
+>>> quant_map = popt[..., 1] 
+
 .. Substitutions
 .. |T2| replace:: T\ :sub:`2`
 .. |T1| replace:: T\ :sub:`1`

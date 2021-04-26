@@ -6,6 +6,8 @@ _SUPPORTED_PACKAGES = {}
 
 _FILE_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
 
+__all__ = ["debug", "get_version", "package_available"]
+
 
 def package_available(name: str):
     """Returns if package is available.

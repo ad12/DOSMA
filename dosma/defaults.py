@@ -41,7 +41,7 @@ DEFAULT_TEXT_SPACING = DEFAULT_FONT_SIZE * 0.01
 class _Preferences(object):
     """A pseudo-Singleton class implementation to track preferences.
 
-    Do not instantiate this class. To modify/update preferences use the preferences
+    Do not instantiate this class. To modify/update preferences use the ``preferences``
     module variable defined below.
 
     However, in the case this class is instantiated, a new object will be created,
@@ -231,6 +231,7 @@ class _Preferences(object):
     # Make certain preferences easily accessible through this class.
     @property
     def segmentation_batch_size(self) -> int:
+        """int: Batch size for segmentation models."""
         return self.get("/segmentation/batch.size")
 
     @property
@@ -239,24 +240,29 @@ class _Preferences(object):
 
     @property
     def mask_dilation_rate(self) -> float:
+        """float: rate for mask dilation."""
         return self.get("/registration/mask/dilation.rate")
 
     @property
     def mask_dilation_threshold(self) -> float:
+        """float: threshold for mask dilation."""
         return self.get("/registration/mask/dilation.threshold")
 
     @property
-    def fitting_r2_threshold(self):
+    def fitting_r2_threshold(self) -> float:
+        """float: r2 threshold for fitting"""
         return self.get("/fitting/r2.threshold")
 
     @property
     def image_data_format(self):
+        """ImageDataFormat: Format for images (e.g. png, eps, etc.)."""
         from dosma.data_io.format_io import ImageDataFormat
 
         return ImageDataFormat[self.get("/data/format")]
 
     @property
     def nipype_logging(self) -> str:
+        """str: nipype library logging mode."""
         # TODO: Remove this try/except clause when schema is well defined.
         try:
             return self.get("/logging/nipype")
