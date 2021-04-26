@@ -1,4 +1,9 @@
-from dosma.scan_sequences.mri import cones, cube_quant, mapss, qdess  # noqa: F401
+from dosma.scan_sequences.mri import (  # noqa: F401
+    cones,
+    cube_quant,
+    mapss,
+    qdess,
+)
 
 from dosma.scan_sequences.mri.cones import *  # noqa
 from dosma.scan_sequences.mri.cube_quant import *  # noqa
