@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 import scipy.ndimage as sni
 
-from dosma.data_io.format_io import ImageDataFormat
-from dosma.data_io.med_volume import MedicalVolume
+from dosma.core.io.format_io import ImageDataFormat
+from dosma.core.med_volume import MedicalVolume
 from dosma.defaults import preferences
 from dosma.quant_vals import QuantitativeValueType
 from dosma.tissues.tissue import Tissue, largest_cc
@@ -413,7 +413,12 @@ class FemoralCartilage(Tissue):
 
         super().set_mask(mask_copy)
 
-        self.regions_mask, self.theta_bins, self.ML_BOUNDARY, self.ACP_BOUNDARY = self.split_regions(  # noqa: E501
+        (
+            self.regions_mask,
+            self.theta_bins,
+            self.ML_BOUNDARY,
+            self.ACP_BOUNDARY,
+        ) = self.split_regions(  # noqa: E501
             self.__mask__.volume
         )
 

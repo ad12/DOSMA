@@ -1,6 +1,6 @@
 import os
 
-from dosma.data_io import NiftiReader
+from dosma.core.io import NiftiReader
 from dosma.scan_sequences import Mapss
 from dosma.tissues.femoral_cartilage import FemoralCartilage
 

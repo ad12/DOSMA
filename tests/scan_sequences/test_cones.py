@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from dosma.data_io import ImageDataFormat, NiftiReader
+from dosma.core.io import ImageDataFormat, NiftiReader
 from dosma.scan_sequences import Cones, QDess
 from dosma.tissues.femoral_cartilage import FemoralCartilage
 

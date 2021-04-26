@@ -17,8 +17,8 @@ try:
 except ImportError:  # pragma: no-cover
     _SUPPORTS_KERAS = False  # pragma: no-cover
 
-from dosma.data_io.med_volume import MedicalVolume
-from dosma.data_io.orientation import SAGITTAL
+from dosma.core.med_volume import MedicalVolume
+from dosma.core.orientation import SAGITTAL
 from dosma.models.seg_model import KerasSegModel, whiten_volume
 
 __all__ = ["OAIUnet2D", "IWOAIOAIUnet2D", "IWOAIOAIUnet2DNormalized"]

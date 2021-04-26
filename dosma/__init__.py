@@ -1,8 +1,8 @@
 """The core module contains functions and classes for musculoskeletal analysis.
 """
-from dosma.data_io.dicom_io import *  # noqa
-from dosma.data_io.med_volume import *  # noqa
-from dosma.data_io.nifti_io import *  # noqa
+from dosma.core.io.dicom_io import *  # noqa
+from dosma.core import *  # noqa
+from dosma.core.io.nifti_io import *  # noqa
 from dosma.utils.device import Device  # noqa
 
 # This line will be programatically read/write by setup.py.

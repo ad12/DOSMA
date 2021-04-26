@@ -30,7 +30,7 @@ import warnings
 from collections import defaultdict
 from typing import Sequence
 
-from dosma.data_io.format_io import ImageDataFormat
+from dosma.core.io.format_io import ImageDataFormat
 from dosma.defaults import preferences
 from dosma.models.seg_model import SegModel
 from dosma.models.util import SUPPORTED_MODELS, get_model, model_from_config

@@ -11,8 +11,8 @@ from typing import Collection
 import nibabel as nib
 import numpy as np
 
-from dosma.data_io.format_io import DataReader, DataWriter, ImageDataFormat
-from dosma.data_io.med_volume import MedicalVolume
+from dosma.core.io.format_io import DataReader, DataWriter, ImageDataFormat
+from dosma.core.med_volume import MedicalVolume
 from dosma.defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 from dosma.utils import io_utils
 

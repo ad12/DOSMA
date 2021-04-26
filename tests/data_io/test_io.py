@@ -7,10 +7,10 @@ import unittest
 import numpy as np
 import pydicom
 
-from dosma.data_io.dicom_io import DicomReader, DicomWriter, to_RAS_affine
-from dosma.data_io.format_io import ImageDataFormat
-from dosma.data_io.med_volume import MedicalVolume
-from dosma.data_io.nifti_io import NiftiReader, NiftiWriter
+from dosma.core.io.dicom_io import DicomReader, DicomWriter, to_RAS_affine
+from dosma.core.io.format_io import ImageDataFormat
+from dosma.core.io.nifti_io import NiftiReader, NiftiWriter
+from dosma.core.med_volume import MedicalVolume
 
 from .. import util as ututils
 

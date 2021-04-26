@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import scipy.ndimage as sni
 
-from dosma.data_io.med_volume import MedicalVolume
+from dosma.core.med_volume import MedicalVolume
 from dosma.defaults import preferences
 from dosma.quant_vals import QuantitativeValueType
 from dosma.tissues.tissue import Tissue

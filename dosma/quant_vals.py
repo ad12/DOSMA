@@ -7,9 +7,9 @@ from typing import Dict, Tuple, Union
 import numpy as np
 import pandas as pd
 
-from dosma.data_io import format_io_utils as fio_utils
-from dosma.data_io.format_io import ImageDataFormat
-from dosma.data_io.med_volume import MedicalVolume
+from dosma.core.io import format_io_utils as fio_utils
+from dosma.core.io.format_io import ImageDataFormat
+from dosma.core.med_volume import MedicalVolume
 from dosma.defaults import preferences
 
 __all__ = ["QuantitativeValueType", "QuantitativeValue", "T1Rho", "T2", "T2Star"]

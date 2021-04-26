@@ -15,8 +15,8 @@ from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
 from dosma import file_constants as fc
-from dosma.data_io.med_volume import MedicalVolume
-from dosma.data_io.nifti_io import NiftiReader, NiftiWriter
+from dosma.core.io.nifti_io import NiftiReader, NiftiWriter
+from dosma.core.med_volume import MedicalVolume
 from dosma.defaults import preferences
 from dosma.utils import env
 from dosma.utils.device import cpu_device

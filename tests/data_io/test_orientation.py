@@ -2,10 +2,10 @@ import unittest
 
 import numpy as np
 
-from dosma.data_io.format_io import ImageDataFormat
-from dosma.data_io.med_volume import MedicalVolume
-from dosma.data_io.nifti_io import NiftiReader, NiftiWriter
-from dosma.data_io.orientation import to_affine
+from dosma.core.io.format_io import ImageDataFormat
+from dosma.core.io.nifti_io import NiftiReader, NiftiWriter
+from dosma.core.med_volume import MedicalVolume
+from dosma.core.orientation import to_affine
 
 from .. import util as ututils
 
@@ -117,7 +117,7 @@ class TestOrientation(unittest.TestCase):
 
 
 class TestToAffine(unittest.TestCase):
-    """Test cases for dosma.data_io.orientation.to_affine."""
+    """Test cases for dosma.io.orientation.to_affine."""
 
     def test_basic(self):
         """Basic transposes and flips in RAS+ coordinate system."""

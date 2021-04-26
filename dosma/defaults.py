@@ -256,7 +256,7 @@ class _Preferences(object):
     @property
     def image_data_format(self):
         """ImageDataFormat: Format for images (e.g. png, eps, etc.)."""
-        from dosma.data_io.format_io import ImageDataFormat
+        from dosma.core.io.format_io import ImageDataFormat
 
         return ImageDataFormat[self.get("/data/format")]
 

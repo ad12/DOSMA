@@ -8,10 +8,10 @@ from nipype.interfaces.elastix import Registration
 
 from dosma import file_constants as fc
 from dosma import quant_vals as qv
-from dosma.data_io import format_io_utils as fio_utils
-from dosma.data_io.format_io import ImageDataFormat
-from dosma.data_io.med_volume import MedicalVolume
-from dosma.data_io.nifti_io import NiftiReader
+from dosma.core.io import format_io_utils as fio_utils
+from dosma.core.io.format_io import ImageDataFormat
+from dosma.core.io.nifti_io import NiftiReader
+from dosma.core.med_volume import MedicalVolume
 from dosma.defaults import preferences
 from dosma.quant_vals import QuantitativeValueType
 from dosma.scan_sequences.scans import ScanSequence

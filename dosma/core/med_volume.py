@@ -12,8 +12,8 @@ import numpy as np
 from nibabel.spatialimages import SpatialFirstSlicer as _SpatialFirstSlicerNib
 from numpy.lib.mixins import NDArrayOperatorsMixin
 
-from dosma.data_io import orientation as stdo
-from dosma.data_io.format_io import ImageDataFormat
+from dosma.core import orientation as stdo
+from dosma.core.io.format_io import ImageDataFormat
 from dosma.defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
 from dosma.utils import env
 from dosma.utils.device import Device, cpu_device, get_array_module, get_device, to_device
@@ -47,7 +47,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
     and set using :meth:`get_metadata()` and :meth:`set_metadata()`, respectively. Headers are
     also auto-aligned, which means that headers will be aligned with the slice(s) of data from
     which they originated, which makes Python slicing feasible. Currently, medical volumes
-    support DICOM headers using ``pydicom`` when loaded with :class:``dosma.data_io.DicomReader``.
+    support DICOM headers using ``pydicom`` when loaded with :class:``dosma.io.DicomReader``.
 
     >>> mv.get_metadata("EchoTime")  # Returns EchoTime
     >>> mv.set_metadata("EchoTime", 10.0)  # Sets EchoTime to 10.0
@@ -107,10 +107,10 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
     >>> log_arr = np.log(mv)
     >>> type(log_arr)
-    <class 'dosma.data_io.MedicalVolume'>
+    <class 'dosma.io.MedicalVolume'>
     >>> exp_arr_gpu = cp.exp(mv_gpu)
     >>> type(exp_arr_gpu)
-    <class 'dosma.data_io.MedicalVolume'>
+    <class 'dosma.io.MedicalVolume'>
 
     Args:
         volume (array-like): nD medical image.
@@ -133,13 +133,13 @@ class MedicalVolume(NDArrayOperatorsMixin):
                 given by the data format in which the volume will be saved.
             data_format (ImageDataFormat): Format to save data.
         """
-        import dosma.data_io.format_io_utils
+        import dosma.core.io.format_io_utils
 
         device = self.device
         if device != cpu_device:
             raise RuntimeError(f"MedicalVolume must be on cpu, got {self.device}")
 
-        writer = dosma.data_io.format_io_utils.get_writer(data_format)
+        writer = dosma.core.io.format_io_utils.get_writer(data_format)
         writer.save(self, file_path)
 
     def reformat(self, new_orientation: Sequence, inplace: bool = False) -> "MedicalVolume":
@@ -702,8 +702,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
     @property
     def scanner_origin(self):
-        """tuple[float]: Scanner origin in global RAS+ x,y,z coordinates.
-        """
+        """tuple[float]: Scanner origin in global RAS+ x,y,z coordinates."""
         return tuple(self._affine[:3, 3])
 
     @property
@@ -1022,8 +1021,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
     @property
     def __cuda_array_interface__(self):
-        """Wrapper for performing cupy operations on MedicalVolume array.
-        """
+        """Wrapper for performing cupy operations on MedicalVolume array."""
         if self.device == cpu_device:
             raise TypeError(
                 "Implicit conversion to a CuPy array is not allowed. "

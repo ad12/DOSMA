@@ -6,9 +6,9 @@ import numpy as np
 
 from dosma import file_constants as fc
 from dosma import quant_vals as qv
-from dosma.data_io import NiftiReader
-from dosma.data_io import format_io_utils as fio_utils
-from dosma.data_io.med_volume import MedicalVolume
+from dosma.core.io import format_io_utils as fio_utils
+from dosma.core.io.nifti_io import NiftiReader
+from dosma.core.med_volume import MedicalVolume
 from dosma.scan_sequences.scans import NonTargetSequence
 from dosma.tissues.tissue import Tissue
 from dosma.utils.cmd_line_utils import ActionWrapper

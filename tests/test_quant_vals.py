@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from dosma.data_io.med_volume import MedicalVolume
+from dosma.core.med_volume import MedicalVolume
 from dosma.quant_vals import T2
 
 

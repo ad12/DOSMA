@@ -30,8 +30,7 @@ SUPPORTED_VISUALIZATION_FORMATS = (
 
 
 class ImageDataFormat(enum.Enum):
-    """Enum describing supported data formats for medical volume I/O.
-    """
+    """Enum describing supported data formats for medical volume I/O."""
 
     nifti = 1, ("nii", "nii.gz")
     dicom = 2, ("dcm",)

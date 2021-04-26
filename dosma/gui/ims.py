@@ -10,8 +10,8 @@ from skimage.color import label2rgb
 from skimage.measure import label
 
 from dosma.cli import SUPPORTED_QUANTITATIVE_VALUES, SUPPORTED_SCAN_TYPES, parse_args
-from dosma.data_io import format_io_utils as fio_utils
-from dosma.data_io.orientation import AXIAL, CORONAL, SAGITTAL
+from dosma.core.io import format_io_utils as fio_utils
+from dosma.core.orientation import AXIAL, CORONAL, SAGITTAL
 from dosma.gui.dosma_gui import ScanReader
 from dosma.gui.gui_utils.filedialog_reader import FileDialogReader
 from dosma.gui.im_viewer import IndexTracker

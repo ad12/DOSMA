@@ -55,7 +55,7 @@ For example,
     \\begin{bmatrix} i\\\\j\\\\k\\\\1\\end{bmatrix}
 
 For details on how the affine matrix is used for reformatting see
-:class:`dosma.data_io.MedicalVolume`.
+:class:`dosma.io.MedicalVolume`.
 
 """
 from typing import Sequence, Union

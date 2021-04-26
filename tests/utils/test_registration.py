@@ -7,8 +7,8 @@ from functools import partial
 import numpy as np
 
 import dosma.file_constants as fc
-from dosma.data_io.dicom_io import DicomReader
-from dosma.data_io.format_io import ImageDataFormat
+from dosma.core.io.dicom_io import DicomReader
+from dosma.core.io.format_io import ImageDataFormat
 from dosma.scan_sequences import CubeQuant, QDess
 from dosma.utils import env
 from dosma.utils.registration import apply_warp, register

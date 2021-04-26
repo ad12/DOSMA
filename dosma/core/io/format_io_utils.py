@@ -5,9 +5,9 @@ import os
 from pathlib import Path
 from typing import Union
 
-from dosma.data_io.dicom_io import DicomReader, DicomWriter
-from dosma.data_io.format_io import DataReader, DataWriter, ImageDataFormat
-from dosma.data_io.nifti_io import NiftiReader, NiftiWriter
+from dosma.core.io.dicom_io import DicomReader, DicomWriter
+from dosma.core.io.format_io import DataReader, DataWriter, ImageDataFormat
+from dosma.core.io.nifti_io import NiftiReader, NiftiWriter
 
 __all__ = [
     "get_reader",

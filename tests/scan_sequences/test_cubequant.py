@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from dosma.data_io import ImageDataFormat, NiftiReader
+from dosma.core.io import ImageDataFormat, NiftiReader
 from dosma.scan_sequences import CubeQuant, QDess
 from dosma.tissues.femoral_cartilage import FemoralCartilage
 
@@ -46,8 +46,7 @@ class CubeQuantTest(util.ScanTest):
         assert map1.volumetric_map.is_identical(map2.volumetric_map)
 
     def test_intraregister(self):
-        """Verify cubequant intraregistering using new registration.
-        """
+        """Verify cubequant intraregistering using new registration."""
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         scan.intraregister()
 

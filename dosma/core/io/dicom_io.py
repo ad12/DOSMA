@@ -29,9 +29,9 @@ from natsort import index_natsorted, natsorted
 from tqdm.auto import tqdm
 from tqdm.contrib.concurrent import process_map
 
-from dosma.data_io import orientation as stdo
-from dosma.data_io.format_io import DataReader, DataWriter, ImageDataFormat
-from dosma.data_io.med_volume import MedicalVolume
+from dosma.core import orientation as stdo
+from dosma.core.io.format_io import DataReader, DataWriter, ImageDataFormat
+from dosma.core.med_volume import MedicalVolume
 from dosma.defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 
 __all__ = ["DicomReader", "DicomWriter"]
@@ -655,7 +655,7 @@ def _update_np_dtype(arr: np.ndarray, bit_depth: int):
         8: [(np.int8, -128, 127), (np.uint8, 0, 255)],
         16: [
             (np.float16, -6.55e4, 6.55e4 - 1),
-            (np.int16, -2 ** 15, 2 ** 15),
+            (np.int16, -(2 ** 15), 2 ** 15),
             (np.uint16, 0, 2 ** 16 - 1),
         ],
     }
