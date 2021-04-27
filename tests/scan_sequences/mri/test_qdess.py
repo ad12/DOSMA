@@ -7,7 +7,7 @@ from dosma.tissues.femoral_cartilage import FemoralCartilage
 
 import keras.backend as K
 
-from .. import util
+from ... import util
 
 SEGMENTATION_WEIGHTS_FOLDER = os.path.join(
     os.path.dirname(__file__), "../../weights/iwoai-2019-t6-normalized"

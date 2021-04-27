@@ -5,7 +5,7 @@ from dosma.core.io import ImageDataFormat, NiftiReader
 from dosma.scan_sequences import Cones, QDess
 from dosma.tissues.femoral_cartilage import FemoralCartilage
 
-from .. import util
+from ... import util
 
 # target mask path used to register Cubequant volume to qDESS volume
 QDESS_ECHO1_PATH = util.get_read_paths(util.get_scan_dirpath(QDess.NAME), ImageDataFormat.nifti)[0]
