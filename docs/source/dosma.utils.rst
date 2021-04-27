@@ -12,10 +12,10 @@ dosma.utils.cmd\_line\_utils module
    :undoc-members:
    :show-inheritance:
 
-dosma.utils.fits module
+dosma.utils.env module
 -----------------------
 
-.. automodule:: dosma.utils.fits
+.. automodule:: dosma.utils.env
    :members:
    :undoc-members:
    :show-inheritance:
@@ -43,13 +43,6 @@ dosma.utils.io\_utils module
    :members:
    :undoc-members:
    :show-inheritance:
-
-dosma.utils.registration module
------------------------
-
-.. automodule:: dosma.utils.registration
-   :members:
-   :undoc-members:
 
 
 Module contents

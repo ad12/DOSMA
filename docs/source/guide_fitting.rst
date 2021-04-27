@@ -9,10 +9,10 @@ Dosma supports cpu-parallelizable quantitative fitting based on
 `scipy.optimize.curve_fit <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html>`_. 
 
 To perform generic fitting to any array-like object using an arbitrary model function, we can use
-:func:`dosma.utils.fits.curve_fit`. For example, we can use this function to fit an array to a
+:func:`dosma.curve_fit`. For example, we can use this function to fit an array to a
 monoexponential model ``y = a * exp(b * x)`` using a maximum of 4 workers:
 
->>> from dosma.utils.fits import curve_fit, monoexponential
+>>> from dosma import curve_fit, monoexponential
 >>> curve_fit(monoexponential, x, y, num_workers=4)
 
 Quantitative fitting is quite common in medical image analysis. For example,
@@ -20,7 +20,7 @@ quantitative MRI (qMRI) has enabled computing voxel-wise relaxation parameter ma
 (e.g. |T2|, |T1rho|, etc.). We can fit a monoexponential model for each voxel across these registered_images,
 where ``tc0`` is the initial guess for parameter :math:`-\frac{1}{b}` in the monoexponential model:
 
->>> from dosma.utils.fits import MonoExponentialFit
+>>> from dosma import MonoExponentialFit
 >>> tc0 = 30.0
 >>> echo_times = np.asarray([10.0, 20.0, 50.0])
 >>> fitter = MonoExponentialFit(echo_times, images, tc0=tc0, num_workers=4)
@@ -31,25 +31,25 @@ a class wrapper around ``curve_fit`` that handles ``MedicalVolume`` data and sup
 on the fitted parameters. The commands below using ``CurveFitter`` and ``curve_fit`` are equivalent to the
 ``fitter`` above:
 
->>> from dosma.utils.fits import CurveFitter
+>>> from dosma import CurveFitter
 >>> cfitter = CurveFitter(
 ... monoexponential, p0=(1.0, -1/tc0), num_workers=4, nan_to_num=0,
 ... out_ufuncs=[None, lambda x: -1/x], out_bounds=(0, 100))
 >>> popt, r2_map = cfitter.fit(echo_times, images)
 >>> quant_map = popt[..., 1]
 
->>> from dosma.utils.fits import curve_fit
+>>> from dosma import curve_fit
 >>> curve_fit(monoexponential, echo_times, [x.volume for x in images], p0=(1.0, -1/tc0), num_workers=4)
 
 Non-linear curve fitting often requires carefully selected parameter initialization. In cases where
 non-linear curve fitting fails, polynomial fitting may be more effective. Polynomials can be fit to
-the data using :func:`dosma.utils.fits.polyfit` or :class:`dosma.utils.fits.PolyFitter` (recommended),
+the data using :func:`dosma.polyfit` or :class:`dosma.PolyFitter` (recommended),
 which is the polynomial fitting equivalent of ``CurveFitter``. Because polynomial fitting can also be
 done as a single least squares problem, it may also often be faster than standard curve fitting.
 The commands below use ``PolyFitter`` to fit to the log-linearized monoexponential fit
 (i.e. ``log(y) = log(a) + b*x`` to some image data:
 
->>> from dosma.utils.fits import PolyFitter
+>>> from dosma import PolyFitter
 >>> echo_times = np.asarray([10.0, 20.0, 50.0])
 >>> pfitter = PolyFitter(deg=1, nan_to_num=0, out_ufuncs=[None, lambda x: -1/x], out_bounds=(0, 100))
 >>> log_images = [np.log(img) for img in images]
@@ -59,7 +59,7 @@ The commands below use ``PolyFitter`` to fit to the log-linearized monoexponenti
 We can also use the polyfit estimates to initialize the non-linear curve fit. For monoexponential
 fitting, we can do the following:
 
->>> from dosma.utils.fits import CurveFitter, PolyFitter
+>>> from dosma import CurveFitter, PolyFitter
 >>> echo_times = np.asarray([10.0, 20.0, 50.0])
 >>> pfitter = PolyFitter(deg=1, r2_threshold=0, num_workers=0)
 >>> log_images = [np.log(img) for img in images]

@@ -6,7 +6,7 @@ Subpackages
 
 .. toctree::
 
-   dosma.data_io
+   dosma.core
    dosma.models
    dosma.msk
    dosma.scan_sequences
@@ -15,6 +15,14 @@ Subpackages
 
 Submodules
 ----------
+
+dosma module
+---------------------
+.. automodule:: dosma
+   :members:
+   :special-members: __init__
+   :undoc-members:
+   :show-inheritance:
 
 dosma.defaults module
 ---------------------

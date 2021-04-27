@@ -60,11 +60,11 @@ follow the instructions below:
 
 If you are using a MacOS system, you may run into path issues with elastix (see
 `this discussion <https://github.com/almarklein/pyelastix/issues/9>`_). To fix
-this, we can use the `dosma.utils.registration.symlink_elastix` to create
+this, we can use the `dosma.symlink_elastix` to create
 appropriate symbolic links to files causing issues.::
 
     $ conda activate dosma_env; python
-    >>> from dosma.utils.registration import symlink_elastix
+    >>> from dosma import symlink_elastix
     >>> symlink_elastix()
 
 Note you will need to run this every time you update elastix/transformix paths

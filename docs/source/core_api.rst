@@ -11,7 +11,20 @@ MedicalVolume
    :toctree: generated
    :nosignatures:
 
-   dosma.data_io.MedicalVolume
+   dosma.MedicalVolume
+
+
+Numpy Routines
+---------------------------
+.. _core_api_numpy_routines:
+
+Numpy operations that are supported on MedicalVolumes.
+
+.. autosummary::
+   :toctree: generated
+   :nosignatures:
+
+   dosma.core.numpy_routines.__all__
 
 
 Image I/O
@@ -20,25 +33,26 @@ Image I/O
    :toctree: generated
    :nosignatures:
 
-   dosma.data_io.NiftiReader
-   dosma.data_io.NiftiWriter
-   dosma.data_io.DicomReader
-   dosma.data_io.DicomWriter
+   dosma.NiftiReader
+   dosma.NiftiWriter
+   dosma.DicomReader
+   dosma.DicomWriter
 
 
 Image Orientation
 ---------------------------
 .. automodule::
-   dosma.data_io.orientation
+   dosma.core.orientation
 
 .. autosummary::
    :toctree: generated
    :nosignatures:
 
-   dosma.data_io.orientation.get_transpose_inds
-   dosma.data_io.orientation.get_flip_inds
-   dosma.data_io.orientation.orientation_nib_to_standard
-   dosma.data_io.orientation.orientation_standard_to_nib
+   dosma.core.orientation.to_affine
+   dosma.core.orientation.get_transpose_inds
+   dosma.core.orientation.get_flip_inds
+   dosma.core.orientation.orientation_nib_to_standard
+   dosma.core.orientation.orientation_standard_to_nib
 
 
 Image Registration
@@ -46,16 +60,16 @@ Image Registration
 For details on using registration, see the :ref:`Registration Guide <guide_registration>`.
 
 .. automodule::
-   dosma.utils.registration
+   dosma.core.registration
 
 .. autosummary::
    :toctree: generated
    :nosignatures:
 
-   dosma.utils.registration.register
-   dosma.utils.registration.apply_warp
-   dosma.utils.registration.symlink_elastix
-   dosma.utils.registration.unlink_elastix
+   dosma.register
+   dosma.apply_warp
+   dosma.symlink_elastix
+   dosma.unlink_elastix
 
 
 Fitting
@@ -63,7 +77,7 @@ Fitting
 For details on using fitting functions, see the :ref:`Fitting Guide <guide_fitting>`.
 
 .. automodule::
-   dosma.utils.fits
+   dosma.core.fitting
 
 General fitting functions:
 
@@ -71,10 +85,10 @@ General fitting functions:
    :toctree: generated
    :nosignatures:
 
-   dosma.utils.fits.curve_fit
-   dosma.utils.fits.polyfit
-   dosma.utils.fits.monoexponential
-   dosma.utils.fits.biexponential
+   dosma.curve_fit
+   dosma.polyfit
+   dosma.core.fitting.monoexponential
+   dosma.core.fitting.biexponential
 
 Fitter classes:
 
@@ -82,7 +96,17 @@ Fitter classes:
    :toctree: generated
    :nosignatures:
 
-   dosma.utils.fits.CurveFitter
-   dosma.utils.fits.PolyFitter
-   dosma.utils.fits.MonoExponentialFit
+   dosma.CurveFitter
+   dosma.PolyFitter
+   dosma.MonoExponentialFit
 
+
+Device
+----------
+.. autosummary::
+   :toctree: generated
+   :nosignatures:
+
+   dosma.Device
+   dosma.get_device
+   dosma.to_device

@@ -4,40 +4,40 @@ dosma.scan\_sequences package
 Submodules
 ----------
 
-dosma.scan\_sequences.cones module
-----------------------------------
+dosma.scan\_sequences.mri.cones module
+-----------------------------------------
 
-.. automodule:: dosma.scan_sequences.cones
+.. automodule:: dosma.scan_sequences.mri.cones
    :members:
    :undoc-members:
    :show-inheritance:
 
-dosma.scan\_sequences.cube\_quant module
-----------------------------------------
+dosma.scan\_sequences.mri.cube\_quant module
+---------------------------------------------
 
-.. automodule:: dosma.scan_sequences.cube_quant
+.. automodule:: dosma.scan_sequences.mri.cube_quant
    :members:
    :undoc-members:
    :show-inheritance:
 
-dosma.scan\_sequences.mapss module
-----------------------------------
+dosma.scan\_sequences.mri.mapss module
+-----------------------------------------
 
-.. automodule:: dosma.scan_sequences.mapss
+.. automodule:: dosma.scan_sequences.mri.mapss
    :members:
    :undoc-members:
    :show-inheritance:
 
-dosma.scan\_sequences.qdess module
-----------------------------------
+dosma.scan\_sequences.mri.qdess module
+-----------------------------------------
 
-.. automodule:: dosma.scan_sequences.qdess
+.. automodule:: dosma.scan_sequences.mri.qdess
    :members:
    :undoc-members:
    :show-inheritance:
 
 dosma.scan\_sequences.scans module
-----------------------------------
+-----------------------------------------
 
 .. automodule:: dosma.scan_sequences.scans
    :members:
