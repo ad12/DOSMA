@@ -1,7 +1,7 @@
 import warnings
 from typing import Sequence, Union
 
-from numpy import __init__ as np
+import numpy as np
 
 from dosma import MedicalVolume
 
