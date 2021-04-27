@@ -1,9 +1,5 @@
-from dosma.core.io import (  # noqa: F401
-    dicom_io,
-    format_io,
-    format_io_utils,
-    nifti_io,
-)
+from dosma.core.io import dicom_io, format_io_utils, nifti_io  # noqa: F401
+
 from dosma.core.io.dicom_io import *  # noqa
 from dosma.core.io.format_io import ImageDataFormat  # noqa
 from dosma.core.io.format_io_utils import *  # noqa

@@ -1,7 +1,7 @@
-from dosma.scan_sequences import (  # noqa: F401
-    mri,
-    scans,
-)
+from dosma.scan_sequences import mri
+
+from dosma.scan_sequences import scans
+
 from dosma.scan_sequences.mri import *  # noqa
 from dosma.scan_sequences.scans import *  # noqa
 
