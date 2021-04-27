@@ -6,15 +6,15 @@ from typing import Sequence
 import numpy as np
 
 from dosma import file_constants as fc
-from dosma import quant_vals as qv
+from dosma.core import quant_vals as qv
+from dosma.core.fitting import MonoExponentialFit
 from dosma.core.io import format_io_utils as fio_utils
 from dosma.core.io.nifti_io import NiftiReader
 from dosma.core.med_volume import MedicalVolume
+from dosma.core.registration import apply_warp, register
 from dosma.scan_sequences.scans import NonTargetSequence
 from dosma.tissues.tissue import Tissue
 from dosma.utils.cmd_line_utils import ActionWrapper
-from dosma.utils.fits import MonoExponentialFit
-from dosma.utils.registration import apply_warp, register
 
 __all__ = ["Cones"]
 

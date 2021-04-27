@@ -13,10 +13,10 @@ from tqdm.auto import tqdm
 from tqdm.contrib.concurrent import process_map
 
 from dosma import defaults
+from dosma.core.device import cpu_device, get_array_module, get_device
 from dosma.core.med_volume import MedicalVolume
 from dosma.defaults import preferences
 from dosma.utils import env
-from dosma.utils.device import cpu_device, get_array_module, get_device
 
 if env.cupy_available():
     import cupy as cp

@@ -8,8 +8,8 @@ Command line interface declaration for knee-related analyses
 import logging
 import uuid
 
+from dosma.core.quant_vals import QuantitativeValueType as QV
 from dosma.defaults import preferences
-from dosma.quant_vals import QuantitativeValueType as QV
 from dosma.tissues import FemoralCartilage, Meniscus, PatellarCartilage, TibialCartilage
 
 KNEE_KEY = "knee"

@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from dosma.utils.device import Device, cpu_device
+from dosma.core.device import Device, cpu_device
 
 from ..util import requires_packages
 

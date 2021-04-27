@@ -7,8 +7,8 @@ from typing import Sequence, Tuple
 from pydicom.tag import Tag
 
 from dosma.core.med_volume import MedicalVolume
+from dosma.core.quant_vals import T2
 from dosma.models.seg_model import SegModel
-from dosma.quant_vals import T2
 from dosma.scan_sequences.scans import ScanSequence
 from dosma.tissues.tissue import Tissue
 from dosma.utils.cmd_line_utils import ActionWrapper

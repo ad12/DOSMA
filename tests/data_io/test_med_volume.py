@@ -6,11 +6,11 @@ import h5py
 import numpy as np
 import SimpleITK as sitk
 
+from dosma.core.device import Device
 from dosma.core.io.dicom_io import DicomReader
 from dosma.core.io.format_io import ImageDataFormat
 from dosma.core.io.nifti_io import NiftiReader
 from dosma.core.med_volume import MedicalVolume
-from dosma.utils.device import Device
 
 from .. import util as ututils
 

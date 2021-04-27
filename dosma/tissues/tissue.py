@@ -9,8 +9,8 @@ from dosma.core.io import format_io_utils as fio_utils
 from dosma.core.io.format_io import ImageDataFormat
 from dosma.core.med_volume import MedicalVolume
 from dosma.core.orientation import SAGITTAL
+from dosma.core.quant_vals import QuantitativeValue, QuantitativeValueType
 from dosma.defaults import preferences
-from dosma.quant_vals import QuantitativeValue, QuantitativeValueType
 from dosma.utils import io_utils
 
 WEIGHTS_FILE_EXT = "h5"

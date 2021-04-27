@@ -31,11 +31,11 @@ from collections import defaultdict
 from typing import Sequence
 
 from dosma.core.io.format_io import ImageDataFormat
+from dosma.core.quant_vals import QuantitativeValueType as QV
 from dosma.defaults import preferences
 from dosma.models.seg_model import SegModel
 from dosma.models.util import SUPPORTED_MODELS, get_model, model_from_config
 from dosma.msk import knee
-from dosma.quant_vals import QuantitativeValueType as QV
 from dosma.scan_sequences.mri.cones import Cones
 from dosma.scan_sequences.mri.cube_quant import CubeQuant
 from dosma.scan_sequences.mri.mapss import Mapss

@@ -8,8 +8,8 @@ import scipy.ndimage as sni
 
 from dosma.core.io.format_io import ImageDataFormat
 from dosma.core.med_volume import MedicalVolume
+from dosma.core.quant_vals import QuantitativeValueType
 from dosma.defaults import preferences
-from dosma.quant_vals import QuantitativeValueType
 from dosma.tissues.tissue import Tissue, largest_cc
 from dosma.utils import img_utils, io_utils
 from dosma.utils.geometry_utils import cart2pol, circle_fit

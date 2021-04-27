@@ -7,18 +7,18 @@ import numpy as np
 from nipype.interfaces.elastix import Registration
 
 from dosma import file_constants as fc
-from dosma import quant_vals as qv
+from dosma.core import quant_vals as qv
+from dosma.core.fitting import MonoExponentialFit
 from dosma.core.io import format_io_utils as fio_utils
 from dosma.core.io.format_io import ImageDataFormat
 from dosma.core.io.nifti_io import NiftiReader
 from dosma.core.med_volume import MedicalVolume
+from dosma.core.quant_vals import QuantitativeValueType
 from dosma.defaults import preferences
-from dosma.quant_vals import QuantitativeValueType
 from dosma.scan_sequences.scans import ScanSequence
 from dosma.tissues.tissue import Tissue
 from dosma.utils import io_utils
 from dosma.utils.cmd_line_utils import ActionWrapper
-from dosma.utils.fits import MonoExponentialFit
 
 __EXPECTED_NUM_ECHO_TIMES__ = 7
 

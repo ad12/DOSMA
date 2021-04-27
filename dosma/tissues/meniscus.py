@@ -13,8 +13,8 @@ import pandas as pd
 import scipy.ndimage as sni
 
 from dosma.core.med_volume import MedicalVolume
+from dosma.core.quant_vals import QuantitativeValueType
 from dosma.defaults import preferences
-from dosma.quant_vals import QuantitativeValueType
 from dosma.tissues.tissue import Tissue
 from dosma.utils import io_utils
 

@@ -2,8 +2,7 @@ import unittest
 
 import numpy as np
 
-from dosma.core.med_volume import MedicalVolume
-from dosma.utils.fits import (
+from dosma.core.fitting import (
     CurveFitter,
     MonoExponentialFit,
     PolyFitter,
@@ -11,6 +10,7 @@ from dosma.utils.fits import (
     monoexponential,
     polyfit,
 )
+from dosma.core.med_volume import MedicalVolume
 
 from .. import util
 

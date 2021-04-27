@@ -13,10 +13,10 @@ from nibabel.spatialimages import SpatialFirstSlicer as _SpatialFirstSlicerNib
 from numpy.lib.mixins import NDArrayOperatorsMixin
 
 from dosma.core import orientation as stdo
+from dosma.core.device import Device, cpu_device, get_array_module, get_device, to_device
 from dosma.core.io.format_io import ImageDataFormat
 from dosma.defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
 from dosma.utils import env
-from dosma.utils.device import Device, cpu_device, get_array_module, get_device, to_device
 
 if env.sitk_available():
     import SimpleITK as sitk

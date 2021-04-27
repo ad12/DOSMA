@@ -3,7 +3,7 @@ from typing import Sequence, Union
 
 import numpy as np
 
-from dosma import MedicalVolume
+from dosma.core.med_volume import MedicalVolume
 
 _HANDLED_NUMPY_FUNCTIONS = {}
 

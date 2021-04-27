@@ -64,6 +64,7 @@ import nibabel.orientations as nibo
 import numpy as np
 
 __all__ = [
+    "to_affine",
     "get_transpose_inds",
     "get_flip_inds",
     "orientation_nib_to_standard",

@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 from dosma.core.med_volume import MedicalVolume
-from dosma.quant_vals import T2
+from dosma.core.quant_vals import T2
 
 
 class TestT2(unittest.TestCase):
