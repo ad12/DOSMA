@@ -12,7 +12,7 @@ if env.sigpy_available():
 if env.torch_available():
     import torch
 
-__all__ = ["Device"]
+__all__ = ["Device", "get_device", "to_device"]
 
 
 class Device(object):

@@ -1,6 +1,6 @@
-"""MedicalVolume
+"""The medical image object.
 
-This module defines `MedicalVolume`, which is a wrapper for 3D volumes.
+This module defines :class:`MedicalVolume`, which is a wrapper for nD volumes.
 """
 import warnings
 from copy import deepcopy

@@ -354,7 +354,8 @@ class CurveFitter(_Fitter):
         raise ValueError(f"p0={p0} not supported")
 
     def fit(self, x, y: Sequence[MedicalVolume], mask=None, p0=np._NoValue):
-        """
+        """Perform non-linear least squares fit.
+
         Args:
             x (array-like): 1D array of independent variables corresponding to different ``y``.
             y (list[MedicalVolumes]): Dependent variable (in order) corresponding to values of
@@ -505,11 +506,12 @@ class PolyFitter(_Fitter):
         self.verbose = verbose
 
     def fit(self, x, y: Sequence[MedicalVolume], mask=None):
-        """
+        """Perform linear least squares fit.
+
         Args:
-            x (array-like): Same as `CurveFitter.fit`.
-            y (Sequence[MedicalVolume]): Same as `CurveFitter.fit`.
-            mask (MedicalVolume or ndarray): Same as `CurveFitter.fit`.
+            x (array-like): Same as :meth:`CurveFitter.fit`.
+            y (Sequence[MedicalVolume]): Same as :meth:`CurveFitter.fit`.
+            mask (MedicalVolume or ndarray): Same as :meth:`CurveFitter.fit`.
 
         Returns:
             Tuple[MedicalVolume, MedicalVolume]: Tuple of fitted parameters (``popt``)
