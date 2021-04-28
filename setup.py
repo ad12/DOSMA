@@ -89,8 +89,10 @@ setup(
         "dev": [
             "coverage",
             "flake8",
+            "flake8-bugbear",
+            "flake8-comprehensions",
             "isort",
-            "black==19.3b0",
+            "black",
             "simpleitk",
             "sphinx",
             "sphinxcontrib.bibtex",

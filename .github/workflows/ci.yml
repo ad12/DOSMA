@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+    
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+    
+  Linting:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.6", "3.7", "3.8"]
+        
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+                    
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          make dev
+          pip install -e '.[dev]'
+
+      - name: Lint with isort, black, docformatter, flake8
+        run: |
+          make lint
+    
+  Documentation:
+    needs: Linting
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.6", "3.7", "3.8"]
+                
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+                    
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip
+    
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          make dev
+          pip install -e '.[dev]'
+      
+      - name: Generate Docs
+        run: |
+          make build-docs
+
+  Build:
+    needs: Documentation
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.6", "3.7", "3.8"]
+                
+    steps:
+      - uses: actions/checkout@v2
+            
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+                
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install tensorflow keras
+          make dev
+          pip install -e '.[dev]'
+      
+      - name: Test with pytest
+        run: |
+          pip install pytest
+          pip install pytest-cov
+          make test-cov
+      
+      - name: Upload to codecov.io
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
