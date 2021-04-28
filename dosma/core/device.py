@@ -21,10 +21,10 @@ class Device(object):
     This class extends ``cupy.Device`` and can also be used to interface with
     ``torch.Device`` and ``sigpy.Device``. This class contains a device type
     ('cpu' or 'cuda') and optional device ordinal (i.e. the id) for the device type.
-    The :cls:`dosma.Device` can also be constructed using only the ordinal id, where id >= 0
+    This class can also be constructed using only the ordinal id, where id >= 0
     representing the id-th GPU, and id = -1 representing CPU. cupy must be installed to use GPUs.
 
-    The array module for the corresponding device can be obtained via :param:`xp`.
+    The array module for the corresponding device can be obtained via ``device.xp``.
     Similar to cupy.Device, the Device object can be used as a context:
 
         >>> device = Device(1)  # gpu 1

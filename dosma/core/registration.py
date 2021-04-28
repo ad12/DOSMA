@@ -44,22 +44,22 @@ def register(
 ):
     """Register moving image(s) to the target.
 
-    `MedVolOrPath` is a shorthand for `MedicalVolume` or `str`. It indicates the argument
-    can be either a `MedicalVolume` or a `str` path to a nifti file.
+    ``MedVolOrPath`` is a shorthand for ``Union[MedicalVolume, str, Path]``.
+    It indicates the argument can be either a ``MedicalVolume`` or a path to a nifti file.
 
     Args:
         target (`MedicalVolume` or `str`): The target/fixed image.
-        moving (`MedicalVolume`(s) or `str`(s)): The moving/source image(s).
-        parameters (`str(s)`): Elastix parameter files to use.
-        output_path (`str`): Output directory to store files.
-        target_mask (`MedicalVolume` or `str`, optional): The target/fixed mask.
-        moving_masks (`MedicalVolume`(s) or `str`(s), optional): The moving mask(s).
+        moving (MedicalVolume(s) or str(s)): The moving/source image(s).
+        parameters (str(s)): Elastix parameter files to use.
+        output_path (str): Output directory to store files.
+        target_mask (MedicalVolume or str, optional): The target/fixed mask.
+        moving_masks (MedicalVolume(s) or str(s), optional): The moving mask(s).
             If only one specified, the mask will be used for all moving images.
         sequential (bool, optional): If `True`, apply parameter files sequentially.
         collate (bool, optional): If `True`, will collate outputs from sequential registration
             into single RegistrationOutputSpec instance. If `sequential=False`, this argument
             is ignored.
-        num_workers (int, optional): Number of workers to use for reading/writing data and
+        num_workers (int, optional): Number of workers to use for reading and writing data and
             for registration.
         num_threads (int, optional): Number of threads to use for registration.
             Note total number of threads used will be ``num_workers * num_threads``.
@@ -72,18 +72,21 @@ def register(
         kwargs: Keyword arguments used to initialize `nipype.interfaces.elastix.Registration`.
 
     Returns:
-        Dict or Tuple: Type specified by `rtype`. If dict, with keys 'outputs'
-            (registration outputs) and 'volumes' (final volumes)
-            if `return_volumes=True`). If tuple, order is (`outputs`, `volumes` or `None`).
-            Length of `outputs` and `volumes` depends on number of images specified in `moving`.
+        Dict or Tuple:
+            Type specified by ``rtype``. If ``rtype=dict``, returns dict with keys ``'outputs'``
+            and ``'volumes'`` (if ``return_volumes=True``). If ``rtype=tuple``, returns
+            ``(outputs, volumes or None)``. Length of ``outputs`` and ``volumes`` depends on
+            number of images specified in ``moving``:
 
             outputs (Sequence[RegistrationOutputSpec]): The output objects from
-                elastix registration, one for each moving image. Each object is effectively
-                a namespace with four main attributes:
-                    - 'transform' (List[str]): Paths to transform files produced using registration.
-                    - 'warped_file' (str): Path to the final registered image.
-                    - 'warped_files' (List[str]): Paths to all intermediate images created if
-                        multiple parameter files used.
+            elastix registration, one for each moving image. Each object is effectively
+            a namespace with four main attributes:
+
+                - 'transform' (List[str]): Paths to transform files produced using registration.
+                - 'warped_file' (str): Path to the final registered image.
+                - 'warped_files' (List[str]): Paths to all intermediate images created
+                  if multiple parameter files used.
+
             volumes (Sequence[MedicalVolume]): Registered volumes.
     """
     assert issubclass(rtype, (Dict, Sequence))  # `rtype` must be dict or tuple

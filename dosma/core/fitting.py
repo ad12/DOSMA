@@ -736,9 +736,12 @@ def curve_fit(
         kwargs: Keyword args for `scipy.optimize.curve_fit`.
 
     Returns:
-        popts (ndarray): A NxP matrix of fitted values. The last dimension (``axis=-1``)
+        Tuple[ndarray, ndarray]:
+
+            popts (ndarray): A NxP matrix of fitted values. The last dimension (``axis=-1``)
             corresponds to the different parameters (in order).
-        rsquared (ndarray): A (N,) length matrix of r-squared goodness-of-fit values.
+
+            rsquared (ndarray): A (N,) length matrix of r-squared goodness-of-fit values.
     """
     if (get_device(x) != cpu_device) or (get_device(y) != cpu_device):
         raise RuntimeError("`x` and `y` must be on CPU")

@@ -1,4 +1,5 @@
-"""DICOM I/O.
+"""
+DICOM I/O.
 
 This module contains DICOM input/output helpers.
 
@@ -45,10 +46,10 @@ class DicomReader(DataReader):
     Attributes:
         num_workers (int, optional): Number of workers to use for loading.
         verbose (bool, optional): If ``True``, show loading progress bar.
-        group_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+        group_by (str(s) or int(s), optional): DICOM attribute(s) used
             to group dicoms. This can be the attribute tag name (str) or tag
             number (int).
-        sort_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+        sort_by (str(s) or int(s), optional): DICOM attribute(s) used
             to sort dicoms. This sorting is done after sorting files in alphabetical
             order.
         ignore_ext (bool, optional): If ``True``, ignore extension (``".dcm"``)
@@ -67,8 +68,8 @@ class DicomReader(DataReader):
         >>> dr = DicomReader(num_workers=0, verbose=True)
         >>> mvs = dr.load("/dicoms/directory", group_by="EchoTime", sort_by="InstanceNumber")
 
-        >>> # Use the same loader for multiple multi-echo MRI scans
-        >>> dr = DicomReader(group_by="EchoTime", sort_by="InstanceNumber")
+        >>> # Use the same loader for multiple multi-echo time-series MRI scans
+        >>> dr = DicomReader(group_by=["EchoTime", "TriggerTime", sort_by="InstanceNumber")
         >>> scans = [dr.load(dcm_dir) for dcm_dir in ["/dicom/dir1", "/dicom/dir2", "/dicom/dir3"]]
     """
 
@@ -322,13 +323,14 @@ class DicomWriter(DataWriter):
         sort_by: Union[str, int, Sequence[Union[str, int]]] = None,
     ):
         """
+
         Args:
             num_workers (int, optional): Number of workers to use for writing.
             verbose (bool, optional): If ``True``, show writing progress bar.
             fname_fmt (str, optional): Formatting string for filenames. Must contain ``%d``,
                 which correspopnds to slice number. Defaults to
                 ``"I%0{max(4, ceil(log10(num_slices)))}d.dcm"`` (e.g. ``"I0001.dcm"``).
-            sort_by (``str``(s) or ``int``(s), optional): DICOM attribute(s) used
+            sort_by (str(s) or int(s), optional): DICOM attribute(s) used
                 to define ordering of slices prior to writing. If not specified, this ordering
                 will be defined by the order of blocks in ``volume``.
         """

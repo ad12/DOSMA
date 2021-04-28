@@ -10,6 +10,7 @@ test:
 
 build-docs:
 	set -e
+	mkdir -p docs/source/_static
 	rm -rf docs/build
 	rm -rf docs/source/generated
 	cd docs && make html
