@@ -12,8 +12,8 @@ import numpy as np
 import pandas as pd
 import scipy.ndimage as sni
 
+from dosma.core.quant_vals import QuantitativeValueType
 from dosma.defaults import preferences
-from dosma.quant_vals import QuantitativeValueType
 from dosma.tissues.tissue import Tissue, largest_cc
 from dosma.utils import io_utils
 

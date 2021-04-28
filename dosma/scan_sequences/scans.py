@@ -27,9 +27,9 @@ from natsort import natsorted
 from nipype.interfaces.elastix import ApplyWarp, Registration
 
 from dosma import file_constants as fc
-from dosma.data_io import format_io_utils as fio_utils
-from dosma.data_io.med_volume import MedicalVolume
-from dosma.data_io.nifti_io import NiftiReader
+from dosma.core.io import format_io_utils as fio_utils
+from dosma.core.io.nifti_io import NiftiReader
+from dosma.core.med_volume import MedicalVolume
 from dosma.defaults import preferences
 from dosma.scan_sequences.scan_io import ScanIOMixin
 from dosma.tissues.tissue import Tissue

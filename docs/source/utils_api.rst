@@ -1,17 +1,17 @@
-.. _core_api:
+.. _utils_api:
 
 Utilities
 ================================================================================
 
-Device
+Collect Env
 ---------------------------
-.. _device_api_device:
+.. _utils_api_collect_env:
 
 .. autosummary::
    :toctree: generated
    :nosignatures:
 
-   dosma.utils.device.Device
+   dosma.utils.collect_env.collect_env_info
 
 
 Env

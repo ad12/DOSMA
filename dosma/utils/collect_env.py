@@ -15,6 +15,10 @@ __all__ = ["collect_env_info"]
 
 
 def collect_env_info():
+    """Collect environment information for reporting issues.
+
+    Run this function when reporting issues on Github.
+    """
     data = []
     data.append(("sys.platform", sys.platform))
     data.append(("Python", sys.version.replace("\n", "")))

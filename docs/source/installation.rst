@@ -16,7 +16,7 @@ Please install the `Anaconda <https://www.anaconda.com/download/>`_ virtual envi
 
 Setup
 --------------------------------------------------------------------------------
-The following steps will create an Anaconda environment (`dosma_env`).
+The following steps will create an Anaconda environment (``dosma_env``).
 
 1. Open a Terminal/Shell window
 2. Create the `dosma_env` environment::
@@ -40,8 +40,8 @@ is supported for knee articular cartilage and meniscus.
 
 If you will be using this functionality, please follow the instructions below.
 
-1. Request access using this `Google form <https://goo.gl/forms/JlxgS3aoUeeUUlVh2>`
-   and email arjundd (at) <standard Stanford email domain>
+1. Request access using this `Google form <https://goo.gl/forms/JlxgS3aoUeeUUlVh2>`_
+   *and* email arjundd (at) <standard Stanford email domain>
 
 2. Save these weights in an accessible location. **Do not rename these files**.
 
@@ -60,11 +60,11 @@ follow the instructions below:
 
 If you are using a MacOS system, you may run into path issues with elastix (see
 `this discussion <https://github.com/almarklein/pyelastix/issues/9>`_). To fix
-this, we can use the `dosma.utils.registration.symlink_elastix` to create
-appropriate symbolic links to files causing issues.::
+this, we can use the `dosma.symlink_elastix` to create
+appropriate symbolic links to files causing issues:
 
     $ conda activate dosma_env; python
-    >>> from dosma.utils.registration import symlink_elastix
+    >>> from dosma import symlink_elastix
     >>> symlink_elastix()
 
 Note you will need to run this every time you update elastix/transformix paths
@@ -91,10 +91,10 @@ Verification
 Updating DOSMA
 --------------------------------------------------------------------------------
 If you have used an earlier stand-alone of DOSMA (v0.0.11 or earlier), you may
-already have a `dosma_env` virtual environment. Please delete this environment
+already have a ``dosma_env`` virtual environment. Please delete this environment
 and reinstall follows steps in setup :ref:`Setup <install-setup>`.
 
-For those (v0.0.12 or later) having installed dosma via `pip`, you can update
+For those (v0.0.12 or later) having installed dosma via ``pip``, you can update
 dosma using::
 
     $ pip install --upgrade dosma

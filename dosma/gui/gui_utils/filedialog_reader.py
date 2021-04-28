@@ -1,7 +1,7 @@
 import os
 from tkinter import StringVar, filedialog
 
-from dosma.data_io import format_io_utils as fio_utils
+from dosma.core.io import format_io_utils as fio_utils
 from dosma.gui.preferences_viewer import PreferencesManager
 
 

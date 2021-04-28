@@ -5,12 +5,12 @@ import numpy as np
 import pandas as pd
 import scipy.ndimage as sni
 
-from dosma.data_io import format_io_utils as fio_utils
-from dosma.data_io.format_io import ImageDataFormat
-from dosma.data_io.med_volume import MedicalVolume
-from dosma.data_io.orientation import SAGITTAL
+from dosma.core.io import format_io_utils as fio_utils
+from dosma.core.io.format_io import ImageDataFormat
+from dosma.core.med_volume import MedicalVolume
+from dosma.core.orientation import SAGITTAL
+from dosma.core.quant_vals import QuantitativeValue, QuantitativeValueType
 from dosma.defaults import preferences
-from dosma.quant_vals import QuantitativeValue, QuantitativeValueType
 from dosma.utils import io_utils
 
 WEIGHTS_FILE_EXT = "h5"
@@ -305,7 +305,7 @@ class Tissue(ABC):
 
 
 def largest_cc(mask, num=1):
-    """ Return the largest `num` connected component(s) of a 3D mask array.
+    """Return the largest `num` connected component(s) of a 3D mask array.
 
     Args:
         mask (np.ndarray): 3D mask array (`np.bool` or `np.[u]int`).

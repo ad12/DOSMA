@@ -12,9 +12,9 @@ supports true parallel execution when registering multiple volumes to a target.
 Elastix/Transformix must be installed and configured on your machine. See
 :ref:`the setup guide <install-setup-registration>` for more information
 
-To register moving image(s) to a target image, we can use ``dosma.utils.registration.register``:
+To register moving image(s) to a target image, we can use :class:`dosma.register`:
 
->>> from dosma.utils.registration import register
+>>> from dosma import register
 >>> out = register(target, moving, "/path/to/elastix/file", "/path/to/save", return_volumes=True)
 >>> registered_images = out["volumes"]
 
@@ -23,9 +23,9 @@ parallelizes registration when there are multiple moving images. The true number
 processes are equivalent to ``min(num_workers, len(moving))``. To increase the number of threads
 used per, use ``num_threads``.
 
-To transform moving image(s) using a transformation file, we can use ``dosma.utils.registration.apply_warp``:
+To transform moving image(s) using a transformation file, we can use :class:`dosma.apply_warp`:
 
->>> from dosma.utils.registration import apply_warp
+>>> from dosma import apply_warp
 >>> transformed_image = apply_warp(image, transform="/path/to/transformation/file")
 
 Often we may want to copy the final transformation file produced during registration to transform

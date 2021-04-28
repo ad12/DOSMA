@@ -11,7 +11,7 @@ import numpy as np
 from pydicom.dataset import FileDataset, FileMetaDataset
 
 from dosma.cli import SUPPORTED_SCAN_TYPES, parse_args
-from dosma.data_io.format_io import ImageDataFormat
+from dosma.core.io.format_io import ImageDataFormat
 from dosma.utils import env, io_utils
 
 UNITTEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "../unittest-data/")

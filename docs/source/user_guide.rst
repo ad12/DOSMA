@@ -9,4 +9,5 @@ User Guide
    guide_basic
    guide_registration
    guide_fitting
+   guide_tutorials
 

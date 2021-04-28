@@ -4,7 +4,7 @@ import unittest
 import h5py
 import numpy as np
 
-from dosma.data_io.nifti_io import NiftiReader
+from dosma.core.io.nifti_io import NiftiReader
 from dosma.models.oaiunet2d import IWOAIOAIUnet2D, IWOAIOAIUnet2DNormalized
 from dosma.models.seg_model import whiten_volume
 from dosma.tissues.femoral_cartilage import FemoralCartilage

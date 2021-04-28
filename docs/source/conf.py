@@ -55,6 +55,7 @@ extensions = [
     "sphinxcontrib.bibtex",
     "sphinx_rtd_theme",
     "sphinx.ext.githubpages",
+    "m2r2",
 ]
 autosummary_generate = True
 autosummary_imported_members = True
@@ -101,6 +102,9 @@ intersphinx_mapping = {"numpy": ("https://numpy.org/doc/stable/", None)}
 # documentation.
 #
 html_theme_options = {"navigation_depth": 2}
+
+# Source Files
+source_suffix = [".rst", ".md"]
 
 # Documentation to include
 todo_include_todos = True

@@ -4,10 +4,15 @@ from tkinter import ttk
 import Pmw
 
 from dosma.cli import GPU_KEY
-from dosma.data_io.format_io import ImageDataFormat
+from dosma.core.io.format_io import ImageDataFormat
 from dosma.defaults import preferences
+from dosma.utils import env
 
-from tensorflow.python.client import device_lib
+if env.package_available("tensorflow"):
+    from tensorflow.python.client import device_lib
+else:
+    device_lib = None
+
 
 CUDA_DEVICES_STR = "CUDA_VISIBLE_DEVICES"
 SUPPORTED_IMAGE_DATA_FORMATS = [x for x in ImageDataFormat]
@@ -175,17 +180,21 @@ class PreferencesManager(metaclass=Singleton):
 
     def _init_gpu_preferences(self):
         gpu_vars = []
-        local_device_protos = device_lib.list_local_devices()
-        for x in local_device_protos:
-            if x.device_type == "GPU":
-                bool_var = tk.BooleanVar()
-                x_id = x.name.split(":")[-1]
-                gpu_vars.append((x_id, bool_var))
+        if device_lib is not None:
+            local_device_protos = device_lib.list_local_devices()
+            for x in local_device_protos:
+                if x.device_type == "GPU":
+                    bool_var = tk.BooleanVar()
+                    x_id = x.name.split(":")[-1]
+                    gpu_vars.append((x_id, bool_var))
 
         self.gui_manager["gpu"] = gpu_vars
 
     @property
     def gpus(self) -> str:
+        if device_lib is None:
+            return None
+
         gpu_ids = []
         local_device_protos = device_lib.list_local_devices()
         for x in local_device_protos:

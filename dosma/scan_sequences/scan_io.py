@@ -7,10 +7,10 @@ from typing import Any, Dict, Sequence, Set, Union
 
 import pydicom
 
-from dosma.data_io import format_io_utils as fio_utils
-from dosma.data_io.dicom_io import DicomReader
-from dosma.data_io.format_io import ImageDataFormat
-from dosma.data_io.med_volume import MedicalVolume
+from dosma.core.io import format_io_utils as fio_utils
+from dosma.core.io.dicom_io import DicomReader
+from dosma.core.io.format_io import ImageDataFormat
+from dosma.core.med_volume import MedicalVolume
 from dosma.defaults import preferences
 from dosma.tissues.tissue import Tissue
 from dosma.utils import io_utils
