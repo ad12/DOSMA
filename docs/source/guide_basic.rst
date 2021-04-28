@@ -1,5 +1,7 @@
 .. _basic_usage:
 
+.. py:currentmodule:: dosma
+
 **This guide is still under construction**
 
 Basic Usage
@@ -9,6 +11,11 @@ Dosma is designed for simple imaging I/O, registration, quantitative fitting, an
 
 Dosma does not bundle Tensorflow and Keras installation by default.
 To enable  support, you must install these libraries as an additional step.
+
+We use the following abbreviations for libraries:
+
+>>> import numpy as np
+>>> import dosma as dm
 
 
 Image I/O
@@ -103,5 +110,29 @@ operate on the pixel data in the medical volume:
 - Rounding functions: :func:`numpy.round`, :func:`numpy.around`, :func:`numpy.round_`
 - NaN functions: :func:`numpy.nanmean`, :func:`numpy.nansum`, :func:`numpy.nanstd`, :func:`numpy.nan_to_num`
 
-For example, ``np.all(mv)`` is equivalent to ``np.all(mv.volume)``, except the former will return a :class:`MedicalVolume` object.
-Note, headers are not deep copied.
+For example, ``np.all(mv)`` is equivalent to ``np.all(mv.volume)``. Note, headers are not deep copied.
+NumPy operations that reduce spatial dimensions are not supported. For example, a 3D volume ``mv`` cannot
+be summed over any two of the first three axes:
+
+>>> np.sum(mv, 0)  # this will raise an error
+>>> np.sum(mv)  # this will return a scalar
+
+
+(BETA) Choosing A Computing Device
+========================================
+
+Dosma provides a device class :class:`dosma.Device`, which allows you to specify which device
+to use for :class:`MedicalVolume` operations. It extends the Device class from `CuPy <https://cupy.dev/>`_.
+To enable GPU computing support, install the correct build for CuPy on your machine.
+
+To move a MedicalVolume to GPU 1, you can use the :meth:`MedicalVolume.to` method:
+
+>>> mv_gpu = mv.to(dm.Device(1))
+
+You can also move the image back to the cpu:
+
+>>> mv_cpu = mv_gpu.to(dm.Device(-1))  # or mv_gpu.cpu()
+
+If the device is already on the specified device, the same object is returned.
+Note, some functionality such as curve fitting (:class:`dosma.curve_fit`), image registration,
+and image I/O are not supported with images on the GPU.

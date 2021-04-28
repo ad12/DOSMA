@@ -35,7 +35,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
     these volumes have inherent spatial metadata, such as pixel/voxel spacing, global coordinates,
     rotation information, all of which can be characterized by an affine matrix following the
     RAS+ coordinate system. The code below creates a random 300x300x40 medical volume with
-    spatial origin ``(0, 0, 0)`` and voxel spacing of ``(1,1,1)``:
+    scanner origin ``(0, 0, 0)`` and voxel spacing of ``(1,1,1)``:
 
     >>> mv = MedicalVolume(np.random.rand(300, 300, 40), np.eye(4))
 
@@ -44,7 +44,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
     and set using :meth:`get_metadata()` and :meth:`set_metadata()`, respectively. Headers are
     also auto-aligned, which means that headers will be aligned with the slice(s) of data from
     which they originated, which makes Python slicing feasible. Currently, medical volumes
-    support DICOM headers using ``pydicom`` when loaded with :class:``dosma.io.DicomReader``.
+    support DICOM headers using ``pydicom`` when loaded with :class:`dosma.DicomReader`.
 
     >>> mv.get_metadata("EchoTime")  # Returns EchoTime
     >>> mv.set_metadata("EchoTime", 10.0)  # Sets EchoTime to 10.0
@@ -70,7 +70,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
     True
 
     **BETA**: Medical volumes can interface with the gpu using the :mod:`cupy` library.
-    Volumes can be moved between devices (see ``dosma.Device``) using the ``.to()`` method.
+    Volumes can be moved between devices (see :class:`Device`) using the ``.to()`` method.
     Only the volume data will be moved to the gpu. Headers and affine matrix will remain on
     the cpu. The following code moves a MedicalVolume to gpu 0 and back to the cpu:
 

@@ -836,9 +836,28 @@ def polyfit(
     solving for each data sequence separately can be beneficial.
 
     Solving each data sequence separately without multiprocessing can also be done by setting
-    ``num_workers=0``.
+    ``num_workers=0``. This can be useful when certain data sequences are ill conditioned.
 
-    TODO: Add documentation
+    Args:
+        x (ndarray): The independent variable(s) where the data is measured.
+            Should usually be an M-length sequence or an (k,M)-shaped array for functions
+            with k predictors, but can actually be any object.
+        y (ndarray): The dependent data, a length M array - nominally func(xdata, ...) - or
+            an (M,N)-shaped array for N different sequences.
+        deg (int): Degree of the fitting polynomial. Same as :func:`numpy.polyfit`.
+        rcond (float, optional): Same as :func:`numpy.polyfit`.
+        full (bool, optional): Same as :func:`numpy.polyfit`.
+        w (array-like, optional): Same as :func:`numpy.polyfit`.
+        cov (bool, optional): Same as :func:`numpy.polyfit`.
+        eps (float, optional): Epsilon for computing r-squared.
+        y_bounds (tuple, optional): Same as :func:`curve_fit`.
+        show_pbar (bool, optional): Same as :func:`curve_fit`.
+        num_workers (int, optional): Maximum number of workers to use for fitting.
+            If ``None``, all data sequences should be solved as a single least squares problem.
+            If ``0``, each data sequence will be fit separately from one another.
+            Defaults to ``None``.
+        chunksize (int, optional): Same as :func:`curve_fit`.
+            Only used when ``num_workers`` is not ``None``.
     """
 
     def _compute_r2_matrix(_x, _y, _popts):

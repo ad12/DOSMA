@@ -1,6 +1,6 @@
 .. _core_api:
 
-Core API
+Core API (dosma.core)
 ================================================================================
 
 MedicalVolume
@@ -110,3 +110,28 @@ Device
    dosma.Device
    dosma.get_device
    dosma.to_device
+
+
+Preferences
+-------------
+.. autosummary::
+   :toctree: generated
+   :nosignatures:
+
+   dosma.defaults._Preferences
+   dosma.preferences
+
+
+(BETA) Quantitative Values
+---------------------------
+Utilities for different quantitative parameters.
+Note, this feature is in beta and will likely change in future releases.
+
+.. autosummary::
+   :toctree: generated
+   :nosignatures:
+
+   dosma.core.quant_vals.QuantitativeValue
+   dosma.core.quant_vals.T1Rho
+   dosma.core.quant_vals.T2
+   dosma.core.quant_vals.T2Star

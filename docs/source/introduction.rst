@@ -4,14 +4,14 @@
 
 Introduction
 ================================================================================
-DOSMA is an open-source Python library and application for musculoskeletal (MSK) MRI analysis.
+DOSMA is an open-source Python library and application for medical image analysis.
 
-In offering support for multiple scan types and tissues, DOSMA is designed to
-streamline rapid multi-scan analysis of MSK anatomy. Because DOSMA is a
-framework, it is built to be flexible enough to write analysis protocols that
-can be run for different combination of prescribed scans.
+DOSMA is designed to streamline medical image analysis by standardizing medical image
+I/O, simplifying array-like operations on medical images, and deploying state-of-the-art
+image analysis algorithms. Because DOSMA is a framework, it is built to be flexible enough
+to write analysis protocols that can be run for different imaging modalities and scan sequences.
 
-For example, the analysis workflow for a combination
+For example, we can build the analysis workflow for a combination
 of quantitative DESS, CubeQuant (3D fast spin echo), and ultra-short echo time Cones scans for multiple patients
 (shown below) can be done in 7 lines of code:
 
@@ -56,14 +56,12 @@ when starting processing with DOSMA.
 By default,  volumes (segmentations, quantitative maps, etc.) are written in the NIfTI format.
 The default output file format can be changed in the :ref:`preferences <faq-citation>`.
 
-Multiple Orientations
-^^^^^^^^^^^^^^^^^^^^^
-We support analyzing volumes acquired in any plane and support automatic
-reformatting to the expected plane during computation.
-
-Our machine learning methods are trained using sagittal acquired images,
-so performance may vary for images acquired in different planes
-(caused by differences in in-plane resolution, FOV, etc.).
+Array-Like Medical Images
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Medical images are spatially-aware pixel arrays with metadata. DOSMA supports array-like
+operations (arithmetic, slicing, etc.) on medical images while preserving spatial attributes and
+accompanying metadata with the :class:`MedicalVolume` data structure. It also supports intelligent
+reformatting, fast low-level computations, and native GPU support.
 
 
 Disclaimers

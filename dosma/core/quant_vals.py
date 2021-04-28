@@ -273,6 +273,7 @@ class QuantitativeValue(ABC):
 
 
 class T1Rho(QuantitativeValue):
+    """T1Rho MRI parameter."""
     ID = 1
     NAME = "t1_rho"
 
@@ -282,6 +283,7 @@ class T1Rho(QuantitativeValue):
 
 
 class T2(QuantitativeValue):
+    """T2 MRI parameter."""
     ID = 2
     NAME = "t2"
 
@@ -291,6 +293,7 @@ class T2(QuantitativeValue):
 
 
 class T2Star(QuantitativeValue):
+    """T2Star MRI parameter."""
     ID = 3
     NAME = "t2_star"
 

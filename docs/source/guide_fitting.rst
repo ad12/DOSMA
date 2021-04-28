@@ -26,9 +26,9 @@ where ``tc0`` is the initial guess for parameter :math:`-\frac{1}{b}` in the mon
 >>> fitter = MonoExponentialFit(echo_times, images, tc0=tc0, num_workers=4)
 >>> quant_map, r2_map = fitter.fit()
 
-Custom model functions can also be provided and used with ``curve_fit`` and ``CurveFitter`` (recommended),
-a class wrapper around ``curve_fit`` that handles ``MedicalVolume`` data and supports additional post-processing
-on the fitted parameters. The commands below using ``CurveFitter`` and ``curve_fit`` are equivalent to the
+Custom model functions can also be provided and used with :class:`dosma.curve_fit` and :class:`dosma.CurveFitter` (recommended),
+a class wrapper around :class:`dosma.curve_fit` that handles :class:`MedicalVolume` data and supports additional post-processing
+on the fitted parameters. The commands below using :class:`dosma.CurveFitter` and :class:`dosma.curve_fit` are equivalent to the
 ``fitter`` above:
 
 >>> from dosma import CurveFitter
