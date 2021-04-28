@@ -59,6 +59,7 @@ setup(
     package_data={"dosma": get_resources()},
     python_requires=">=3.6",
     install_requires=[
+        "matplotlib",
         "numpy",
         "h5py<3.0.0",
         "natsort",
@@ -84,6 +85,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     extras_require={
+        "ai": ["tensorflow", "keras"],
         "dev": [
             "coverage",
             "flake8",
@@ -92,6 +94,8 @@ setup(
             "simpleitk",
             "sphinx",
             "sphinxcontrib.bibtex",
-        ]
+            "m2r2",
+        ],
+        "docs": ["sphinx", "sphinxcontrib.bibtex", "m2r2"],
     },
 )

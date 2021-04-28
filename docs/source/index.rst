@@ -5,7 +5,8 @@
 
 Welcome to DOSMA's documentation!
 =================================
-DOSMA is an open-source Python library and application for musculoskeletal (MSK) MRI analysis.
+
+.. mdinclude:: ../../README.md
 
 .. toctree::
    :maxdepth: 2

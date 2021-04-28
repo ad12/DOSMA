@@ -4,7 +4,7 @@ Medical image orientation convention is library and image format (DICOM, NIfTI, 
 dependent and is often difficult to interpret. This makes it challenging to intelligently
 and rapidly reformat images.
 
-We adopt a easily interpretable orientation representation
+We adopt a human readable orientation representation
 for the dimensions and define utilities to convert between different orientation formats
 from current libraries (Nibabel, PyDicom, ITK, etc).
 
@@ -55,7 +55,7 @@ For example,
     \\begin{bmatrix} i\\\\j\\\\k\\\\1\\end{bmatrix}
 
 For details on how the affine matrix is used for reformatting see
-:class:`dosma.io.MedicalVolume`.
+:class:`dosma.core.MedicalVolume`.
 
 """
 from typing import Sequence, Union

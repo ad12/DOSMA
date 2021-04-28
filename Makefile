@@ -17,7 +17,7 @@ build-docs:
 
 dev:
 	pip install black coverage isort flake8
-	pip install sphinx sphinx-rtd-theme recommonmark
+	pip install sphinx sphinx-rtd-theme recommonmark m2r2
 	pip install -r docs/requirements.txt
 
 all: autoformat test build-docs

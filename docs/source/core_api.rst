@@ -24,7 +24,7 @@ Numpy operations that are supported on MedicalVolumes.
    :toctree: generated
    :nosignatures:
 
-   dosma.core.numpy_routines.__all__
+   dosma.core.numpy_routines
 
 
 Image I/O
