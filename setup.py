@@ -95,6 +95,8 @@ setup(
             "sphinx",
             "sphinxcontrib.bibtex",
             "m2r2",
+            "tensorflow",
+            "keras",
         ],
         "docs": ["sphinx", "sphinxcontrib.bibtex", "m2r2"],
     },
