@@ -2,7 +2,7 @@
 # Keep in sync with setup.cfg and pyproject.toml which is used for source packages.
 
 [flake8]
-ignore = W503, E203, B950
+ignore = W503, E203, B950, B011
 max-line-length = 100
 max-complexity = 18
 select = B,C,E,F,W,T4,B9

@@ -167,7 +167,7 @@ class ScanIOMixin(ABC):
         os.makedirs(save_dirpath, exist_ok=True)
         filepath = os.path.join(save_dirpath, "%s.data" % self.NAME)
 
-        metadata = dict()
+        metadata: Dict = {}
         for attr in self.__serializable_variables__():
             metadata[attr] = self.__getattribute__(attr)
 

@@ -90,7 +90,7 @@ def load_h5(file_path):
     if not os.path.isfile(file_path):
         raise FileNotFoundError("{} does not exist".format(file_path))
 
-    data = dict()
+    data = {}
     with h5py.File(file_path, "r") as f:
         for key in f.keys():
             data[key] = f.get(key).value

@@ -51,7 +51,7 @@ class Tissue(ABC):
     def __init__(self, weights_dir: str = None, medial_to_lateral: bool = None):
         self.pid = None
         self.__mask__ = None
-        self.quant_vals = dict()
+        self.quant_vals = {}
         self.weights_file_path = None
 
         if weights_dir is not None:

@@ -476,7 +476,7 @@ class TestMedicalVolume(unittest.TestCase):
 
     def test_hdf5(self):
         shape = (10, 20, 30)
-        volume = np.reshape([i for i in range(np.product(shape))], shape)
+        volume = np.reshape(list(range(np.product(shape))), shape)
         hdf5_file = os.path.join(self._TEMP_PATH, "unittest.h5")
 
         with h5py.File(hdf5_file, "w") as f:
@@ -547,9 +547,9 @@ class TestMedicalVolume(unittest.TestCase):
         assert mv2._headers.shape == (1, 1, 2, 1)
 
         mv2 = mv[:10]
-        mv2._headers.shape == (1, 1, 30, 40)
+        assert mv2._headers.shape == (1, 1, 30, 2)
         mv2 = mv[:, :10]
-        mv2._headers.shape == (1, 1, 30, 40)
+        assert mv2._headers.shape == (1, 1, 30, 2)
 
         mv2 = mv[..., 0:1]
         assert mv2._headers.shape == (1, 1, 30, 1)
@@ -575,7 +575,7 @@ class TestMedicalVolume(unittest.TestCase):
 
         ornt = ("AP", "IS", "RL")
         mv2 = mv.reformat(ornt)
-        mv2.orientation == ornt
+        assert mv2.orientation == ornt
         assert mv2.shape == (20, 10, 30, 2)
 
         mv2 = mv.reformat(ornt).reformat(mv.orientation)

@@ -7,7 +7,7 @@ class TestUtil(unittest.TestCase):
     def test_aliases_exist(self):
         # Verify that none of the supported segmentation models have overlapping aliases
         models = m_util.__SUPPORTED_MODELS__
-        alias_to_model = dict()  # noqa: F841
+        alias_to_model = {}  # noqa: F841
 
         for m in models:
             aliases = m.ALIASES
@@ -20,7 +20,7 @@ class TestUtil(unittest.TestCase):
     def test_overlapping_aliases(self):
         # Verify that none of the supported segmentation models have overlapping aliases
         models = m_util.__SUPPORTED_MODELS__
-        alias_to_model = dict()
+        alias_to_model = {}
 
         for m in models:
             curr_aliases = set(alias_to_model.keys())

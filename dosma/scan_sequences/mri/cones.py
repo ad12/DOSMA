@@ -121,7 +121,7 @@ class Cones(NonTargetSequence):
 
         # Undo sorting by echo time.
         reverse_idxs = {v: i for i, v in enumerate(idxs)}
-        reg_vols = [reg_vols[reverse_idxs[k]] for k in sorted(list(reverse_idxs.keys()))]
+        reg_vols = [reg_vols[reverse_idxs[k]] for k in sorted(reverse_idxs.keys())]
 
         self.volumes = reg_vols
 
@@ -188,7 +188,7 @@ class Cones(NonTargetSequence):
         scan = super().from_dict(data, force=force)
         if interregistered_dirpath is not None:
             subvolumes = scan.__load_interregistered_files__(interregistered_dirpath)
-            cls.volumes = [subvolumes[k] for k in sorted(list(subvolumes.keys()))]
+            cls.volumes = [subvolumes[k] for k in sorted(subvolumes.keys())]
 
         return scan
 

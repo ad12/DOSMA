@@ -70,7 +70,7 @@ class QuantitativeValue(ABC):
         # Store these as string_name: MedicalVolume (i.e. "r2: MedicalVolume)
         # To add values to this field, use the add_additional_volume method below
         # these results will not be loaded
-        self.additional_volumes = dict()
+        self.additional_volumes = {}
 
     def save_data(
         self, dir_path: str, data_format: ImageDataFormat = preferences.image_data_format

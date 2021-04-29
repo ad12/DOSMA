@@ -3,6 +3,7 @@ import os
 import sys
 import tkinter as tk
 from tkinter import IntVar, Radiobutton, filedialog, messagebox, ttk
+from typing import Dict
 
 import numpy as np
 import Pmw
@@ -100,8 +101,8 @@ class AnalysisFrame(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
-        self.manager = dict()
-        self.gui_manager = dict()
+        self.manager: Dict = {}
+        self.gui_manager: Dict = {}
         self.balloon = Pmw.Balloon()
 
         self.__init_manager()
@@ -271,8 +272,8 @@ class DosmaFrame(tk.Frame):
 
         self.file_dialog_reader = FileDialogReader()
 
-        self.manager = dict()
-        self.gui_manager = dict()
+        self.manager: Dict = {}
+        self.gui_manager: Dict = {}
         self.balloon = Pmw.Balloon()
 
         self.__init_manager()
@@ -469,7 +470,7 @@ class PageThree(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self._im_display = None
-        self.binding_vars = dict()
+        self.binding_vars: Dict = {}
         fig, ax = plt.subplots(1, 1)
         X = np.random.rand(20, 20, 40)
 
@@ -508,7 +509,7 @@ class PageThree(tk.Frame):
         orientation_var = IntVar(0)
         orientation_var.trace_add("write", self.__reformat_callback)
         count = 0
-        for text, value in self._ORIENTATIONS:
+        for text, _value in self._ORIENTATIONS:
             b = Radiobutton(self, text=text, variable=orientation_var, value=count)
             b.pack(side=tk.TOP, anchor="w")
             count += 1

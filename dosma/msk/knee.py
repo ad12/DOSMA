@@ -53,7 +53,7 @@ def knee_parser(base_parser):
             help="analyze %s" % tissue.FULL_NAME,
         )
 
-    qvs_dict = dict()
+    qvs_dict = {}
     for qv in SUPPORTED_QUANTITATIVE_VALUES:
         qv_name = qv.name.lower()
         qvs_dict[qv_name] = qv
