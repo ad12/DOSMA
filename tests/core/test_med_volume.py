@@ -7,9 +7,8 @@ import numpy as np
 import SimpleITK as sitk
 
 from dosma.core.device import Device
-from dosma.core.io.dicom_io import DicomReader
 from dosma.core.io.format_io import ImageDataFormat
-from dosma.core.io.nifti_io import NiftiReader
+from dosma.core.io.nifti_io import NiftiReader, NiftiWriter
 from dosma.core.med_volume import MedicalVolume
 
 from .. import util as ututils
@@ -130,8 +129,11 @@ class TestMedicalVolume(unittest.TestCase):
         mv2 = mv.clone()
         assert mv.is_identical(mv2)  # expected identical volumes
 
-        dr = DicomReader(num_workers=ututils.num_workers())
-        mv = dr.load(ututils.get_dicoms_path(ututils.get_scan_dirpath("qdess")))[0]
+        mv = MedicalVolume(
+            np.random.rand(10, 20, 30),
+            self._AFFINE,
+            headers=ututils.build_dummy_headers((1, 1, 30)),
+        )
         mv2 = mv.clone(headers=False)
         assert mv.is_identical(mv2)  # expected identical volumes
         assert id(mv.headers(flatten=True)[0]) == id(
@@ -145,9 +147,10 @@ class TestMedicalVolume(unittest.TestCase):
         ), "headers cloned, expected different memory address"
 
     def test_to_sitk(self):
-        filepath = ututils.get_read_paths(ututils.get_scan_dirpath("qdess"), ImageDataFormat.nifti)[
-            0
-        ]
+        mv = MedicalVolume(np.random.rand(10, 20, 30), self._AFFINE)
+        filepath = os.path.join(ututils.TEMP_PATH, "med_vol_to_sitk.nii.gz")
+        NiftiWriter().save(mv, filepath)
+
         expected = sitk.ReadImage(filepath)
 
         nr = NiftiReader()
@@ -166,9 +169,10 @@ class TestMedicalVolume(unittest.TestCase):
         assert img.GetSize() == (10, 20, 1)
 
     def test_from_sitk(self):
-        filepath = ututils.get_read_paths(ututils.get_scan_dirpath("qdess"), ImageDataFormat.nifti)[
-            0
-        ]
+        mv = MedicalVolume(np.random.rand(10, 20, 30), self._AFFINE)
+        filepath = os.path.join(ututils.TEMP_PATH, "med_vol_from_sitk.nii.gz")
+        NiftiWriter().save(mv, filepath)
+
         nr = NiftiReader()
         expected = nr.load(filepath)
 
