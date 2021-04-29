@@ -298,7 +298,7 @@ class CurveFitter(_Fitter):
     ):
         func_name = func.__name__ if hasattr(func, "__name__") else type(func).__name__
         sig = inspect.signature(func)
-        func_args = [p for p in sig.parameters]
+        func_args = list(sig.parameters)
         func_nparams = len(func_args) - 2 if "self" in func_args else len(func_args) - 1
 
         if out_ufuncs is not None:
@@ -752,7 +752,7 @@ def curve_fit(
         y = y.reshape(y.shape + (1,))
     N = y.shape[-1]
 
-    func_args = [p for p in inspect.signature(func).parameters]
+    func_args = list(inspect.signature(func).parameters)
     nparams = len(func_args) - 2 if "self" in func_args else len(func_args) - 1
     param_args = func_args[2:] if "self" in func_args else func_args[1:]
 

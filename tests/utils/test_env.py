@@ -25,4 +25,4 @@ class TestEnv(unittest.TestCase):
         env.debug(False)
         assert preferences.nipype_logging == "file_stderr"
 
-        os.environ = os_env
+        os.environ = os_env  # noqa: B003

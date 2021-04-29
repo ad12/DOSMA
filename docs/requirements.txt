@@ -18,3 +18,4 @@ sphinx-rtd-theme
 recommonmark
 sphinx_bootstrap_theme
 sphinxcontrib-bibtex>=2.0.0
+m2r2

@@ -274,7 +274,7 @@ class DicomReader(DataReader):
             dicom_data[val_groupby]["arr"].append(ds.pixel_array)
 
         vols = []
-        for k in sorted(list(dicom_data.keys())):
+        for k in sorted(dicom_data.keys()):
             dd = dicom_data[k]
             headers = dd["headers"]
             if len(headers) == 0:

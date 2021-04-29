@@ -224,7 +224,7 @@ class NonTargetSequence(ScanSequence):
         # Sort list of tuples (ind, echo_time) by echo_time
         ordered_echo_times = sorted(echo_times, key=lambda x: x[1])
 
-        ordered_subvolumes_dict = dict()
+        ordered_subvolumes_dict = {}
 
         for i in range(num_echo_times):
             volume_ind, echo_time = ordered_echo_times[i]
@@ -285,7 +285,7 @@ class NonTargetSequence(ScanSequence):
         if len(subvolumes) == 0:
             raise ValueError("No interregistered files found")
 
-        subvolumes_dict = dict()
+        subvolumes_dict = {}
         for i in range(len(indices)):
             subvolumes_dict[indices[i]] = subvolumes[i]
 

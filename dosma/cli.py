@@ -390,8 +390,11 @@ def add_base_argument(
     param_type,
     param_default,
     param_help,
-    additional_param_names: list = [],
+    additional_param_names: list = None,
 ):
+    if additional_param_names is None:
+        additional_param_names = []
+
     # TODO: Clean up this code block to properly do syntax parsing.
     try:
         if param_type not in BASIC_TYPES:
@@ -619,7 +622,7 @@ def handle_scan(vargin):
     parameters = func_signature.parameters
     if scan_action_str == "segment":
         weights_to_tissues = _find_tissue_groups(vargin, tissues)
-        for weights_file, seg_tissues in weights_to_tissues.items():
+        for _weights_file, seg_tissues in weights_to_tissues.items():
             if len(seg_tissues) == 1:
                 seg_tissues = seg_tissues[0]
             param_dict = _build_params(vargin, scan, parameters, seg_tissues)

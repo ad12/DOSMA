@@ -1,6 +1,7 @@
 import inspect
 import tkinter as tk
 from tkinter import IntVar
+from typing import Dict
 
 import Pmw
 
@@ -16,7 +17,7 @@ class ScanReader:
         self.parent = parent
         self.hbox = None
         self.action_box = None
-        self.params = dict()
+        self.params: Dict = {}
         self.action_var = None
         self._action_bool = IntVar()
         self.balloon = None
@@ -61,7 +62,7 @@ class ScanReader:
             self.action_box.destroy()
 
         if self.params:
-            self.params = dict()
+            self.params = {}
 
         hbox = tk.Frame(self.parent)
         hbox.pack(anchor="nw", side="top")

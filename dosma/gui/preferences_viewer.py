@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from typing import Dict
 
 import Pmw
 
@@ -15,7 +16,7 @@ else:
 
 
 CUDA_DEVICES_STR = "CUDA_VISIBLE_DEVICES"
-SUPPORTED_IMAGE_DATA_FORMATS = [x for x in ImageDataFormat]
+SUPPORTED_IMAGE_DATA_FORMATS = list(ImageDataFormat)
 LARGE_FONT = ("Verdana", 18)
 
 
@@ -165,13 +166,13 @@ class PreferencesManager(metaclass=Singleton):
         self.frame = None
         self.balloon = None
 
-        self.gui_manager = dict()
-        self.gui_elements = dict()
+        self.gui_manager: Dict = {}
+        self.gui_elements: Dict = {}
 
         self._init_gpu_preferences()
 
         # Init preferences
-        self._preference_elements = dict()
+        self._preference_elements = {}
         preferences_metadata = preferences.cmd_line_flags()
         for preference in preferences_metadata.keys():
             self._preference_elements[preference] = CommandLineFlagGUI(

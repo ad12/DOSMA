@@ -324,7 +324,7 @@ def _infer_orientation(orientation):
     Returns:
         tuple[str, str, str]: Standard orientation.
     """
-    idxs = set([__ORIENTATIONS_TO_AXIS_ID__[k] for k in orientation])
+    idxs = {__ORIENTATIONS_TO_AXIS_ID__[k] for k in orientation}
     if len(orientation) != 2 or len(idxs) != 2:
         raise ValueError(
             "`orientation` must be an incomplete orientation that encodes orthogonal directions"
