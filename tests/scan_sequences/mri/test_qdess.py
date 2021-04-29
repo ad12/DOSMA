@@ -15,6 +15,7 @@ SEGMENTATION_WEIGHTS_FOLDER = os.path.join(
 SEGMENTATION_MODEL = "iwoai-2019-t6-normalized"
 
 
+@unittest.skipIf(not util.is_data_available(), "unittest data is not available")
 class QDessTest(util.ScanTest):
     SCAN_TYPE = QDess
 

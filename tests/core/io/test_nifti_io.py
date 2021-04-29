@@ -13,6 +13,7 @@ class TestNiftiIO(unittest.TestCase):
 
     data_format = ImageDataFormat.nifti
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_nifti_read(self):
         for dp in ututils.SCAN_DIRPATHS:
             dicoms_path = ututils.get_dicoms_path(dp)
@@ -30,6 +31,7 @@ class TestNiftiIO(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     _ = self.nr.load(os.path.join(dicoms_path, "I0002.dcm"))
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_nifti_write(self):
         for dp in ututils.SCAN_DIRPATHS:
             read_filepaths = ututils.get_read_paths(dp, self.data_format)

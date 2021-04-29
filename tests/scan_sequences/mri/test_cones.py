@@ -12,6 +12,7 @@ QDESS_ECHO1_PATH = util.get_read_paths(util.get_scan_dirpath(QDess.NAME), ImageD
 TARGET_MASK_PATH = os.path.join(util.get_scan_dirpath(Cones.NAME), "misc/fc.nii.gz")
 
 
+@unittest.skipIf(not util.is_data_available(), "unittest data is not available")
 class ConesTest(util.ScanTest):
     SCAN_TYPE = Cones
 

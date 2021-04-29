@@ -44,6 +44,7 @@ class TestDicomIO(unittest.TestCase):
         ]
         return len(changes) == 0
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_dicom_reader_total(self):
         for ind, dp in enumerate(ututils.SCAN_DIRPATHS):
             curr_scan = ututils.SCANS[ind]
@@ -89,6 +90,7 @@ class TestDicomIO(unittest.TestCase):
                         i + 1,
                     )
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_dicom_reader_separate(self):
         # User manually separates two echos into different folders
         # still be able to read volume in.
@@ -140,6 +142,7 @@ class TestDicomIO(unittest.TestCase):
                         "headers for echos %d must be equivalent" % echo_number
                     )
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_dicom_reader_files(self):
         """Test reading dicoms provided as list of files."""
         for ind, dp in enumerate(ututils.SCAN_DIRPATHS):
@@ -163,6 +166,7 @@ class TestDicomIO(unittest.TestCase):
                     for h1, h2 in zip(v.headers(flatten=True), e.headers(flatten=True))
                 )
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_dicom_reader_single_file(self):
         """Test reading single dicom file."""
         dp = ututils.SCAN_DIRPATHS[0]
@@ -188,6 +192,7 @@ class TestDicomIO(unittest.TestCase):
         spacing = [np.linalg.norm(vol.affine[:3, i]) for i in range(3)]
         assert np.allclose(spacing, spacing_expected), f"{spacing} == {spacing_expected}"
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_dicom_writer(self):
         for dp_ind, dp in enumerate(ututils.SCAN_DIRPATHS):
             curr_scan = ututils.SCANS[dp_ind]
@@ -227,6 +232,7 @@ class TestDicomIO(unittest.TestCase):
                         h1, h2
                     ), "headers for echoes %d must be equivalent" % (ind + 1)
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_dicom_writer_nd(self):
         """Test writing dicoms for >3D MedicalVolume data."""
         dicom_path = ututils.get_dicoms_path(ututils.get_scan_dirpath("qdess"))
@@ -251,6 +257,7 @@ class TestDicomIO(unittest.TestCase):
                     h1, h2
                 ), "headers for echoes %d must be equivalent" % (ind + 1)
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_dicom_writer_orientation(self):
         # Read in dicom information, reorient image, write out to different folder,
         # compare with multi-echo dicoms
@@ -323,6 +330,7 @@ class TestDicomIO(unittest.TestCase):
                         "headers for echoes %d must be equivalent" % echo_num
                     )
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_read_multiple_workers(self):
         """Test reading/writing from multiple workers."""
         for dp_ind, dp in enumerate(ututils.SCAN_DIRPATHS):
@@ -337,6 +345,7 @@ class TestDicomIO(unittest.TestCase):
             for vol, exp in zip(volumes, volumes_exp):
                 assert vol.is_identical(exp)
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_write_multiple_workers(self):
         """Test reading/writing from multiple workers."""
         for dp_ind, dp in enumerate(ututils.SCAN_DIRPATHS):
@@ -371,6 +380,7 @@ class TestDicomIO(unittest.TestCase):
         assert mv.pixel_spacing == (0.5, 0.2, 1.0)
         assert mv.scanner_origin == (0.0, 0.0, 0.0)
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_load_sort_by(self):
         """Test sorting by dicom attributes."""
         dp = ututils.SCAN_DIRPATHS[0]
@@ -381,6 +391,7 @@ class TestDicomIO(unittest.TestCase):
             instance_numbers = [h.InstanceNumber for h in v.headers(flatten=True)]
             assert instance_numbers == sorted(instance_numbers)
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_write_sort_by(self):
         """Test sorting by dicom attributes before writing."""
         dp = ututils.get_scan_dirpath("qdess")
@@ -401,6 +412,7 @@ class TestDicomIO(unittest.TestCase):
         assert e1.is_identical(vols[0])
         assert e2.is_identical(vols[1])
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_load_no_group_by(self):
         """Test reading dicoms without group_by."""
         dp = ututils.get_scan_dirpath("qdess")
@@ -414,6 +426,7 @@ class TestDicomIO(unittest.TestCase):
 
         assert e1.is_identical(e1_expected)
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_init_params(self):
         """Test reading/writing works with passing values to constructor."""
         dp = ututils.get_scan_dirpath("qdess")

@@ -2,6 +2,7 @@ import datetime
 import os
 import re
 import shutil
+import subprocess
 import tempfile
 import unittest
 import uuid
@@ -14,7 +15,9 @@ from dosma.cli import SUPPORTED_SCAN_TYPES, parse_args
 from dosma.core.io.format_io import ImageDataFormat
 from dosma.utils import env, io_utils
 
-UNITTEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "../unittest-data/")
+UNITTEST_DATA_PATH = os.environ.get(
+    "DOSMA_UNITTEST_DATA_PATH", os.path.join(os.path.dirname(__file__), "../unittest-data/")
+)
 UNITTEST_SCANDATA_PATH = os.path.join(UNITTEST_DATA_PATH, "scans")
 TEMP_PATH = os.path.join(
     UNITTEST_SCANDATA_PATH, "temp"
@@ -32,6 +35,9 @@ SCAN_DIRPATHS = [os.path.join(UNITTEST_SCANDATA_PATH, x) for x in SCANS]
 
 # Decimal precision for analysis (quantitative values, etc)
 DECIMAL_PRECISION = 1  # (+/- 0.1ms)
+
+# If elastix is available
+_IS_ELASTIX_AVAILABLE = None
 
 
 def build_dummy_headers(shape, fields=None):
@@ -52,6 +58,11 @@ def build_dummy_headers(shape, fields=None):
     num_headers = np.prod(shape)
     headers = np.asarray([_build_dummy_pydicom_header(fields) for _ in range(num_headers)])
     return headers.reshape(shape)
+
+
+def is_data_available():
+    disable_data = os.environ.get("DOSMA_UNITTEST_DISABLE_DATA", "").lower() == "true"
+    return not disable_data and os.path.isdir(UNITTEST_DATA_PATH)
 
 
 def get_scan_dirpath(scan: str):
@@ -84,6 +95,19 @@ def get_data_path(fp):
 
 def get_expected_data_path(fp):
     return os.path.join(fp, "expected")
+
+
+def is_elastix_available():
+    global _IS_ELASTIX_AVAILABLE
+
+    if _IS_ELASTIX_AVAILABLE is None:
+        disable_elastix = os.environ.get("DOSMA_UNITTEST_DISABLE_ELASTIX", None)
+        if disable_elastix is None:
+            _IS_ELASTIX_AVAILABLE = subprocess.run(["elastix", "--help"]).returncode == 0
+        else:
+            _IS_ELASTIX_AVAILABLE = disable_elastix.lower() != "true"
+
+    return _IS_ELASTIX_AVAILABLE
 
 
 def num_workers() -> int:

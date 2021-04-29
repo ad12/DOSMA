@@ -1,4 +1,5 @@
 import os
+import unittest
 
 from dosma.core.io import NiftiReader
 from dosma.scan_sequences import Mapss
@@ -17,6 +18,7 @@ MANUAL_SEGMENTATION_MASK_PATH = os.path.join(
 )
 
 
+@unittest.skipIf(not util.is_data_available(), "unittest data is not available")
 class MapssTest(util.ScanTest):
     SCAN_TYPE = Mapss
 

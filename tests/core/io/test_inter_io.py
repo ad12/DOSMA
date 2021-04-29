@@ -20,6 +20,7 @@ class TestInterIO(unittest.TestCase):
         assert vol1.is_same_dimensions(vol2)
         assert (vol1.volume == vol2.volume).all()
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_dcm_nifti_load(self):
         """Verify that volumes loaded from nifti or dicom are identical"""
         for dp_ind, dp in enumerate(ututils.SCAN_DIRPATHS):
@@ -40,6 +41,7 @@ class TestInterIO(unittest.TestCase):
                 # assert nifti_vol.is_same_dimensions(dicom_vol)
                 assert (nifti_vol.volume == dicom_vol.volume).all()
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_dcm_to_nifti(self):
         for dp_ind, dp in enumerate(ututils.SCAN_DIRPATHS):
             curr_scan = ututils.SCANS[dp_ind]

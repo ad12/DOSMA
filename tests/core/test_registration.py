@@ -19,6 +19,10 @@ QDESS_ECHO1_PATH = util.get_read_paths(util.get_scan_dirpath(QDess.NAME), ImageD
 TARGET_MASK_PATH = os.path.join(util.get_scan_dirpath(CubeQuant.NAME), "misc/fc.nii.gz")
 
 
+@unittest.skipIf(
+    not util.is_data_available() or not util.is_elastix_available(),
+    "unittest data or elastix is not available",
+)
 class TestRegister(unittest.TestCase):
     def test_multiprocessing(self):
         dr = DicomReader(num_workers=util.num_workers())
@@ -58,6 +62,10 @@ class TestRegister(unittest.TestCase):
         shutil.rmtree(data_dir)
 
 
+@unittest.skipIf(
+    not util.is_data_available() or not util.is_elastix_available(),
+    "unittest data or elastix is not available",
+)
 class TestApplyWarp(unittest.TestCase):
     def test_multiprocessing(self):
         """Verify that multiprocessing compatible with apply_warp."""
