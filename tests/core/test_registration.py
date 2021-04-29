@@ -15,8 +15,12 @@ from dosma.utils import env
 
 from .. import util
 
-QDESS_ECHO1_PATH = util.get_read_paths(util.get_scan_dirpath(QDess.NAME), ImageDataFormat.nifti)[0]
-TARGET_MASK_PATH = os.path.join(util.get_scan_dirpath(CubeQuant.NAME), "misc/fc.nii.gz")
+if util.is_data_available():
+    QDESS_ECHO1_PATH = util.get_read_paths(util.get_scan_dirpath(QDess.NAME), ImageDataFormat.nifti)[0]
+    TARGET_MASK_PATH = os.path.join(util.get_scan_dirpath(CubeQuant.NAME), "misc/fc.nii.gz")
+else:
+    QDESS_ECHO1_PATH = None
+    TARGET_MASK_PATH = None
 
 
 @unittest.skipIf(

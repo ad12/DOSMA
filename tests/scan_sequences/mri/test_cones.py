@@ -8,8 +8,12 @@ from dosma.tissues.femoral_cartilage import FemoralCartilage
 from ... import util
 
 # target mask path used to register Cubequant volume to qDESS volume
-QDESS_ECHO1_PATH = util.get_read_paths(util.get_scan_dirpath(QDess.NAME), ImageDataFormat.nifti)[0]
-TARGET_MASK_PATH = os.path.join(util.get_scan_dirpath(Cones.NAME), "misc/fc.nii.gz")
+if util.is_data_available():
+    QDESS_ECHO1_PATH = util.get_read_paths(util.get_scan_dirpath(QDess.NAME), ImageDataFormat.nifti)[0]
+    TARGET_MASK_PATH = os.path.join(util.get_scan_dirpath(Cones.NAME), "misc/fc.nii.gz")
+else:
+    QDESS_ECHO1_PATH = None
+    TARGET_MASK_PATH = None
 
 
 @unittest.skipIf(not util.is_data_available(), "unittest data is not available")
