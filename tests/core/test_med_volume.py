@@ -7,7 +7,6 @@ import numpy as np
 import SimpleITK as sitk
 
 from dosma.core.device import Device
-from dosma.core.io.format_io import ImageDataFormat
 from dosma.core.io.nifti_io import NiftiReader, NiftiWriter
 from dosma.core.med_volume import MedicalVolume
 
