@@ -112,7 +112,7 @@ class _StateMixin(ABC):
         Returns:
             Collection[str]: Serializable variables.
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def state_dict(self) -> Dict[str, Any]:
         """Returns the state dictionary for an object.
@@ -163,7 +163,7 @@ class DataReader(_StateMixin):
         Returns:
             MedicalVolume: The loaded volume.
         """
-        pass
+        pass  # pragma: no cover
 
     def __call__(self, *args, **kwargs):
         """Alias for :meth:`self.load`."""
@@ -189,7 +189,7 @@ class DataWriter(_StateMixin):
             volume (MedicalVolume): Volume to save.
             file_path (str): File path to save volume to.
         """
-        pass
+        pass  # pragma: no cover
 
     def __call__(self, *args, **kwargs):
         """Alias for :meth:`self.save`."""

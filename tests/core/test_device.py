@@ -58,6 +58,9 @@ class TestDevice(unittest.TestCase):
         import torch
 
         pt_device = torch.device("cpu")
+
+        assert Device(pt_device) == cpu_device
+
         dm_device = Device(-1)
         assert dm_device == pt_device
         assert dm_device.ptdevice == pt_device

@@ -22,6 +22,7 @@ else:
 class ConesTest(util.ScanTest):
     SCAN_TYPE = Cones
 
+    @unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
     def test_interregister(self):
         """Test Cones interregistration."""
         # Register to first echo of QDess without a mask.
@@ -32,6 +33,7 @@ class ConesTest(util.ScanTest):
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath)
         scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
 
+    @unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
     def test_t2_star_map(self):
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
@@ -50,6 +52,7 @@ class ConesTest(util.ScanTest):
         # map1 and map2 should be identical
         assert map1.volumetric_map.is_identical(map2.volumetric_map)
 
+    @unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
     def test_cmd_line(self):
         # Generate segmentation mask for femoral cartilage via command line.
         cmdline_str = "--d {} --s {} cones --fc interregister --tp {} --tm {}".format(

@@ -22,6 +22,7 @@ else:
 class CubeQuantTest(util.ScanTest):
     SCAN_TYPE = CubeQuant
 
+    @unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
     def test_interregister_no_mask(self):
         """Register Cubequant scan to qDESS scan without a target mask"""
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
@@ -29,11 +30,13 @@ class CubeQuantTest(util.ScanTest):
         # Register to first echo of QDess without a mask
         scan.interregister(target_path=QDESS_ECHO1_PATH)
 
+    @unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
     def test_interregister_mask(self):
         """Register Cubequant scan to qDESS scan with a target mask (mask for femoral cartilage)"""
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
 
+    @unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
     def test_t1_rho_map(self):
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
@@ -52,11 +55,13 @@ class CubeQuantTest(util.ScanTest):
         # map1 and map2 should be identical
         assert map1.volumetric_map.is_identical(map2.volumetric_map)
 
+    @unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
     def test_intraregister(self):
         """Verify cubequant intraregistering using new registration."""
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         scan.intraregister()
 
+    @unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
     def test_cmd_line(self):
         # Intraregister
         cmdline_str = "--d %s --s %s cubequant intraregister" % (

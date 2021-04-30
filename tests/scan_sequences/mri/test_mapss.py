@@ -42,6 +42,7 @@ class MapssTest(util.ScanTest):
                 map2.volumetric_map
             ), "%s: map1 and map2 should be identical" % str(action)
 
+    @unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
     def test_cmd_line(self):
         # Intraregister
         cmdline_str = "--d %s --s %s mapss intraregister" % (self.dicom_dirpath, self.data_dirpath)

@@ -248,6 +248,10 @@ class TestMedicalVolume(unittest.TestCase):
         assert np.all(out._volume == 0.5)
 
         out = mv1.clone()
+        out //= mv2
+        assert np.all(out._volume == 0)
+
+        out = mv1.clone()
         out **= mv2
         assert np.all(out._volume == 1)
 
@@ -674,7 +678,7 @@ class TestMedicalVolume(unittest.TestCase):
         vol = np.ones((10, 20, 30))
         mv = MedicalVolume(vol, self._AFFINE)
 
-        assert mv.__repr__ is not None
+        assert mv.__repr__() is not None
 
     def test_set_volume(self):
         vol = np.ones((10, 20, 30))
