@@ -15,10 +15,10 @@ SEGMENTATION_WEIGHTS_FOLDER = os.path.join(
 SEGMENTATION_MODEL = "iwoai-2019-t6-normalized"
 
 
-@unittest.skipIf(not util.is_data_available(), "unittest data is not available")
 class QDessTest(util.ScanTest):
     SCAN_TYPE = QDess
 
+    @unittest.skipIf(not util.is_data_available(), "unittest data is not available")
     def test_segmentation_multiclass(self):
         """Test support for multiclass segmentation."""
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
@@ -57,6 +57,7 @@ class QDessTest(util.ScanTest):
     #
     #     npt.assert_almost_equal(mat_t2_map, py_t2_map, decimal=util.DECIMAL_PRECISION)
 
+    @unittest.skipIf(not util.is_data_available(), "unittest data is not available")
     def test_cmd_line(self):
         # Generate segmentation mask for femoral cartilage via command line.
         cmdline_str = (

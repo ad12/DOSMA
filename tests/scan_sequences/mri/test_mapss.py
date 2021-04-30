@@ -18,10 +18,10 @@ MANUAL_SEGMENTATION_MASK_PATH = os.path.join(
 )
 
 
-@unittest.skipIf(not util.is_data_available(), "unittest data is not available")
 class MapssTest(util.ScanTest):
     SCAN_TYPE = Mapss
 
+    @unittest.skipIf(not util.is_data_available(), "unittest data is not available")
     def test_quant_val_fitting(self):
         """Test quantitative fitting (T1-rho, T2)"""
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
