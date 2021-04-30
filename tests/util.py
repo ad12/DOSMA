@@ -188,7 +188,9 @@ class ScanTest(unittest.TestCase):
             cls.dicom_dirpath = get_dicoms_path(
                 os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME)
             )
-            cls.data_dirpath = get_data_path(os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME))
+            cls.data_dirpath = get_data_path(
+                os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME)
+            )
             io_utils.mkdirs(cls.data_dirpath)
 
     @classmethod
