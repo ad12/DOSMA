@@ -251,24 +251,3 @@ def to_device(input, device=cpu_device):
     else:
         with odevice:
             return cp.asarray(input)
-
-
-def copyto(output, input):
-    """Copy from input to output. Input/output can be in different device.
-
-    Adapted from :mod:`sigpy`.
-
-    Args:
-        input (array): Input.
-        output (array): Output.
-    """
-    idevice = get_device(input)
-    odevice = get_device(output)
-    if idevice == cpu_device and odevice != cpu_device:
-        with odevice:
-            output.set(input)
-    elif idevice != cpu_device and odevice == cpu_device:
-        with idevice:
-            np.copyto(output, input.get())
-    else:
-        idevice.xp.copyto(output, input)
