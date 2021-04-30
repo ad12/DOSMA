@@ -256,6 +256,15 @@ class TestCurveFitter(unittest.TestCase):
         assert np.allclose(a_hat.volume[mask_arr != 0], 1.0)
         assert np.allclose(b_hat.volume[mask_arr != 0], b[mask_arr != 0])
 
+        with self.assertRaises(TypeError):
+            fitter = CurveFitter(monoexponential)
+            popt = fitter.fit(x, y, mask="foo")[0]
+
+        with self.assertRaises(RuntimeError):
+            mask_incorrect_shape = np.random.rand(5, 5, 5) > 0.5
+            fitter = CurveFitter(monoexponential)
+            popt = fitter.fit(x, y, mask=mask_incorrect_shape)[0]
+
     def test_bounds(self):
         shape = (10, 10, 20)
         a = np.ones(shape)
@@ -289,6 +298,14 @@ class TestCurveFitter(unittest.TestCase):
         assert np.allclose(a_hat[:5].volume, 1.0) and np.all(np.isnan(a_hat[5:].volume))
         assert np.allclose(b_hat.volume, b)
 
+        # Bounds should only be lower and upper.
+        with self.assertRaises(ValueError):
+            fitter = CurveFitter(monoexponential, out_bounds=[(0, 0.5, 1.0)])
+
+        # Check lower bound < upper bound
+        with self.assertRaises(ValueError):
+            fitter = CurveFitter(monoexponential, out_bounds=[(1.2, 0)])
+
     def test_out_ufuncs(self):
         shape = (10, 10, 20)
         a = -1
@@ -314,6 +331,12 @@ class TestCurveFitter(unittest.TestCase):
         a_hat, b_hat = popt[..., 0], popt[..., 1]
         assert np.allclose(a_hat.volume, ufunc(a))
         assert np.allclose(b_hat.volume, b)
+
+        with self.assertRaises(TypeError):
+            fitter = CurveFitter(monoexponential, out_ufuncs=[None, 5])
+
+        with self.assertWarns(UserWarning):
+            fitter = CurveFitter(monoexponential, out_ufuncs=[None, ufunc, ufunc])
 
     def test_nan_to_num(self):
         shape = (10, 10, 20)
@@ -419,6 +442,19 @@ class TestCurveFitter(unittest.TestCase):
         assert np.allclose(a_hat.volume, 1.0)
         assert np.allclose(b_hat.volume, b)
 
+        fitter = CurveFitter(monoexponential)
+        p0 = np.stack(
+            [
+                MedicalVolume(np.ones(b.shape), affine=y[0].affine),
+                MedicalVolume(b, affine=y[0].affine),
+            ],
+            axis=-1,
+        )
+        popt, _ = fitter.fit(x, y, p0=p0)
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+        assert np.allclose(a_hat.volume, 1.0)
+        assert np.allclose(b_hat.volume, b)
+
     def test_str(self):
         fitter = CurveFitter(
             monoexponential,
@@ -503,6 +539,14 @@ class TestPolyFitter(unittest.TestCase):
         a_hat, b_hat = popt[..., 0], popt[..., 1]
         assert np.allclose(a_hat[:5].volume, 1.0) and np.allclose(a_hat[5:].volume, 0.0)
         assert np.allclose(b_hat[5:].volume, b[5:]) and np.allclose(b_hat[:5].volume, 0.0)
+
+    def test_out_ufuncs(self):
+        x, y, a, b = _generate_affine((10, 10, 20, 4), as_med_vol=True)
+        fitter = PolyFitter(deg=1, out_ufuncs=[lambda x: x + 1, lambda x: x + 2])
+        popt, _ = fitter.fit(x, y)
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+        assert np.allclose(a_hat.A, a + 1)
+        assert np.allclose(b_hat.A, b + 2)
 
     def test_str(self):
         fitter = PolyFitter(deg=2, rcond=0.5, y_bounds=(0, 200), r2_threshold=0.9, chunksize=1000)

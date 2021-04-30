@@ -9,6 +9,7 @@ from typing import Sequence, Tuple, Union
 
 import nibabel as nib
 import numpy as np
+import pydicom
 from nibabel.spatialimages import SpatialFirstSlicer as _SpatialFirstSlicerNib
 from numpy.lib.mixins import NDArrayOperatorsMixin
 
@@ -365,7 +366,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
         mv.reformat(self.orientation, inplace=True)
 
-    def match_orientation_batch(self, mvs):
+    def match_orientation_batch(self, mvs):  # pragma: no cover
         """Reorient a collection of MedicalVolumes to orientation specified by self.orientation.
 
         Args:
@@ -569,7 +570,16 @@ class MedicalVolume(NDArrayOperatorsMixin):
             RuntimeError: If ``self._headers`` is ``None``.
         """
         if self._headers is None:
-            raise RuntimeError("No headers found. MedicalVolume must be initialized with `headers`")
+            if not force:
+                raise ValueError(
+                    "No headers found. To generate headers and write keys, `force` must be True."
+                )
+            self._headers = self._validate_and_format_headers([pydicom.Dataset()])
+            warnings.warn(
+                "Headers were generated and may not contain all attributes "
+                "required to save the volume in DICOM format."
+            )
+
         for h in self.headers(flatten=True):
             if force:
                 setattr(h, key, value)
@@ -717,6 +727,11 @@ class MedicalVolume(NDArrayOperatorsMixin):
     def shape(self) -> Tuple[int, ...]:
         """The shape of the underlying ndarray."""
         return self._volume.shape
+
+    @property
+    def ndim(self) -> int:
+        """int: The number of dimensions of the underlying ndarray."""
+        return self._volume.ndim
 
     @property
     def device(self) -> Device:
