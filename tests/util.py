@@ -184,11 +184,12 @@ class ScanTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.dicom_dirpath = get_dicoms_path(
-            os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME)
-        )
-        cls.data_dirpath = get_data_path(os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME))
-        io_utils.mkdirs(cls.data_dirpath)
+        if is_data_available():
+            cls.dicom_dirpath = get_dicoms_path(
+                os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME)
+            )
+            cls.data_dirpath = get_data_path(os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME))
+            io_utils.mkdirs(cls.data_dirpath)
 
     @classmethod
     def tearDownClass(cls):
