@@ -1,9 +1,13 @@
 import os
 import unittest
 
-from dosma.core.io import ImageDataFormat, NiftiReader
-from dosma.scan_sequences import Cones, QDess
+import numpy as np
+
+from dosma.core.io import ImageDataFormat
+from dosma.core.med_volume import MedicalVolume
+from dosma.scan_sequences.mri import Cones, QDess
 from dosma.tissues.femoral_cartilage import FemoralCartilage
+from dosma.utils import io_utils
 
 from ... import util
 
@@ -21,6 +25,33 @@ else:
 class ConesTest(util.ScanTest):
     SCAN_TYPE = Cones
 
+    def _generate_mock_data(self, shape=None, ts=None):
+        """Generates multi-echo mock data for Cones sequence.
+
+        For some echo time :math:`t`, the data can be modeled as:
+
+            :math:`y=a * \\exp(-t/t2star)`
+
+        Args:
+            ts: Echo times.
+            t2star (ndarray): The t2star times for each voxel
+            a (ndarray or int): The multiplicative constant.
+        """
+        if shape is None:
+            shape = (10, 10, 10)
+        if ts is None:
+            ts = [0.5, 2.0, 3.0, 8.0]
+
+        a = 1.0
+        t2star = np.random.rand(*shape) * 80 + 0.1
+        _, ys, _, _ = util.generate_monoexp_data(shape=shape, x=ts, a=a, b=-1 / t2star)
+
+        for idx, (y, t) in enumerate(zip(ys, ts)):
+            y.set_metadata("EchoTime", t, force=True)
+            y.set_metadata("EchoNumber", idx + 1, force=True)
+
+        return ys, ts, a, t2star
+
     @unittest.skipIf(
         not util.is_data_available() or not util.is_elastix_available(),
         "unittest data or elastix is not available",
@@ -35,22 +66,39 @@ class ConesTest(util.ScanTest):
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath)
         scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
 
-    @unittest.skipIf(
-        not util.is_data_available() or not util.is_elastix_available(),
-        "unittest data or elastix is not available",
-    )
-    def test_t2_star_map(self):
-        scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
-        scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
+    def test_save_load(self):
+        ys, _, _, _ = self._generate_mock_data()
+        scan = Cones(ys)
 
-        # run analysis with femoral cartilage, without mask in tissue, but mask as additional input.
+        save_dir = os.path.join(self.data_dirpath, "test-save")
+        save_path = scan.save(save_dir, save_custom=True, image_data_format=ImageDataFormat.nifti)
+        assert set(os.listdir(save_dir)) == {"volumes", f"{scan.NAME}.data"}
+
+        scan2 = Cones.load(save_dir)
+        for v1, v2 in zip(scan.volumes, scan2.volumes):
+            assert v1.is_identical(v2)
+
+        scan2 = Cones.load(save_path)
+        for v1, v2 in zip(scan.volumes, scan2.volumes):
+            assert v1.is_identical(v2)
+
+        scan2 = Cones.from_dict(io_utils.load_pik(save_path))
+        for v1, v2 in zip(scan.volumes, scan2.volumes):
+            assert v1.is_identical(v2)
+
+    def test_t2_star_map(self):
+        ys, _, _, _ = self._generate_mock_data()
+        scan = Cones(ys)
+
+        # No mask
         tissue = FemoralCartilage()
-        map1 = scan.generate_t2_star_map(tissue, TARGET_MASK_PATH, num_workers=util.num_workers())
+        map1 = scan.generate_t2_star_map(tissue, num_workers=util.num_workers())
         assert map1 is not None, "map should not be None"
 
-        # add mask to femoral cartilage and run
-        nr = NiftiReader()
-        tissue.set_mask(nr.load(TARGET_MASK_PATH))
+        mask = MedicalVolume(np.ones(ys[0].shape), np.eye(4))
+
+        # Use a mask
+        tissue.set_mask(mask)
         map2 = scan.generate_t2_star_map(tissue, num_workers=util.num_workers())
         assert map2 is not None, "map should not be None"
 

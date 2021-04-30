@@ -73,7 +73,7 @@ class Cones(NonTargetSequence):
         num_workers = 0
         verbose = True
 
-        if verbose:
+        if verbose:  # pragma: no cover
             logging.info("")
             logging.info("==" * 40)
             logging.info("Interregistering...")

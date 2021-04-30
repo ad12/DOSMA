@@ -1,3 +1,5 @@
+"""Utilities for unit tests."""
+
 import datetime
 import os
 import re
@@ -12,7 +14,9 @@ import numpy as np
 from pydicom.dataset import FileDataset, FileMetaDataset
 
 from dosma.cli import SUPPORTED_SCAN_TYPES, parse_args
+from dosma.core.fitting import monoexponential
 from dosma.core.io.format_io import ImageDataFormat
+from dosma.core.med_volume import MedicalVolume
 from dosma.utils import env, io_utils
 
 UNITTEST_DATA_PATH = os.environ.get(
@@ -38,26 +42,6 @@ DECIMAL_PRECISION = 1  # (+/- 0.1ms)
 
 # If elastix is available
 _IS_ELASTIX_AVAILABLE = None
-
-
-def build_dummy_headers(shape, fields=None):
-    """Build dummy ``pydicom.FileDataset`` headers.
-
-    Note these headers are not dicom compliant and should not be used to write out DICOM
-    files.
-
-    Args:
-        shape (int or tuple[int]): Shape of headers array.
-        fields (Dict): Fields and corresponding values to use to populate the header.
-
-    Returns:
-        ndarray: Headers
-    """
-    if isinstance(shape, int):
-        shape = (shape,)
-    num_headers = np.prod(shape)
-    headers = np.asarray([_build_dummy_pydicom_header(fields) for _ in range(num_headers)])
-    return headers.reshape(shape)
 
 
 def is_data_available():
@@ -130,6 +114,42 @@ def requires_packages(*packages):
     return _decorator
 
 
+def generate_monoexp_data(shape=None, x=None, a=1.0, b=None):
+    """Generate sample monoexponetial data.
+    ``a=1.0``, ``b`` is randomly generated in interval [0.1, 1.1).
+
+    The equation is :math:`y =  a * \\exp (b*x)`.
+    """
+    if b is None:
+        b = np.random.rand(*shape) + 0.1
+    else:
+        shape = b.shape
+    if x is None:
+        x = np.asarray([0.5, 1.0, 2.0, 4.0])
+    y = [MedicalVolume(monoexponential(t, a, b), affine=np.eye(4)) for t in x]
+    return x, y, a, b
+
+
+def build_dummy_headers(shape, fields=None):
+    """Build dummy ``pydicom.FileDataset`` headers.
+
+    Note these headers are not dicom compliant and should not be used to write out DICOM
+    files.
+
+    Args:
+        shape (int or tuple[int]): Shape of headers array.
+        fields (Dict): Fields and corresponding values to use to populate the header.
+
+    Returns:
+        ndarray: Headers
+    """
+    if isinstance(shape, int):
+        shape = (shape,)
+    num_headers = np.prod(shape)
+    headers = np.asarray([_build_dummy_pydicom_header(fields) for _ in range(num_headers)])
+    return headers.reshape(shape)
+
+
 def _build_dummy_pydicom_header(fields=None):
     """Builds dummy pydicom-based header.
 
@@ -188,10 +208,8 @@ class ScanTest(unittest.TestCase):
             cls.dicom_dirpath = get_dicoms_path(
                 os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME)
             )
-            cls.data_dirpath = get_data_path(
-                os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME)
-            )
-            io_utils.mkdirs(cls.data_dirpath)
+        cls.data_dirpath = get_data_path(os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME))
+        io_utils.mkdirs(cls.data_dirpath)
 
     @classmethod
     def tearDownClass(cls):
