@@ -1,6 +1,10 @@
 # DOSMA: Deep Open-Source Medical Image Analysis
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/ad12/DOSMA/CI)
+[![codecov](https://codecov.io/gh/ad12/DOSMA/branch/master/graph/badge.svg?token=X2FRQJHV2M)](https://codecov.io/gh/ad12/DOSMA)
 [![Documentation Status](https://readthedocs.org/projects/dosma/badge/?version=latest)](https://dosma.readthedocs.io/en/latest/?badge=latest)
+
+[Documentation](http://dosma.readthedocs.io/) | [Questionnaire](https://forms.gle/sprthTC2swyt8dDb6) | [DOSMA Basics Tutorial](https://colab.research.google.com/drive/1zY5-3ZyTBrn7hoGE5lH0IoQqBzumzP1i?usp=sharing)
 
 DOSMA is an AI-powered Python library for medical image analysis. This includes, but is not limited to:
 - image processing (denoising, super-resolution, registration, segmentation, etc.)
@@ -8,8 +12,6 @@ DOSMA is an AI-powered Python library for medical image analysis. This includes,
 - anatomical visualization and analysis (patellar tilt, femoral cartilage thickness, etc.)
 
 We hope that this open-source pipeline will be useful for quick anatomy/pathology analysis and will serve as a hub for adding support for analyzing different anatomies and scan sequences.
-
-[Documentation](http://dosma.readthedocs.io/) | [Questionnaire](https://forms.gle/sprthTC2swyt8dDb6) | [DOSMA Basics Tutorial](https://colab.research.google.com/drive/1zY5-3ZyTBrn7hoGE5lH0IoQqBzumzP1i?usp=sharing)
 
 ## Installation
 DOSMA requires Python 3.6+. The core module depends on numpy, nibabel, nipype,

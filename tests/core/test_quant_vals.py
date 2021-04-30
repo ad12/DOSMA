@@ -1,13 +1,14 @@
-from dosma.core.io.format_io import ImageDataFormat
+import os
 import unittest
 
 import numpy as np
 
+from dosma.core.io.format_io import ImageDataFormat
 from dosma.core.med_volume import MedicalVolume
 from dosma.core.quant_vals import T2
 
 from .. import util as ututils
-import os
+
 
 class TestT2(unittest.TestCase):
     _AFFINE = np.asarray(
@@ -36,7 +37,7 @@ class TestT2(unittest.TestCase):
 
         qv = T2(mv)
         qv.add_additional_volume("r2", mv + 1)
-        
+
         qv.save_data(out_dir, ImageDataFormat.nifti)
         assert os.path.isfile(os.path.join(out_dir, "t2", "t2.nii.gz"))
         assert os.path.isfile(os.path.join(out_dir, "t2", "t2-r2.nii.gz"))
