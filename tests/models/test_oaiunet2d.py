@@ -14,6 +14,7 @@ import keras.backend as K
 from .. import util
 
 
+@unittest.skipIf(not util.is_data_available(), "unittest data is not available")
 class TestIWOAIOAIUnet2D(unittest.TestCase):
     def test_segmentation(self):
         """Check that segmentation works as expected from ported version."""
@@ -40,6 +41,7 @@ class TestIWOAIOAIUnet2D(unittest.TestCase):
             assert np.all(masks[tissue].volume == expected_seg[..., i])
 
 
+@unittest.skipIf(not util.is_data_available(), "unittest data is not available")
 class TestIWOAIOAIUnet2DNormalized(unittest.TestCase):
     def test_h5_nifti_same(self):
         with h5py.File(

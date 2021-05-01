@@ -62,6 +62,7 @@ class TestOrientation(unittest.TestCase):
                 str(mv.affine),
             )
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_flip(self):
         # tests flipping orientation across volume axis
         for fp in self.filepaths:
@@ -79,6 +80,7 @@ class TestOrientation(unittest.TestCase):
 
             self.check_orientations(e1, orientations)
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_transpose(self):
         # tests transposing axes - i.e. changing vantage point on current volume
         for fp in self.filepaths:
@@ -95,6 +97,7 @@ class TestOrientation(unittest.TestCase):
 
             self.check_orientations(e1, orientations)
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_transpose_and_flip(self):
         from itertools import permutations
 

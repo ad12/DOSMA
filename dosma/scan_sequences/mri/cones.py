@@ -73,7 +73,7 @@ class Cones(NonTargetSequence):
         num_workers = 0
         verbose = True
 
-        if verbose:
+        if verbose:  # pragma: no cover
             logging.info("")
             logging.info("==" * 40)
             logging.info("Interregistering...")
@@ -150,8 +150,6 @@ class Cones(NonTargetSequence):
         mask = tissue.get_mask()
         if (not mask or np.sum(mask.volume) == 0) and mask_path:
             mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
-            if tuple(np.unique(mask.volume)) != (0, 1):
-                raise ValueError("`mask_path` must reference binary segmentation volume")
 
         spin_lock_times = self.echo_times
         subvolumes_list = self.volumes
@@ -181,11 +179,11 @@ class Cones(NonTargetSequence):
         return super()._save(metadata, save_dir, fname_fmt=default_fmt, **kwargs)
 
     @classmethod
-    def from_dict(cls, data, force: bool = False):
+    def from_dict(cls, data, force: bool = False) -> "Cones":
         interregistered_dirpath = None
         if "subvolumes" in data:
             interregistered_dirpath = os.path.dirname(data.pop("subvolumes")[0])
-        scan = super().from_dict(data, force=force)
+        scan: Cones = super().from_dict(data, force=force)
         if interregistered_dirpath is not None:
             subvolumes = scan.__load_interregistered_files__(interregistered_dirpath)
             cls.volumes = [subvolumes[k] for k in sorted(subvolumes.keys())]

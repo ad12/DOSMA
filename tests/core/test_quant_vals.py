@@ -1,9 +1,13 @@
+import os
 import unittest
 
 import numpy as np
 
+from dosma.core.io.format_io import ImageDataFormat
 from dosma.core.med_volume import MedicalVolume
 from dosma.core.quant_vals import T2
+
+from .. import util as ututils
 
 
 class TestT2(unittest.TestCase):
@@ -16,6 +20,31 @@ class TestT2(unittest.TestCase):
         ]
     )  # ('SI', 'AP', 'LR')
 
+    def test_basic(self):
+        vol = np.zeros((10, 10, 10))
+        mv = MedicalVolume(vol, self._AFFINE)
+        with self.assertRaises(TypeError):
+            _ = T2(vol)
+
+        qv = T2(mv)
+        qv.add_additional_volume("r2", mv + 1)
+        assert np.all(qv.additional_volumes["r2"] == mv + 1)
+
+    def test_save_data(self):
+        out_dir = os.path.join(ututils.TEMP_PATH, "quant_val_save")
+        vol = np.zeros((10, 10, 10))
+        mv = MedicalVolume(vol, self._AFFINE)
+
+        qv = T2(mv)
+        qv.add_additional_volume("r2", mv + 1)
+
+        qv.save_data(out_dir, ImageDataFormat.nifti)
+        assert os.path.isfile(os.path.join(out_dir, "t2", "t2.nii.gz"))
+        assert os.path.isfile(os.path.join(out_dir, "t2", "t2-r2.nii.gz"))
+
+        with self.assertWarns(UserWarning):
+            qv.save_data(out_dir, ImageDataFormat.dicom)
+
     def test_to_metrics(self):
         vol = np.zeros((10, 10, 10))
         vol[:5, :5, :] = 1
@@ -26,6 +55,11 @@ class TestT2(unittest.TestCase):
 
         qv_vol = 10 * vol
         t2 = T2(MedicalVolume(qv_vol, self._AFFINE))
+
+        metrics = t2.to_metrics()
+        assert np.allclose(metrics["Mean"], [25]), metrics["Mean"].tolist()
+        assert np.allclose(metrics["Median"], [25]), metrics["Median"].tolist()
+        assert np.allclose(metrics["Std"], [11.180339887498949]), metrics["Std"].tolist()
 
         metrics = t2.to_metrics(mask)
         assert metrics["Region"].tolist() == [

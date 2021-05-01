@@ -7,9 +7,7 @@ import numpy as np
 import SimpleITK as sitk
 
 from dosma.core.device import Device
-from dosma.core.io.dicom_io import DicomReader
-from dosma.core.io.format_io import ImageDataFormat
-from dosma.core.io.nifti_io import NiftiReader
+from dosma.core.io.nifti_io import NiftiReader, NiftiWriter
 from dosma.core.med_volume import MedicalVolume
 
 from .. import util as ututils
@@ -125,13 +123,26 @@ class TestMedicalVolume(unittest.TestCase):
         for h in headers[..., 1].flatten():
             assert h[field].value == new_val
 
+        # Set metadata when volume has no headers.
+        mv_nh = MedicalVolume(volume, self._AFFINE, headers=None)
+        with self.assertRaises(ValueError):
+            mv_nh.set_metadata("EchoTime", 40.0)
+        with self.assertWarns(UserWarning):
+            mv_nh.set_metadata("EchoTime", 40.0, force=True)
+        assert mv_nh._headers.shape == (1,) * len(mv_nh.shape)
+        assert mv_nh.get_metadata("EchoTime") == 40.0
+        assert mv_nh[:1, :2, :3]._headers.shape == (1,) * len(mv_nh.shape)
+
     def test_clone(self):
         mv = MedicalVolume(np.random.rand(10, 20, 30), self._AFFINE)
         mv2 = mv.clone()
         assert mv.is_identical(mv2)  # expected identical volumes
 
-        dr = DicomReader(num_workers=ututils.num_workers())
-        mv = dr.load(ututils.get_dicoms_path(ututils.get_scan_dirpath("qdess")))[0]
+        mv = MedicalVolume(
+            np.random.rand(10, 20, 30),
+            self._AFFINE,
+            headers=ututils.build_dummy_headers((1, 1, 30)),
+        )
         mv2 = mv.clone(headers=False)
         assert mv.is_identical(mv2)  # expected identical volumes
         assert id(mv.headers(flatten=True)[0]) == id(
@@ -145,9 +156,10 @@ class TestMedicalVolume(unittest.TestCase):
         ), "headers cloned, expected different memory address"
 
     def test_to_sitk(self):
-        filepath = ututils.get_read_paths(ututils.get_scan_dirpath("qdess"), ImageDataFormat.nifti)[
-            0
-        ]
+        mv = MedicalVolume(np.random.rand(10, 20, 30), self._AFFINE)
+        filepath = os.path.join(ututils.TEMP_PATH, "med_vol_to_sitk.nii.gz")
+        NiftiWriter().save(mv, filepath)
+
         expected = sitk.ReadImage(filepath)
 
         nr = NiftiReader()
@@ -166,9 +178,10 @@ class TestMedicalVolume(unittest.TestCase):
         assert img.GetSize() == (10, 20, 1)
 
     def test_from_sitk(self):
-        filepath = ututils.get_read_paths(ututils.get_scan_dirpath("qdess"), ImageDataFormat.nifti)[
-            0
-        ]
+        mv = MedicalVolume(np.random.rand(10, 20, 30), self._AFFINE)
+        filepath = os.path.join(ututils.TEMP_PATH, "med_vol_from_sitk.nii.gz")
+        NiftiWriter().save(mv, filepath)
+
         nr = NiftiReader()
         expected = nr.load(filepath)
 
@@ -208,6 +221,11 @@ class TestMedicalVolume(unittest.TestCase):
         assert np.all(mv2._volume == 2)
         assert np.all(out._volume == 0.5)
 
+        out = mv1 // mv2
+        assert np.all(mv1._volume == 1)
+        assert np.all(mv2._volume == 2)
+        assert np.all(out._volume == 0)
+
         out = mv1 ** mv2
         assert np.all(mv1._volume == 1)
         assert np.all(mv2._volume == 2)
@@ -228,6 +246,10 @@ class TestMedicalVolume(unittest.TestCase):
         out = mv1.clone()
         out /= mv2
         assert np.all(out._volume == 0.5)
+
+        out = mv1.clone()
+        out //= mv2
+        assert np.all(out._volume == 0)
 
         out = mv1.clone()
         out **= mv2
@@ -422,6 +444,9 @@ class TestMedicalVolume(unittest.TestCase):
         mv_b = MedicalVolume(vol * 2, np.eye(4), headers=headers)
         mv_c = MedicalVolume(vol * 3, np.eye(4), headers=headers)
 
+        assert mv_a.shape == vol.shape
+        assert mv_a.ndim == vol.ndim
+
         mv2 = np.stack([mv_a, mv_b, mv_c], axis=-1)
         assert mv2.shape == (10, 20, 30, 2, 3)
         assert mv2.headers() is not None
@@ -517,10 +542,10 @@ class TestMedicalVolume(unittest.TestCase):
 
         mv = MedicalVolume(np.ones((10, 20, 30)), self._AFFINE)
         mv2 = mv[:5, ...].clone()
-        mv2 = 2
+        mv2 += 2
         mv[:5, ...] = mv2
-        assert np.all(mv._volume[:5, ...] == 2) & np.all(mv._volume[5:, ...] == 1)
-        assert np.all(mv[:5, ...].volume == 2)
+        assert np.all(mv._volume[:5, ...] == 3) & np.all(mv._volume[5:, ...] == 1)
+        assert np.all(mv[:5, ...].volume == 3)
 
     def test_slice_with_headers(self):
         vol = np.stack([np.ones((10, 20, 30)), 2 * np.ones((10, 20, 30))], axis=-1)
@@ -586,8 +611,13 @@ class TestMedicalVolume(unittest.TestCase):
         mv2 = NiftiReader().load(fp)
         assert mv2.is_identical(mv)
 
-    @ututils.requires_packages("cupy")
     def test_device(self):
+        mv = MedicalVolume(np.ones((10, 20, 30)), self._AFFINE)
+        assert mv.to(Device(-1)) == mv
+        assert mv.cpu() == mv
+
+    @ututils.requires_packages("cupy")
+    def test_device_gpu(self):
         import cupy as cp
 
         mv = MedicalVolume(np.ones((10, 20, 30)), self._AFFINE)
@@ -643,6 +673,19 @@ class TestMedicalVolume(unittest.TestCase):
         mv2 = mv.astype("int32")
         assert id(mv) == id(mv2)
         assert mv2.volume.dtype == np.int32
+
+    def test_repr(self):
+        vol = np.ones((10, 20, 30))
+        mv = MedicalVolume(vol, self._AFFINE)
+
+        assert mv.__repr__() is not None
+
+    def test_set_volume(self):
+        vol = np.ones((10, 20, 30))
+        mv = MedicalVolume(vol, self._AFFINE)
+
+        mv.volume += 2
+        assert np.all(mv.volume == 3)
 
 
 if __name__ == "__main__":

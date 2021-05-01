@@ -1,20 +1,29 @@
+"""Utilities for unit tests."""
+
 import datetime
 import os
 import re
 import shutil
+import subprocess
 import tempfile
 import unittest
 import uuid
+from typing import Callable
 
 import natsort
 import numpy as np
 from pydicom.dataset import FileDataset, FileMetaDataset
 
 from dosma.cli import SUPPORTED_SCAN_TYPES, parse_args
+from dosma.core.fitting import monoexponential
 from dosma.core.io.format_io import ImageDataFormat
+from dosma.core.med_volume import MedicalVolume
 from dosma.utils import env, io_utils
+from dosma.utils.cmd_line_utils import ActionWrapper
 
-UNITTEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "../unittest-data/")
+UNITTEST_DATA_PATH = os.environ.get(
+    "DOSMA_UNITTEST_DATA_PATH", os.path.join(os.path.dirname(__file__), "../unittest-data/")
+)
 UNITTEST_SCANDATA_PATH = os.path.join(UNITTEST_DATA_PATH, "scans")
 TEMP_PATH = os.path.join(
     UNITTEST_SCANDATA_PATH, "temp"
@@ -33,25 +42,13 @@ SCAN_DIRPATHS = [os.path.join(UNITTEST_SCANDATA_PATH, x) for x in SCANS]
 # Decimal precision for analysis (quantitative values, etc)
 DECIMAL_PRECISION = 1  # (+/- 0.1ms)
 
+# If elastix is available
+_IS_ELASTIX_AVAILABLE = None
 
-def build_dummy_headers(shape, fields=None):
-    """Build dummy ``pydicom.FileDataset`` headers.
 
-    Note these headers are not dicom compliant and should not be used to write out DICOM
-    files.
-
-    Args:
-        shape (int or tuple[int]): Shape of headers array.
-        fields (Dict): Fields and corresponding values to use to populate the header.
-
-    Returns:
-        ndarray: Headers
-    """
-    if isinstance(shape, int):
-        shape = (shape,)
-    num_headers = np.prod(shape)
-    headers = np.asarray([_build_dummy_pydicom_header(fields) for _ in range(num_headers)])
-    return headers.reshape(shape)
+def is_data_available():
+    disable_data = os.environ.get("DOSMA_UNITTEST_DISABLE_DATA", "").lower() == "true"
+    return not disable_data and os.path.isdir(UNITTEST_DATA_PATH)
 
 
 def get_scan_dirpath(scan: str):
@@ -86,6 +83,19 @@ def get_expected_data_path(fp):
     return os.path.join(fp, "expected")
 
 
+def is_elastix_available():
+    global _IS_ELASTIX_AVAILABLE
+
+    if _IS_ELASTIX_AVAILABLE is None:
+        disable_elastix = os.environ.get("DOSMA_UNITTEST_DISABLE_ELASTIX", None)
+        if disable_elastix is None:
+            _IS_ELASTIX_AVAILABLE = subprocess.run(["elastix", "--help"]).returncode == 0
+        else:
+            _IS_ELASTIX_AVAILABLE = disable_elastix.lower() != "true"
+
+    return _IS_ELASTIX_AVAILABLE
+
+
 def num_workers() -> int:
     return int(os.environ.get("DOSMA_NUM_WORKERS", min(8, os.cpu_count())))
 
@@ -104,6 +114,42 @@ def requires_packages(*packages):
         return _wrapper
 
     return _decorator
+
+
+def generate_monoexp_data(shape=None, x=None, a=1.0, b=None):
+    """Generate sample monoexponetial data.
+    ``a=1.0``, ``b`` is randomly generated in interval [0.1, 1.1).
+
+    The equation is :math:`y =  a * \\exp (b*x)`.
+    """
+    if b is None:
+        b = np.random.rand(*shape) + 0.1
+    else:
+        shape = b.shape
+    if x is None:
+        x = np.asarray([0.5, 1.0, 2.0, 4.0])
+    y = [MedicalVolume(monoexponential(t, a, b), affine=np.eye(4)) for t in x]
+    return x, y, a, b
+
+
+def build_dummy_headers(shape, fields=None):
+    """Build dummy ``pydicom.FileDataset`` headers.
+
+    Note these headers are not dicom compliant and should not be used to write out DICOM
+    files.
+
+    Args:
+        shape (int or tuple[int]): Shape of headers array.
+        fields (Dict): Fields and corresponding values to use to populate the header.
+
+    Returns:
+        ndarray: Headers
+    """
+    if isinstance(shape, int):
+        shape = (shape,)
+    num_headers = np.prod(shape)
+    headers = np.asarray([_build_dummy_pydicom_header(fields) for _ in range(num_headers)])
+    return headers.reshape(shape)
 
 
 def _build_dummy_pydicom_header(fields=None):
@@ -160,9 +206,10 @@ class ScanTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.dicom_dirpath = get_dicoms_path(
-            os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME)
-        )
+        if is_data_available():
+            cls.dicom_dirpath = get_dicoms_path(
+                os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME)
+            )
         cls.data_dirpath = get_data_path(os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME))
         io_utils.mkdirs(cls.data_dirpath)
 
@@ -182,6 +229,17 @@ class ScanTest(unittest.TestCase):
         assert hasattr(
             self.SCAN_TYPE, "cmd_line_actions"
         ), "All scans supported by command line must have `cmd_line_actions` method"
+
+        cmd_line_actions = self.SCAN_TYPE.cmd_line_actions()
+        for func, action in cmd_line_actions:
+            assert isinstance(func, Callable)
+            assert isinstance(action, ActionWrapper)
+
+            func_name = func.__name__
+            cls_name = self.SCAN_TYPE.__name__
+            assert action.name, f"Action for `{cls_name}.{func_name}()` must have a name"
+            assert action.help, f"Action for `{cls_name}.{func_name}()` must have help menu"
+
         assert hasattr(
             type(self), "test_cmd_line"
         ), "All scan supported in command line must have test methods `test_cmd_line`"

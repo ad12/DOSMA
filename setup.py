@@ -99,6 +99,7 @@ setup(
             "m2r2",
             "tensorflow",
             "keras",
+            "sigpy",
         ],
         "docs": ["sphinx", "sphinxcontrib.bibtex", "m2r2"],
     },

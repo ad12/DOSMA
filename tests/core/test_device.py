@@ -2,7 +2,8 @@ import unittest
 
 import numpy as np
 
-from dosma.core.device import Device, cpu_device
+from dosma.core.device import Device, cpu_device, get_device, to_device
+from dosma.core.med_volume import MedicalVolume
 
 from ..util import requires_packages
 
@@ -40,6 +41,7 @@ class TestDevice(unittest.TestCase):
         assert Device(sp.cpu_device) == sp.cpu_device
 
         device = Device(-1)
+        assert device == sp.cpu_device
         assert device.spdevice == sp.cpu_device
 
     @requires_packages("sigpy", "cupy")
@@ -50,6 +52,28 @@ class TestDevice(unittest.TestCase):
 
         device = Device(0)
         assert device.spdevice == sp.Device(0)
+
+    @requires_packages("torch")
+    def test_torch(self):
+        import torch
+
+        pt_device = torch.device("cpu")
+
+        assert Device(pt_device) == cpu_device
+
+        dm_device = Device(-1)
+        assert dm_device == pt_device
+        assert dm_device.ptdevice == pt_device
+
+    def test_to_device(self):
+        arr = np.ones((3, 3, 3))
+        mv = MedicalVolume(arr, affine=np.eye(4))
+
+        arr2 = to_device(arr, -1)
+        assert get_device(arr2) == cpu_device
+
+        mv2 = to_device(mv, -1)
+        assert get_device(mv2) == cpu_device
 
 
 if __name__ == "__main__":

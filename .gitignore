@@ -52,4 +52,6 @@ docs/source/generated
 # ignore all resources
 **/resources
 
+# coverage files
 .coverage
+coverage.xml

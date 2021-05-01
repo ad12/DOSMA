@@ -50,6 +50,9 @@ class QuantitativeValue(ABC):
             with quantitative value. These are typically volumes associated with the
             goodness of fit of the value. For example, a volume could be pixel-wise r-squared,
             or error bounds, etc.
+
+    Note:
+        This class is in alpha - signature and functionality changes are very likely.
     """
 
     ID = 0

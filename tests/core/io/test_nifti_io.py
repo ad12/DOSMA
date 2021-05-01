@@ -1,6 +1,10 @@
 import os
 import unittest
 
+import nibabel as nib
+import nibabel.testing as nib_testing
+import numpy as np
+
 from dosma.core.io.format_io import ImageDataFormat
 from dosma.core.io.nifti_io import NiftiReader, NiftiWriter
 
@@ -13,6 +17,7 @@ class TestNiftiIO(unittest.TestCase):
 
     data_format = ImageDataFormat.nifti
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_nifti_read(self):
         for dp in ututils.SCAN_DIRPATHS:
             dicoms_path = ututils.get_dicoms_path(dp)
@@ -30,6 +35,7 @@ class TestNiftiIO(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     _ = self.nr.load(os.path.join(dicoms_path, "I0002.dcm"))
 
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_nifti_write(self):
         for dp in ututils.SCAN_DIRPATHS:
             read_filepaths = ututils.get_read_paths(dp, self.data_format)
@@ -43,6 +49,25 @@ class TestNiftiIO(unittest.TestCase):
                 # cannot save with extensions other than nii or nii.gz
                 with self.assertRaises(ValueError):
                     self.nw.save(mv, os.path.join(ututils.TEMP_PATH, "eg.dcm"))
+
+    def test_nifti_nib(self):
+        """Test with nibabel sample data."""
+        filepath = os.path.join(nib_testing.data_path, "example4d.nii.gz")
+        mv_nib = nib.load(filepath)
+
+        nr = NiftiReader()
+        mv = nr(filepath)
+
+        assert mv.shape == mv_nib.shape
+        assert np.all(mv.A == mv_nib.get_fdata())
+        assert np.allclose(mv.affine, mv_nib.affine, atol=1e-4)
+
+        out_path = os.path.join(ututils.TEMP_PATH, "nifti_nib_example.nii.gz")
+        nw = NiftiWriter()
+        nw(mv, out_path)
+
+        mv_nib2 = nib.load(out_path)
+        assert np.all(mv_nib2.get_fdata() == mv_nib.get_fdata())
 
     def test_state(self):
         nr1 = NiftiReader()

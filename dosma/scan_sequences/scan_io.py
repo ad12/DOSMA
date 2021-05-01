@@ -3,6 +3,7 @@ import logging
 import os
 import warnings
 from abc import ABC
+from pathlib import Path
 from typing import Any, Dict, Sequence, Set, Union
 
 import pydicom
@@ -198,7 +199,10 @@ class ScanIOMixin(ABC):
         Raises:
             ValueError: If ``scan`` cannot be constructed.
         """
-        if isinstance(path_or_data, str):
+        if isinstance(path_or_data, (str, Path, os.PathLike)):
+            if os.path.isdir(path_or_data):
+                path_or_data = os.path.join(path_or_data, f"{cls.NAME}.data")
+
             if not os.path.isfile(path_or_data):
                 raise FileNotFoundError(f"File {path_or_data} does not exist")
             data = io_utils.load_pik(path_or_data)
