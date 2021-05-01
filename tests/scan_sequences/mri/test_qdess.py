@@ -1,6 +1,12 @@
 import os
 import unittest
+import warnings
 
+import numpy as np
+from pydicom.tag import Tag
+
+from dosma.core.med_volume import MedicalVolume
+from dosma.core.quant_vals import QuantitativeValue
 from dosma.models.util import get_model
 from dosma.scan_sequences.mri.qdess import QDess
 from dosma.tissues.femoral_cartilage import FemoralCartilage
@@ -18,6 +24,53 @@ SEGMENTATION_MODEL = "iwoai-2019-t6-normalized"
 class QDessTest(util.ScanTest):
     SCAN_TYPE = QDess
 
+    def _generate_mock_data(self, shape=None, metadata=True):
+        """Generates arbitrary mock data for QDess sequence.
+
+        Metadata values were extracted from a real qDESS sequence.
+        """
+        if shape is None:
+            shape = (10, 10, 10)
+        e1 = MedicalVolume(np.random.rand(*shape) * 80 + 0.1, affine=np.eye(4))
+        e2 = MedicalVolume(np.random.rand(*shape) * 40 + 0.1, affine=np.eye(4))
+        ys = [e1, e2]
+        ts = [8, 42]
+        if metadata:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                for idx, (y, t) in enumerate(zip(ys, ts)):
+                    y.set_metadata("EchoTime", t, force=True)
+                    y.set_metadata("EchoNumber", idx + 1, force=True)
+                    y.set_metadata("RepetitionTime", 25.0, force=True)
+                    y.set_metadata("FlipAngle", 30.0, force=True)
+                    y.set_metadata(Tag(0x001910B6), 3132.0, force=True)  # gradient time
+                    y.set_metadata(Tag(0x001910B7), 1560.0, force=True)  # gradient area
+
+        return ys, ts, None
+
+    def test_basic(self):
+        ys, _, _ = self._generate_mock_data()
+        scan = QDess(ys)
+        assert scan.ref_dicom == ys[0].headers(flatten=True)[0]
+
+        with self.assertRaises(ValueError):
+            _ = QDess(ys + ys)
+
+    def test_calc_rss(self):
+        ys, _, _ = self._generate_mock_data()
+        scan = QDess(ys)
+        rss = scan.calc_rss()
+
+        assert np.allclose(rss.A, np.sqrt(ys[0] ** 2 + ys[1] ** 2).A)
+
+    def test_generate_t2_map(self):
+        ys, _, _ = self._generate_mock_data()
+        scan = QDess(ys)
+
+        tissue = FemoralCartilage()
+        t2 = scan.generate_t2_map(tissue)
+        assert isinstance(t2, QuantitativeValue)
+
     @unittest.skipIf(not util.is_data_available(), "unittest data is not available")
     def test_segmentation_multiclass(self):
         """Test support for multiclass segmentation."""
@@ -34,28 +87,6 @@ class QDessTest(util.ScanTest):
         # This should call __del__ in KerasSegModel
         model = None
         K.clear_session()
-
-    #
-    # def test_t2_map(self):
-    #     # Load ground truth t2 map
-    #     scan = self.SCAN_TYPE(dicom_path=self.dicom_dirpath)
-    #     tissue = FemoralCartilage()
-    #     scan.generate_t2_map(tissue)
-    #
-    #     mat_filepath = os.path.join(util.get_expected_data_path(os.path.dirname(self.dicom_dirpath)), tissue.STR_ID,  # noqa: E501
-    #                                 't2map.mat')
-    #     mat_t2_map = sio.loadmat(mat_filepath)
-    #     mat_t2_map = mat_t2_map['t2map']
-    #
-    #     # calculate t2 map
-    #     py_t2_map = tissue.quantitative_values[0].volumetric_map.volume
-    #
-    #     # need to convert all np.nan values ato 0 before comparing
-    #     # np.nan does not equal np.nan, so we need the same values to compare
-    #     mat_t2_map = np.nan_to_num(mat_t2_map)
-    #     py_t2_map = np.nan_to_num(py_t2_map)
-    #
-    #     npt.assert_almost_equal(mat_t2_map, py_t2_map, decimal=util.DECIMAL_PRECISION)
 
     @unittest.skipIf(not util.is_data_available(), "unittest data is not available")
     def test_cmd_line(self):

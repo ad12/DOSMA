@@ -580,9 +580,13 @@ class MedicalVolume(NDArrayOperatorsMixin):
                 "required to save the volume in DICOM format."
             )
 
+        VR_registry = {float: "DS", int: "IS", str: "LS"}
         for h in self.headers(flatten=True):
-            if force:
-                setattr(h, key, value)
+            if force and key not in h:
+                try:
+                    setattr(h, key, value)
+                except TypeError:
+                    h.add_new(key, VR_registry[type(value)], value)
             else:
                 h[key].value = value
 

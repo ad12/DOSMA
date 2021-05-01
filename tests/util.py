@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import unittest
 import uuid
+from typing import Callable
 
 import natsort
 import numpy as np
@@ -18,6 +19,7 @@ from dosma.core.fitting import monoexponential
 from dosma.core.io.format_io import ImageDataFormat
 from dosma.core.med_volume import MedicalVolume
 from dosma.utils import env, io_utils
+from dosma.utils.cmd_line_utils import ActionWrapper
 
 UNITTEST_DATA_PATH = os.environ.get(
     "DOSMA_UNITTEST_DATA_PATH", os.path.join(os.path.dirname(__file__), "../unittest-data/")
@@ -227,6 +229,17 @@ class ScanTest(unittest.TestCase):
         assert hasattr(
             self.SCAN_TYPE, "cmd_line_actions"
         ), "All scans supported by command line must have `cmd_line_actions` method"
+
+        cmd_line_actions = self.SCAN_TYPE.cmd_line_actions()
+        for func, action in cmd_line_actions:
+            assert isinstance(func, Callable)
+            assert isinstance(action, ActionWrapper)
+
+            func_name = func.__name__
+            cls_name = self.SCAN_TYPE.__name__
+            assert action.name, f"Action for `{cls_name}.{func_name}()` must have a name"
+            assert action.help, f"Action for `{cls_name}.{func_name}()` must have help menu"
+
         assert hasattr(
             type(self), "test_cmd_line"
         ), "All scan supported in command line must have test methods `test_cmd_line`"

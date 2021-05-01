@@ -1,9 +1,11 @@
 """Quantitative Double Echo in Steady State (qDESS) sequence."""
 import logging
 import math
+import warnings
 from copy import deepcopy
 from typing import Sequence, Tuple
 
+import numpy as np
 from pydicom.tag import Tag
 
 from dosma.core.med_volume import MedicalVolume
@@ -99,7 +101,7 @@ class QDess(ScanSequence):
 
     def generate_t2_map(
         self,
-        tissue: Tissue,
+        tissue: Tissue = None,
         suppress_fat: bool = False,
         suppress_fluid: bool = False,
         beta: float = 1.2,
@@ -123,7 +125,9 @@ class QDess(ScanSequence):
         All array-like arguments must be the same dimensions as the echo 1 and echo 2 volumes.
 
         Args:
-            tissue (Tissue): Tissue to generate T2 map for.
+            tissue (Tissue, optional): Tissue to generate T2 map for.
+                If provided, the resulting quantitative value map will
+                be added to the list of quantitative values for the tissue.
             suppress_fat (`bool`, optional): Suppress fat region in T2 computation.
                 This can help reduce noise.
             suppress_fluid (`bool`, optional): Suppress fluid region in T2 computation.
@@ -143,7 +147,7 @@ class QDess(ScanSequence):
                 Required if dicom header unavailable.
             diffusivity (float or array-like): Estimated diffusivity.
             t1 (float or array-like): Estimated t1 in milliseconds.
-                Defaults to ``tissue.T1_EXPECTED``.
+                Defaults to ``tissue.T1_EXPECTED`` if ``tissue`` provided.
             nan_bounds (float or Tuple[float, float], optional): The closed interval
                 (``[a, b]``) for valid t2 values. All values outside of this interval will
                 be set to ``nan``.
@@ -153,7 +157,7 @@ class QDess(ScanSequence):
                 will not be rounded.
 
         Returns:
-            qv.T2: T2 fit for tissue.
+            qv.T2: T2 fit map.
         """
 
         if self.volumes is None or self.ref_dicom is None:
@@ -186,6 +190,8 @@ class QDess(ScanSequence):
         # Flip Angle (degree -> radians)
         alpha = float(ref_dicom.FlipAngle) if alpha is None else alpha
         alpha = math.radians(alpha)
+        if np.allclose(math.sin(alpha / 2), 0):
+            warnings.warn("sin(flip angle) is close to 0 - t2 map may fail.")
 
         GlArea = float(ref_dicom[self.__GL_AREA_TAG__].value) if gl_area is None else gl_area
 
@@ -233,7 +239,8 @@ class QDess(ScanSequence):
         t2_map_wrapped = subvolumes[0]._partial_clone(volume=t2map, headers=True)
         t2_map_wrapped = T2(t2_map_wrapped)
 
-        tissue.add_quantitative_value(t2_map_wrapped)
+        if tissue is not None:
+            tissue.add_quantitative_value(t2_map_wrapped)
 
         return t2_map_wrapped
 

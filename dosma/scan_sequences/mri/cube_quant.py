@@ -58,7 +58,13 @@ class CubeQuant(NonTargetSequence):
     def intraregister(self):
         """Intra-register volumes.
 
-        Alias for :func:`self.__intraregister__`.
+        Patient could have moved between acquisition of different volumes,
+        so different volumes of CubeQuant scan have to be registered with each other.
+
+        The first spin lock time has the highest SNR, so it is used as the target.
+        Volumes corresponding to the other spin lock times are registered to the target.
+
+        Affine registration is done using Elastix.
         """
         self.__intraregister__()
 
@@ -154,8 +160,6 @@ class CubeQuant(NonTargetSequence):
         mask = tissue.get_mask()
         if (not mask or np.sum(mask.volume) == 0) and mask_path:
             mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
-            if tuple(np.unique(mask.volume)) != (0, 1):
-                raise ValueError("`mask_path` must reference binary segmentation volume")
 
         mef = MonoExponentialFit(
             spin_lock_times,
@@ -239,11 +243,11 @@ class CubeQuant(NonTargetSequence):
         return super()._save(metadata, save_dir, fname_fmt=default_fmt, **kwargs)
 
     @classmethod
-    def from_dict(cls, data, force: bool = False):
+    def from_dict(cls, data, force: bool = False) -> "CubeQuant":
         interregistered_dirpath = None
         if "subvolumes" in data:
-            interregistered_dirpath = os.path.dirpath(data.pop("subvolumes")[0])
-        scan = super().from_dict(data, force=force)
+            interregistered_dirpath = os.path.dirname(data.pop("subvolumes")[0])
+        scan: CubeQuant = super().from_dict(data, force=force)
         if interregistered_dirpath is not None:
             subvolumes = scan.__load_interregistered_files__(interregistered_dirpath)
             cls.volumes = [subvolumes[k] for k in sorted(subvolumes.keys())]
