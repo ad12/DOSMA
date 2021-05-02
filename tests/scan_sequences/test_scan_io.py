@@ -1,6 +1,4 @@
 import os
-import shutil
-import unittest
 
 import numpy as np
 import pydicom

@@ -45,9 +45,9 @@ class UtilsTest(unittest.TestCase):
             assert (datas[data] == datas2[data]).all()
 
     def test_save_tables(self):
-        df = pd.DataFrame({"a": [1,2,3,4], "b": [5,6,7,8]})
+        df = pd.DataFrame({"a": [1, 2, 3, 4], "b": [5, 6, 7, 8]})
         path = os.path.join(IO_UTILS_DATA, "table.xlsx")
         io_utils.save_tables(path, [df])
 
-        df2 = pd.read_excel(path, engine='openpyxl')
+        df2 = pd.read_excel(path, engine="openpyxl")
         assert np.all(df == df2)

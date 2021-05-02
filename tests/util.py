@@ -4,11 +4,11 @@ import datetime
 import os
 import re
 import shutil
-from pathlib import Path
 import subprocess
 import tempfile
 import unittest
 import uuid
+from pathlib import Path
 from typing import Callable
 
 import natsort
@@ -19,7 +19,7 @@ from dosma.cli import SUPPORTED_SCAN_TYPES, parse_args
 from dosma.core.fitting import monoexponential
 from dosma.core.io.format_io import ImageDataFormat
 from dosma.core.med_volume import MedicalVolume
-from dosma.utils import env, io_utils
+from dosma.utils import env
 from dosma.utils.cmd_line_utils import ActionWrapper
 
 UNITTEST_DATA_PATH = os.environ.get(
@@ -201,9 +201,11 @@ class TempPathMixin(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.data_dirpath = Path(os.path.join(
-            get_data_path(os.path.join(UNITTEST_SCANDATA_PATH, "temp")), f"{cls.__name__}"
-        ))
+        cls.data_dirpath = Path(
+            os.path.join(
+                get_data_path(os.path.join(UNITTEST_SCANDATA_PATH, "temp")), f"{cls.__name__}"
+            )
+        )
         os.makedirs(cls.data_dirpath, exist_ok=True)
 
     @classmethod
@@ -225,9 +227,9 @@ class ScanTest(TempPathMixin):
     def setUpClass(cls):
         super().setUpClass()
         if is_data_available():
-            cls.dicom_dirpath = Path(get_dicoms_path(
-                os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME)
-            ))
+            cls.dicom_dirpath = Path(
+                get_dicoms_path(os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME))
+            )
 
     def test_has_cmd_line_actions_attr(self):
         """

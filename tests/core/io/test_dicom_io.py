@@ -493,7 +493,7 @@ class TestDicomIO(ututils.TempPathMixin):
         # sort by
         mv2 = dr.load(filepath, sort_by="InstanceNumber")[0]
         assert mv2.is_identical(mv)
-    
+
     def test_save_different_bits(self):
         """Test writing volume where bit depth has changed."""
         filepath = get_testdata_file("MR_small.dcm")
@@ -510,7 +510,7 @@ class TestDicomIO(ututils.TempPathMixin):
         dr = DicomReader(group_by=None)
         mv2 = dr.load(out_dir)[0]
         assert mv2.is_identical(mv)
-    
+
     def test_save(self):
         filepath = get_testdata_file("MR_small.dcm")
         dr = DicomReader(group_by=None)
@@ -523,7 +523,7 @@ class TestDicomIO(ututils.TempPathMixin):
         assert mv2.is_identical(mv_base)
 
         out_dir = os.path.join(self.data_dirpath, "test_save_no_headers")
-        mv = MedicalVolume(np.ones((10,10,10)), np.eye(4))
+        mv = MedicalVolume(np.ones((10, 10, 10)), np.eye(4))
         dw = DicomWriter()
         with self.assertRaises(ValueError):
             dw.save(mv, out_dir)
@@ -555,32 +555,48 @@ class TestDicomIO(ututils.TempPathMixin):
         out_dir = self.data_dirpath / "test_get_files"
         os.makedirs(out_dir, exist_ok=True)
         filenames = [
-            "I0001.dcm", "I0002.dcm", "I0003.dcm", "I0004.dcm", "I0005.dcm",
-            "I0006", "I0007", "I0008", "I0009", "I0010",
-            "I0011-sft.dcm", "I0012-sft.dcm", "I0013-sft.dcm", "I0014-sft.dcm", "I0015-sft.dcm",
-            ".I0016.dcm"
+            "I0001.dcm",
+            "I0002.dcm",
+            "I0003.dcm",
+            "I0004.dcm",
+            "I0005.dcm",
+            "I0006",
+            "I0007",
+            "I0008",
+            "I0009",
+            "I0010",
+            "I0011-sft.dcm",
+            "I0012-sft.dcm",
+            "I0013-sft.dcm",
+            "I0014-sft.dcm",
+            "I0015-sft.dcm",
+            ".I0016.dcm",
         ]
         filenames = [out_dir / fname for fname in filenames]
         filenames_str = [str(x) for x in filenames]
         for fname in filenames:
             with open(fname, "w"):
                 pass
-    
+
         dr = DicomReader()
         files = dr.get_files(out_dir, ignore_ext=False, ignore_hidden=False)
-        assert set(files) == set(x for x in filenames_str if x.endswith(".dcm"))
+        assert set(files) == {x for x in filenames_str if x.endswith(".dcm")}
 
         dr = DicomReader()
         files = dr.get_files(out_dir, ignore_ext=False, ignore_hidden=True)
-        assert set(files) == set(x for x in filenames_str if not os.path.basename(x).startswith(".") and x.endswith(".dcm"))
+        assert set(files) == {
+            x
+            for x in filenames_str
+            if not os.path.basename(x).startswith(".") and x.endswith(".dcm")
+        }
 
         dr = DicomReader()
         files = dr.get_files(out_dir, ignore_ext=True, ignore_hidden=False)
-        assert set(files) == set(x for x in filenames_str)
+        assert set(files) == set(filenames_str)
 
         dr = DicomReader()
         files = dr.get_files(out_dir, ignore_ext=True, ignore_hidden=True)
-        assert set(files) == set(x for x in filenames_str if not os.path.basename(x).startswith("."))
+        assert set(files) == {x for x in filenames_str if not os.path.basename(x).startswith(".")}
 
         with self.assertRaises(NotADirectoryError):
             dr.get_files(out_dir / "some-folder")
