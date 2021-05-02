@@ -4,8 +4,8 @@ import os
 import platform
 import shutil
 import subprocess
-import uuid
 import sys
+import uuid
 import warnings
 from functools import partial
 from typing import Dict, Sequence, Union
@@ -93,7 +93,9 @@ def register(
     assert issubclass(rtype, (Dict, Sequence))  # `rtype` must be dict or tuple
     has_output_path = bool(output_path)
     if not output_path:
-        output_path = os.path.join(env.temp_dir(), f"register-{str(uuid.uuid1())}-{str(uuid.uuid4())}")
+        output_path = os.path.join(
+            env.temp_dir(), f"register-{str(uuid.uuid1())}-{str(uuid.uuid4())}"
+        )
 
     moving = [moving] if isinstance(moving, (MedicalVolume, str)) else moving
     moving_masks = (
@@ -246,7 +248,9 @@ def apply_warp(
         # When multiprocessing executes rapidly and poor seed is set, the uuids have
         # collided. To avoid this, we append the process name to the directory that is
         # created.
-        output_path = os.path.join(env.temp_dir(), f"apply_warp-{str(uuid.uuid1())}-{str(uuid.uuid4())}")
+        output_path = os.path.join(
+            env.temp_dir(), f"apply_warp-{str(uuid.uuid1())}-{str(uuid.uuid4())}"
+        )
         if not _is_main_process():
             output_path += mp.current_process().name
     output_path = os.path.abspath(output_path)
@@ -468,4 +472,6 @@ def _local_lib_dir():
 
 def _is_main_process():
     py_version = tuple(sys.version_info[0:2])
-    return ((py_version < (3, 8) and mp.current_process().name == "MainProcess") or (py_version >= (3, 8) and mp.parent_process() is None))
+    return (py_version < (3, 8) and mp.current_process().name == "MainProcess") or (
+        py_version >= (3, 8) and mp.parent_process() is None
+    )
