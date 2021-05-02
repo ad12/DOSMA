@@ -64,7 +64,7 @@ class ScanIOMixin(ABC):
             group_by = cls.__DEFAULT_SPLIT_BY__
         volumes = dr.load(dir_or_files, group_by, ignore_ext)
 
-        if isinstance(dir_or_files, str):
+        if isinstance(dir_or_files, (str, Path, os.PathLike)):
             dir_or_files = os.path.abspath(dir_or_files)
         else:
             dir_or_files = type(dir_or_files)([os.path.abspath(x) for x in dir_or_files])
