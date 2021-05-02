@@ -92,7 +92,7 @@ def register(
     assert issubclass(rtype, (Dict, Sequence))  # `rtype` must be dict or tuple
     has_output_path = bool(output_path)
     if not output_path:
-        output_path = os.path.join(env.temp_dir(), "register")
+        output_path = os.path.join(env.temp_dir(), f"register-{str(uuid.uuid1())}")
 
     moving = [moving] if isinstance(moving, (MedicalVolume, str)) else moving
     moving_masks = (
