@@ -252,8 +252,8 @@ class NonTargetSequence(ScanSequence):
         """Dilate mask using gaussian blur and write to disk to use with Elastix.
 
         Args:
-            mask_path (str): File path for mask to use to use as focus points for registration.
-                Mask must be binary.
+            mask_path (str | MedicalVolume): File path for mask or mask to use to use as
+                focus points for registration. Mask must be binary.
             temp_path (str): Directory path to store temporary data.
             dil_rate (`float`, optional): Dilation rate (sigma).
                 Defaults to ``preferences.mask_dilation_rate``.
@@ -268,13 +268,15 @@ class NonTargetSequence(ScanSequence):
             ValueError: If `dil_threshold` not in range [0, 1].
         """
 
-        if not os.path.isfile(mask_path):
-            raise FileNotFoundError("File {} not found".format(mask_path))
-
         if dil_threshold < 0 or dil_threshold > 1:
             raise ValueError("'dil_threshold' must be in range [0, 1]")
 
-        mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
+        if isinstance(mask_path, MedicalVolume):
+            mask = mask_path
+        elif os.path.isfile(mask_path):
+            mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
+        else:
+            raise FileNotFoundError("File {} not found".format(mask_path))
 
         dilated_mask = (
             sni.gaussian_filter(np.asarray(mask.volume, dtype=np.float32), sigma=dil_rate)

@@ -149,11 +149,42 @@ class CubeQuantTest(util.ScanTest):
         assert map2 is not None, "map should not be None"
         assert map1.volumetric_map.is_identical(map2.volumetric_map)
 
+    @unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
+    def test_intraregister(self):
+        ys, _, _, _ = self._generate_mock_data()
+        scan = CubeQuant(ys)
+        scan.intraregister()
+        assert scan.volumes is not ys
+
+    @unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
+    def test_interregister(self):
+        """Test trivial inter-registration."""
+        ys, _, _, _ = self._generate_mock_data()
+        mask = MedicalVolume(np.ones(ys[0].shape), np.eye(4))
+
+        # No mask.
+        scan1 = CubeQuant(ys)
+        scan1.interregister(ys[0])
+        assert scan1.volumes is not ys
+
+        # With trivial mask.
+        scan2 = CubeQuant(ys)
+        scan2.interregister(ys[0], mask)
+        assert scan2.volumes is not ys
+
+        # With trivial mask path
+        mask_path = os.path.join(self.data_dirpath, "test_interregister_mask.nii.gz")
+        NiftiWriter().save(mask, mask_path)
+        scan3 = CubeQuant(ys)
+        scan3.interregister(ys[0], mask)
+        for v1, v2 in zip(scan3.volumes, scan2.volumes):
+            assert np.allclose(v1.A, v2.A)
+
     @unittest.skipIf(
         not util.is_data_available() or not util.is_elastix_available(),
         "unittest data or elastix is not available",
     )
-    def test_interregister_no_mask(self):
+    def test_interregister_no_mask_real_data(self):
         """Register Cubequant scan to qDESS scan without a target mask"""
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
 
@@ -164,7 +195,7 @@ class CubeQuantTest(util.ScanTest):
         not util.is_data_available() or not util.is_elastix_available(),
         "unittest data or elastix is not available",
     )
-    def test_interregister_mask(self):
+    def test_interregister_mask_real_data(self):
         """Register Cubequant scan to qDESS scan with a target mask (mask for femoral cartilage)"""
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         scan.interregister(target_path=QDESS_ECHO1_PATH, target_mask_path=TARGET_MASK_PATH)
@@ -173,7 +204,7 @@ class CubeQuantTest(util.ScanTest):
         not util.is_data_available() or not util.is_elastix_available(),
         "unittest data or elastix is not available",
     )
-    def test_intraregister(self):
+    def test_intraregister_real_data(self):
         """Verify cubequant intraregistering using new registration."""
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         scan.intraregister()
