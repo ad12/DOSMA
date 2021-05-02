@@ -7,39 +7,36 @@ from functools import partial
 import numpy as np
 
 import dosma.file_constants as fc
-from dosma.core.io.dicom_io import DicomReader
-from dosma.core.io.format_io import ImageDataFormat
+from dosma.core.med_volume import MedicalVolume
+from dosma.core.orientation import to_affine
 from dosma.core.registration import apply_warp, register
-from dosma.scan_sequences import CubeQuant, QDess
 from dosma.utils import env
 
 from .. import util
 
-if util.is_data_available():
-    QDESS_ECHO1_PATH = util.get_read_paths(
-        util.get_scan_dirpath(QDess.NAME), ImageDataFormat.nifti
-    )[0]
-    TARGET_MASK_PATH = os.path.join(util.get_scan_dirpath(CubeQuant.NAME), "misc/fc.nii.gz")
-else:
-    QDESS_ECHO1_PATH = None
-    TARGET_MASK_PATH = None
+
+def _generate_translated_vols(n=3):
+    """Generate mock data that is translated diagonally by 1 pixel."""
+    mvs = []
+    affine = to_affine(("SI", "AP"), (0.3, 0.3, 0.5))
+    for offset in range(n):
+        arr = np.zeros((250, 250, 10))
+        arr[15 + offset : 35 + offset, 15 + offset : 35 + offset] = 1
+        mvs.append(MedicalVolume(arr, affine))
+    return mvs
 
 
-@unittest.skipIf(
-    not util.is_data_available() or not util.is_elastix_available(),
-    "unittest data or elastix is not available",
-)
 class TestRegister(unittest.TestCase):
+    unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
+
     def test_multiprocessing(self):
-        dr = DicomReader(num_workers=util.num_workers())
-        cq_dicoms = util.get_dicoms_path(os.path.join(util.UNITTEST_SCANDATA_PATH, CubeQuant.NAME))
-        cq = dr.load(cq_dicoms)
+        mvs = _generate_translated_vols()
         data_dir = os.path.join(env.temp_dir(), "test-register-mp")
 
         out_path = os.path.join(data_dir, "expected")
         _, expected = register(
-            cq[0],
-            cq[1:],
+            mvs[0],
+            mvs[1:],
             fc.ELASTIX_AFFINE_PARAMS_FILE,
             out_path,
             num_workers=0,
@@ -51,8 +48,8 @@ class TestRegister(unittest.TestCase):
 
         out_path = os.path.join(data_dir, "out")
         _, out = register(
-            cq[0],
-            cq[1:],
+            mvs[0],
+            mvs[1:],
             fc.ELASTIX_AFFINE_PARAMS_FILE,
             out_path,
             num_workers=util.num_workers(),
@@ -68,21 +65,17 @@ class TestRegister(unittest.TestCase):
         shutil.rmtree(data_dir)
 
 
-@unittest.skipIf(
-    not util.is_data_available() or not util.is_elastix_available(),
-    "unittest data or elastix is not available",
-)
 class TestApplyWarp(unittest.TestCase):
+    unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
+
     def test_multiprocessing(self):
         """Verify that multiprocessing compatible with apply_warp."""
         # Generate viable transform file.
-        dr = DicomReader(num_workers=util.num_workers())
-        cq_dicoms = util.get_dicoms_path(os.path.join(util.UNITTEST_SCANDATA_PATH, CubeQuant.NAME))
-        cq = dr.load(cq_dicoms)
+        mvs = _generate_translated_vols(n=4)
         out_path = os.path.join(env.temp_dir(), "test-register")
         out, _ = register(
-            cq[0],
-            cq[1],
+            mvs[0],
+            mvs[1],
             fc.ELASTIX_AFFINE_PARAMS_FILE,
             out_path,
             num_workers=util.num_workers(),
@@ -90,7 +83,7 @@ class TestApplyWarp(unittest.TestCase):
             return_volumes=False,
             rtype=tuple,
         )
-        vols = cq[2:]
+        vols = mvs[2:]
 
         # Single process (main thread)
         expected = []

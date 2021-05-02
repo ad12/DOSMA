@@ -10,29 +10,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  Elastix:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.6"]
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install Elastix
-        run: |
-          wget https://github.com/SuperElastix/elastix/releases/download/4.9.0/elastix-4.9.0-linux.tar.bz2
-          ELASTIX_FOLDER="elastix"
-          mkdir -p $ELASTIX_FOLDER
-          tar -xvf elastix-4.9.0-linux.tar.bz2 -C $ELASTIX_FOLDER
-          ELASTIX_DIR="$(realpath $ELASTIX_FOLDER)"
-          echo "PATH=${ELASTIX_DIR}/bin:${PATH}" >> $GITHUB_ENV
-          echo "LD_LIBRARY_PATH=${ELASTIX_DIR}/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
-      
-      - name: Print Elastix version
-        run: |
-          elastix --version
     
   Linting:
-    needs: Elastix
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -112,6 +91,16 @@ jobs:
           pip install torch
           make dev
           pip install -e '.[dev]'
+      
+      - name: Install Elastix
+        run: |
+          wget https://github.com/SuperElastix/elastix/releases/download/4.9.0/elastix-4.9.0-linux.tar.bz2
+          ELASTIX_FOLDER="elastix"
+          mkdir -p $ELASTIX_FOLDER
+          tar -xvf elastix-4.9.0-linux.tar.bz2 -C $ELASTIX_FOLDER
+          ELASTIX_DIR="$(realpath $ELASTIX_FOLDER)"
+          echo "PATH=${ELASTIX_DIR}/bin:${PATH}" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=${ELASTIX_DIR}/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
       
       - name: Test with pytest
         run: |
