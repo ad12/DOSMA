@@ -23,7 +23,7 @@ jobs:
           ELASTIX_FOLDER="elastix"
           mkdir -p $ELASTIX_FOLDER
           tar -xvf elastix-4.9.0-linux.tar.bz2 -C $ELASTIX_FOLDER
-          ELASTIX_DIR="$(realpath $ELASTIX_FOLDER)""
+          ELASTIX_DIR="$(realpath $ELASTIX_FOLDER)"
           echo "PATH=${ELASTIX_DIR}/bin:${PATH}" >> $GITHUB_ENV
           echo "LD_LIBRARY_PATH=${ELASTIX_DIR}/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
       
