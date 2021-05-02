@@ -15,7 +15,7 @@ from dosma.core.med_volume import MedicalVolume
 from ... import util as ututils
 
 
-class TestDicomIO(unittest.TestCase):
+class TestDicomIO(ututils.TempPathMixin):
     dr = DicomReader()
     dw = DicomWriter()
 
@@ -470,6 +470,64 @@ class TestDicomIO(unittest.TestCase):
         assert np.all(mv_pydicom_loaded.pixel_array == arr)
         assert self.are_equivalent_headers(mv_pydicom_loaded, mv_pydicom)
 
+    def test_load_pydicom_data(self):
+        filepath = get_testdata_file("MR_small.dcm")
+        dr = DicomReader(group_by=None)
+        mv = dr.load(filepath)[0]
+
+        # CT does not have EchoNumbers field in header.
+        with self.assertRaises(KeyError):
+            dr.load(get_testdata_file("CT_small.dcm"), group_by="EchoNumbers")
+        with self.assertRaises(KeyError):
+            dr.load(get_testdata_file("CT_small.dcm"), sort_by="EchoNumbers")
+
+        # Multiprocessing
+        dr_mp = DicomReader(group_by=None, num_workers=1)
+        mv2 = dr_mp.load(filepath)[0]
+        assert mv2.is_identical(mv)
+
+        dr_mp = DicomReader(group_by=None, num_workers=1, verbose=True)
+        mv2 = dr_mp.load(filepath)[0]
+        assert mv2.is_identical(mv)
+
+        # sort by
+        mv2 = dr.load(filepath, sort_by="InstanceNumber")[0]
+        assert mv2.is_identical(mv)
+
+    def test_save_different_bits(self):
+        """Test writing volume where bit depth has changed."""
+        filepath = get_testdata_file("MR_small.dcm")
+        dr = DicomReader(group_by=None)
+        mv_base = dr.load(filepath)[0]
+
+        arr = (np.random.rand(*mv_base.shape) > 0.5).astype(np.uint8) * 255
+        mv = mv_base._partial_clone(volume=arr)
+
+        dw = DicomWriter()
+        out_dir = os.path.join(self.data_dirpath, "test_write_different_bits")
+        dw.save(mv, dir_path=out_dir)
+
+        dr = DicomReader(group_by=None)
+        mv2 = dr.load(out_dir)[0]
+        assert mv2.is_identical(mv)
+
+    def test_save(self):
+        filepath = get_testdata_file("MR_small.dcm")
+        dr = DicomReader(group_by=None)
+        mv_base = dr.load(filepath)[0]
+
+        out_dir = os.path.join(self.data_dirpath, "test_save_sort_by")
+        dw = DicomWriter()
+        dw.save(mv_base, out_dir, sort_by="InstanceNumber")
+        mv2 = dr.load(filepath)[0]
+        assert mv2.is_identical(mv_base)
+
+        out_dir = os.path.join(self.data_dirpath, "test_save_no_headers")
+        mv = MedicalVolume(np.ones((10, 10, 10)), np.eye(4))
+        dw = DicomWriter()
+        with self.assertRaises(ValueError):
+            dw.save(mv, out_dir)
+
     def test_state(self):
         dr1 = DicomReader()
         state_dict = dr1.state_dict()
@@ -491,6 +549,57 @@ class TestDicomIO(unittest.TestCase):
         state_dict = dw2.load_state_dict(state_dict)
         assert dw2.num_workers == 8
         assert dw2.sort_by == "InstanceNumber"
+
+    def test_get_files(self):
+        # Make dummy files with some properties.
+        out_dir = self.data_dirpath / "test_get_files"
+        os.makedirs(out_dir, exist_ok=True)
+        filenames = [
+            "I0001.dcm",
+            "I0002.dcm",
+            "I0003.dcm",
+            "I0004.dcm",
+            "I0005.dcm",
+            "I0006",
+            "I0007",
+            "I0008",
+            "I0009",
+            "I0010",
+            "I0011-sft.dcm",
+            "I0012-sft.dcm",
+            "I0013-sft.dcm",
+            "I0014-sft.dcm",
+            "I0015-sft.dcm",
+            ".I0016.dcm",
+        ]
+        filenames = [out_dir / fname for fname in filenames]
+        filenames_str = [str(x) for x in filenames]
+        for fname in filenames:
+            with open(fname, "w"):
+                pass
+
+        dr = DicomReader()
+        files = dr.get_files(out_dir, ignore_ext=False, ignore_hidden=False)
+        assert set(files) == {x for x in filenames_str if x.endswith(".dcm")}
+
+        dr = DicomReader()
+        files = dr.get_files(out_dir, ignore_ext=False, ignore_hidden=True)
+        assert set(files) == {
+            x
+            for x in filenames_str
+            if not os.path.basename(x).startswith(".") and x.endswith(".dcm")
+        }
+
+        dr = DicomReader()
+        files = dr.get_files(out_dir, ignore_ext=True, ignore_hidden=False)
+        assert set(files) == set(filenames_str)
+
+        dr = DicomReader()
+        files = dr.get_files(out_dir, ignore_ext=True, ignore_hidden=True)
+        assert set(files) == {x for x in filenames_str if not os.path.basename(x).startswith(".")}
+
+        with self.assertRaises(NotADirectoryError):
+            dr.get_files(out_dir / "some-folder")
 
 
 if __name__ == "__main__":

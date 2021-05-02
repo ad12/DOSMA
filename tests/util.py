@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import unittest
 import uuid
+from pathlib import Path
 from typing import Callable
 
 import natsort
@@ -18,7 +19,7 @@ from dosma.cli import SUPPORTED_SCAN_TYPES, parse_args
 from dosma.core.fitting import monoexponential
 from dosma.core.io.format_io import ImageDataFormat
 from dosma.core.med_volume import MedicalVolume
-from dosma.utils import env, io_utils
+from dosma.utils import env
 from dosma.utils.cmd_line_utils import ActionWrapper
 
 UNITTEST_DATA_PATH = os.environ.get(
@@ -26,7 +27,7 @@ UNITTEST_DATA_PATH = os.environ.get(
 )
 UNITTEST_SCANDATA_PATH = os.path.join(UNITTEST_DATA_PATH, "scans")
 TEMP_PATH = os.path.join(
-    UNITTEST_SCANDATA_PATH, "temp"
+    UNITTEST_SCANDATA_PATH, f"temp-{str(uuid.uuid1())}-{str(uuid.uuid4())}"
 )  # should be used when for writing with assert_raises clauses
 
 SCANS = ["qdess", "mapss", "cubequant", "cones"]
@@ -193,29 +194,42 @@ def _build_dummy_pydicom_header(fields=None):
     return ds
 
 
-class ScanTest(unittest.TestCase):
+class TempPathMixin(unittest.TestCase):
+    """Testing helper that creates temporary path for the class."""
+
+    data_dirpath = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.data_dirpath = Path(
+            os.path.join(
+                get_data_path(os.path.join(UNITTEST_SCANDATA_PATH, "temp")), f"{cls.__name__}"
+            )
+        )
+        os.makedirs(cls.data_dirpath, exist_ok=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.data_dirpath)
+
+
+class ScanTest(TempPathMixin):
     from dosma.scan_sequences.scans import ScanSequence
 
     SCAN_TYPE = ScanSequence  # override in subclasses
 
     dicom_dirpath = None
-    data_dirpath = None
 
     def setUp(self):
         print("Testing: ", self._testMethodName)
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         if is_data_available():
-            cls.dicom_dirpath = get_dicoms_path(
-                os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME)
+            cls.dicom_dirpath = Path(
+                get_dicoms_path(os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME))
             )
-        cls.data_dirpath = get_data_path(os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME))
-        io_utils.mkdirs(cls.data_dirpath)
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.data_dirpath)
 
     def test_has_cmd_line_actions_attr(self):
         """

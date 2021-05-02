@@ -238,7 +238,7 @@ class DicomReader(DataReader):
         temp_dicom = pydicom.read_file(lstFilesDCM[0], force=True)
         for _group in group_by:
             if _group not in temp_dicom:
-                raise ValueError("Tag {} does not exist in dicom".format(_group))
+                raise KeyError("Tag {} does not exist in dicom".format(_group))
 
         if self.num_workers:
             fn = functools.partial(pydicom.read_file, force=True)
@@ -656,9 +656,9 @@ def _update_np_dtype(arr: np.ndarray, bit_depth: int):
     dtype_dict = {
         8: [(np.int8, -128, 127), (np.uint8, 0, 255)],
         16: [
-            (np.float16, -6.55e4, 6.55e4 - 1),
-            (np.int16, -(2 ** 15), 2 ** 15),
             (np.uint16, 0, 2 ** 16 - 1),
+            (np.int16, -(2 ** 15), 2 ** 15),
+            (np.float16, -6.55e4, 6.55e4 - 1),
         ],
     }
     supported_floats = [np.float16]

@@ -429,6 +429,11 @@ class TestMedicalVolume(unittest.TestCase):
         mv2 = np.clip(mv, 0.4, 0.6)
         assert np.all((mv2.volume >= 0.4) & (mv2.volume <= 0.6))
 
+        mv_lower = MedicalVolume(np.ones(mv.shape) * 0.4, mv.affine)
+        mv_upper = MedicalVolume(np.ones(mv.shape) * 0.6, mv.affine)
+        mv2 = np.clip(mv, mv_lower, mv_upper)
+        assert np.all((mv2.volume >= 0.4) & (mv2.volume <= 0.6))
+
     def test_numpy_shaping(self):
         """Test numpy shaping functions (stack, concatenate, etc.)."""
         shape = (10, 20, 30, 2)
@@ -447,6 +452,7 @@ class TestMedicalVolume(unittest.TestCase):
         assert mv_a.shape == vol.shape
         assert mv_a.ndim == vol.ndim
 
+        # Stack
         mv2 = np.stack([mv_a, mv_b, mv_c], axis=-1)
         assert mv2.shape == (10, 20, 30, 2, 3)
         assert mv2.headers() is not None
@@ -458,6 +464,7 @@ class TestMedicalVolume(unittest.TestCase):
         with self.assertRaises(TypeError):
             mv2 = np.stack([mv_a, mv_b, mv_c], axis=(-1,))
 
+        # Expand dims
         mv2 = np.expand_dims(mv_a, (-2, -3))
         assert mv2.shape == (10, 20, 30, 1, 1, 2)
         mv2 = np.expand_dims(mv_a, -1)
@@ -465,6 +472,7 @@ class TestMedicalVolume(unittest.TestCase):
         with self.assertRaises(ValueError):
             mv2 = np.expand_dims(mv_a, 0)
 
+        # Squeeze
         mv_d = mv_a[..., :1]
         assert mv_d.shape == (10, 20, 30, 1)
         assert np.squeeze(mv_d).shape == (10, 20, 30)
@@ -477,8 +485,11 @@ class TestMedicalVolume(unittest.TestCase):
         with self.assertRaises(ValueError):
             np.squeeze(mv_d, axis=0)
 
+        # Concatenate
         with self.assertRaises(ValueError):
             np.concatenate([mv_a, mv_b], axis=0)
+        with self.assertRaises(TypeError):
+            np.concatenate([mv_a, mv_b], axis="-1")
 
         mv2 = np.concatenate([mv_a, mv_b], axis=-1)
         assert np.all(mv2.volume == np.concatenate([mv_a.volume, mv_b.volume], axis=-1))
@@ -498,6 +509,20 @@ class TestMedicalVolume(unittest.TestCase):
         mv2 = np.concatenate([mv_a, mv_d], axis=-2)
         assert np.all(mv2.volume == np.concatenate([mv_a.volume, mv_d.volume], axis=-2))
         assert mv2.headers().shape == (1, 1, 60, 2)
+
+        affine = np.eye(4)
+        affine[:3, 3] += [0, 0, 30]
+        affine[:, 0] *= 0.5
+        mv_d = MedicalVolume(vol * 2, affine, headers=headers)
+        with self.assertRaises(ValueError):
+            mv2 = np.concatenate([mv_a, mv_d], axis=-2)
+
+        affine = np.eye(4)
+        affine[:3, 3] += [0, 0, 30]
+        mv_d = MedicalVolume(vol * 2, affine, headers=None)
+        mv2 = np.concatenate([mv_a, mv_d], axis=-2)
+        assert np.all(mv2.volume == np.concatenate([mv_a.volume, mv_d.volume], axis=-2))
+        assert mv2.headers() is None
 
     def test_hdf5(self):
         shape = (10, 20, 30)

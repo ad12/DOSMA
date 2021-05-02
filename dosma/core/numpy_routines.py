@@ -178,9 +178,9 @@ def clip(x, x_min, x_max, **kwargs):
         The ``out`` positional argument is not currently supported.
     """
     if isinstance(x_min, MedicalVolume):
-        x_min = x_min.A
+        x_min = x_min.reformat_as(x).A
     if isinstance(x_max, MedicalVolume):
-        x_max = x_max.A
+        x_max = x_max.reformat_as(x).A
 
     arr = np.clip(x.A, x_min, x_max, **kwargs)
     return x._partial_clone(volume=arr)

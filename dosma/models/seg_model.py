@@ -13,7 +13,7 @@ from dosma.defaults import preferences
 
 try:
     import keras.backend as K
-except ImportError:  # pragma: no-cover
+except ImportError:  # pragma: no cover
     pass
 
 
