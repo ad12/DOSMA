@@ -69,7 +69,7 @@ class TestApplyWarp(util.TempPathMixin):
         """Verify that multiprocessing compatible with apply_warp."""
         # Generate viable transform file.
         mvs = _generate_translated_vols(n=4)
-        out_path = os.path.join(self.data_dirpath, "test-register")
+        out_path = os.path.join(self.data_dirpath, "test-apply-warp")
         out, _ = register(
             mvs[0],
             mvs[1],

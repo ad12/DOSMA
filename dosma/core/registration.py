@@ -276,7 +276,7 @@ def apply_warp(
 
     if os.path.isfile(mv_filepath):
         os.remove(mv_filepath)
-    if not has_output_path:
+    if not has_output_path and os.path.isdir(output_path):
         shutil.rmtree(output_path)
 
     return out
