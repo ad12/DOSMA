@@ -10,7 +10,6 @@ import dosma.file_constants as fc
 from dosma.core.med_volume import MedicalVolume
 from dosma.core.orientation import to_affine
 from dosma.core.registration import apply_warp, register
-from dosma.utils import env
 
 from .. import util
 
@@ -26,12 +25,11 @@ def _generate_translated_vols(n=3):
     return mvs
 
 
-class TestRegister(unittest.TestCase):
-    unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
-
+class TestRegister(util.TempPathMixin):
+    @unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
     def test_multiprocessing(self):
         mvs = _generate_translated_vols()
-        data_dir = os.path.join(env.temp_dir(), "test-register-mp")
+        data_dir = os.path.join(self.data_dirpath, "test-register-mp")
 
         out_path = os.path.join(data_dir, "expected")
         _, expected = register(
@@ -65,14 +63,13 @@ class TestRegister(unittest.TestCase):
         shutil.rmtree(data_dir)
 
 
-class TestApplyWarp(unittest.TestCase):
-    unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
-
+class TestApplyWarp(util.TempPathMixin):
+    @unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
     def test_multiprocessing(self):
         """Verify that multiprocessing compatible with apply_warp."""
         # Generate viable transform file.
         mvs = _generate_translated_vols(n=4)
-        out_path = os.path.join(env.temp_dir(), "test-register")
+        out_path = os.path.join(self.data_dirpath, "test-register")
         out, _ = register(
             mvs[0],
             mvs[1],
