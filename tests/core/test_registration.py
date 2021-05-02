@@ -62,6 +62,29 @@ class TestRegister(util.TempPathMixin):
 
         shutil.rmtree(data_dir)
 
+    def test_complex(self):
+        mvs = _generate_translated_vols()
+        mask = mvs[0]._partial_clone(volume=np.ones(mvs[0].shape))
+        data_dir = os.path.join(self.data_dirpath, "test-register-complex-sequential-moving-masks")
+
+        out_path = os.path.join(data_dir, "expected")
+        _ = register(
+            mvs[0],
+            mvs[1:],
+            [fc.ELASTIX_AFFINE_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE],
+            out_path,
+            target_mask=mask,
+            use_mask=[True, True],
+            sequential=True,
+            num_workers=0,
+            num_threads=2,
+            return_volumes=True,
+            rtype=tuple,
+            show_pbar=True,
+        )
+
+        shutil.rmtree(data_dir)
+
 
 class TestApplyWarp(util.TempPathMixin):
     @unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
