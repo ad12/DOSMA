@@ -1,10 +1,9 @@
 import inspect
-import logging
 import os
 import warnings
 from abc import ABC
 from pathlib import Path
-from typing import Any, Dict, Sequence, Set, Union
+from typing import Any, Dict, Optional, Sequence, Set, Union
 
 import pydicom
 
@@ -32,7 +31,7 @@ class ScanIOMixin(ABC):
     # This is just a summary on variables used in this abstract class,
     # the proper values/initialization should be done in child class.
     NAME: str
-    __DEFAULT_SPLIT_BY__: str
+    __DEFAULT_SPLIT_BY__: Optional[str]
     _from_file_args: Dict[str, Any]
 
     @classmethod
@@ -114,7 +113,7 @@ class ScanIOMixin(ABC):
 
         for k, v in data.items():
             if not hasattr(scan, k) and not force:
-                logging.warn(f"{cls.__name__} does not have attribute {k}. Skipping...")
+                warnings.warn(f"{cls.__name__} does not have attribute {k}. Skipping...")
                 continue
             scan.__setattr__(k, v)
 
@@ -419,7 +418,7 @@ class ScanIOMixin(ABC):
         return data
 
     def __serializable_variables__(
-        self, ignore_types=(pydicom.FileDataset, Tissue), ignore_attrs=()
+        self, ignore_types=(pydicom.FileDataset, pydicom.Dataset, Tissue), ignore_attrs=()
     ) -> Set:
         """
         By default, all instance attributes are serialized except those
@@ -442,8 +441,6 @@ class ScanIOMixin(ABC):
             if attr.upper() == attr or (attr.startswith("__") and attr.endswith("__")):
                 continue
             if callable(value) or isinstance(value, property):
-                continue
-            if _contains_type(value, ignore_types):
                 continue
             serializable.append(attr)
 

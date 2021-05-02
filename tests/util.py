@@ -4,6 +4,7 @@ import datetime
 import os
 import re
 import shutil
+from pathlib import Path
 import subprocess
 import tempfile
 import unittest
@@ -193,29 +194,40 @@ def _build_dummy_pydicom_header(fields=None):
     return ds
 
 
-class ScanTest(unittest.TestCase):
+class TempPathMixin(unittest.TestCase):
+    """Testing helper that creates temporary path for the class."""
+
+    data_dirpath = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.data_dirpath = Path(os.path.join(
+            get_data_path(os.path.join(UNITTEST_SCANDATA_PATH, "temp")), f"{cls.__name__}"
+        ))
+        os.makedirs(cls.data_dirpath, exist_ok=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.data_dirpath)
+
+
+class ScanTest(TempPathMixin):
     from dosma.scan_sequences.scans import ScanSequence
 
     SCAN_TYPE = ScanSequence  # override in subclasses
 
     dicom_dirpath = None
-    data_dirpath = None
 
     def setUp(self):
         print("Testing: ", self._testMethodName)
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         if is_data_available():
-            cls.dicom_dirpath = get_dicoms_path(
+            cls.dicom_dirpath = Path(get_dicoms_path(
                 os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME)
-            )
-        cls.data_dirpath = get_data_path(os.path.join(UNITTEST_SCANDATA_PATH, cls.SCAN_TYPE.NAME))
-        io_utils.mkdirs(cls.data_dirpath)
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.data_dirpath)
+            ))
 
     def test_has_cmd_line_actions_attr(self):
         """

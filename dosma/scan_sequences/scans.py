@@ -24,9 +24,7 @@ from typing import Any, Sequence, Union
 import numpy as np
 import scipy.ndimage as sni
 from natsort import natsorted
-from nipype.interfaces.elastix import ApplyWarp, Registration
 
-from dosma import file_constants as fc
 from dosma.core.io import format_io_utils as fio_utils
 from dosma.core.io.nifti_io import NiftiReader
 from dosma.core.med_volume import MedicalVolume
@@ -187,54 +185,7 @@ class NonTargetSequence(ScanSequence):
 
             mask_path (str): Path to mask to use to use as focus points for registration.
         """
-        pass
-
-    def __split_volumes__(self, expected_num_subvolumes: int):
-        """Split the scan into multiple volumes based on the echo time.
-
-        Each volume represents a volumes of slices acquired with the same TR and TE times.
-        For example, Cubequant uses 4 spin lock times -- this will produce 4 volumes.
-
-        Args:
-            expected_num_subvolumes (int): Expected number of volumes that should be in the scan.
-
-        Returns:
-            Tuple[Dict[int, MedicalVolume], list[float]]:
-                A dictionary mapping echo time index -> MedicalVolume
-                and a list of echo times in ascending order.
-
-            e.g.: {0: MedicalVolume A, 1:MedicalVolume B}, [10, 50]
-
-            10 (at index 0 in the --> key 0 --> MedicalVolume A, 50 --> key 1 --> MedicalVolume B)
-        """
-        volumes = self.volumes
-
-        if len(volumes) != expected_num_subvolumes:
-            raise ValueError(
-                "Expected %d subvolumes but got %d" % (expected_num_subvolumes, len(volumes))
-            )
-
-        num_echo_times = len(volumes)
-        echo_times = []
-
-        for i in range(num_echo_times):
-            echo_time = float(volumes[i].get_metadata("EchoTime"))
-            echo_times.append((i, echo_time))
-
-        # Sort list of tuples (ind, echo_time) by echo_time
-        ordered_echo_times = sorted(echo_times, key=lambda x: x[1])
-
-        ordered_subvolumes_dict = {}
-
-        for i in range(num_echo_times):
-            volume_ind, echo_time = ordered_echo_times[i]
-            ordered_subvolumes_dict[i] = volumes[volume_ind]
-
-        subvolumes_dict = ordered_subvolumes_dict
-
-        echo_times = [x for _, x in echo_times]
-
-        return subvolumes_dict, echo_times
+        pass  # pragma: no cover
 
     def __load_interregistered_files__(self, interregistered_dirpath: str):
         """Load the NIfTI files of the interregistered subvolumes.
@@ -336,95 +287,3 @@ class NonTargetSequence(ScanSequence):
         dilated_mask_volume.save_volume(fixed_mask_filepath)
 
         return fixed_mask_filepath
-
-    def __interregister_base_file__(
-        self,
-        base_image_info: tuple,
-        target_path: str,
-        temp_path: str,
-        mask_path: str = None,
-        parameter_files=(fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE),
-    ):
-        """Interregister the base moving image to the target image.
-
-        Args:
-            base_image_info (tuple[str, int]): File path, echo index (eg. 'scans/000.nii.gz, 0).
-            target_path (str): File path to target scan. Must be in nifti (.nii.gz) format.
-            temp_path (str): Directory path to store temporary data.
-            mask_path (str): Path to mask to use to use as focus points for registration.
-                Mask must be binary. Recommend using dilated mask.
-            parameter_files (list[str]): Transformix parameter files to use for transformations.
-
-        Returns:
-            tuple[str, list[str]): File path to the transformed moving image and
-                a list of file paths to elastix transformations
-                (e.g. '/result.nii.gz', ['/tranformation0.txt', '/transformation1.txt']).
-        """
-        base_image_path, base_time_id = base_image_info
-
-        # Register base image to the target image.
-        logging.info(f"Registering base image: {base_image_path}")
-        transformation_files = []
-
-        use_mask_arr = [False, True]
-        reg_output = None
-        moving_image = base_image_path
-
-        for i in range(len(parameter_files)):
-            use_mask = use_mask_arr[i]
-            pfile = parameter_files[i]
-
-            reg = Registration()
-            reg.inputs.fixed_image = target_path
-            reg.inputs.moving_image = moving_image
-            reg.inputs.output_path = io_utils.mkdirs(
-                os.path.join(temp_path, "{:03d}_param{}".format(base_time_id, i))
-            )
-            reg.inputs.parameters = pfile
-
-            if use_mask and mask_path is not None:
-                fixed_mask_filepath = self.__dilate_mask__(mask_path, temp_path)
-                reg.inputs.fixed_mask = fixed_mask_filepath
-
-            reg.terminal_output = preferences.nipype_logging
-
-            reg_output = reg.run()
-            reg_output = reg_output.outputs
-            assert reg_output is not None
-
-            # Update moving image to output.
-            moving_image = reg_output.warped_file
-
-            transformation_files.append(reg_output.transform[0])
-
-        return reg_output.warped_file, transformation_files
-
-    def __apply_transform__(self, image_info, transformation_files, temp_path):
-        """Apply transform(s) to moving image using Transformix.
-
-        Args:
-            image_info (Tuple[str, int]): File path, echo index (eg. 'scans/000.nii.gz, 0).
-            transformation_files (List[str]): Paths to elastix transformation files.
-            temp_path (str): Directory path to store temporary data.
-
-        Returns:
-            str: File path to warped file in NIfTI format.
-        """
-        filename, image_id = image_info
-        logging.info("Applying transform {}".format(filename))
-        warped_file = ""
-        for f in transformation_files:
-            reg = ApplyWarp()
-            reg.inputs.moving_image = filename if len(warped_file) == 0 else warped_file
-
-            reg.inputs.transform_file = f
-            reg.inputs.output_path = io_utils.mkdirs(
-                os.path.join(temp_path, "{:03d}".format(image_id))
-            )
-            reg.terminal_output = preferences.nipype_logging
-            reg_output = reg.run()
-
-            warped_file = reg_output.outputs.warped_file
-            assert warped_file != ""
-
-        return warped_file
