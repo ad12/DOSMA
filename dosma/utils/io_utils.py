@@ -127,7 +127,7 @@ def save_tables(
     writer.save()
 
 
-def init_logger(log_file: str, debug: bool = False):
+def init_logger(log_file: str, debug: bool = False):  # pragma: no cover
     """Initialize logger.
 
     Args:
