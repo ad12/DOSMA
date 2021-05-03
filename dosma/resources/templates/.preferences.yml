@@ -3,7 +3,7 @@ data:
 fitting:
   r2.threshold: 0.9
 logging:
-  nipype: "file_stderr"
+  nipype: "file_stdout"
 registration:
   mask:
     dilation.rate: 9.0
