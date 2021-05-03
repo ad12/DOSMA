@@ -150,11 +150,35 @@ class ConesTest(util.ScanTest):
         assert map2 is not None, "map should not be None"
         assert map1.volumetric_map.is_identical(map2.volumetric_map)
 
+    @unittest.skipIf(not util.is_elastix_available(), "elastix is not available")
+    def test_interregister(self):
+        """Test trivial inter-registration."""
+        ys, _, _, _ = self._generate_mock_data()
+        mask = MedicalVolume(np.ones(ys[0].shape), np.eye(4))
+
+        # No mask.
+        scan1 = Cones(ys)
+        scan1.interregister(ys[-1])
+        assert scan1.volumes is not ys
+
+        # With trivial mask.
+        scan2 = Cones(ys)
+        scan2.interregister(ys[-1], mask)
+        assert scan2.volumes is not ys
+
+        # With trivial mask path
+        mask_path = os.path.join(self.data_dirpath, "test_interregister_mask.nii.gz")
+        NiftiWriter().save(mask, mask_path)
+        scan3 = Cones(ys)
+        scan3.interregister(ys[-1], mask)
+        for v1, v2 in zip(scan3.volumes, scan2.volumes):
+            assert np.allclose(v1.A, v2.A)
+
     @unittest.skipIf(
         not util.is_data_available() or not util.is_elastix_available(),
         "unittest data or elastix is not available",
     )
-    def test_interregister(self):
+    def test_interregister_real_data(self):
         """Test Cones interregistration."""
         # Register to first echo of QDess without a mask.
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath)

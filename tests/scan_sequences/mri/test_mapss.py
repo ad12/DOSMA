@@ -57,6 +57,15 @@ class MapssTest(util.ScanTest):
 
         return ys, ts, a, t1rho, t2
 
+    def test_basic(self):
+        ys, ts, _, _, _ = self._generate_mock_data()
+        scan = Mapss(ys)
+        assert scan.echo_times == ts
+        assert scan.volumes == ys
+
+        with self.assertRaises(ValueError):
+            _ = Mapss(np.stack(ys, axis=-1))
+
     def test_generate_t1_rho_map(self):
         ys, _, _, _, _ = self._generate_mock_data()
         scan = Mapss(ys)
@@ -98,6 +107,29 @@ class MapssTest(util.ScanTest):
         map2 = scan.generate_t2_map(tissue, mask_path=mask, num_workers=util.num_workers())
         assert map2 is not None
         assert map1.volumetric_map.is_identical(map2.volumetric_map)
+
+    def test_intraregister(self):
+        ys, _, _, _, _ = self._generate_mock_data()
+        scan = Mapss(ys)
+        scan.intraregister()
+        assert scan.volumes is not ys
+
+    def test_save_load(self):
+        ys, _, _, _, _ = self._generate_mock_data()
+        scan = Mapss(ys)
+
+        save_dir = os.path.join(self.data_dirpath, "test_save_load")
+        pik_file = scan.save(save_dir, save_custom=True)
+        assert os.path.isfile(pik_file)
+        assert all(
+            os.path.isfile(os.path.join(save_dir, "volumes", f"echo-{idx:03d}.nii.gz"))
+            for idx in range(7)
+        )
+
+        scan2 = Mapss.load(pik_file)
+        for v1, v2 in zip(scan.volumes, scan2.volumes):
+            assert v1.is_identical(v2)
+        assert scan2.echo_times == scan.echo_times
 
     @unittest.skipIf(
         not util.is_data_available() or not util.is_elastix_available(),

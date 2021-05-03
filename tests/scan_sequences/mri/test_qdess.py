@@ -71,6 +71,22 @@ class QDessTest(util.ScanTest):
         t2 = scan.generate_t2_map(tissue)
         assert isinstance(t2, QuantitativeValue)
 
+    def test_save_load(self):
+        ys, _, _ = self._generate_mock_data()
+        scan = QDess(ys)
+
+        save_dir = os.path.join(self.data_dirpath, "test_save_load")
+        pik_file = scan.save(save_dir, save_custom=True)
+        assert os.path.isfile(pik_file)
+        assert all(
+            os.path.isfile(os.path.join(save_dir, "volumes", f"echo-{idx:03d}.nii.gz"))
+            for idx in range(2)
+        )
+
+        scan2 = QDess.load(pik_file)
+        for v1, v2 in zip(scan.volumes, scan2.volumes):
+            assert v1.is_identical(v2)
+
     @unittest.skipIf(not util.is_data_available(), "unittest data is not available")
     def test_segmentation_multiclass(self):
         """Test support for multiclass segmentation."""

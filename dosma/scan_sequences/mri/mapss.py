@@ -3,7 +3,6 @@ import os
 from copy import deepcopy
 from typing import List, Sequence
 
-import numpy as np
 from nipype.interfaces.elastix import Registration
 
 from dosma import file_constants as fc
@@ -225,8 +224,6 @@ class Mapss(ScanSequence):
         mask = tissue.get_mask()
         if not mask and mask_path:
             mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
-            if tuple(np.unique(mask.volume)) != (0, 1):
-                raise ValueError("mask_filepath must reference binary segmentation volume")
 
         mef = MonoExponentialFit(
             xs,
