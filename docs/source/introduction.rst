@@ -20,8 +20,8 @@ of quantitative DESS, CubeQuant (3D fast spin echo), and ultra-short echo time C
    :alt: Example workflow for analyzing multiple scans per patient
    :figclass: align-center
 
-   Example workflow for analyzing 1. quantitative DESS (qDESS), a |T2|-weighted
-   sequence, 2. CubeQuant, a |T1rho|-weighted sequence, and 3. ultra-short echo
+   Example quantitative knee MRI workflow for analyzing 1. quantitative DESS (qDESS),
+   a |T2|-weighted sequence, 2. CubeQuant, a |T1rho|-weighted sequence, and 3. ultra-short echo
    time (UTE) Cones, a |T2star| weighted sequence.
 
 Workflow

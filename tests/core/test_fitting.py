@@ -1,4 +1,3 @@
-from typing import Type
 import unittest
 
 import numpy as np
@@ -227,7 +226,7 @@ class TestMonoExponentialFit(unittest.TestCase):
         assert np.allclose(t_hat.volume[mask != 0], t[mask != 0])
 
         fitter2 = MonoExponentialFit(x, y, mask_arr, decimal_precision=8)
-        t_hat2 = fitter.fit()[0]
+        t_hat2 = fitter2.fit()[0]
         assert np.allclose(t_hat2.volume, t_hat.volume)
 
     def test_polyfit_initialization(self):
