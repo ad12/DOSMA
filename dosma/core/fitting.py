@@ -645,8 +645,16 @@ class MonoExponentialFit(_Fit):
                 rsquared_volume (MedicalVolume): The per-voxel r2 goodness of fit.
         """
         if self.tc0 == "polyfit":
-            polyfitter = PolyFitter(1, r2_threshold=0, num_workers=self.num_workers, nan_to_num=0., verbose=self.verbose)
-            params, _ = polyfitter.fit(self.ts, [np.log(sv) for sv in self.subvolumes], mask=self.mask)
+            polyfitter = PolyFitter(
+                1,
+                r2_threshold=0,
+                num_workers=self.num_workers,
+                nan_to_num=0.0,
+                verbose=self.verbose,
+            )
+            params, _ = polyfitter.fit(
+                self.ts, [np.log(sv) for sv in self.subvolumes], mask=self.mask
+            )
             p0 = {"a": np.exp(params[..., 1]), "b": params[..., 0]}
         else:
             p0 = {"a": 1.0, "b": -1 / self.tc0}
@@ -660,7 +668,7 @@ class MonoExponentialFit(_Fit):
             num_workers=self.num_workers,
             chunksize=1000,
             verbose=self.verbose,
-            nan_to_num=0.
+            nan_to_num=0.0,
         )
         popt, r_squared = curve_fitter.fit(self.ts, self.subvolumes, mask=self.mask, p0=p0)
         tc_map = popt[..., 1]
