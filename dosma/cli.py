@@ -562,7 +562,7 @@ def _find_tissue_groups(vargin, tissues: Sequence[Tissue]):
     return weights_to_tissues
 
 
-def _build_params(vargin, scan, parameters, tissue):
+def _build_params(vargin, scan, parameters, tissue=None):
     param_dict = {}
     for param_name in parameters.keys():
         param = parameters[param_name]
@@ -572,6 +572,7 @@ def _build_params(vargin, scan, parameters, tissue):
             continue
 
         if param_type is Tissue:
+            assert tissue is not None
             param_dict["tissue"] = tissue
             continue
 
@@ -628,8 +629,12 @@ def handle_scan(vargin):
             param_dict = _build_params(vargin, scan, parameters, seg_tissues)
             getattr(scan, action.__name__)(**param_dict)
     else:
-        for tissue in tissues:
-            param_dict = _build_params(vargin, scan, parameters, tissue)
+        if "tissue" in func_signature.parameters.keys():
+            for tissue in tissues:
+                param_dict = _build_params(vargin, scan, parameters, tissue)
+                getattr(scan, action.__name__)(**param_dict)
+        else:
+            param_dict = _build_params(vargin, scan, parameters)
             getattr(scan, action.__name__)(**param_dict)
 
     scan.save(vargin[SAVE_KEY], image_data_format=preferences.image_data_format)

@@ -218,8 +218,14 @@ class TestMonoExponentialFit(unittest.TestCase):
         mask = mask.volume
         assert np.allclose(t_hat.volume[mask != 0], t[mask != 0])
 
-        with self.assertRaises(ValueError):
-            fitter = MonoExponentialFit(x, y, mask_arr, decimal_precision=8)
+    def test_polyfit_initialization(self):
+        x, y, b = _generate_monoexp_data((10, 10, 20))
+        t = 1 / np.abs(b)
+
+        fitter = MonoExponentialFit(x, y, tc0="polyfit", decimal_precision=8)
+        t_hat = fitter.fit()[0]
+
+        assert np.allclose(t_hat.volume, t)
 
 
 class TestCurveFitter(unittest.TestCase):

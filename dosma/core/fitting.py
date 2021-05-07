@@ -576,7 +576,9 @@ class MonoExponentialFit(_Fit):
             Speeds fitting time as fewer fits are required.
         bounds (:obj:`tuple[float, float]`, optional): Upper and lower bound for quantitative
             values. Values outside those bounds will be set to ``np.nan``.
-        tc0 (:obj:`float`, optional): Initial time constant guess (in milliseconds).
+        tc0 (:obj:`float`, optional): Initial time constant guess. If ``"polyfit"``, this
+            guess will be determined by first doing a polynomial fit on the log-linearized
+            form of the monoexponential equation :math:`\\log y = \\log a - \\frac{t}{tc}`.
         decimal_precision (:obj:`int`, optional): Rounding precision after the decimal point.
     """
 
@@ -586,7 +588,8 @@ class MonoExponentialFit(_Fit):
         subvolumes: List[MedicalVolume],
         mask: MedicalVolume = None,
         bounds: Tuple[float] = (0, 100.0),
-        tc0: float = 30.0,
+        tc0: Union[float, str] = 30.0,
+        r2_threshold: float = "preferences",
         decimal_precision: int = 1,
         verbose: bool = False,
         num_workers: int = 0,
@@ -604,14 +607,21 @@ class MonoExponentialFit(_Fit):
             raise ValueError(
                 "`len(ts)`={:d}, but `len(subvolumes)`={:d}".format(len(ts), len(subvolumes))
             )
+
+        if not isinstance(tc0, Number) and (isinstance(tc0, str) and tc0 != "polyfit"):
+            raise ValueError("`tc0` must either be a float or the string 'polyfit'.")
+
         self.ts = ts
 
         orientation = subvolumes[0].orientation
         subvolumes = [sv.reformat(orientation) for sv in subvolumes]
         self.subvolumes = subvolumes
 
-        if mask and not isinstance(mask, MedicalVolume):
-            raise TypeError("`mask` must be a MedicalVolume")
+        if mask is not None:
+            if isinstance(mask, np.ndarray):
+                mask = MedicalVolume(mask, affine=subvolumes[0].affine)
+            if not isinstance(mask, MedicalVolume):
+                raise TypeError("`mask` must be a MedicalVolume")
         self.mask = mask.reformat(orientation) if mask else None
 
         self.verbose = verbose
@@ -621,61 +631,39 @@ class MonoExponentialFit(_Fit):
             raise ValueError("`bounds` should provide lower/upper bound in format (lb, ub)")
         self.bounds = bounds
 
+        self.r2_threshold = r2_threshold
         self.tc0 = tc0
         self.decimal_precision = decimal_precision
 
     def fit(self):
-        svs = []
-        msk = None
+        """Perform monoexponential fitting.
 
-        subvolumes = self.subvolumes
-        for sv in subvolumes[1:]:
-            assert subvolumes[0].is_same_dimensions(sv), "Dimension mismatch within subvolumes"
+        Returns:
+            Tuple[MedicalVolume, MedicalVolume]:
 
-        if self.mask:
-            assert subvolumes[0].is_same_dimensions(
-                self.mask, defaults.AFFINE_DECIMAL_PRECISION
-            ), "Mask dimension mismatch"
-            msk = self.mask.volume
-            msk = (msk > 0).astype(msk.dtype)
-            msk = msk.reshape(1, -1)
+                time_constant_volume (MedicalVolume): The per-voxel tc fit.
+                rsquared_volume (MedicalVolume): The per-voxel r2 goodness of fit.
+        """
+        if self.tc0 == "polyfit":
+            polyfitter = PolyFitter(1, r2_threshold=0, num_workers=self.num_workers, nan_to_num=0., verbose=self.verbose)
+            params, _ = polyfitter.fit(self.ts, [np.log(sv) for sv in self.subvolumes], mask=self.mask)
+            p0 = {"a": np.exp(params[..., 1]), "b": params[..., 0]}
+        else:
+            p0 = {"a": 1.0, "b": -1 / self.tc0}
 
-        original_shape = subvolumes[0].volume.shape
-
-        for i in range(len(self.ts)):
-            sv = subvolumes[i].volume
-
-            svr = sv.reshape((1, -1))
-            if msk is not None:
-                svr = svr * msk
-
-            svs.append(svr)
-
-        svs = np.concatenate(svs)
-
-        p0 = (1.0, -1 / self.tc0)
-        popt, r_squared = curve_fit(
+        curve_fitter = CurveFitter(
             monoexponential,
-            self.ts,
-            svs,
             y_bounds=None,
-            p0=p0,
-            show_pbar=self.verbose,
+            out_ufuncs=(None, lambda x: 1 / np.abs(x)),
+            out_bounds=((-np.inf, np.inf), self.bounds),
+            r2_threshold=self.r2_threshold,
             num_workers=self.num_workers,
+            chunksize=1000,
+            verbose=self.verbose,
+            nan_to_num=0.
         )
-        vals = 1 / np.abs(popt[:, 1])
-
-        map_unfiltered = vals.reshape(original_shape)
-        r_squared = r_squared.reshape(original_shape)
-
-        # All accepted values must meet an r-squared threshold of `DEFAULT_R2_THRESHOLD`.
-        tc_map = map_unfiltered * (r_squared >= preferences.fitting_r2_threshold)
-
-        # Filter calculated values that are below limit bounds.
-        tc_map[tc_map < self.bounds[0]] = np.nan
-        tc_map = np.nan_to_num(tc_map)
-        tc_map[tc_map > self.bounds[1]] = np.nan
-        tc_map = np.nan_to_num(tc_map)
+        popt, r_squared = curve_fitter.fit(self.ts, self.subvolumes, mask=self.mask, p0=p0)
+        tc_map = popt[..., 1]
 
         if self.decimal_precision is not None:
             tc_map = np.around(tc_map, self.decimal_precision)

@@ -158,17 +158,22 @@ class CubeQuant(NonTargetSequence):
 
         # only calculate for focused region if a mask is available, this speeds up computation
         mask = tissue.get_mask()
-        if (not mask or np.sum(mask.volume) == 0) and mask_path:
-            mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
+        if mask_path is not None:
+            mask = (
+                fio_utils.generic_load(mask_path, expected_num_volumes=1)
+                if isinstance(mask_path, (str, os.PathLike))
+                else mask_path
+            )
 
         mef = MonoExponentialFit(
             spin_lock_times,
             subvolumes_list,
             mask=mask,
             bounds=(__T1_RHO_LOWER_BOUND__, __T1_RHO_UPPER_BOUND__),
-            tc0=__INITIAL_T1_RHO_VAL__,
+            tc0="polyfit",
             decimal_precision=__T1_RHO_DECIMAL_PRECISION__,
             num_workers=num_workers,
+            verbose=True,
         )
 
         t1rho_map, r2 = mef.fit()

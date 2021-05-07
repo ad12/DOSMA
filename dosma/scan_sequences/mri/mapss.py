@@ -167,7 +167,7 @@ class Mapss(ScanSequence):
         """
         echo_inds = range(4)
         bounds = (__T1_RHO_LOWER_BOUND__, __T1_RHO_UPPER_BOUND__)
-        tc0 = __INITIAL_T1_RHO_VAL__
+        tc0 = "polyfit"
         decimal_precision = __DECIMAL_PRECISION__
 
         qv_map = self.__fitting_helper(
@@ -192,7 +192,7 @@ class Mapss(ScanSequence):
         """
         echo_inds = [0, 4, 5, 6]
         bounds = (__T2_LOWER_BOUND__, __T2_UPPER_BOUND__)
-        tc0 = __INITIAL_T2_VAL__
+        tc0 = "polyfit"
         decimal_precision = __DECIMAL_PRECISION__
 
         qv_map = self.__fitting_helper(

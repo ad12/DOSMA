@@ -159,7 +159,7 @@ class Cones(NonTargetSequence):
             subvolumes_list,
             mask=mask,
             bounds=(__T2_STAR_LOWER_BOUND__, __T2_STAR_UPPER_BOUND__),
-            tc0=__INITIAL_T2_STAR_VAL__,
+            tc0="polyfit",
             decimal_precision=__T2_STAR_DECIMAL_PRECISION__,
             num_workers=num_workers,
         )
