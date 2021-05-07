@@ -16,6 +16,13 @@ class TestDevice(unittest.TestCase):
 
         device = Device(-1)
         assert int(device) == -1
+        assert device.index == -1
+        assert device.id == -1
+        assert device == -1
+        assert device.cpdevice is None
+
+        device2 = Device(-1)
+        assert device2 == device
 
     @requires_packages("cupy")
     def test_cupy(self):

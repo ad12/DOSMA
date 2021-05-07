@@ -30,7 +30,7 @@ class TestT2(unittest.TestCase):
         qv.add_additional_volume("r2", mv + 1)
         assert np.all(qv.additional_volumes["r2"] == mv + 1)
 
-    def test_save_data(self):
+    def test_save_load_data(self):
         out_dir = os.path.join(ututils.TEMP_PATH, "quant_val_save")
         vol = np.zeros((10, 10, 10))
         mv = MedicalVolume(vol, self._AFFINE)
@@ -44,6 +44,10 @@ class TestT2(unittest.TestCase):
 
         with self.assertWarns(UserWarning):
             qv.save_data(out_dir, ImageDataFormat.dicom)
+
+        qv2 = T2()
+        qv2.load_data(out_dir)
+        assert qv2.volumetric_map.is_identical(qv.volumetric_map)
 
     def test_to_metrics(self):
         vol = np.zeros((10, 10, 10))
