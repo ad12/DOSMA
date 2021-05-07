@@ -1,3 +1,4 @@
+from typing import Type
 import unittest
 
 import numpy as np
@@ -206,6 +207,13 @@ class TestMonoExponentialFit(unittest.TestCase):
 
         assert np.allclose(t_hat.volume, t)
 
+        with self.assertRaises(ValueError):
+            fitter = MonoExponentialFit(list(x) + [5], y)
+        with self.assertRaises(TypeError):
+            fitter = MonoExponentialFit(x, [_y.A for _y in y])
+        with self.assertRaises(ValueError):
+            fitter = MonoExponentialFit(x, y, tc0="a value")
+
     def test_mask(self):
         x, y, b = _generate_monoexp_data((10, 10, 20))
         mask_arr = np.random.rand(*y[0].shape) > 0.5
@@ -217,6 +225,10 @@ class TestMonoExponentialFit(unittest.TestCase):
 
         mask = mask.volume
         assert np.allclose(t_hat.volume[mask != 0], t[mask != 0])
+
+        fitter2 = MonoExponentialFit(x, y, mask_arr, decimal_precision=8)
+        t_hat2 = fitter.fit()[0]
+        assert np.allclose(t_hat2.volume, t_hat.volume)
 
     def test_polyfit_initialization(self):
         x, y, b = _generate_monoexp_data((10, 10, 20))

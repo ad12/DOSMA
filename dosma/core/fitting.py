@@ -580,6 +580,12 @@ class MonoExponentialFit(_Fit):
             guess will be determined by first doing a polynomial fit on the log-linearized
             form of the monoexponential equation :math:`\\log y = \\log a - \\frac{t}{tc}`.
         decimal_precision (:obj:`int`, optional): Rounding precision after the decimal point.
+        num_workers (int, optional): Maximum number of workers to use for fitting.
+        chunksize (int, optional): Size of chunks sent to worker processes when
+            ``num_workers > 0``. When ``show_pbar=True``, this defaults to the standard
+            value in :func:`tqdm.concurrent.process_map`.
+        verbose (bool, optional): If `True`, show progress bar. Note this can increase runtime
+            slightly when using multiple workers.
     """
 
     def __init__(
@@ -591,8 +597,9 @@ class MonoExponentialFit(_Fit):
         tc0: Union[float, str] = 30.0,
         r2_threshold: float = "preferences",
         decimal_precision: int = 1,
-        verbose: bool = False,
         num_workers: int = 0,
+        chunksize: int = 1000,
+        verbose: bool = False,
     ):
 
         if (not isinstance(subvolumes, list)) or (
@@ -608,7 +615,7 @@ class MonoExponentialFit(_Fit):
                 "`len(ts)`={:d}, but `len(subvolumes)`={:d}".format(len(ts), len(subvolumes))
             )
 
-        if not isinstance(tc0, Number) and (isinstance(tc0, str) and tc0 != "polyfit"):
+        if not (isinstance(tc0, Number) or (isinstance(tc0, str) and tc0 == "polyfit")):
             raise ValueError("`tc0` must either be a float or the string 'polyfit'.")
 
         self.ts = ts
@@ -631,6 +638,7 @@ class MonoExponentialFit(_Fit):
             raise ValueError("`bounds` should provide lower/upper bound in format (lb, ub)")
         self.bounds = bounds
 
+        self.chunksize = chunksize
         self.r2_threshold = r2_threshold
         self.tc0 = tc0
         self.decimal_precision = decimal_precision
@@ -666,7 +674,7 @@ class MonoExponentialFit(_Fit):
             out_bounds=((-np.inf, np.inf), self.bounds),
             r2_threshold=self.r2_threshold,
             num_workers=self.num_workers,
-            chunksize=1000,
+            chunksize=self.chunksize,
             verbose=self.verbose,
             nan_to_num=0.0,
         )
