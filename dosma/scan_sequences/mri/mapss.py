@@ -233,7 +233,7 @@ class Mapss(ScanSequence):
             tc0=tc0,
             decimal_precision=decimal_precision,
             num_workers=num_workers,
-            verbose=True
+            verbose=True,
         )
         qv_map, r2 = mef.fit()
 
