@@ -162,6 +162,7 @@ class Cones(NonTargetSequence):
             tc0="polyfit",
             decimal_precision=__T2_STAR_DECIMAL_PRECISION__,
             num_workers=num_workers,
+            verbose=True,
         )
 
         t2star_map, r2 = mef.fit()

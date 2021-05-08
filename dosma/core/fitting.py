@@ -579,6 +579,8 @@ class MonoExponentialFit(_Fit):
         tc0 (:obj:`float`, optional): Initial time constant guess. If ``"polyfit"``, this
             guess will be determined by first doing a polynomial fit on the log-linearized
             form of the monoexponential equation :math:`\\log y = \\log a - \\frac{t}{tc}`.
+            Note for polyfit initialization, ``subvolumes`` should not have any nan or infinite
+            values.
         decimal_precision (:obj:`int`, optional): Rounding precision after the decimal point.
         num_workers (int, optional): Maximum number of workers to use for fitting.
         chunksize (int, optional): Size of chunks sent to worker processes when
@@ -642,6 +644,7 @@ class MonoExponentialFit(_Fit):
         self.r2_threshold = r2_threshold
         self.tc0 = tc0
         self.decimal_precision = decimal_precision
+        self._eps = 1e-16  # epsilon for polyfit
 
     def fit(self):
         """Perform monoexponential fitting.
@@ -656,13 +659,16 @@ class MonoExponentialFit(_Fit):
             polyfitter = PolyFitter(
                 1,
                 r2_threshold=0,
-                num_workers=self.num_workers,
+                num_workers=None,
                 nan_to_num=0.0,
+                chunksize=self.chunksize,
                 verbose=self.verbose,
             )
-            params, _ = polyfitter.fit(
-                self.ts, [np.log(sv) for sv in self.subvolumes], mask=self.mask
-            )
+            vols = [sv.astype(np.float) for sv in self.subvolumes]
+            vols = [sv + self._eps * (sv == 0) for sv in vols]
+            assert all(np.all(v != 0) for v in vols)
+            log_vols = [np.log(v) for v in vols]
+            params, _ = polyfitter.fit(self.ts, log_vols, mask=self.mask)
             p0 = {"a": np.exp(params[..., 1]), "b": params[..., 0]}
         else:
             p0 = {"a": 1.0, "b": -1 / self.tc0}

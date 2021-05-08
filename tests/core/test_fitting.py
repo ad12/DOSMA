@@ -235,8 +235,19 @@ class TestMonoExponentialFit(unittest.TestCase):
 
         fitter = MonoExponentialFit(x, y, tc0="polyfit", decimal_precision=8)
         t_hat = fitter.fit()[0]
-
         assert np.allclose(t_hat.volume, t)
+
+        # Test fitting still works even if some values are 0.
+        # The values will not be accurate, but other pixel values should be.
+        x, y, b = _generate_monoexp_data((10, 10, 20))
+        t = 1 / np.abs(b)
+        mask_arr = np.zeros(y[0].shape, dtype=np.bool)
+        mask_arr[:5, :5] = 1
+        y[0][mask_arr] = 0
+
+        fitter = MonoExponentialFit(x, y, tc0="polyfit", decimal_precision=8)
+        t_hat = fitter.fit()[0]
+        assert np.allclose(t_hat.volume[mask_arr == 0], t[mask_arr == 0])
 
 
 class TestCurveFitter(unittest.TestCase):
