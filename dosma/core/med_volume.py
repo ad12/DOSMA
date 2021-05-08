@@ -19,6 +19,8 @@ from dosma.core.io.format_io import ImageDataFormat
 from dosma.defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
 from dosma.utils import env
 
+from packaging import version
+
 if env.sitk_available():
     import SimpleITK as sitk
 if env.cupy_available():
@@ -433,7 +435,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
         if (
             env.package_available("h5py")
             and isinstance(self._volume, h5py.Dataset)
-            and env.get_version(h5py) < (3, 0, 0)
+            and version.parse(env.get_version(h5py)) < version.parse("3.0.0")
         ):
             raise ValueError("Cannot cast h5py.Dataset to dtype for h5py<3.0.0")
 

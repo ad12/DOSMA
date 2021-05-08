@@ -1,6 +1,5 @@
 import os
 from importlib import util
-from typing import Tuple
 
 _SUPPORTED_PACKAGES = {}
 
@@ -24,25 +23,19 @@ def package_available(name: str):
     return _SUPPORTED_PACKAGES[name]
 
 
-def get_version(package_or_name, num: int = 2) -> Tuple[int]:
+def get_version(package_or_name) -> str:
     """Returns version number of the package up to ``num``.
 
     Args:
         package_or_name (``module`` or ``str``): Module or name of module.
             This package must have the version accessible through ``<module>.__version__``.
-        num (int, optional): Version depth to return. Should be <=3 following standard
-            semantic versioning. For example, ``num==2`` will return ``(X, Y)``.
 
     Returns:
-        Tuple[int]: The versions.
+        str: The package version.
 
     Examples:
         >>> get_version("numpy")
-        (1, 20)
-        >>> get_version("numpy", 3)
-        (1, 20, 1)
-        >>> get_version("numpy") >= (1, 18)
-        True
+        "1.20.0"
     """
     if isinstance(package_or_name, str):
         if not package_available(package_or_name):
@@ -51,7 +44,7 @@ def get_version(package_or_name, num: int = 2) -> Tuple[int]:
         package_or_name = util.module_from_spec(spec)
         spec.loader.exec_module(package_or_name)
     version = package_or_name.__version__
-    return tuple([int(x) for x in version.split(".")[:num]])
+    return version
 
 
 def debug(value: bool = None) -> bool:

@@ -12,9 +12,7 @@ class TestEnv(unittest.TestCase):
         assert not env.package_available("blah")
 
     def test_get_version(self):
-        version = tuple(int(x) for x in dosma.__version__.split("."))
-        assert env.get_version("dosma") == version[:2]
-        assert env.get_version("dosma", 3) == version
+        assert env.get_version("dosma") == dosma.__version__
 
     def test_debug(self):
         os_env = os.environ.copy()
