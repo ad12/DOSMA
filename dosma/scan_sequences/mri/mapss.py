@@ -226,16 +226,13 @@ class Mapss(ScanSequence):
             mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
 
         mef = MonoExponentialFit(
-            xs,
-            ys,
-            mask=mask,
             bounds=bounds,
             tc0=tc0,
             decimal_precision=decimal_precision,
             num_workers=num_workers,
             verbose=True,
         )
-        qv_map, r2 = mef.fit()
+        qv_map, r2 = mef.fit(xs, ys, mask=mask)
 
         quant_val_map = qv_type(qv_map)
         quant_val_map.add_additional_volume("r2", r2)

@@ -201,9 +201,13 @@ class TestMonoExponentialFit(unittest.TestCase):
         x, y, b = _generate_monoexp_data((10, 10, 20))
         t = 1 / np.abs(b)
 
-        fitter = MonoExponentialFit(x, y, decimal_precision=8)
-        t_hat = fitter.fit()[0]
+        fitter = MonoExponentialFit(decimal_precision=8)
+        t_hat = fitter.fit(x, y)[0]
+        assert np.allclose(t_hat.volume, t)
 
+        with self.assertWarns(UserWarning):
+            fitter = MonoExponentialFit(x, y, decimal_precision=8)
+        t_hat = fitter.fit(x, y)[0]
         assert np.allclose(t_hat.volume, t)
 
         with self.assertRaises(ValueError):
@@ -213,28 +217,51 @@ class TestMonoExponentialFit(unittest.TestCase):
         with self.assertRaises(ValueError):
             fitter = MonoExponentialFit(x, y, tc0="a value")
 
+    def test_headers(self):
+        x, y, b = _generate_monoexp_data((10, 10, 20))
+        t = 1 / np.abs(b)
+        for idx, _y in enumerate(y):
+            _y._headers = util.build_dummy_headers(
+                (1, 1) + _y.shape[2:],
+                fields={"StudyDescription": "Sample study", "EchoNumbers": idx},
+            )
+
+        fitter = MonoExponentialFit(decimal_precision=8)
+        t_hat = fitter.fit(x, y)[0]
+
+        assert np.allclose(t_hat.volume, t)
+        assert t_hat.headers() is not None
+        assert t_hat.headers().shape == (1, 1, 20)
+        for h in t_hat.headers().flatten():
+            assert h.get("StudyDescription") == "Sample study"
+
     def test_mask(self):
         x, y, b = _generate_monoexp_data((10, 10, 20))
         mask_arr = np.random.rand(*y[0].shape) > 0.5
         t = 1 / np.abs(b)
 
         mask = MedicalVolume(mask_arr, np.eye(4))
-        fitter = MonoExponentialFit(x, y, mask, decimal_precision=8)
-        t_hat = fitter.fit()[0]
+        fitter = MonoExponentialFit(decimal_precision=8)
+        t_hat = fitter.fit(x, y, mask)[0]
 
         mask = mask.volume
         assert np.allclose(t_hat.volume[mask != 0], t[mask != 0])
 
-        fitter2 = MonoExponentialFit(x, y, mask_arr, decimal_precision=8)
-        t_hat2 = fitter2.fit()[0]
+        fitter2 = MonoExponentialFit(decimal_precision=8)
+        t_hat2 = fitter2.fit(x, y, mask_arr)[0]
         assert np.allclose(t_hat2.volume, t_hat.volume)
+
+        with self.assertWarns(UserWarning):
+            fitter3 = MonoExponentialFit(mask=mask, decimal_precision=8)
+        t_hat3 = fitter3.fit(x, y)[0]
+        assert np.allclose(t_hat3.volume, t_hat.volume)
 
     def test_polyfit_initialization(self):
         x, y, b = _generate_monoexp_data((10, 10, 20))
         t = 1 / np.abs(b)
 
-        fitter = MonoExponentialFit(x, y, tc0="polyfit", decimal_precision=8)
-        t_hat = fitter.fit()[0]
+        fitter = MonoExponentialFit(tc0="polyfit", decimal_precision=8)
+        t_hat = fitter.fit(x, y)[0]
         assert np.allclose(t_hat.volume, t)
 
         # Test fitting still works even if some values are 0.
@@ -245,8 +272,8 @@ class TestMonoExponentialFit(unittest.TestCase):
         mask_arr[:5, :5] = 1
         y[0][mask_arr] = 0
 
-        fitter = MonoExponentialFit(x, y, tc0="polyfit", decimal_precision=8)
-        t_hat = fitter.fit()[0]
+        fitter = MonoExponentialFit(tc0="polyfit", decimal_precision=8)
+        t_hat = fitter.fit(x, y)[0]
         assert np.allclose(t_hat.volume[mask_arr == 0], t[mask_arr == 0])
 
 
@@ -386,8 +413,8 @@ class TestCurveFitter(unittest.TestCase):
         """Match functionality of ``MonoexponentialFit`` using ``CurveFitter``."""
         x, y, _ = _generate_monoexp_data((10, 10, 20))
 
-        fitter = MonoExponentialFit(x, y, tc0=30.0, bounds=(0, 100), decimal_precision=8)
-        t_hat_mef = fitter.fit()[0]
+        fitter = MonoExponentialFit(tc0=30.0, bounds=(0, 100), decimal_precision=8)
+        t_hat_mef = fitter.fit(x, y)[0]
 
         fitter = CurveFitter(
             monoexponential,
@@ -415,6 +442,8 @@ class TestCurveFitter(unittest.TestCase):
 
         assert np.allclose(a_hat.volume, 1.0)
         assert np.allclose(b_hat.volume, b)
+        assert b_hat.headers() is not None
+        assert b_hat.headers().shape == (1, 1, 20, 4)
 
         # Test header with single parameter to fit
         x, y, a = _generate_linear_data((10, 10, 20, 4))

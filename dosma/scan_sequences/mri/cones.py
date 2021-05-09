@@ -155,9 +155,6 @@ class Cones(NonTargetSequence):
         subvolumes_list = self.volumes
 
         mef = MonoExponentialFit(
-            spin_lock_times,
-            subvolumes_list,
-            mask=mask,
             bounds=(__T2_STAR_LOWER_BOUND__, __T2_STAR_UPPER_BOUND__),
             tc0="polyfit",
             decimal_precision=__T2_STAR_DECIMAL_PRECISION__,
@@ -165,7 +162,7 @@ class Cones(NonTargetSequence):
             verbose=True,
         )
 
-        t2star_map, r2 = mef.fit()
+        t2star_map, r2 = mef.fit(spin_lock_times, subvolumes_list, mask=mask)
 
         quant_val_map = qv.T2Star(t2star_map)
         quant_val_map.add_additional_volume("r2", r2)

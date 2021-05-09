@@ -166,9 +166,6 @@ class CubeQuant(NonTargetSequence):
             )
 
         mef = MonoExponentialFit(
-            spin_lock_times,
-            subvolumes_list,
-            mask=mask,
             bounds=(__T1_RHO_LOWER_BOUND__, __T1_RHO_UPPER_BOUND__),
             tc0="polyfit",
             decimal_precision=__T1_RHO_DECIMAL_PRECISION__,
@@ -176,7 +173,7 @@ class CubeQuant(NonTargetSequence):
             verbose=True,
         )
 
-        t1rho_map, r2 = mef.fit()
+        t1rho_map, r2 = mef.fit(spin_lock_times, subvolumes_list, mask=mask)
 
         quant_val_map = qv.T1Rho(t1rho_map)
         quant_val_map.add_additional_volume("r2", r2)

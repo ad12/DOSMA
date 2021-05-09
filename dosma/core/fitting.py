@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import partial
 from numbers import Number
-from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import Callable, Dict, Mapping, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from scipy import optimize as sop
@@ -171,8 +171,6 @@ class _Fitter(ABC):
         """
         svs = []
         msk = None
-
-        # import pdb; pdb.set_trace()
 
         if (not isinstance(y, (list, tuple))) or (
             not all([isinstance(_y, MedicalVolume) for _y in y])
@@ -565,12 +563,11 @@ class PolyFitter(_Fitter):
 
 
 class MonoExponentialFit(_Fit):
-    """Fit quantitative values using mono-exponential fit of model :math:`a*exp(-t/tc)`.
+    """Fit quantitative values using mono-exponential fit of model :math:`y=a*exp(-x/tc)`.
 
     Args:
-        ts (:obj:`array-like`): 1D array of times in milliseconds (typically echo times)
-            corresponding to different volumes.
-        subvolumes (list[MedicalVolumes]): Volumes (in order) corresponding to times in `ts`.
+        x (:obj:`array-like`): 1D array of independent variables corresponding to different volumes.
+        y (list[MedicalVolumes]): Volumes (in order) corresponding to independent variable in `x`.
         mask (:obj:`MedicalVolume`, optional): Mask of pixels to fit.
             If specified, pixels outside of mask region are ignored and set to ``np.nan``.
             Speeds fitting time as fewer fits are required.
@@ -592,8 +589,8 @@ class MonoExponentialFit(_Fit):
 
     def __init__(
         self,
-        ts: Sequence[float],
-        subvolumes: List[MedicalVolume],
+        x: Sequence[float] = None,
+        y: Sequence[MedicalVolume] = None,
         mask: MedicalVolume = None,
         bounds: Tuple[float] = (0, 100.0),
         tc0: Union[float, str] = 30.0,
@@ -604,34 +601,24 @@ class MonoExponentialFit(_Fit):
         verbose: bool = False,
     ):
 
-        if (not isinstance(subvolumes, list)) or (
-            not all([isinstance(sv, MedicalVolume) for sv in subvolumes])
-        ):
-            raise TypeError("`subvolumes` must be list of MedicalVolumes.")
-
-        if any(x.device != cpu_device for x in subvolumes):
-            raise RuntimeError("All MedicalVolumes must be on the CPU")
-
-        if len(ts) != len(subvolumes):
-            raise ValueError(
-                "`len(ts)`={:d}, but `len(subvolumes)`={:d}".format(len(ts), len(subvolumes))
+        self.x = x
+        if y is not None:
+            warnings.warn(
+                f"Setting `y` in the constructor can result in significant memory overhead. "
+                f"Specify `y` in `{type(self).__name__}.fit(y=...)` instead."
             )
+            self._check_y(x, y)
+        self.y = y
+
+        if mask is not None:
+            warnings.warn(
+                f"Setting `mask` in the constructor can result in significant memory overhead. "
+                f"Specify `mask` in `{type(self).__name__}.fit(mask=...)` instead."
+            )
+        self.mask = mask
 
         if not (isinstance(tc0, Number) or (isinstance(tc0, str) and tc0 == "polyfit")):
             raise ValueError("`tc0` must either be a float or the string 'polyfit'.")
-
-        self.ts = ts
-
-        orientation = subvolumes[0].orientation
-        subvolumes = [sv.reformat(orientation) for sv in subvolumes]
-        self.subvolumes = subvolumes
-
-        if mask is not None:
-            if isinstance(mask, np.ndarray):
-                mask = MedicalVolume(mask, affine=subvolumes[0].affine)
-            if not isinstance(mask, MedicalVolume):
-                raise TypeError("`mask` must be a MedicalVolume")
-        self.mask = mask.reformat(orientation) if mask else None
 
         self.verbose = verbose
         self.num_workers = num_workers
@@ -644,9 +631,9 @@ class MonoExponentialFit(_Fit):
         self.r2_threshold = r2_threshold
         self.tc0 = tc0
         self.decimal_precision = decimal_precision
-        self._eps = 1e-16  # epsilon for polyfit
+        self._eps = 1e-10  # epsilon for polyfit - do not change this
 
-    def fit(self):
+    def fit(self, x=None, y: Sequence[MedicalVolume] = None, mask=None):
         """Perform monoexponential fitting.
 
         Returns:
@@ -655,6 +642,20 @@ class MonoExponentialFit(_Fit):
                 time_constant_volume (MedicalVolume): The per-voxel tc fit.
                 rsquared_volume (MedicalVolume): The per-voxel r2 goodness of fit.
         """
+        x = self.x if x is None else x
+        y = self.y if y is None else y
+        mask = self.mask if mask is None else mask
+
+        self._check_y(x, y)
+        orientation = y[0].orientation
+        y = [sv.reformat(orientation) for sv in y]
+
+        if isinstance(mask, np.ndarray):
+            mask = MedicalVolume(mask, affine=y[0].affine)
+            if not isinstance(mask, MedicalVolume):
+                raise TypeError("`mask` must be a MedicalVolume")
+        mask = mask.reformat(orientation) if mask else None
+
         if self.tc0 == "polyfit":
             polyfitter = PolyFitter(
                 1,
@@ -664,19 +665,22 @@ class MonoExponentialFit(_Fit):
                 chunksize=self.chunksize,
                 verbose=self.verbose,
             )
-            vols = [sv.astype(np.float) for sv in self.subvolumes]
+            vols = [
+                sv.astype(np.float32) if np.issubdtype(sv.dtype, np.integer) else sv for sv in y
+            ]
             vols = [sv + self._eps * (sv == 0) for sv in vols]
             assert all(np.all(v != 0) for v in vols)
-            log_vols = [np.log(v) for v in vols]
-            params, _ = polyfitter.fit(self.ts, log_vols, mask=self.mask)
+            vols = [np.log(v) for v in vols]
+            params, _ = polyfitter.fit(x, vols, mask=mask)
             p0 = {"a": np.exp(params[..., 1]), "b": params[..., 0]}
+            del vols, params  # begin garbage collection for large arrays sooner
         else:
             p0 = {"a": 1.0, "b": -1 / self.tc0}
 
         curve_fitter = CurveFitter(
             monoexponential,
             y_bounds=None,
-            out_ufuncs=(None, lambda x: 1 / np.abs(x)),
+            out_ufuncs=(None, lambda _x: 1 / np.abs(_x)),
             out_bounds=((-np.inf, np.inf), self.bounds),
             r2_threshold=self.r2_threshold,
             num_workers=self.num_workers,
@@ -684,16 +688,23 @@ class MonoExponentialFit(_Fit):
             verbose=self.verbose,
             nan_to_num=0.0,
         )
-        popt, r_squared = curve_fitter.fit(self.ts, self.subvolumes, mask=self.mask, p0=p0)
+        popt, r_squared = curve_fitter.fit(x, y, mask=mask, p0=p0)
         tc_map = popt[..., 1]
 
         if self.decimal_precision is not None:
             tc_map = np.around(tc_map, self.decimal_precision)
 
-        time_constant_volume = self.subvolumes[0]._partial_clone(volume=tc_map, headers=True)
-        rsquared_volume = self.subvolumes[0]._partial_clone(volume=r_squared, headers=True)
+        return tc_map, r_squared
 
-        return time_constant_volume, rsquared_volume
+    def _check_y(self, x, y):
+        if (not isinstance(y, Sequence)) or (not all([isinstance(sv, MedicalVolume) for sv in y])):
+            raise TypeError("`y` must be list of MedicalVolumes.")
+
+        if any(x.device != cpu_device for x in y):
+            raise RuntimeError("All MedicalVolumes must be on the CPU")
+
+        if len(x) != len(y):
+            raise ValueError("`len(x)`={:d}, but `len(y)`={:d}".format(len(x), len(y)))
 
 
 __EPSILON__ = 1e-8
