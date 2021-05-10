@@ -341,7 +341,9 @@ class CurveFitter(_Fitter):
         self.verbose = verbose
         self.kwargs = kwargs
 
-    def _format_p0(self, p0, ref: MedicalVolume = None, flatten: bool = False, mask=None, depth: int = 0):
+    def _format_p0(
+        self, p0, ref: MedicalVolume = None, flatten: bool = False, mask=None, depth: int = 0
+    ):
         if p0 is None or isinstance(p0, Number):
             return p0
         elif isinstance(p0, MedicalVolume) and depth > 0:
@@ -371,7 +373,8 @@ class CurveFitter(_Fitter):
             # last axis is considered to be the parameter axis. Note, this may
             # change in the future.
             return tuple(
-                self._format_p0(p0[..., i], ref, flatten, mask, depth + 1) for i in range(p0.shape[-1])
+                self._format_p0(p0[..., i], ref, flatten, mask, depth + 1)
+                for i in range(p0.shape[-1])
             )
 
         raise ValueError(f"p0={p0} not supported")
