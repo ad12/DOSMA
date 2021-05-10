@@ -122,6 +122,11 @@ def register(
     assert len(default_files) == len(files), default_files  # should be 1-to-1 with # args provided
     vols = [(idx, v) for idx, v in enumerate(files) if isinstance(v, MedicalVolume)]
     idxs, vols = [x[0] for x in vols], [x[1] for x in vols]
+
+    # Temporary directory must be created prior to writing data
+    # due to issues with creating directories in multiprocessing settings.
+    os.makedirs(tmp_dir, exist_ok=True)
+
     if len(vols) > 0:
         filepaths = [os.path.join(tmp_dir, f"{default_files[idx]}.nii.gz") for idx in idxs]
         if num_workers > 0:

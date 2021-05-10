@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import partial
 from numbers import Number
-from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import Callable, Dict, Mapping, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from scipy import optimize as sop
@@ -104,7 +104,7 @@ class _Fitter(ABC):
         if not mask.is_same_dimensions(y, defaults.AFFINE_DECIMAL_PRECISION):
             raise RuntimeError("`mask` and `y` dimension mismatch")
 
-        return (mask > 0).astype(mask.dtype)
+        return mask > 0
 
     def _process_params(self, x, r_squared):
         """
@@ -154,7 +154,7 @@ class _Fitter(ABC):
         """
         raise NotImplementedError  # pragma: no cover
 
-    def fit(self, x, y: Sequence[MedicalVolume], mask=None, **kwargs):
+    def fit(self, x, y: Sequence[MedicalVolume], mask=None, copy_headers: bool = True, **kwargs):
         """
         Args:
             x (array-like): 1D array of independent variables corresponding to different ``y``.
@@ -162,6 +162,8 @@ class _Fitter(ABC):
                 independent variable ``x``. Data must be spatially aligned.
             mask (``MedicalVolume`` or ``ndarray``, optional): If specified, only entries where
                 ``mask > 0`` will be fit.
+            copy_headers (bool): If ``True``, headers will be deep copied. If ``False``,
+                headers will not be copied. Returned values will not have headers.
             kwargs: Optional keyword arguments to be passed to :func:`self._fit`.
 
         Returns:
@@ -170,9 +172,6 @@ class _Fitter(ABC):
             corresponds to different parameters in order of appearance in ``self.func``.
         """
         svs = []
-        msk = None
-
-        # import pdb; pdb.set_trace()
 
         if (not isinstance(y, (list, tuple))) or (
             not all([isinstance(_y, MedicalVolume) for _y in y])
@@ -189,29 +188,49 @@ class _Fitter(ABC):
         y = [_y.reformat(orientation) for _y in y]
 
         if mask is not None:
-            msk = self._process_mask(mask, y[0])
-            msk = msk.volume.reshape(1, -1)
+            mask = self._process_mask(mask, y[0])
+            mask = mask.volume.reshape(-1)
 
         original_shape = y[0].shape
         svs = np.concatenate([_y.volume.reshape((1, -1)) for _y in y], axis=0)
-        if msk is not None:
-            svs *= msk
+        flattened_shape = svs.shape
+
+        # Select indices to fit.
+        if mask is not None:
+            svs = svs[:, mask]
 
         popt, r_squared = self._fit(x, svs, **kwargs)
         popt = self._process_params(popt, r_squared)
+
+        if mask is not None:
+            popt_full = np.empty(flattened_shape[-1:] + popt.shape[-1:])
+            r2_full = np.empty(flattened_shape[-1])
+            nan_val = np.nan if self.nan_to_num is None else self.nan_to_num
+            popt_full.fill(nan_val)
+            r2_full.fill(nan_val)
+            popt_full[mask] = popt
+            r2_full[mask] = r_squared
+            popt = popt_full
+            r_squared = r2_full
+            del popt_full, r2_full  # variables not used later - drop reference to underlying array
+
         popt = popt.reshape(original_shape + popt.shape[-1:])
         r_squared = r_squared.reshape(original_shape)
 
         # For parameters, headers have to be deep copied and expanded to follow
         # broadcasting dimensions.
-        headers = y[0].headers()
-        if headers is not None:
-            headers = deepcopy(headers)
-            if popt.ndim > y[0].volume.ndim:
-                axis = tuple(-i for i in range(1, popt.ndim - y[0].volume.ndim + 1))
-                headers = np.expand_dims(headers, axis=axis)
-        popt = y[0]._partial_clone(volume=popt, headers=headers)
-        rsquared_volume = y[0]._partial_clone(volume=r_squared, headers=True)
+        if copy_headers:
+            headers = y[0].headers()
+            if headers is not None:
+                headers = deepcopy(headers)
+                if popt.ndim > y[0].volume.ndim:
+                    axis = tuple(-i for i in range(1, popt.ndim - y[0].volume.ndim + 1))
+                    headers = np.expand_dims(headers, axis=axis)
+            popt_headers, r2_headers = headers, True
+        else:
+            popt_headers, r2_headers = None, None
+        popt = y[0]._partial_clone(volume=popt, headers=popt_headers)
+        rsquared_volume = y[0]._partial_clone(volume=r_squared, headers=r2_headers)
 
         return popt, rsquared_volume
 
@@ -322,7 +341,9 @@ class CurveFitter(_Fitter):
         self.verbose = verbose
         self.kwargs = kwargs
 
-    def _format_p0(self, p0, ref: MedicalVolume = None, flatten: bool = False, depth: int = 0):
+    def _format_p0(
+        self, p0, ref: MedicalVolume = None, flatten: bool = False, mask=None, depth: int = 0
+    ):
         if p0 is None or isinstance(p0, Number):
             return p0
         elif isinstance(p0, MedicalVolume) and depth > 0:
@@ -331,29 +352,36 @@ class CurveFitter(_Fitter):
                 assert p0.is_same_dimensions(ref, err=True)
             if flatten:
                 p0 = p0.A.flatten()
+                if mask is not None:
+                    p0 = p0[mask]
             return p0
         elif isinstance(p0, np.ndarray) and depth > 0:
             if ref is not None and p0.shape != ref.shape:
                 raise ValueError(f"Got p0.shape={p0.shape}, but y.shape={ref.shape}")
             if flatten:
                 p0 = p0.flatten()
+            if mask is not None:
+                p0 = p0[mask]
             return p0
 
         if isinstance(p0, Mapping):
-            return {k: self._format_p0(v, ref, flatten, depth + 1) for k, v in p0.items()}
+            return {k: self._format_p0(v, ref, flatten, mask, depth + 1) for k, v in p0.items()}
         elif isinstance(p0, Sequence):
-            return tuple(self._format_p0(v, ref, flatten, depth + 1) for v in p0)
+            return tuple(self._format_p0(v, ref, flatten, mask, depth + 1) for v in p0)
         elif isinstance(p0, (np.ndarray, MedicalVolume)):
             # If a single numpy array is provided as the parameter input, the
             # last axis is considered to be the parameter axis. Note, this may
             # change in the future.
             return tuple(
-                self._format_p0(p0[..., i], ref, flatten, depth + 1) for i in range(p0.shape[-1])
+                self._format_p0(p0[..., i], ref, flatten, mask, depth + 1)
+                for i in range(p0.shape[-1])
             )
 
         raise ValueError(f"p0={p0} not supported")
 
-    def fit(self, x, y: Sequence[MedicalVolume], mask=None, p0=np._NoValue):
+    def fit(
+        self, x, y: Sequence[MedicalVolume], mask=None, p0=np._NoValue, copy_headers: bool = True
+    ):
         """Perform non-linear least squares fit.
 
         Args:
@@ -364,6 +392,8 @@ class CurveFitter(_Fitter):
                 ``mask > 0`` will be fit.
             p0 (Sequence, optional): Initial guess for the parameters.
                 Defaults to ``self.p0``.
+            copy_headers (bool, optional): If ``True``, headers will be deep copied. If ``False``,
+                headers will not be copied. Returned values will not have headers.
 
         Returns:
             Tuple[MedicalVolume, MedicalVolume]: Tuple of fitted parameters (``popt``)
@@ -375,11 +405,19 @@ class CurveFitter(_Fitter):
         if any(get_device(_y) != cpu_device for _y in y):
             raise RuntimeError("All elements in `y` must be on the CPU")
 
+        if mask is not None:
+            mask = self._process_mask(mask, y[0])
+
         if p0 is np._NoValue:
             p0 = self.p0
-        p0 = self._format_p0(p0, ref=y[0], flatten=True)
+        p0 = self._format_p0(
+            p0,
+            ref=y[0],
+            flatten=True,
+            mask=mask.A.reshape(-1) if mask is not None else None,
+        )
 
-        return super().fit(x, y, mask=mask, p0=p0)
+        return super().fit(x, y, mask=mask, p0=p0, copy_headers=copy_headers)
 
     def _fit(self, x, y, p0=np._NoValue):
         assert p0 is not np._NoValue
@@ -505,13 +543,15 @@ class PolyFitter(_Fitter):
         self.chunksize = chunksize
         self.verbose = verbose
 
-    def fit(self, x, y: Sequence[MedicalVolume], mask=None):
+    def fit(self, x, y: Sequence[MedicalVolume], mask=None, copy_headers: bool = True):
         """Perform linear least squares fit.
 
         Args:
             x (array-like): Same as :meth:`CurveFitter.fit`.
             y (Sequence[MedicalVolume]): Same as :meth:`CurveFitter.fit`.
             mask (MedicalVolume or ndarray): Same as :meth:`CurveFitter.fit`.
+            copy_headers (bool, optional): If ``True``, headers will be deep copied. If ``False``,
+                headers will not be copied. Returned values will not have headers.
 
         Returns:
             Tuple[MedicalVolume, MedicalVolume]: Tuple of fitted parameters (``popt``)
@@ -527,7 +567,7 @@ class PolyFitter(_Fitter):
                 f"Got {y_devices}."
             )
 
-        return super().fit(x, y, mask=mask)
+        return super().fit(x, y, mask=mask, copy_headers=copy_headers)
 
     def _fit(self, x, y):
         return polyfit(
@@ -565,12 +605,11 @@ class PolyFitter(_Fitter):
 
 
 class MonoExponentialFit(_Fit):
-    """Fit quantitative values using mono-exponential fit of model :math:`a*exp(-t/tc)`.
+    """Fit quantitative values using mono-exponential fit of model :math:`y=a*exp(-x/tc)`.
 
     Args:
-        ts (:obj:`array-like`): 1D array of times in milliseconds (typically echo times)
-            corresponding to different volumes.
-        subvolumes (list[MedicalVolumes]): Volumes (in order) corresponding to times in `ts`.
+        x (:obj:`array-like`): 1D array of independent variables corresponding to different volumes.
+        y (list[MedicalVolumes]): Volumes (in order) corresponding to independent variable in `x`.
         mask (:obj:`MedicalVolume`, optional): Mask of pixels to fit.
             If specified, pixels outside of mask region are ignored and set to ``np.nan``.
             Speeds fitting time as fewer fits are required.
@@ -592,8 +631,8 @@ class MonoExponentialFit(_Fit):
 
     def __init__(
         self,
-        ts: Sequence[float],
-        subvolumes: List[MedicalVolume],
+        x: Sequence[float] = None,
+        y: Sequence[MedicalVolume] = None,
         mask: MedicalVolume = None,
         bounds: Tuple[float] = (0, 100.0),
         tc0: Union[float, str] = 30.0,
@@ -604,34 +643,24 @@ class MonoExponentialFit(_Fit):
         verbose: bool = False,
     ):
 
-        if (not isinstance(subvolumes, list)) or (
-            not all([isinstance(sv, MedicalVolume) for sv in subvolumes])
-        ):
-            raise TypeError("`subvolumes` must be list of MedicalVolumes.")
-
-        if any(x.device != cpu_device for x in subvolumes):
-            raise RuntimeError("All MedicalVolumes must be on the CPU")
-
-        if len(ts) != len(subvolumes):
-            raise ValueError(
-                "`len(ts)`={:d}, but `len(subvolumes)`={:d}".format(len(ts), len(subvolumes))
+        self.x = x
+        if y is not None:
+            warnings.warn(
+                f"Setting `y` in the constructor can result in significant memory overhead. "
+                f"Specify `y` in `{type(self).__name__}.fit(y=...)` instead."
             )
+            self._check_y(x, y)
+        self.y = y
+
+        if mask is not None:
+            warnings.warn(
+                f"Setting `mask` in the constructor can result in significant memory overhead. "
+                f"Specify `mask` in `{type(self).__name__}.fit(mask=...)` instead."
+            )
+        self.mask = mask
 
         if not (isinstance(tc0, Number) or (isinstance(tc0, str) and tc0 == "polyfit")):
             raise ValueError("`tc0` must either be a float or the string 'polyfit'.")
-
-        self.ts = ts
-
-        orientation = subvolumes[0].orientation
-        subvolumes = [sv.reformat(orientation) for sv in subvolumes]
-        self.subvolumes = subvolumes
-
-        if mask is not None:
-            if isinstance(mask, np.ndarray):
-                mask = MedicalVolume(mask, affine=subvolumes[0].affine)
-            if not isinstance(mask, MedicalVolume):
-                raise TypeError("`mask` must be a MedicalVolume")
-        self.mask = mask.reformat(orientation) if mask else None
 
         self.verbose = verbose
         self.num_workers = num_workers
@@ -644,9 +673,9 @@ class MonoExponentialFit(_Fit):
         self.r2_threshold = r2_threshold
         self.tc0 = tc0
         self.decimal_precision = decimal_precision
-        self._eps = 1e-16  # epsilon for polyfit
+        self._eps = 1e-10  # epsilon for polyfit - do not change this
 
-    def fit(self):
+    def fit(self, x=None, y: Sequence[MedicalVolume] = None, mask=None):
         """Perform monoexponential fitting.
 
         Returns:
@@ -655,6 +684,20 @@ class MonoExponentialFit(_Fit):
                 time_constant_volume (MedicalVolume): The per-voxel tc fit.
                 rsquared_volume (MedicalVolume): The per-voxel r2 goodness of fit.
         """
+        x = self.x if x is None else x
+        y = self.y if y is None else y
+        mask = self.mask if mask is None else mask
+
+        self._check_y(x, y)
+        orientation = y[0].orientation
+        y = [sv.reformat(orientation) for sv in y]
+
+        if isinstance(mask, np.ndarray):
+            mask = MedicalVolume(mask, affine=y[0].affine)
+            if not isinstance(mask, MedicalVolume):
+                raise TypeError("`mask` must be a MedicalVolume")
+        mask = mask.reformat(orientation) if mask else None
+
         if self.tc0 == "polyfit":
             polyfitter = PolyFitter(
                 1,
@@ -664,19 +707,22 @@ class MonoExponentialFit(_Fit):
                 chunksize=self.chunksize,
                 verbose=self.verbose,
             )
-            vols = [sv.astype(np.float) for sv in self.subvolumes]
+            vols = [
+                sv.astype(np.float32) if np.issubdtype(sv.dtype, np.integer) else sv for sv in y
+            ]
             vols = [sv + self._eps * (sv == 0) for sv in vols]
             assert all(np.all(v != 0) for v in vols)
-            log_vols = [np.log(v) for v in vols]
-            params, _ = polyfitter.fit(self.ts, log_vols, mask=self.mask)
+            vols = [np.log(v) for v in vols]
+            params, _ = polyfitter.fit(x, vols, mask=mask, copy_headers=False)
             p0 = {"a": np.exp(params[..., 1]), "b": params[..., 0]}
+            del vols  # begin garbage collection for large arrays sooner
         else:
             p0 = {"a": 1.0, "b": -1 / self.tc0}
 
         curve_fitter = CurveFitter(
             monoexponential,
             y_bounds=None,
-            out_ufuncs=(None, lambda x: 1 / np.abs(x)),
+            out_ufuncs=(None, lambda _x: 1 / np.abs(_x)),
             out_bounds=((-np.inf, np.inf), self.bounds),
             r2_threshold=self.r2_threshold,
             num_workers=self.num_workers,
@@ -684,16 +730,23 @@ class MonoExponentialFit(_Fit):
             verbose=self.verbose,
             nan_to_num=0.0,
         )
-        popt, r_squared = curve_fitter.fit(self.ts, self.subvolumes, mask=self.mask, p0=p0)
+        popt, r_squared = curve_fitter.fit(x, y, mask=mask, p0=p0)
         tc_map = popt[..., 1]
 
         if self.decimal_precision is not None:
             tc_map = np.around(tc_map, self.decimal_precision)
 
-        time_constant_volume = self.subvolumes[0]._partial_clone(volume=tc_map, headers=True)
-        rsquared_volume = self.subvolumes[0]._partial_clone(volume=r_squared, headers=True)
+        return tc_map, r_squared
 
-        return time_constant_volume, rsquared_volume
+    def _check_y(self, x, y):
+        if (not isinstance(y, Sequence)) or (not all([isinstance(sv, MedicalVolume) for sv in y])):
+            raise TypeError("`y` must be list of MedicalVolumes.")
+
+        if any(x.device != cpu_device for x in y):
+            raise RuntimeError("All MedicalVolumes must be on the CPU")
+
+        if len(x) != len(y):
+            raise ValueError("`len(x)`={:d}, but `len(y)`={:d}".format(len(x), len(y)))
 
 
 __EPSILON__ = 1e-8
@@ -1009,7 +1062,6 @@ def _curve_fit(
     else:
         y = y_or_dict
 
-    # import pdb; pdb.set_trace()
     oob = y_bounds is not None and ((y < y_bounds[0]).any() or (y > y_bounds[1]).any())
     if oob or (y == 0).all():
         return (np.nan,) * nparams, 0
