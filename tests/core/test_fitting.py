@@ -530,6 +530,36 @@ class TestCurveFitter(unittest.TestCase):
         assert np.allclose(a_hat.volume, 1.0)
         assert np.allclose(b_hat.volume, b)
 
+        # Test combination of setting p0 with a volume and using a mask.
+        mask_arr = np.random.rand(*y[0].shape) > 0.5
+        mask = MedicalVolume(mask_arr, y[0].affine)
+
+        fitter = CurveFitter(monoexponential)
+        popt, _ = fitter.fit(
+            x,
+            y,
+            p0={"a": 1.0, "b": MedicalVolume(b, affine=y[0].affine)},
+            mask=mask,
+        )
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+        assert np.allclose(a_hat.volume[mask_arr != 0], 1.0)
+        assert np.allclose(b_hat.volume[mask_arr != 0], b[mask_arr != 0])
+        assert np.all(np.isnan(a_hat.volume[mask_arr == 0]))
+        assert np.all(np.isnan(b_hat.volume[mask_arr == 0]))
+
+        fitter = CurveFitter(monoexponential)
+        popt, _ = fitter.fit(
+            x,
+            y,
+            p0=(1.0, b),
+            mask=mask_arr,
+        )
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+        assert np.allclose(a_hat.volume[mask_arr != 0], 1.0)
+        assert np.allclose(b_hat.volume[mask_arr != 0], b[mask_arr != 0])
+        assert np.all(np.isnan(a_hat.volume[mask_arr == 0]))
+        assert np.all(np.isnan(b_hat.volume[mask_arr == 0]))
+
     def test_str(self):
         fitter = CurveFitter(
             monoexponential,

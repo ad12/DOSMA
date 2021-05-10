@@ -341,7 +341,7 @@ class CurveFitter(_Fitter):
         self.verbose = verbose
         self.kwargs = kwargs
 
-    def _format_p0(self, p0, ref: MedicalVolume = None, flatten: bool = False, depth: int = 0):
+    def _format_p0(self, p0, ref: MedicalVolume = None, flatten: bool = False, mask=None, depth: int = 0):
         if p0 is None or isinstance(p0, Number):
             return p0
         elif isinstance(p0, MedicalVolume) and depth > 0:
@@ -350,24 +350,28 @@ class CurveFitter(_Fitter):
                 assert p0.is_same_dimensions(ref, err=True)
             if flatten:
                 p0 = p0.A.flatten()
+                if mask is not None:
+                    p0 = p0[mask]
             return p0
         elif isinstance(p0, np.ndarray) and depth > 0:
             if ref is not None and p0.shape != ref.shape:
                 raise ValueError(f"Got p0.shape={p0.shape}, but y.shape={ref.shape}")
             if flatten:
                 p0 = p0.flatten()
+            if mask is not None:
+                p0 = p0[mask]
             return p0
 
         if isinstance(p0, Mapping):
-            return {k: self._format_p0(v, ref, flatten, depth + 1) for k, v in p0.items()}
+            return {k: self._format_p0(v, ref, flatten, mask, depth + 1) for k, v in p0.items()}
         elif isinstance(p0, Sequence):
-            return tuple(self._format_p0(v, ref, flatten, depth + 1) for v in p0)
+            return tuple(self._format_p0(v, ref, flatten, mask, depth + 1) for v in p0)
         elif isinstance(p0, (np.ndarray, MedicalVolume)):
             # If a single numpy array is provided as the parameter input, the
             # last axis is considered to be the parameter axis. Note, this may
             # change in the future.
             return tuple(
-                self._format_p0(p0[..., i], ref, flatten, depth + 1) for i in range(p0.shape[-1])
+                self._format_p0(p0[..., i], ref, flatten, mask, depth + 1) for i in range(p0.shape[-1])
             )
 
         raise ValueError(f"p0={p0} not supported")
@@ -398,9 +402,17 @@ class CurveFitter(_Fitter):
         if any(get_device(_y) != cpu_device for _y in y):
             raise RuntimeError("All elements in `y` must be on the CPU")
 
+        if mask is not None:
+            mask = self._process_mask(mask, y[0])
+
         if p0 is np._NoValue:
             p0 = self.p0
-        p0 = self._format_p0(p0, ref=y[0], flatten=True)
+        p0 = self._format_p0(
+            p0,
+            ref=y[0],
+            flatten=True,
+            mask=mask.A.reshape(-1) if mask is not None else None,
+        )
 
         return super().fit(x, y, mask=mask, p0=p0, copy_headers=copy_headers)
 
