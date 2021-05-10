@@ -32,6 +32,10 @@ __all__ = [
     "where",
     "all_np",
     "any_np",
+    "zeros_like",
+    "ones_like",
+    "shares_memory",
+    "may_share_memory",
 ]
 
 
@@ -383,6 +387,36 @@ def all_np(x, axis=None, keepdims=np._NoValue):
 @implements(np.any)
 def any_np(x, axis=None, keepdims=np._NoValue):
     return reduce_array_op(np.any, x, axis=axis, keepdims=keepdims)
+
+
+@implements(np.zeros_like)
+def zeros_like(a, dtype=None, order="K", subok=True, shape=None):
+    vol = np.zeros_like(a.A, dtype=dtype, order=order, subok=subok, shape=shape)
+    return a._partial_clone(volume=vol)
+
+
+@implements(np.ones_like)
+def ones_like(a, dtype=None, order="K", subok=True, shape=None):
+    vol = np.ones_like(a.A, dtype=dtype, order=order, subok=subok, shape=shape)
+    return a._partial_clone(volume=vol)
+
+
+@implements(np.shares_memory)
+def shares_memory(a, b, max_work=None):
+    vol = np.shares_memory(a.A, b.A, max_work=max_work)
+    headers = True
+    if a.headers() is not None or b.headers() is not None:
+        headers = np.shares_memory(a.headers(), b.headers(), max_work=max_work)
+    return vol and headers
+
+
+@implements(np.may_share_memory)
+def may_share_memory(a, b, max_work=None):  # pragma: no cover
+    vol = np.may_share_memory(a.A, b.A, max_work=max_work)
+    headers = True
+    if a.headers() is not None or b.headers() is not None:
+        headers = np.may_share_memory(a.headers(), b.headers(), max_work=max_work)
+    return vol and headers
 
 
 def _to_positive_axis(

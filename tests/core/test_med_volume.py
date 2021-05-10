@@ -434,6 +434,30 @@ class TestMedicalVolume(unittest.TestCase):
         mv2 = np.clip(mv, mv_lower, mv_upper)
         assert np.all((mv2.volume >= 0.4) & (mv2.volume <= 0.6))
 
+        # Array like
+        shape = (10, 20, 30)
+        mv = MedicalVolume(np.random.rand(*shape), np.eye(4))
+
+        mv2 = np.zeros_like(mv)
+        assert np.all(mv2.volume == 0)
+
+        mv2 = np.ones_like(mv)
+        assert np.all(mv2.volume == 1)
+
+        # Shares memory
+        shape = (10, 20, 30, 2)
+        headers = np.stack(
+            [
+                ututils.build_dummy_headers(shape[2], {"EchoTime": 2}),
+                ututils.build_dummy_headers(shape[2], {"EchoTime": 10}),
+            ],
+            axis=-1,
+        )
+        mv = MedicalVolume(np.random.rand(*shape), np.eye(4), headers=headers)
+        mv2 = MedicalVolume(mv.A, affine=mv.affine, headers=mv.headers())
+        assert np.shares_memory(mv, mv)
+        assert np.shares_memory(mv, mv2)
+
     def test_numpy_shaping(self):
         """Test numpy shaping functions (stack, concatenate, etc.)."""
         shape = (10, 20, 30, 2)
