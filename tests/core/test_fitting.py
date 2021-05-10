@@ -303,6 +303,8 @@ class TestCurveFitter(unittest.TestCase):
 
         assert np.allclose(a_hat.volume[mask_arr != 0], 1.0)
         assert np.allclose(b_hat.volume[mask_arr != 0], b[mask_arr != 0])
+        assert np.all(np.isnan(a_hat.volume[mask_arr == 0]))
+        assert np.all(np.isnan(b_hat.volume[mask_arr == 0]))
 
         fitter = CurveFitter(monoexponential)
         popt = fitter.fit(x, y, mask=mask_arr)[0]
@@ -458,6 +460,22 @@ class TestCurveFitter(unittest.TestCase):
 
         assert np.allclose(a_hat.volume, a)
 
+        # Test not copying headers
+        x, y, b = _generate_monoexp_data((10, 10, 20, 4))
+        for idx, _y in enumerate(y):
+            _y._headers = util.build_dummy_headers(
+                (1, 1) + _y.shape[2:], fields={"EchoNumbers": idx}
+            )
+
+        fitter = CurveFitter(monoexponential)
+        popt, _ = fitter.fit(x, y, copy_headers=False)
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+
+        assert np.allclose(a_hat.volume, 1.0)
+        assert np.allclose(b_hat.volume, b)
+        assert a_hat.headers() is None
+        assert b_hat.headers() is None
+
     def test_p0(self):
         x, y, b = _generate_monoexp_data((10, 10, 20))
 
@@ -580,6 +598,22 @@ class TestPolyFitter(unittest.TestCase):
         a_hat = popt[..., 0]
 
         assert np.allclose(a_hat.volume, a)
+
+        # Test not copying headers
+        x, y, b = _generate_monoexp_data((10, 10, 20, 4))
+        for idx, _y in enumerate(y):
+            _y._headers = util.build_dummy_headers(
+                (1, 1) + _y.shape[2:], fields={"EchoNumbers": idx}
+            )
+
+        fitter = CurveFitter(monoexponential)
+        popt, _ = fitter.fit(x, y, copy_headers=False)
+        a_hat, b_hat = popt[..., 0], popt[..., 1]
+
+        assert np.allclose(a_hat.volume, 1.0)
+        assert np.allclose(b_hat.volume, b)
+        assert a_hat.headers() is None
+        assert b_hat.headers() is None
 
     def test_nan_to_num(self):
         shape = (10, 10, 20)

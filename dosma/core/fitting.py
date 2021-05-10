@@ -104,7 +104,7 @@ class _Fitter(ABC):
         if not mask.is_same_dimensions(y, defaults.AFFINE_DECIMAL_PRECISION):
             raise RuntimeError("`mask` and `y` dimension mismatch")
 
-        return (mask > 0).astype(mask.dtype)
+        return mask > 0
 
     def _process_params(self, x, r_squared):
         """
@@ -154,7 +154,7 @@ class _Fitter(ABC):
         """
         raise NotImplementedError  # pragma: no cover
 
-    def fit(self, x, y: Sequence[MedicalVolume], mask=None, **kwargs):
+    def fit(self, x, y: Sequence[MedicalVolume], mask=None, copy_headers: bool = True, **kwargs):
         """
         Args:
             x (array-like): 1D array of independent variables corresponding to different ``y``.
@@ -162,6 +162,8 @@ class _Fitter(ABC):
                 independent variable ``x``. Data must be spatially aligned.
             mask (``MedicalVolume`` or ``ndarray``, optional): If specified, only entries where
                 ``mask > 0`` will be fit.
+            copy_headers (bool): If ``True``, headers will be deep copied. If ``False``,
+                headers will not be copied. Returned values will not have headers.
             kwargs: Optional keyword arguments to be passed to :func:`self._fit`.
 
         Returns:
@@ -170,7 +172,6 @@ class _Fitter(ABC):
             corresponds to different parameters in order of appearance in ``self.func``.
         """
         svs = []
-        msk = None
 
         if (not isinstance(y, (list, tuple))) or (
             not all([isinstance(_y, MedicalVolume) for _y in y])
@@ -187,29 +188,49 @@ class _Fitter(ABC):
         y = [_y.reformat(orientation) for _y in y]
 
         if mask is not None:
-            msk = self._process_mask(mask, y[0])
-            msk = msk.volume.reshape(1, -1)
+            mask = self._process_mask(mask, y[0])
+            mask = mask.volume.reshape(-1)
 
         original_shape = y[0].shape
         svs = np.concatenate([_y.volume.reshape((1, -1)) for _y in y], axis=0)
-        if msk is not None:
-            svs *= msk
+        flattened_shape = svs.shape
+
+        # Select indices to fit.
+        if mask is not None:
+            svs = svs[:, mask]
 
         popt, r_squared = self._fit(x, svs, **kwargs)
         popt = self._process_params(popt, r_squared)
+
+        if mask is not None:
+            popt_full = np.empty(flattened_shape[-1:] + popt.shape[-1:])
+            r2_full = np.empty(flattened_shape[-1])
+            nan_val = np.nan if self.nan_to_num is None else self.nan_to_num
+            popt_full.fill(nan_val)
+            r2_full.fill(nan_val)
+            popt_full[mask] = popt
+            r2_full[mask] = r_squared
+            popt = popt_full
+            r_squared = r2_full
+            del popt_full, r2_full  # variables not used later - drop reference to underlying array
+
         popt = popt.reshape(original_shape + popt.shape[-1:])
         r_squared = r_squared.reshape(original_shape)
 
         # For parameters, headers have to be deep copied and expanded to follow
         # broadcasting dimensions.
-        headers = y[0].headers()
-        if headers is not None:
-            headers = deepcopy(headers)
-            if popt.ndim > y[0].volume.ndim:
-                axis = tuple(-i for i in range(1, popt.ndim - y[0].volume.ndim + 1))
-                headers = np.expand_dims(headers, axis=axis)
-        popt = y[0]._partial_clone(volume=popt, headers=headers)
-        rsquared_volume = y[0]._partial_clone(volume=r_squared, headers=True)
+        if copy_headers:
+            headers = y[0].headers()
+            if headers is not None:
+                headers = deepcopy(headers)
+                if popt.ndim > y[0].volume.ndim:
+                    axis = tuple(-i for i in range(1, popt.ndim - y[0].volume.ndim + 1))
+                    headers = np.expand_dims(headers, axis=axis)
+            popt_headers, r2_headers = headers, True
+        else:
+            popt_headers, r2_headers = None, None
+        popt = y[0]._partial_clone(volume=popt, headers=popt_headers)
+        rsquared_volume = y[0]._partial_clone(volume=r_squared, headers=r2_headers)
 
         return popt, rsquared_volume
 
@@ -351,7 +372,9 @@ class CurveFitter(_Fitter):
 
         raise ValueError(f"p0={p0} not supported")
 
-    def fit(self, x, y: Sequence[MedicalVolume], mask=None, p0=np._NoValue):
+    def fit(
+        self, x, y: Sequence[MedicalVolume], mask=None, p0=np._NoValue, copy_headers: bool = True
+    ):
         """Perform non-linear least squares fit.
 
         Args:
@@ -362,6 +385,8 @@ class CurveFitter(_Fitter):
                 ``mask > 0`` will be fit.
             p0 (Sequence, optional): Initial guess for the parameters.
                 Defaults to ``self.p0``.
+            copy_headers (bool, optional): If ``True``, headers will be deep copied. If ``False``,
+                headers will not be copied. Returned values will not have headers.
 
         Returns:
             Tuple[MedicalVolume, MedicalVolume]: Tuple of fitted parameters (``popt``)
@@ -377,7 +402,7 @@ class CurveFitter(_Fitter):
             p0 = self.p0
         p0 = self._format_p0(p0, ref=y[0], flatten=True)
 
-        return super().fit(x, y, mask=mask, p0=p0)
+        return super().fit(x, y, mask=mask, p0=p0, copy_headers=copy_headers)
 
     def _fit(self, x, y, p0=np._NoValue):
         assert p0 is not np._NoValue
@@ -503,13 +528,15 @@ class PolyFitter(_Fitter):
         self.chunksize = chunksize
         self.verbose = verbose
 
-    def fit(self, x, y: Sequence[MedicalVolume], mask=None):
+    def fit(self, x, y: Sequence[MedicalVolume], mask=None, copy_headers: bool = True):
         """Perform linear least squares fit.
 
         Args:
             x (array-like): Same as :meth:`CurveFitter.fit`.
             y (Sequence[MedicalVolume]): Same as :meth:`CurveFitter.fit`.
             mask (MedicalVolume or ndarray): Same as :meth:`CurveFitter.fit`.
+            copy_headers (bool, optional): If ``True``, headers will be deep copied. If ``False``,
+                headers will not be copied. Returned values will not have headers.
 
         Returns:
             Tuple[MedicalVolume, MedicalVolume]: Tuple of fitted parameters (``popt``)
@@ -525,7 +552,7 @@ class PolyFitter(_Fitter):
                 f"Got {y_devices}."
             )
 
-        return super().fit(x, y, mask=mask)
+        return super().fit(x, y, mask=mask, copy_headers=copy_headers)
 
     def _fit(self, x, y):
         return polyfit(
@@ -671,9 +698,9 @@ class MonoExponentialFit(_Fit):
             vols = [sv + self._eps * (sv == 0) for sv in vols]
             assert all(np.all(v != 0) for v in vols)
             vols = [np.log(v) for v in vols]
-            params, _ = polyfitter.fit(x, vols, mask=mask)
+            params, _ = polyfitter.fit(x, vols, mask=mask, copy_headers=False)
             p0 = {"a": np.exp(params[..., 1]), "b": params[..., 0]}
-            del vols, params  # begin garbage collection for large arrays sooner
+            del vols  # begin garbage collection for large arrays sooner
         else:
             p0 = {"a": 1.0, "b": -1 / self.tc0}
 
@@ -1020,7 +1047,6 @@ def _curve_fit(
     else:
         y = y_or_dict
 
-    # import pdb; pdb.set_trace()
     oob = y_bounds is not None and ((y < y_bounds[0]).any() or (y > y_bounds[1]).any())
     if oob or (y == 0).all():
         return (np.nan,) * nparams, 0
