@@ -23,8 +23,8 @@ where ``tc0`` is the initial guess for parameter :math:`-\frac{1}{b}` in the mon
 >>> from dosma import MonoExponentialFit
 >>> tc0 = 30.0
 >>> echo_times = np.asarray([10.0, 20.0, 50.0])
->>> fitter = MonoExponentialFit(echo_times, images, tc0=tc0, num_workers=4)
->>> tc, r2_map = fitter.fit()
+>>> fitter = MonoExponentialFit(tc0=tc0, num_workers=4)
+>>> tc, r2_map = fitter.fit(echo_times, images)
 
 If you don't have a good initial guess for ``tc0`` or expect the initial guess to be dependent on the voxel being fit
 (which is often the case), you can specify that the initial guess should be determined based on results from a
@@ -33,8 +33,8 @@ polynomial fit over the log-linearized form of the monoexponential equation ``lo
 >>> from dosma import MonoExponentialFit
 >>> tc0 = "polyfit"
 >>> echo_times = np.asarray([10.0, 20.0, 50.0])
->>> fitter = MonoExponentialFit(echo_times, images, tc0=tc0, num_workers=4)
->>> tc, r2_map = fitter.fit()
+>>> fitter = MonoExponentialFit(tc0=tc0, num_workers=4)
+>>> tc, r2_map = fitter.fit(echo_times, images)
 
 Custom model functions can also be provided and used with :class:`dosma.curve_fit` and :class:`dosma.CurveFitter` (recommended),
 a class wrapper around :class:`dosma.curve_fit` that handles :class:`MedicalVolume` data and supports additional post-processing
