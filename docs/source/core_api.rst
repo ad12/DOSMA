@@ -26,6 +26,37 @@ Numpy operations that are supported on MedicalVolumes.
 
    dosma.core.numpy_routines
 
+Standard universal functions that act element-wise on the array are also supported.
+A (incomplete) list is shown below:
+
+.. list-table::
+   :widths: 20 20 20 20 20
+   :header-rows: 0
+
+   * - numpy.power
+     - numpy.sign
+     - numpy.remainder
+     - numpy.mod
+     - numpy.abs
+   * - numpy.log
+     - numpy.exp
+     - numpy.sqrt
+     - numpy.square
+     - numpy.reciprocal
+   * - numpy.sin
+     - numpy.cos
+     - numpy.tan
+     - numpy.bitwise_and
+     - numpy.bitwise_or
+   * - numpy.isfinite
+     - numpy.isinf
+     - numpy.isnan
+     - numpy.floor
+     - numpy.ceil
+
+   
+     
+
 
 Image I/O
 ---------------------------
