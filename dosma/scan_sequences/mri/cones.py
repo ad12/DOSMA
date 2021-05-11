@@ -148,8 +148,12 @@ class Cones(NonTargetSequence):
         """
         # only calculate for focused region if a mask is available, this speeds up computation
         mask = tissue.get_mask()
-        if (not mask or np.sum(mask.volume) == 0) and mask_path:
-            mask = fio_utils.generic_load(mask_path, expected_num_volumes=1)
+        if mask_path is not None:
+            mask = (
+                fio_utils.generic_load(mask_path, expected_num_volumes=1)
+                if isinstance(mask_path, (str, os.PathLike))
+                else mask_path
+            )
 
         spin_lock_times = self.echo_times
         subvolumes_list = self.volumes
