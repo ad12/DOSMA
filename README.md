@@ -25,6 +25,9 @@ To install DOSMA, run:
 
 ```bash
 pip install dosma
+
+# To install with AI support
+pip install dosma[ai]
 ```
 
 If you would like to contribute to DOSMA, we recommend you clone the repository and
@@ -33,7 +36,7 @@ install DOSMA with `pip` in editable mode.
 ```bash
 git clone git@github.com:ad12/DOSMA.git
 cd DOSMA
-pip install -e '.[dev]'
+pip install -e '.[dev,docs]'
 make dev
 ```
 
@@ -42,7 +45,84 @@ To run tests, build documentation and contribute, run
 make autoformat test build-docs
 ```
 
-## How to Cite
+## Features
+### Simplified, Efficient I/O
+DOSMA provides efficient readers for DICOM and NIfTI formats built on nibabel and pydicom. Multi-slice DICOM data can be loaded in
+parallel with multiple workers and structured into the appropriate 3D volume(s). For example, multi-echo and dynamic contrast-enhanced (DCE) MRI scans have multiple volumes acquired at different echo times and trigger times, respectively. These can be loaded into multiple volumes with ease:
+
+```python
+dr = dosma.DicomReader(verbose=True, num_workers=8)
+multi_echo_scan = dr.load("/path/to/multi-echo/scan", group_by="EchoNumbers")
+dce_scan = dr.load("/path/to/dce/scan", group_by="TriggerTime")
+```
+
+### Data-Embedded Medical Images
+DOSMA's [`MedicalVolume`](https://dosma.readthedocs.io/en/latest/generated/dosma.MedicalVolume.html#dosma.MedicalVolume) data structure supports array-like operations (arithmetic, slicing, etc.) on medical images while preserving spatial attributes and accompanying metadata. This structure supports NumPy interoperability, intelligent reformatting, fast low-level computations, and native GPU support. For example, given MedicalVolumes `mvA` and `mvB` we can do the following:
+
+```python
+# Reformat image into Superior->Inferior, Anterior->Posterior, Left->Right directions.
+mvA = mvA.reformat(("SI", "AP", "LR"))
+
+# Get and set metadata
+study_description = mvA.get_metadata("StudyDescription")
+mvA.set_metadata("StudyDescription", "A sample study")
+
+# Perform NumPy operations like you would on image data.
+rss = np.sqrt(mvA**2 + mvB**2)
+
+# Move to GPU 0 for CuPy operations
+mv_gpu = mvA.to(dosma.Device(0))
+
+# Take slices. Metadata will be sliced appropriately.
+mv_subvolume = mvA[10:20, 10:20, 4:6]
+```
+
+### Built-in AI Models
+DOSMA is built to be a hub for machine/deep learning models. Currently, DOSMA hosts a set of knee MRI segmentation models.
+A complete list of models and corresponding publications can be found [here](https://dosma.readthedocs.io/en/latest/models.html).
+We can use one of the knee segmentation models to segment a MedicalVolume `mv` and model
+`weights` [downloaded locally](https://dosma.readthedocs.io/en/latest/installation.html#segmentation):
+
+```python
+from dosma.models import IWOAIOAIUnet2DNormalized
+
+# Reformat such that sagittal plane is last dimension.
+mv = mv.reformat(("SI", "AP", "LR"))
+
+# Do segmentation
+model = IWOAIOAIUnet2DNormalized(input_shape=mv.shape[:2] + (1,), weights_path=weights)
+masks = model.generate_mask(mv)
+```
+
+### Parallelizable Operations
+DOSMA supports parallelization for curve fitting and image registration operations.
+Image registration is supported thru the [elastix/transformix](https://elastix.lumc.nl/download.php) libraries. For example we can register volumes to a target, and use the registered outputs for per-voxel monoexponential fitting:
+
+```python
+# Register images mvA, mvB, mvC to target image mv_tgt in parallel
+_, (mvA_reg, mvB_reg, mvC_reg) = dosma.register(
+   mv_tgt,
+   moving=[mvA, mvB, mvC],
+   parameters="/path/to/elastix/registration/file",
+   num_workers=3,
+   return_volumes=True,
+   show_pbar=True,
+)
+
+# Perform monoexponential fitting.
+def monoexponential(x, a, b):
+   return a * np.exp(b*x)
+
+fitter = dosma.CurveFitter(
+   monoexponential,
+   num_workers=4,
+   p0={"a": 1.0, "b": -1/30},
+)
+popt, r2 = fitter.fit(x=[1, 2, 3, 4], [mv_tgt, mvA_reg, mvB_reg, mvC_reg])
+a_fit, b_fit = popt[..., 0], popt[..., 1]
+```
+
+## Citation
 ```
 @inproceedings{desai2019dosma,
    Title={DOSMA: A deep-learning, open-source framework for musculoskeletal MRI analysis.},
