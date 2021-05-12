@@ -57,7 +57,7 @@ dce_scan = dr.load("/path/to/dce/scan", group_by="TriggerTime")
 ```
 
 ### Data-Embedded Medical Images
-DOSMA's [`MedicalVolume`](https://dosma.readthedocs.io/en/latest/generated/dosma.MedicalVolume.html#dosma.MedicalVolume) data structure supports array-like operations (arithmetic, slicing, etc.) on medical images while preserving spatial attributes and accompanying metadata. This structure supports NumPy interoperability, intelligent reformatting, fast low-level computations, and native GPU support. For example, given MedicalVolumes `mvA` and `mvB` we can do the following:
+DOSMA's [MedicalVolume](https://dosma.readthedocs.io/en/latest/generated/dosma.MedicalVolume.html#dosma.MedicalVolume) data structure supports array-like operations (arithmetic, slicing, etc.) on medical images while preserving spatial attributes and accompanying metadata. This structure supports NumPy interoperability, intelligent reformatting, fast low-level computations, and native GPU support. For example, given MedicalVolumes `mvA` and `mvB` we can do the following:
 
 ```python
 # Reformat image into Superior->Inferior, Anterior->Posterior, Left->Right directions.
@@ -78,8 +78,7 @@ mv_subvolume = mvA[10:20, 10:20, 4:6]
 ```
 
 ### Built-in AI Models
-DOSMA is built to be a hub for machine/deep learning models. Currently, DOSMA hosts a set of knee MRI segmentation models.
-A complete list of models and corresponding publications can be found [here](https://dosma.readthedocs.io/en/latest/models.html).
+DOSMA is built to be a hub for machine/deep learning models. A complete list of models and corresponding publications can be found [here](https://dosma.readthedocs.io/en/latest/models.html).
 We can use one of the knee segmentation models to segment a MedicalVolume `mv` and model
 `weights` [downloaded locally](https://dosma.readthedocs.io/en/latest/installation.html#segmentation):
 
@@ -96,7 +95,7 @@ masks = model.generate_mask(mv)
 
 ### Parallelizable Operations
 DOSMA supports parallelization for curve fitting and image registration operations.
-Image registration is supported thru the [elastix/transformix](https://elastix.lumc.nl/download.php) libraries. For example we can register volumes to a target, and use the registered outputs for per-voxel monoexponential fitting:
+Image registration is supported thru the [elastix/transformix](https://elastix.lumc.nl/download.php) libraries. For example we can use multiple workers to register volumes to a target, and use the registered outputs for per-voxel monoexponential fitting:
 
 ```python
 # Register images mvA, mvB, mvC to target image mv_tgt in parallel

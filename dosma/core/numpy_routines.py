@@ -63,26 +63,31 @@ def reduce_array_op(func, x, axis=None, **kwargs):
 
 @implements(np.amin)
 def amin(x, axis=None, keepdims=False, initial=np._NoValue, where=np._NoValue):
+    """See :func:`numpy.amin`."""
     return reduce_array_op(np.amin, x, axis=axis, keepdims=keepdims, initial=initial, where=where)
 
 
 @implements(np.amax)
 def amax(x, axis=None, keepdims=False, initial=np._NoValue, where=np._NoValue):
+    """See :func:`numpy.amax`."""
     return reduce_array_op(np.amax, x, axis=axis, keepdims=keepdims, initial=initial, where=where)
 
 
 @implements(np.argmin)
 def argmin(x, axis=None):
+    """See :func:`numpy.argmin`."""
     return reduce_array_op(np.argmin, x, axis=axis)
 
 
 @implements(np.argmax)
 def argmax(x, axis=None):
+    """See :func:`numpy.argmax`."""
     return reduce_array_op(np.argmax, x, axis=axis)
 
 
 @implements(np.sum)
 def sum_np(x, axis=None, dtype=None, keepdims=False, initial=np._NoValue, where=np._NoValue):
+    """See :func:`numpy.sum`."""
     return reduce_array_op(
         np.sum, x, axis=axis, dtype=dtype, keepdims=keepdims, initial=initial, where=where
     )
@@ -90,11 +95,13 @@ def sum_np(x, axis=None, dtype=None, keepdims=False, initial=np._NoValue, where=
 
 @implements(np.mean)
 def mean_np(x, axis=None, dtype=None, keepdims=False, where=np._NoValue):
+    """See :func:`numpy.mean`."""
     return reduce_array_op(np.mean, x, axis=axis, dtype=dtype, keepdims=keepdims, where=where)
 
 
 @implements(np.std)
 def std(x, axis=None, dtype=None, ddof=0, keepdims=False, where=np._NoValue):
+    """See :func:`numpy.std`."""
     return reduce_array_op(
         np.std, x, axis=axis, dtype=dtype, ddof=ddof, keepdims=keepdims, where=where
     )
@@ -102,41 +109,49 @@ def std(x, axis=None, dtype=None, ddof=0, keepdims=False, where=np._NoValue):
 
 @implements(np.nanmin)
 def nanmin(x, axis=None, keepdims=False):
+    """See :func:`numpy.nanmin`."""
     return reduce_array_op(np.nanmin, x, axis=axis, keepdims=keepdims)
 
 
 @implements(np.nanmax)
 def nanmax(x, axis=None, keepdims=False):
+    """See :func:`numpy.nanmax`."""
     return reduce_array_op(np.nanmax, x, axis=axis, keepdims=keepdims)
 
 
 @implements(np.nanargmin)
 def nanargmin(x, axis=None):
+    """See :func:`numpy.nanargmin`."""
     return reduce_array_op(np.nanargmin, x, axis=axis)
 
 
 @implements(np.nanargmax)
 def nanargmax(x, axis=None):
+    """See :func:`numpy.nanargmax`."""
     return reduce_array_op(np.nanargmax, x, axis=axis)
 
 
 @implements(np.nansum)
 def nansum(x, axis=None, dtype=None, keepdims=False):
+    """See :func:`numpy.nansum`."""
     return reduce_array_op(np.nansum, x, axis=axis, dtype=dtype, keepdims=keepdims)
 
 
 @implements(np.nanmean)
 def nanmean(x, axis=None, dtype=None, keepdims=False):
+    """See :func:`numpy.nanmean`."""
     return reduce_array_op(np.nanmean, x, axis=axis, dtype=dtype, keepdims=keepdims)
 
 
 @implements(np.nanstd)
 def nanstd(x, axis=None, dtype=None, ddof=0, keepdims=False):
+    """See :func:`numpy.nanstd`."""
     return reduce_array_op(np.nanstd, x, axis=axis, dtype=dtype, ddof=ddof, keepdims=keepdims)
 
 
 @implements(np.nan_to_num)
 def nan_to_num(x, copy=True, nan=0.0, posinf=None, neginf=None):
+    """See :func:`numpy.nan_to_num`."""
     vol = np.nan_to_num(x.volume, copy=copy, nan=nan, posinf=posinf, neginf=neginf)
     if not copy:
         x._volume = vol
@@ -155,6 +170,13 @@ def around(x, decimals=0, affine=False):
             If decimals is negative, it specifies the number of positions to the left
             of the decimal point.
         affine (bool, optional): If ``True``, rounds affine matrix.
+
+    Returns:
+        MedicalVolume: The rounded medical image.
+
+    Examples:
+        >>> mv = MedicalVolume(10*np.random.rand(3,4,5), affine=np.eye(4))
+        >>> mv_rounded = np.round(mv, decimals=3)
     """
     affine = np.around(x.affine, decimals=decimals) if affine else x.affine
     return x._partial_clone(volume=np.around(x.volume, decimals=decimals), affine=affine)
@@ -164,7 +186,7 @@ def around(x, decimals=0, affine=False):
 def clip(x, x_min, x_max, **kwargs):
     """Clip the values in the array.
 
-    Same as applying :func:`np.clip` on ``x.volume``.
+    Same as applying :func:`numpy.clip` on ``x.volume``.
     Only one of ``x_min`` or ``x_max`` can be ``None``.
 
     Args:
@@ -173,13 +195,20 @@ def clip(x, x_min, x_max, **kwargs):
             If ``None``, clipping is not performed on this edge.
         x_max (array-like or ``MedicalVolume``): Maximum value.
             If ``None``, clipping is not performed on this edge.
-        kwargs: Optional keyword arguments, see :func:`np.clip`.
+        kwargs: Optional keyword arguments, see :func:`numpy.clip`.
 
     Returns:
         MedicalVolume: The clipped medical image.
 
     Note:
         The ``out`` positional argument is not currently supported.
+
+    Examples:
+        >>> mv = MedicalVolume([[[0,1,2,3,4,5,6,7,8,9]]], affine=np.eye(4))
+        >>> np.clip(mv, 1, 5)  # Clip values between [1, 5]
+        MedicalVolume(volume=[[[1 1 2 3 4 5 5 5 5 5]]])
+        >>> np.clip(mv, x_max=5)  # Clip values between (-inf, 5]
+        MedicalVolume(volume=[[[0 1 2 3 4 5 5 5 5 5]]])
     """
     if isinstance(x_min, MedicalVolume):
         x_min = x_min.reformat_as(x).A
@@ -201,7 +230,7 @@ def stack(xs, axis: int = -1):
         axis (int, optional): Axis to stack along.
 
     Returns:
-        MedicalVolume: Stack
+        MedicalVolume: The stacked medical image.
 
     Note:
         Unlike NumPy, the default stacking axis is ``-1``.
@@ -209,6 +238,11 @@ def stack(xs, axis: int = -1):
     Note:
         Headers are not set unless all inputs have headers of the same
         shape. This functionality may change in the future.
+
+    Examples:
+        >>> mv = dm.MedicalVolume([[[0,1,2,3]]], affine=np.eye(4))
+        >>> np.stack([mv, mv], axis=-1)  # Stacks along last axis.
+        MedicalVolume(volume=[[[[0 0], [1 1], [2 2], [3 3]]]])
     """
     if not isinstance(axis, int):
         raise TypeError(f"'{type(axis)}' cannot be interpreted as int")
@@ -252,9 +286,34 @@ def concatenate(xs, axis: int = -1):
 
     Images will be auto-oriented to the orientation of the first medical volume.
 
+    Args:
+        xs (Sequence[MedicalVolume]): The medical images to concatenate.
+        axis (int, optional): The axis to concatenate on.
+
+    Returns:
+        MedicalVolume: The concatenated medical image.
+
     Note:
         Headers are not set unless all inputs have headers of the same
         shape. This functionality may change in the future.
+
+    Examples:
+        >>> mv = dm.MedicalVolume([[[[0],[1],[2],[3]]]], affine=np.eye(4))
+        >>> np.concatenate([mv, mv], axis=-1)  # Concatenate along non-spatial dimension
+        MedicalVolume(volume=[[[[0 0], [1 1], [2 2], [3 3]]]])
+        >>> mv2 = dm.MedicalVolume(
+            [[[[4],[5],[6],[7]]]],
+            affine=[[1,0,0,0], [0,1,0,0],[0,0,1,4],[0,0,0,1]]
+        )
+        >>> np.concatenate([mv, mv2], axis=2)  # Concatenate along spatial dimension
+        MedicalVolume(volume=[[[[0]
+            [1]
+            [2]
+            [3]
+            [0]
+            [1]
+            [2]
+            [3]]]])
     """
     precision = None
     tol = 10 ** (-precision) if precision is not None else None
@@ -329,6 +388,12 @@ def expand_dims(x, axis: Union[int, Sequence[int]]):
 
     Returns:
         MedicalVolume: The medical image with expanded dimensions.
+
+    Examples:
+        >>> mv = dm.MedicalVolume(np.random.rand(3,4,5), affine=np.eye(4))
+        >>> mv_expanded = np.expand_dims(mv, axis=-1)  # Expand last dimension
+        >>> mv_expanded.shape
+        (3, 4, 5, 1)
     """
     try:
         axis = _to_positive_axis(axis, len(x.shape), grow=True, invalid_axis="spatial")
@@ -355,6 +420,12 @@ def squeeze(x, axis: Union[int, Sequence[int]] = None):
     Raises:
         ValueError: If axis is not None, and an axis being squeezed is not of length 1
             or axis is not None and is squeezing spatial dimension (i.e. axis=0, 1, or 2).
+
+    Examples:
+        >>> mv = MedicalVolume(np.random.rand(3,4,5,1), np.eye(4))
+        >>> mv_squeezed = np.squeeze(mv)  # squeeze all non-spatial dimensions
+        >>> mv_squeezed.shape
+        (3, 4, 5)
     """
     if axis is not None:
         try:
@@ -376,33 +447,65 @@ def squeeze(x, axis: Union[int, Sequence[int]] = None):
 
 @implements(np.where)
 def where(*args, **kwargs):
+    """See :func:`numpy.where`."""
     return np.where(np.asarray(args[0]), *args[1:], **kwargs)
 
 
 @implements(np.all)
 def all_np(x, axis=None, keepdims=np._NoValue):
+    """See :func:`numpy.all`."""
     return reduce_array_op(np.all, x, axis=axis, keepdims=keepdims)
 
 
 @implements(np.any)
 def any_np(x, axis=None, keepdims=np._NoValue):
+    """See :func:`numpy.any`."""
     return reduce_array_op(np.any, x, axis=axis, keepdims=keepdims)
 
 
 @implements(np.zeros_like)
 def zeros_like(a, dtype=None, order="K", subok=True, shape=None):
+    """See :func:`numpy.zeros_like`."""
     vol = np.zeros_like(a.A, dtype=dtype, order=order, subok=subok, shape=shape)
     return a._partial_clone(volume=vol)
 
 
 @implements(np.ones_like)
 def ones_like(a, dtype=None, order="K", subok=True, shape=None):
+    """See :func:`numpy.ones_like`."""
     vol = np.ones_like(a.A, dtype=dtype, order=order, subok=subok, shape=shape)
     return a._partial_clone(volume=vol)
 
 
 @implements(np.shares_memory)
 def shares_memory(a, b, max_work=None):
+    """Determine if two medical volumes share memory.
+
+    This function implements :func:`numpy.shares_memory` for :class:`MedicalVolume`.
+    Two volumes share memory if the pixel arrays and headers (if defined)
+    share memory.
+
+    Args:
+        a (MedicalVolume): Input volume.
+        b (MedicalVolume): Input volume.
+        max_work (int, optional): Same as :func:`numpy.shares_memory`.
+
+    Returns:
+        bool: ``True`` if pixel arrays and headers (if defined) share memory.
+
+    Raises:
+        numpy.TooHardError: Exceeded max_work.
+
+    Examples:
+        >>> arr = np.random.rand(3,4,5)
+        >>> mv1 = MedicalVolume(arr, affine=np.eye(4))
+        >>> mv2 = MedicalVolume(arr, affine=np.eye(4))
+        >>> np.shares_memory(mv1, mv2)  # Compare medicalVolume with same array in memory
+        True
+        >>> mv3 = MedicalVolume(arr.copy(), affine=np.eye(4))
+        >>> np.shares_memory(mv1, mv2)  # Compare medicalVolume with different arrays in memory
+        False
+    """
     vol = np.shares_memory(a.A, b.A, max_work=max_work)
     headers = True
     if a.headers() is not None or b.headers() is not None:
@@ -412,6 +515,33 @@ def shares_memory(a, b, max_work=None):
 
 @implements(np.may_share_memory)
 def may_share_memory(a, b, max_work=None):  # pragma: no cover
+    """Determine if two medical volumes may share memory.
+
+    This function implements :func:`numpy.may_share_memory` for :class:`MedicalVolume`.
+    Two volumes share memory if the pixel arrays and headers (if defined)
+    may share memory.
+
+    Args:
+        a (MedicalVolume): Input volume.
+        b (MedicalVolume): Input volume.
+        max_work (int, optional): Same as :func:`numpy.may_share_memory`.
+
+    Returns:
+        bool: ``True`` if pixel arrays and headers (if defined) may share memory.
+
+    Raises:
+        numpy.TooHardError: Exceeded max_work.
+
+    Examples:
+        >>> arr = np.random.rand(3,4,5)
+        >>> mv1 = MedicalVolume(arr, affine=np.eye(4))
+        >>> mv2 = MedicalVolume(arr, affine=np.eye(4))
+        >>> np.shares_memory(mv1, mv2)  # Compare medicalVolume with same array in memory
+        True
+        >>> mv3 = MedicalVolume(arr.copy(), affine=np.eye(4))
+        >>> np.shares_memory(mv1, mv2)  # Compare medicalVolume with different arrays in memory
+        False
+    """
     vol = np.may_share_memory(a.A, b.A, max_work=max_work)
     headers = True
     if a.headers() is not None or b.headers() is not None:

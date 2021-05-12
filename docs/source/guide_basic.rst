@@ -27,7 +27,7 @@ These I/O tools create or write from the Dosma image class :class:`MedicalVolume
 For example to load a DICOM image series, which has multiple echos, with each echo corresponding to a volume,
 we can do:
 
->>> from dosma import DicomReader:
+>>> from dosma import DicomReader
 >>> with DicomReader() as dr:
 >>>   volumes = dr.load("/path/to/dicom/folder", group_by="EchoNumbers")
 

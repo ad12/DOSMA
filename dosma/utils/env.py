@@ -24,7 +24,7 @@ def package_available(name: str):
 
 
 def get_version(package_or_name) -> str:
-    """Returns version number of the package up to ``num``.
+    """Returns package version.
 
     Args:
         package_or_name (``module`` or ``str``): Module or name of module.
@@ -61,11 +61,12 @@ def debug(value: bool = None) -> bool:
         ValueError: If ``value`` is not a supported value.
 
     Examples:
-        >>> from dosma.utils import env
-        >>> env.debug(True)
-        True
-        >>> env.debug(False)
+        >>> debug()  # get debug status, defaults to False
         False
+        >>> debug(True)
+        True
+        >>> debug()
+        True
     """
     from dosma.defaults import preferences
 
