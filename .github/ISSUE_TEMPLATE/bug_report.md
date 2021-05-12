@@ -1,7 +1,7 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: ''
+title: '[BUG]'
 labels: ''
 assignees: ''
 
@@ -28,11 +28,12 @@ If applicable, add screenshots to help explain your problem.
  - Browser [e.g. chrome, safari]
  - Version [e.g. 22]
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+Please also provide the output of the following code:
+
+```python
+>>> from dosma.utils.collect_env import collect_env_info
+>>> print(collect_env_info())
+```
 
 **Additional context**
 Add any other context about the problem here.
