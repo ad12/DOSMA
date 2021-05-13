@@ -86,6 +86,7 @@ class ImageDataFormat(enum.Enum):
         # and assume that format is dicom.
         # We cannot check if the path is a directory path because it may not
         # have been created yet.
+        file_or_dir_path = str(file_or_dir_path)
         filename_base, ext = os.path.splitext(file_or_dir_path)
         if filename_base == file_or_dir_path:
             return ImageDataFormat.dicom
