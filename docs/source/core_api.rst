@@ -24,7 +24,34 @@ Numpy operations that are supported on MedicalVolumes.
    :toctree: generated
    :nosignatures:
 
-   dosma.core.numpy_routines
+   dosma.core.numpy_routines.all_np
+   dosma.core.numpy_routines.amax
+   dosma.core.numpy_routines.amin
+   dosma.core.numpy_routines.any_np
+   dosma.core.numpy_routines.argmax
+   dosma.core.numpy_routines.argmin
+   dosma.core.numpy_routines.around
+   dosma.core.numpy_routines.clip
+   dosma.core.numpy_routines.concatenate
+   dosma.core.numpy_routines.expand_dims
+   dosma.core.numpy_routines.may_share_memory
+   dosma.core.numpy_routines.mean_np
+   dosma.core.numpy_routines.nan_to_num
+   dosma.core.numpy_routines.nanargmax
+   dosma.core.numpy_routines.nanargmin
+   dosma.core.numpy_routines.nanmax
+   dosma.core.numpy_routines.nanmean
+   dosma.core.numpy_routines.nanmin
+   dosma.core.numpy_routines.nanstd
+   dosma.core.numpy_routines.nansum
+   dosma.core.numpy_routines.ones_like
+   dosma.core.numpy_routines.shares_memory
+   dosma.core.numpy_routines.squeeze
+   dosma.core.numpy_routines.stack
+   dosma.core.numpy_routines.std
+   dosma.core.numpy_routines.sum_np
+   dosma.core.numpy_routines.where
+   dosma.core.numpy_routines.zeros_like
 
 Standard universal functions that act element-wise on the array are also supported.
 A (incomplete) list is shown below:
@@ -53,9 +80,6 @@ A (incomplete) list is shown below:
      - numpy.isnan
      - numpy.floor
      - numpy.ceil
-
-   
-     
 
 
 Image I/O
