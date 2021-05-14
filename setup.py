@@ -86,7 +86,9 @@ setup(
         "Operating System :: OS Independent",
     ],
     extras_require={
-        "ai": ["tensorflow", "keras"],
+        # TODO Issue #106: Fix to only import tensorflow version with fixed version
+        # once keras import statements are properly handled.
+        "ai": ["tensorflow==2.4.1", "keras==2.4.3"],
         "dev": [
             "coverage",
             "flake8",
