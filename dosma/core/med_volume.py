@@ -2,6 +2,7 @@
 
 This module defines :class:`MedicalVolume`, which is a wrapper for nD volumes.
 """
+from typing_extensions import get_origin
 import warnings
 from copy import deepcopy
 from numbers import Number
@@ -446,7 +447,19 @@ class MedicalVolume(NDArrayOperatorsMixin):
         return self
 
     def to_nib(self):
-        """Converts to Nibabel Nifti1Image."""
+        """Converts to nibabel Nifti1Image.
+
+        Returns:
+            nibabel.Nifti1Image: The nibabel image.
+        
+        Raises:
+            RuntimeError: If medical volume is not on the cpu.
+        
+        Examples:
+            >>> mv = MedicalVolume(np.ones((10,20,30)), np.eye(4))
+            >>> mv.to_nib()
+            <nibabel.nifti1.Nifti1Image>
+        """
         device = self.device
         if device != cpu_device:
             raise RuntimeError(f"MedicalVolume must be on cpu, got {self.device}")
@@ -512,21 +525,47 @@ class MedicalVolume(NDArrayOperatorsMixin):
     def to_torch(
         self, requires_grad: bool = False, contiguous: bool = False, view_as_real: bool = False
     ):
-        """Zero-copy conversion to pytorch tensor.
+        """Zero-copy conversion to torch tensor.
 
-        For complex array input, returns a tensor with shape + [2],
-        where tensor[..., 0] and tensor[..., 1] represent the real
-        and imaginary.
+        If torch version supports complex tensors (i.e. torch>=1.5.0), complex MedicalVolume
+        arrays will be converted into complex tensors (torch.complex64/torch.complex128).
+        Otherwise, tensors will be returned as the real view, where the last dimension has
+        two channels (`tensor.shape[-1]==2`). `[..., 0]` and `[..., 1]` correspond to the
+        real/imaginary channels, respectively.
 
         Args:
-            array (numpy/cupy array): input.
-            requires_grad(bool): Set .requires_grad output tensor
+            requires_grad (bool, optional): Set ``.requires_grad`` for output tensor.
+            contiguous (bool, optional): Make output tensor contiguous before returning.
+            view_as_real (bool, optional): If ``True`` and underlying array is complex,
+                returns a real view of a complex tensor.
 
         Returns:
-            PyTorch tensor.
+            torch.Tensor: The torch tensor.
+
+        Raises:
+            ImportError: If ``torch`` is not installed.
 
         Note:
             This method does not convert affine matrices and headers to tensor types.
+        
+        Examples:
+            >>> mv = MedicalVolume(np.ones((2,2,2)), np.eye(4))  # zero-copy on CPU
+            >>> mv.to_torch()
+            tensor([[[1., 1.],
+                     [1., 1.]],
+                    [[1., 1.],
+                     [1., 1.]]], dtype=torch.float64)
+            >>> mv_gpu = MedicalVolume(cp.ones((2,2,2)), np.eye(4))  # zero-copy on GPU
+            >>> mv.to_torch()
+            tensor([[[1., 1.],
+                     [1., 1.]],
+                    [[1., 1.],
+                     [1., 1.]]], device="cuda:0", dtype=torch.float64)
+            >>> # view complex array as real tensor
+            >>> mv = MedicalVolume(np.ones((3,4,5), dtype=np.complex), np.eye(4))
+            >>> tensor = mv.to_torch(view_as_real)
+            >>> tensor.shape
+            (3, 4, 5, 2)
         """
         if not env.package_available("torch"):
             raise ImportError(  # pragma: no cover
@@ -811,7 +850,31 @@ class MedicalVolume(NDArrayOperatorsMixin):
         return self._volume.dtype
 
     @classmethod
-    def from_nib(cls, image, affine_precision=None, origin_precision=None) -> "MedicalVolume":
+    def from_nib(cls, image, affine_precision: int =None, origin_precision: int =None) -> "MedicalVolume":
+        """Constructs MedicalVolume from nibabel images.
+
+        Args:
+            image (nibabel.Nifti1Image): The nibabel image to convert.
+            affine_precision (int, optional): If specified, rounds the i/j/k coordinate
+                vectors in the affine matrix to this decimal precision.
+            origin_precision (int, optional): If specified, rounds the scanner origin
+                in the affine matrix to this decimal precision.
+
+        Returns:
+            MedicalVolume: The medical image.
+
+        Examples:
+            >>> import nibabel as nib
+            >>> nib_img = nib.Nifti1Image(np.ones((10,20,30)), np.eye(4))
+            >>> MedicalVolume.from_nib(nib_img)
+            MedicalVolume(
+                shape=(10, 20, 30),
+                ornt=('LR', 'PA', 'IS')),
+                spacing=(1.0, 1.0, 1.0),
+                origin=(0.0, 0.0, 0.0),
+                device=Device(type='cpu')
+            )
+        """
         affine = np.array(image.affine)  # Make a copy of the affine matrix.
         if affine_precision is not None:
             affine[:3, :3] = np.round(affine[:3, :3], affine_precision)
@@ -866,7 +929,59 @@ class MedicalVolume(NDArrayOperatorsMixin):
         return cls(arr, affine)
 
     @classmethod
-    def from_torch(cls, tensor, affine, headers=None, to_complex: bool = None):
+    def from_torch(cls, tensor, affine, headers=None, to_complex: bool = None) -> "MedicalVolume":
+        """Zero-copy construction from PyTorch tensor.
+
+        Args:
+            tensor (torch.Tensor): A PyTorch tensor where first three dimensions correspond
+                to spatial dimensions.
+            affine (np.ndarray): See class parameters.
+            headers (np.ndarray[pydicom.FileDataset], optional): See class parameters.
+            to_complex (bool, optional): If ``True``, interprets tensor as real view of complex
+                tensor and attempts to restructure it as a complex array.
+
+        Returns:
+            MedicalVolume: A medical image.
+
+        Raises:
+            RuntimeError: If ``affine`` is not on the cpu.
+            ValueError: If ``tensor`` does not have at least three spatial dimensions.
+            ValueError: If ``to_complex=True`` and shape is not size ``(..., 2)``.
+            ImportError: If ``tensor`` on GPU and ``cupy`` not installed.
+
+        Examples:
+            >>> import torch
+            >>> tensor = torch.ones((2,2,2))
+            >>> MedicalVolume.from_torch(tensor, affine=np.eye(4))
+            MedicalVolume(
+                shape=(2, 2, 2),
+                ornt=('LR', 'PA', 'IS')),
+                spacing=(1.0, 1.0, 1.0),
+                origin=(0.0, 0.0, 0.0),
+                device=Device(type='cpu')
+            )
+            >>> tensor = torch.ones((2,2,2), device="cuda")  # zero-copy from GPU 0
+            >>> MedicalVolume.from_torch(tensor, affine=np.eye(4))
+            MedicalVolume(
+                shape=(2, 2, 2),
+                ornt=('LR', 'PA', 'IS')),
+                spacing=(1.0, 1.0, 1.0),
+                origin=(0.0, 0.0, 0.0),
+                device=Device(type='cuda', index=0)
+            )
+            >>> tensor = torch.ones((3,4,5,2))  # treat this tensor as view of complex tensor
+            >>> mv = MedicalVolume.from_torch(tensor, affine=np.eye(4), to_complex=True)
+            >>> print(mv)
+            MedicalVolume(
+                shape=(3,4,5),
+                ornt=('LR', 'PA', 'IS')),
+                spacing=(1.0, 1.0, 1.0),
+                origin=(0.0, 0.0, 0.0),
+                device=Device(type='cuda', index=0)
+            )
+            >>> mv.dtype
+            np.complex128
+        """
         if not env.package_available("torch"):
             raise ImportError(  # pragma: no cover
                 "torch is not installed. Install it with `pip install torch`. "
@@ -887,8 +1002,15 @@ class MedicalVolume(NDArrayOperatorsMixin):
             or (supports_cplx and tensor.dtype not in (torch.complex64, torch.complex128))
         )
 
+        if isinstance(affine, torch.Tensor):
+            if Device(affine.device) != cpu_device:
+                raise RuntimeError("Affine matrix must be on the cpu")
+            affine = affine.numpy()
+
         if (not to_complex and tensor.ndim < 3) or (to_complex and tensor.ndim < 4):
-            raise ValueError(f"Tensor must have three spatial dimensions. Got shape {torch.shape}.")
+            raise ValueError(
+                f"Tensor must have three spatial dimensions. Got shape {tensor.shape}."
+            )
         if to_complex and tensor.shape[-1] != 2:
             raise ValueError(
                 f"tensor.shape[-1] must have shape 2 when to_complex is specified. "
@@ -1064,7 +1186,12 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
     def __repr__(self) -> str:
         nl = "\n"
-        return f"{self.__class__.__name__}(volume={self._volume},{nl}affine={self._affine})"
+        nltb = "\n  "
+        return (
+            f"{self.__class__.__name__}({nltb}shape={self.shape},{nltb}"
+            f"ornt={self.orientation}),{nltb}spacing={self.pixel_spacing},{nltb}"
+            f"origin={self.scanner_origin},{nltb}device={self.device}{nl})"
+        )
 
     def __iadd__(self, other):
         if isinstance(other, MedicalVolume):

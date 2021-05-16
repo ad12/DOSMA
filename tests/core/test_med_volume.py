@@ -797,6 +797,11 @@ class TestMedicalVolume(unittest.TestCase):
         mv = MedicalVolume.from_torch(tensor, self._AFFINE)
         assert np.all(tensor.numpy() == mv.A)
 
+        tensor = torch.ones(10, 20, 30)
+        mv = MedicalVolume.from_torch(tensor, torch.from_numpy(self._AFFINE))
+        assert np.all(tensor.numpy() == mv.A)
+        assert isinstance(mv.affine, np.ndarray)
+
         tensor = torch.ones(10, 20, 30, dtype=torch.complex64)
         mv = MedicalVolume.from_torch(tensor, self._AFFINE)
         assert mv.dtype == np.complex64
@@ -815,13 +820,17 @@ class TestMedicalVolume(unittest.TestCase):
         assert mv.dtype == np.complex128
         assert mv.shape == tensor.shape[:3]
 
+        tensor = torch.ones(10, 20, dtype=torch.float64)
+        with self.assertRaises(ValueError):
+            mv = MedicalVolume.from_torch(tensor, self._AFFINE)
+
         tensor = torch.ones(10, 20, 2, dtype=torch.float64)
         with self.assertRaises(ValueError):
             mv = MedicalVolume.from_torch(tensor, self._AFFINE, to_complex=True)
 
         tensor = torch.ones(10, 20, 30, 3, dtype=torch.float64)
         with self.assertRaises(ValueError):
-            mv = MedicalVolume.from_torch(tensor, self._AFFINE)
+            mv = MedicalVolume.from_torch(tensor, self._AFFINE, to_complex=True)
 
 
 if __name__ == "__main__":
