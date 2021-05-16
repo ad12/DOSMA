@@ -2,7 +2,6 @@
 
 This module defines :class:`MedicalVolume`, which is a wrapper for nD volumes.
 """
-from typing_extensions import get_origin
 import warnings
 from copy import deepcopy
 from numbers import Number
@@ -451,10 +450,10 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
         Returns:
             nibabel.Nifti1Image: The nibabel image.
-        
+
         Raises:
             RuntimeError: If medical volume is not on the cpu.
-        
+
         Examples:
             >>> mv = MedicalVolume(np.ones((10,20,30)), np.eye(4))
             >>> mv.to_nib()
@@ -547,7 +546,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
         Note:
             This method does not convert affine matrices and headers to tensor types.
-        
+
         Examples:
             >>> mv = MedicalVolume(np.ones((2,2,2)), np.eye(4))  # zero-copy on CPU
             >>> mv.to_torch()
@@ -850,7 +849,9 @@ class MedicalVolume(NDArrayOperatorsMixin):
         return self._volume.dtype
 
     @classmethod
-    def from_nib(cls, image, affine_precision: int =None, origin_precision: int =None) -> "MedicalVolume":
+    def from_nib(
+        cls, image, affine_precision: int = None, origin_precision: int = None
+    ) -> "MedicalVolume":
         """Constructs MedicalVolume from nibabel images.
 
         Args:
