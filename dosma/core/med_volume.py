@@ -115,6 +115,17 @@ class MedicalVolume(NDArrayOperatorsMixin):
     >>> type(exp_arr_gpu)
     <class 'dosma.io.MedicalVolume'>
 
+    **ALPHA**: MedicalVolumes are also interoperable with popular image data structures
+    with zero-copy, meaning array data will not be copied. Formats currently include the
+    SimpleITK Image, Nibabel Nifti1Image, and PyTorch tensors:
+
+    >>> sitk_img = mv.to_sitk()  # Convert to SimpleITK Image
+    >>> mv_from_sitk = MedicalVolume.from_sitk(sitk_img)  # Convert back to MedicalVolume
+    >>> nib_img = mv.to_nib()  # Convert to nibabel Nifti1Image
+    >>> mv_from_nib = MedicalVolume.from_nib(nib_img)
+    >>> torch_tensor = mv.to_torch()  # Convert to torch tensor
+    >>> mv_from_tensor = MedicalVolume.from_torch(torch_tensor, affine)
+
     Args:
         volume (array-like): nD medical image.
         affine (array-like): 4x4 array corresponding to affine matrix transform in RAS+ coordinates.
