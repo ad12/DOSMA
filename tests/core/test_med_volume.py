@@ -762,6 +762,67 @@ class TestMedicalVolume(unittest.TestCase):
         mv.volume += 2
         assert np.all(mv.volume == 3)
 
+    @ututils.requires_packages("torch")
+    def test_to_torch(self):
+        import torch
+
+        vol = np.ones((10, 20, 30))
+        mv = MedicalVolume(vol, self._AFFINE)
+
+        tensor = mv.to_torch()
+        assert torch.all(tensor == torch.from_numpy(vol))
+        assert tensor.shape == mv.shape
+
+        tensor = mv.to_torch(requires_grad=True, contiguous=True)
+        assert tensor.is_contiguous()
+        assert tensor.requires_grad
+        assert torch.all(tensor == torch.from_numpy(vol))
+        assert tensor.shape == mv.shape
+
+        vol = np.ones((10, 20, 30), np.complex)
+        mv = MedicalVolume(vol, self._AFFINE)
+
+        tensor = mv.to_torch()
+        assert tensor.dtype == torch.complex128
+        assert tensor.shape == mv.shape
+
+        tensor = mv.to_torch(view_as_real=True)
+        assert tensor.shape == mv.shape + (2,)
+
+    @ututils.requires_packages("torch")
+    def test_from_torch(self):
+        import torch
+
+        tensor = torch.ones(10, 20, 30)
+        mv = MedicalVolume.from_torch(tensor, self._AFFINE)
+        assert np.all(tensor.numpy() == mv.A)
+
+        tensor = torch.ones(10, 20, 30, dtype=torch.complex64)
+        mv = MedicalVolume.from_torch(tensor, self._AFFINE)
+        assert mv.dtype == np.complex64
+
+        tensor = torch.ones(10, 20, 30, dtype=torch.complex128)
+        mv = MedicalVolume.from_torch(tensor, self._AFFINE)
+        assert mv.dtype == np.complex128
+
+        tensor = torch.ones(10, 20, 30, 2, dtype=torch.float32)
+        mv = MedicalVolume.from_torch(tensor, self._AFFINE, to_complex=True)
+        assert mv.dtype == np.complex64
+        assert mv.shape == tensor.shape[:3]
+
+        tensor = torch.ones(10, 20, 30, 2, dtype=torch.float64)
+        mv = MedicalVolume.from_torch(tensor, self._AFFINE, to_complex=True)
+        assert mv.dtype == np.complex128
+        assert mv.shape == tensor.shape[:3]
+
+        tensor = torch.ones(10, 20, 2, dtype=torch.float64)
+        with self.assertRaises(ValueError):
+            mv = MedicalVolume.from_torch(tensor, self._AFFINE, to_complex=True)
+
+        tensor = torch.ones(10, 20, 30, 3, dtype=torch.float64)
+        with self.assertRaises(ValueError):
+            mv = MedicalVolume.from_torch(tensor, self._AFFINE)
+
 
 if __name__ == "__main__":
     unittest.main()

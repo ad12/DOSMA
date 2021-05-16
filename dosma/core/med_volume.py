@@ -12,14 +12,13 @@ import numpy as np
 import pydicom
 from nibabel.spatialimages import SpatialFirstSlicer as _SpatialFirstSlicerNib
 from numpy.lib.mixins import NDArrayOperatorsMixin
+from packaging import version
 
 from dosma.core import orientation as stdo
 from dosma.core.device import Device, cpu_device, get_array_module, get_device, to_device
 from dosma.core.io.format_io import ImageDataFormat
 from dosma.defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
 from dosma.utils import env
-
-from packaging import version
 
 if env.sitk_available():
     import SimpleITK as sitk
@@ -29,6 +28,10 @@ if env.package_available("h5py"):
     import h5py
 
 __all__ = ["MedicalVolume"]
+
+
+# PyTorch version introducing complex tensor support.
+_TORCH_COMPLEX_SUPPORT_VERSION = version.Version("1.5.0")
 
 
 class MedicalVolume(NDArrayOperatorsMixin):
@@ -506,6 +509,56 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
         return img
 
+    def to_torch(
+        self, requires_grad: bool = False, contiguous: bool = False, view_as_real: bool = False
+    ):
+        """Zero-copy conversion to pytorch tensor.
+
+        For complex array input, returns a tensor with shape + [2],
+        where tensor[..., 0] and tensor[..., 1] represent the real
+        and imaginary.
+
+        Args:
+            array (numpy/cupy array): input.
+            requires_grad(bool): Set .requires_grad output tensor
+
+        Returns:
+            PyTorch tensor.
+
+        Note:
+            This method does not convert affine matrices and headers to tensor types.
+        """
+        if not env.package_available("torch"):
+            raise ImportError(  # pragma: no cover
+                "torch is not installed. Install it with `pip install torch`. "
+                "See https://pytorch.org/ for more information."
+            )
+
+        import torch
+        from torch.utils.dlpack import from_dlpack
+
+        device = self.device
+        array = self.A
+
+        if any(np.issubdtype(array.dtype, dtype) for dtype in (np.complex64, np.complex128)):
+            torch_version = env.get_version(torch)
+            supports_cplx = version.Version(torch_version) >= _TORCH_COMPLEX_SUPPORT_VERSION
+            if not supports_cplx or view_as_real:
+                with device:
+                    shape = array.shape
+                    array = array.view(dtype=array.real.dtype)
+                    array = array.reshape(shape + (2,))
+
+        if device == cpu_device:
+            tensor = torch.from_numpy(array)
+        else:
+            tensor = from_dlpack(array.toDlpack())
+
+        tensor.requires_grad = requires_grad
+        if contiguous:
+            tensor = tensor.contiguous()
+        return tensor
+
     def headers(self, flatten=False):
         """Returns headers.
 
@@ -811,6 +864,60 @@ class MedicalVolume(NDArrayOperatorsMixin):
         affine[3, 3] = 1
 
         return cls(arr, affine)
+
+    @classmethod
+    def from_torch(cls, tensor, affine, headers=None, to_complex: bool = None):
+        if not env.package_available("torch"):
+            raise ImportError(  # pragma: no cover
+                "torch is not installed. Install it with `pip install torch`. "
+                "See https://pytorch.org/ for more information."
+            )
+
+        import torch
+        from torch.utils.dlpack import to_dlpack
+
+        torch_version = env.get_version(torch)
+        supports_cplx = version.Version(torch_version) >= _TORCH_COMPLEX_SUPPORT_VERSION
+        # Check if tensor needs to be converted to np.complex type.
+        # If tensor is of torch.complex64 or torch.complex128 dtype, then from_numpy will take
+        # care of conversion to appropriate numpy dtype, and we do not need to do the to_complex
+        # logic.
+        to_complex = to_complex and (
+            not supports_cplx
+            or (supports_cplx and tensor.dtype not in (torch.complex64, torch.complex128))
+        )
+
+        if (not to_complex and tensor.ndim < 3) or (to_complex and tensor.ndim < 4):
+            raise ValueError(f"Tensor must have three spatial dimensions. Got shape {torch.shape}.")
+        if to_complex and tensor.shape[-1] != 2:
+            raise ValueError(
+                f"tensor.shape[-1] must have shape 2 when to_complex is specified. "
+                f"Got shape {tensor.shape}."
+            )
+
+        device = Device(tensor.device)
+        if device == cpu_device:
+            array = tensor.detach().numpy()
+        else:
+            if env.cupy_available():
+                array = cp.fromDlpack(to_dlpack(tensor))
+            else:
+                raise ImportError(  # pragma: no cover
+                    "CuPy is required to convert a GPU torch.Tensor to array. "
+                    "Follow instructions at https://docs.cupy.dev/en/stable/install.html to "
+                    "install the correct binary."
+                )
+
+        if to_complex:
+            with get_device(array):
+                if array.dtype == np.float32:
+                    array = array.view(np.complex64)
+                elif array.dtype == np.float64:
+                    array = array.view(np.complex128)
+
+                array = array.reshape(array.shape[:-1])
+
+        return cls(array, affine, headers=headers)
 
     def _partial_clone(self, **kwargs) -> "MedicalVolume":
         """Copies constructor information from ``self`` if not available in ``kwargs``."""
