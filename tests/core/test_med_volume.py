@@ -3,6 +3,8 @@ import shutil
 import unittest
 
 import h5py
+import nibabel as nib
+import nibabel.testing as nib_testing
 import numpy as np
 import SimpleITK as sitk
 
@@ -155,6 +157,15 @@ class TestMedicalVolume(unittest.TestCase):
             mv3.headers(flatten=True)[0]
         ), "headers cloned, expected different memory address"
 
+    def test_to_nib(self):
+        arr = np.random.rand(10, 20, 30)
+        mv = MedicalVolume(arr, self._AFFINE)
+        nib_img = nib.Nifti1Image(arr, mv.affine)
+
+        nib_from_mv = mv.to_nib()
+        assert np.all(nib_from_mv.get_fdata() == nib_img.get_fdata())
+        assert np.all(nib_from_mv.affine == nib_img.affine)
+
     def test_to_sitk(self):
         mv = MedicalVolume(np.random.rand(10, 20, 30), self._AFFINE)
         filepath = os.path.join(ututils.TEMP_PATH, "med_vol_to_sitk.nii.gz")
@@ -176,6 +187,21 @@ class TestMedicalVolume(unittest.TestCase):
         img = mv.to_sitk(vdim=-1)
         assert np.all(sitk.GetArrayViewFromImage(img) == 0)
         assert img.GetSize() == (10, 20, 1)
+
+    def test_from_nib(self):
+        filepath = os.path.join(nib_testing.data_path, "example4d.nii.gz")
+        nib_img = nib.load(filepath)
+
+        mv = MedicalVolume.from_nib(nib_img)
+        assert np.all(mv.affine == nib_img.affine)
+        assert np.all(mv.A == nib_img.get_fdata())
+
+        precision = 4
+        mv2 = MedicalVolume.from_nib(
+            nib_img, affine_precision=precision, origin_precision=precision
+        )
+        assert np.allclose(mv2.affine, nib_img.affine, atol=10 ** (-precision))
+        assert np.all(mv2.A == nib_img.get_fdata())
 
     def test_from_sitk(self):
         mv = MedicalVolume(np.random.rand(10, 20, 30), self._AFFINE)

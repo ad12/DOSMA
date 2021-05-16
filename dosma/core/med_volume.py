@@ -442,6 +442,14 @@ class MedicalVolume(NDArrayOperatorsMixin):
         self._volume = self._volume.astype(dtype, **kwargs)
         return self
 
+    def to_nib(self):
+        """Converts to Nibabel Nifti1Image."""
+        device = self.device
+        if device != cpu_device:
+            raise RuntimeError(f"MedicalVolume must be on cpu, got {self.device}")
+
+        return nib.Nifti1Image(self.A, self.affine.copy())
+
     def to_sitk(self, vdim: int = None):
         """Converts to SimpleITK Image.
 
@@ -748,6 +756,16 @@ class MedicalVolume(NDArrayOperatorsMixin):
     def dtype(self):
         """The ``dtype`` of the ndarray. Same as ``self.volume.dtype``."""
         return self._volume.dtype
+
+    @classmethod
+    def from_nib(cls, image, affine_precision=None, origin_precision=None) -> "MedicalVolume":
+        affine = np.array(image.affine)  # Make a copy of the affine matrix.
+        if affine_precision is not None:
+            affine[:3, :3] = np.round(affine[:3, :3], affine_precision)
+        if origin_precision:
+            affine[:3, 3] = np.round(affine[:3, 3], origin_precision)
+
+        return cls(image.get_fdata(), affine)
 
     @classmethod
     def from_sitk(cls, image, copy=False) -> "MedicalVolume":
