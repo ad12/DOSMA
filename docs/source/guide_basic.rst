@@ -125,14 +125,34 @@ Dosma provides a device class :class:`dosma.Device`, which allows you to specify
 to use for :class:`MedicalVolume` operations. It extends the Device class from `CuPy <https://cupy.dev/>`_.
 To enable GPU computing support, install the correct build for CuPy on your machine.
 
-To move a MedicalVolume to GPU 1, you can use the :meth:`MedicalVolume.to` method:
+To move a MedicalVolume to GPU 0, you can use the :meth:`MedicalVolume.to` method:
 
->>> mv_gpu = mv.to(dm.Device(1))
+>>> mv_gpu = mv.to(dm.Device(0))
 
 You can also move the image back to the cpu:
 
->>> mv_cpu = mv_gpu.to(dm.Device(-1))  # or mv_gpu.cpu()
+>>> mv_cpu = mv_gpu.cpu()  # or mv_gpu.to(dm.Device(-1))
 
 If the device is already on the specified device, the same object is returned.
 Note, some functionality such as curve fitting (:class:`dosma.curve_fit`), image registration,
 and image I/O are not supported with images on the GPU.
+
+
+(ALPHA) Multi-Library Interoperability
+========================================
+
+:class:`MedicalVolume` is also interoperable with popular image data structures
+with zero-copy, meaning array data will not be copied. Structures currently include the
+SimpleITK Image, Nibabel Nifti1Image, and PyTorch tensors.
+
+For example, we can use the :meth:`MedicalVolume.to_sitk` method to convert a MedicalVolume
+to a SimpleITK image:
+
+>>> sitk_img = mv.to_sitk()
+
+For PyTorch tensors, the zero-copy also applies to tensors on the GPU. Using ``mv_gpu``,
+which is on GPU 0, from the previous section, we can do:
+
+>>> torch_tensor = mv_gpu.to_torch()
+>>> torch.device
+cuda:0
