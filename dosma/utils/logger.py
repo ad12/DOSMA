@@ -44,37 +44,56 @@ class _ColorfulFormatter(logging.Formatter):
 @functools.lru_cache()  # so that calling setup_logger multiple times won't add many handlers
 def setup_logger(
     output: Union[str, bool] = True,
-    *,
     color=True,
     name="dosma",
     abbrev_name=None,
-    level=None,
+    stream_lvl=None,
+    overwrite_handlers: bool = False,
 ):
     """Initialize the dosma logger.
 
     Args:
-        output (str | bool): A file name or a directory to save log. If True, will save to
-            the default dosma log location.
-            If ``None`` or ``False``, will not save log file. If ends with ".txt" or ".log",
-            assumed to be a file name. Otherwise, logs will be saved to `output/log.txt`.
-        name (str): the root module name of this logger
-        abbrev_name (str): an abbreviation of the module, to avoid long names in logs.
+        output (str | bool): A file name or a directory to save log or a boolean.
+            If ``True``, logs will save to the default dosma log location
+            (:func:`dosma.utils.env.log_file_path`).
+            If ``None`` or ``False``, logs will not be written to a file. This is not recommended.
+            If a string and ends with ".txt" or ".log", assumed to be a file name.
+            Otherwise, logs will be saved to `output/log.txt`.
+        color (bool): If ``True``, logs printed to terminal (stdout) will be in color.
+        name (str): The root module name of this logger.
+        abbrev_name (str): An abbreviation of the module, to avoid long names in logs.
             Set to "" to not log the root module in logs.
-            By default, will abbreviate "detectron2" to "d2" and leave other
+            By default, will abbreviate "dosma" to "dm" and leave other
             modules unchanged.
+        stream_lvl (int): The level for logging to console. Defaults to ``logging.DEBUG``
+            if :func:`dosma.utils.env.debug()` is ``True``, else defaults to ``logging.INFO``.
+        overwrite_handlers (bool): It ``True`` and logger with name ``name`` has logging handlers,
+            these handlers will be removed before adding the new handlers. This is useful
+            when to avoid having too many handlers for a logger.
+
     Returns:
-        logging.Logger: a logger
+        logging.Logger: A logger.
+
+    Note:
+        This method removes existing handlers from the logger.
+
+    Examples:
+        >>> setup_logger()  # how initializing logger is done most of the time
+        >>> setup_logger("/path/to/save/dosma.log")  # save log to particular file
+        >>> setup_logger(
+        ... stream_lvl=logging.WARNING,
+        ... overwrite_handlers=True)  # only prints warnings to console
     """
-    if level is None:
-        level = logging.DEBUG if env.debug() else logging.INFO
+    if stream_lvl is None:
+        stream_lvl = logging.DEBUG if env.debug() else logging.INFO
 
     logger = logging.getLogger(name)
-    logger.setLevel(level)
+    logger.setLevel(logging.DEBUG)
     logger.propagate = False
 
     # Clear handlers if they exist.
     is_new_logger = not logger.hasHandlers()
-    if not is_new_logger:
+    if not is_new_logger and overwrite_handlers:
         logger.handlers.clear()
 
     if abbrev_name is None:
@@ -85,7 +104,7 @@ def setup_logger(
     )
 
     ch = logging.StreamHandler(stream=sys.stdout)
-    ch.setLevel(level)
+    ch.setLevel(stream_lvl)
     if color:
         formatter = _ColorfulFormatter(
             colored("[%(asctime)s %(name)s]: ", "green") + "%(message)s",

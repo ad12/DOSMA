@@ -62,17 +62,17 @@ def debug(value: bool = None) -> bool:
         ValueError: If ``value`` is not a supported value.
 
     Note:
-        Changing the debug state changes the stream logging level for the default
-        dosma logger. If debug state is turned off, logging level is set to
-        ``logging.INFO``. If debug state is turned on, logging level is set
-        to ``logging.DEBUG``.
+        Changing the debug state changes the stream handler logging level
+        for the default dosma logger. If debug state is turned off, logging
+        level is set to ``logging.INFO``. If debug state is turned on,
+        logging level is set to ``logging.DEBUG``.
 
     Examples:
         >>> debug()  # get debug status, defaults to False
         False
-        >>> debug(True)
+        >>> debug(True)  # turn on debug mode
         True
-        >>> debug()
+        >>> debug()  # get debug status
         True
     """
 
@@ -94,7 +94,7 @@ def debug(value: bool = None) -> bool:
                 h.setLevel(logging.DEBUG)
         else:
             preferences.set("nipype", value="file_stderr", prefix="logging")
-            _dm_logger.setLevel(logging.INFO)
+            _dm_logger.setLevel(logging.DEBUG)  # the root logger should always log at DEBUG level
             for h in _dm_logger.handlers:
                 if isinstance(h, logging.StreamHandler):
                     h.setLevel(logging.INFO)

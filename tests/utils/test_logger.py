@@ -27,3 +27,13 @@ class TestSetupLogger(unittest.TestCase):
     def test_makes_file(self):
         setup_logger(util.TEMP_PATH)
         assert os.path.isfile(os.path.join(util.TEMP_PATH, "dosma.log"))
+
+    def test_overwrite_handlers(self):
+        logger = setup_logger()
+        assert len(logger.handlers) == 2
+
+        logger = setup_logger()
+        assert len(logger.handlers) == 4
+
+        logger = setup_logger(overwrite_handlers=True)
+        assert len(logger.handlers) == 2
