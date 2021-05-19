@@ -19,6 +19,8 @@ from dosma.tissues.tissue import Tissue
 from dosma.utils import io_utils
 from dosma.utils.cmd_line_utils import ActionWrapper
 
+__all__ = ["Mapss"]
+
 __EXPECTED_NUM_ECHO_TIMES__ = 7
 
 __INITIAL_T1_RHO_VAL__ = 70.0
@@ -31,7 +33,7 @@ __T2_UPPER_BOUND__ = 100
 
 __DECIMAL_PRECISION__ = 3
 
-__all__ = ["Mapss"]
+_logger = logging.getLogger(__name__)
 
 
 class Mapss(ScanSequence):
@@ -95,10 +97,10 @@ class Mapss(ScanSequence):
 
         num_echos = len(volumes)
 
-        logging.info("")
-        logging.info("==" * 40)
-        logging.info("Intraregistering...")
-        logging.info("==" * 40)
+        _logger.info("")
+        _logger.info("==" * 40)
+        _logger.info("Intraregistering...")
+        _logger.info("==" * 40)
 
         # temporarily save subvolumes as nifti file
         raw_volumes_base_path = io_utils.mkdirs(os.path.join(self.temp_path, "raw"))
@@ -128,7 +130,7 @@ class Mapss(ScanSequence):
             )
             reg.inputs.parameters = [fc.ELASTIX_AFFINE_PARAMS_FILE]
             reg.terminal_output = preferences.nipype_logging
-            logging.info("Registering {} -> {}".format(str(echo_index), str(target_echo_index)))
+            _logger.info("Registering {} -> {}".format(str(echo_index), str(target_echo_index)))
             tmp = reg.run()
 
             warped_file = tmp.outputs.warped_file

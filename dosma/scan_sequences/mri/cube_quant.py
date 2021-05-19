@@ -25,6 +25,8 @@ __T1_RHO_LOWER_BOUND__ = 0.0
 __T1_RHO_UPPER_BOUND__ = 500.0
 __T1_RHO_DECIMAL_PRECISION__ = 3
 
+_logger = logging.getLogger(__name__)
+
 
 class CubeQuant(NonTargetSequence):
     """CubeQuant MRI sequence.
@@ -88,13 +90,13 @@ class CubeQuant(NonTargetSequence):
         moving = volumes[1:]
 
         if verbose:
-            logging.info("")
-            logging.info("==" * 40)
-            logging.info("Interregistering...")
-            logging.info("Target: {}".format(target_path))
+            _logger.info("")
+            _logger.info("==" * 40)
+            _logger.info("Interregistering...")
+            _logger.info("Target: {}".format(target_path))
             if target_mask_path is not None:
-                logging.info("Mask: {}".format(target_mask_path))
-            logging.info("==" * 40)
+                _logger.info("Mask: {}".format(target_mask_path))
+            _logger.info("==" * 40)
 
         if not target_mask_path:
             parameter_files = [fc.ELASTIX_RIGID_PARAMS_FILE, fc.ELASTIX_AFFINE_PARAMS_FILE]
@@ -208,10 +210,10 @@ class CubeQuant(NonTargetSequence):
         verbose = True
 
         if verbose:
-            logging.info("")
-            logging.info("==" * 40)
-            logging.info("Intraregistering...")
-            logging.info("==" * 40)
+            _logger.info("")
+            _logger.info("==" * 40)
+            _logger.info("Intraregistering...")
+            _logger.info("==" * 40)
 
         out_path = os.path.join(self.temp_path, "intraregister")
         _, reg_vols = register(

@@ -26,6 +26,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 matplotlib.use("TkAgg")
 LARGE_FONT = ("Verdana", 12)
 
+_logger = logging.getLogger(__name__)
+
 
 class DosmaViewer(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -329,7 +331,7 @@ class DosmaFrame(tk.Frame):
                 action_str,
             )
 
-            logging.info("CMD LINE INPUT: %s" % str_f)
+            _logger.info("CMD LINE INPUT: %s" % str_f)
 
             parse_args(str_f.split())
         except Exception as e:

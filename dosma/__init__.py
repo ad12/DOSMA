@@ -4,6 +4,7 @@ from dosma.core import *  # noqa
 from dosma.defaults import preferences  # noqa
 from dosma.utils.collect_env import collect_env_info  # noqa
 from dosma.utils.env import debug  # noqa
+from dosma.utils.logger import setup_logger  # noqa
 
 # This line will be programatically read/write by setup.py.
 # Leave them at the bottom of this file and don't touch them.

@@ -1,3 +1,4 @@
+import logging
 import os
 from importlib import util
 
@@ -60,6 +61,12 @@ def debug(value: bool = None) -> bool:
     Raises:
         ValueError: If ``value`` is not a supported value.
 
+    Note:
+        Changing the debug state changes the stream logging level for the default
+        dosma logger. If debug state is turned off, logging level is set to
+        ``logging.INFO``. If debug state is turned on, logging level is set
+        to ``logging.DEBUG``.
+
     Examples:
         >>> debug()  # get debug status, defaults to False
         False
@@ -68,19 +75,29 @@ def debug(value: bool = None) -> bool:
         >>> debug()
         True
     """
-    from dosma.defaults import preferences
 
     def _is_debug():
         return os.environ.get("DOSMA_DEBUG", "") in ["True", "true"]
 
     def _toggle_debug(_old_value, _new_value):
+        from dosma.defaults import preferences
+
         # TODO: Toggle dosma logging to debug mode.
         if _old_value == _new_value:
             return
+
+        _dm_logger = logging.getLogger("dosma")
         if _new_value:
             preferences.set("nipype", value="stream", prefix="logging")
+            _dm_logger.setLevel(logging.DEBUG)
+            for h in _dm_logger.handlers:
+                h.setLevel(logging.DEBUG)
         else:
             preferences.set("nipype", value="file_stderr", prefix="logging")
+            _dm_logger.setLevel(logging.INFO)
+            for h in _dm_logger.handlers:
+                if isinstance(h, logging.StreamHandler):
+                    h.setLevel(logging.INFO)
 
     if value is not None:
         old_value = _is_debug()
@@ -101,6 +118,11 @@ def sitk_available():
 
 
 def cupy_available():
+    if "cupy" not in _SUPPORTED_PACKAGES:
+        try:
+            import cupy  # noqa
+        except ImportError:
+            _SUPPORTED_PACKAGES["cupy"] = False
     return package_available("cupy")
 
 
