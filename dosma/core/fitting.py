@@ -1167,8 +1167,8 @@ def __fit_mono_exp__(x, y, p0=None):  # pragma: no cover
         return a * exp
 
     warnings.warn(
-        "__fit_mono_exp__ is deprecated since v0.12 and will no longer be "
-        "supported in v0.13. Use `curve_fit` instead.",
+        "__fit_mono_exp__ is deprecated since v0.0.12 and will no longer be "
+        "supported in v0.0.13. Use `curve_fit` instead.",
         DeprecationWarning,
     )
 

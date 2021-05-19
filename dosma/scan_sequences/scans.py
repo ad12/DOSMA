@@ -35,6 +35,8 @@ from dosma.utils import env, io_utils
 
 __all__ = ["ScanSequence"]
 
+_logger = logging.getLogger(__name__)
+
 
 class ScanSequence(ScanIOMixin):
     """The class for scan sequences and corresponding analysis.
@@ -205,7 +207,7 @@ class NonTargetSequence(ScanSequence):
                 (e.g. `0.nii.gz`, `000.nii.gz`, etc.) or if no interregistered files
                 found in interregistered_dirpath.
         """
-        logging.info("Loading interregistered files")
+        _logger.info("Loading interregistered files")
         if "interregistered" not in interregistered_dirpath:
             raise ValueError("Invalid path for loading {} interregistered files".format(self.NAME))
 

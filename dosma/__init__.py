@@ -1,5 +1,9 @@
 """The core module contains functions and classes for medical image analysis.
 """
+from dosma.utils.logger import setup_logger  # noqa
+
+setup_logger()
+
 from dosma.core import *  # noqa
 from dosma.defaults import preferences  # noqa
 from dosma.utils.collect_env import collect_env_info  # noqa

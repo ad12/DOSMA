@@ -17,6 +17,8 @@ from dosma.utils.cmd_line_utils import ActionWrapper
 
 __all__ = ["QDess"]
 
+_logger = logging.getLogger(__name__)
+
 
 class QDess(ScanSequence):
     """qDESS MRI sequence.
@@ -76,7 +78,7 @@ class QDess(ScanSequence):
             if isinstance(tissue, Sequence)
             else tissue.FULL_NAME
         )
-        logging.info(f"Segmenting {tissue_names}...")
+        _logger.info(f"Segmenting {tissue_names}...")
 
         if use_rss:
             segmentation_volume = self.calc_rss()

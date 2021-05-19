@@ -42,7 +42,8 @@ from dosma.scan_sequences.mri.mapss import Mapss
 from dosma.scan_sequences.mri.qdess import QDess
 from dosma.scan_sequences.scans import ScanSequence
 from dosma.tissues.tissue import Tissue
-from dosma.utils import env, io_utils
+from dosma.utils import env
+from dosma.utils.logger import setup_logger
 
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
@@ -69,6 +70,8 @@ TISSUES_KEY = "tissues"
 
 SUPPORTED_SCAN_TYPES = [Cones, CubeQuant, Mapss, QDess]
 BASIC_TYPES = [bool, str, float, int, list, tuple]
+
+_logger = logging.getLogger(__name__)
 
 
 class CommandLineScanContainer:
@@ -280,7 +283,7 @@ def parse_tissues(vargin: dict):
 
     # if no tissues are specified, do computation for all supported tissues
     if len(tissues) == 0:
-        logging.info("No tissues specified, computing for all supported tissues...")
+        _logger.info("No tissues specified, computing for all supported tissues...")
         tissues = []
         for tissue in knee.SUPPORTED_TISSUES:
             t = tissue()
@@ -295,7 +298,7 @@ def parse_tissues(vargin: dict):
     for tissue in tissues:
         analysis_str += "%s, " % tissue.FULL_NAME
 
-    logging.info(analysis_str)
+    _logger.info(analysis_str)
 
     return tissues
 
@@ -586,7 +589,7 @@ def _build_params(vargin, scan, parameters, tissue=None):
 def handle_scan(vargin):
 
     scan_name = vargin[SCAN_KEY]
-    logging.info("Analyzing {}...".format(scan_name))
+    _logger.info("Analyzing {}...".format(scan_name))
     scan = None
 
     for p_scan in SUPPORTED_SCAN_TYPES:
@@ -759,7 +762,7 @@ def parse_args(f_input=None):
 
         # Only initialize logger if called from command line.
         # If UI is using it, the logger should be initialized by the UI.
-        io_utils.init_logger(env.log_file_path(), args.debug)
+        setup_logger(env.log_file_path())
 
     vargin = vars(args)
 
@@ -768,7 +771,7 @@ def parse_args(f_input=None):
 
     gpu = vargin[GPU_KEY]
 
-    logging.debug(vargin)
+    _logger.debug(vargin)
 
     if gpu is not None:
         os.environ["CUDA_VISIBLE_DEVICES"] = gpu
@@ -801,7 +804,7 @@ def parse_args(f_input=None):
     args.func(vargin)
 
     time_elapsed = time.time() - start_time
-    logging.info("Time Elapsed: {:.2f} seconds".format(time.time() - start_time))
+    _logger.info("Time Elapsed: {:.2f} seconds".format(time.time() - start_time))
 
     return time_elapsed
 

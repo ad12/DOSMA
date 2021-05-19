@@ -22,6 +22,8 @@ PID_KEY = "pid"
 SUPPORTED_TISSUES = [FemoralCartilage, Meniscus, TibialCartilage, PatellarCartilage]
 SUPPORTED_QUANTITATIVE_VALUES = [QV.T2, QV.T1_RHO, QV.T2_STAR]
 
+_logger = logging.getLogger(__name__)
+
 
 def knee_parser(base_parser):
     """Parse command line input related to knee
@@ -79,7 +81,7 @@ def handle_knee(vargin):
     pid = vargin[PID_KEY]
 
     if tissues is None or len(tissues) == 0:
-        logging.info("Computing for all supported knee tissues...")
+        _logger.info("Computing for all supported knee tissues...")
         tissues = []
         for t in SUPPORTED_TISSUES:
             tissues.append(t())
@@ -91,7 +93,7 @@ def handle_knee(vargin):
             qvs.append(qv)
 
     if len(qvs) == 0:
-        logging.info("Computing for all supported quantitative values...")
+        _logger.info("Computing for all supported quantitative values...")
         qvs = SUPPORTED_QUANTITATIVE_VALUES
 
     for tissue in tissues:
@@ -99,14 +101,14 @@ def handle_knee(vargin):
         tissue.medial_to_lateral = medial_to_lateral
         tissue.load_data(load_path)
 
-        logging.info("")
-        logging.info("==" * 40)
-        logging.info(tissue.FULL_NAME)
-        logging.info("==" * 40)
+        _logger.info("")
+        _logger.info("==" * 40)
+        _logger.info(tissue.FULL_NAME)
+        _logger.info("==" * 40)
 
         for qv in qvs:
             # load file
-            logging.info("Analyzing %s" % qv.name.lower())
+            _logger.info("Analyzing %s" % qv.name.lower())
             tissue.calc_quant_vals()
 
     for tissue in tissues:

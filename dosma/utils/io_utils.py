@@ -1,11 +1,13 @@
 import logging
 import os
 import pickle
-from time import localtime, strftime
+import warnings
 from typing import Sequence
 
 import h5py
 import pandas as pd
+
+from dosma.utils.logger import setup_logger
 
 __all__ = ["mkdirs", "save_pik", "load_pik", "save_h5", "load_h5", "save_tables"]
 
@@ -136,27 +138,11 @@ def init_logger(log_file: str, debug: bool = False):  # pragma: no cover
             This means debug statements will also be written to the log file.
             Defaults to ``False``.
     """
+    warnings.warn(
+        "init_logger is deprecated since v0.0.14 and will no longer be "
+        "supported in v0.13. Use `dosma.setup_logger` instead.",
+        DeprecationWarning,
+    )
+
     level = logging.DEBUG if debug else logging.INFO
-    logging.basicConfig(level=level)
-    log_formatter = logging.Formatter("[%(levelname)-5.5s] %(message)s")
-    root_logger = logging.getLogger()
-
-    if os.path.exists(log_file):
-        mode = "a"
-    else:
-        mode = "w"
-
-    mkdirs(os.path.dirname(log_file))
-
-    file_handler = logging.FileHandler(log_file, mode=mode)
-    file_handler.setFormatter(log_formatter)
-    root_logger.addHandler(file_handler)
-
-    logging.captureWarnings(True)
-
-    if mode == "a":
-        logging.info("\n" * 4)
-
-    logging.info("==" * 40)
-    logging.info("Timestamp: %s" % strftime("%Y-%m-%d %H:%M:%S", localtime()))
-    logging.info("\n\n")
+    setup_logger(log_file, level=level)

@@ -77,6 +77,7 @@ setup(
         "Pmw",
         "PyYAML",
         "tabulate",
+        "termcolor",
         "tqdm>=4.42.0",
     ],
     license="GNU",

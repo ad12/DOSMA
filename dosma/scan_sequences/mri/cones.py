@@ -26,6 +26,8 @@ __T2_STAR_LOWER_BOUND__ = 0
 __T2_STAR_UPPER_BOUND__ = np.inf
 __T2_STAR_DECIMAL_PRECISION__ = 3
 
+_logger = logging.getLogger(__name__)
+
 
 class Cones(NonTargetSequence):
     """UTE-Cones MRI sequence.
@@ -74,13 +76,13 @@ class Cones(NonTargetSequence):
         verbose = True
 
         if verbose:  # pragma: no cover
-            logging.info("")
-            logging.info("==" * 40)
-            logging.info("Interregistering...")
-            logging.info("Target: {}".format(target_path))
+            _logger.info("")
+            _logger.info("==" * 40)
+            _logger.info("Interregistering...")
+            _logger.info("Target: {}".format(target_path))
             if target_mask_path is not None:
-                logging.info("Mask: {}".format(target_mask_path))
-            logging.info("==" * 40)
+                _logger.info("Mask: {}".format(target_mask_path))
+            _logger.info("==" * 40)
 
         # Target mask path has to be dilated.
         if target_mask_path:
