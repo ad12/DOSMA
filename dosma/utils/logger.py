@@ -9,9 +9,9 @@ import sys
 from time import localtime, strftime
 from typing import Union
 
-from dosma.utils import env
-
 from termcolor import colored
+
+from dosma.utils import env
 
 __all__ = ["setup_logger"]
 
@@ -105,7 +105,7 @@ def setup_logger(
         if output.endswith(".txt") or output.endswith(".log"):
             filename = output
         else:
-            filename = os.path.join(output, "log.txt")
+            filename = os.path.join(output, "dosma.log")
         os.makedirs(os.path.dirname(filename), exist_ok=True)
 
         fh = logging.StreamHandler(_cached_log_stream(filename))

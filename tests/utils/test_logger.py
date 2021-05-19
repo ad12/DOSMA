@@ -1,7 +1,9 @@
-from dosma.utils.logger import setup_logger
-from dosma.utils import env
-import unittest
 import logging
+import os
+import unittest
+
+from dosma.utils import env
+from dosma.utils.logger import setup_logger
 
 from .. import util
 
@@ -16,8 +18,12 @@ class TestSetupLogger(unittest.TestCase):
             logging.getLogger("dosma").info("Sample log at INFO level")
 
         env.debug(True)
-        setup_logger(util.TEMP_PATH)
+        setup_logger(None)
         with self.assertLogs("dosma", level="DEBUG"):
             logging.getLogger("dosma").debug("Sample log at DEBUG level")
 
         env.debug(debug_val)
+
+    def test_makes_file(self):
+        setup_logger(util.TEMP_PATH)
+        assert os.path.isfile(os.path.join(util.TEMP_PATH, "dosma.log"))
