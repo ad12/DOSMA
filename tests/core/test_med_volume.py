@@ -11,6 +11,7 @@ import SimpleITK as sitk
 from dosma.core.device import Device
 from dosma.core.io.nifti_io import NiftiReader, NiftiWriter
 from dosma.core.med_volume import MedicalVolume
+from dosma.utils import env
 
 from .. import util as ututils
 
@@ -285,294 +286,11 @@ class TestMedicalVolume(unittest.TestCase):
         with self.assertRaises(ValueError):
             mv3 + mv2
 
-    def test_numpy(self):
-        mv = MedicalVolume(np.ones((10, 20, 30)), np.eye(4))
-        assert np.all(np.exp(mv.volume) == np.exp(mv).volume)
-
-        mv[np.where(mv == 1)] = 5
-        assert np.all(mv == 5)
-        assert not np.any(mv == 1)
-        assert all(mv == 5)
-        assert not any(mv == 5)
-
-        _ = mv + np.ones(mv.shape)
-
-        shape = (10, 20, 30, 2)
-        headers = np.stack(
-            [
-                ututils.build_dummy_headers(shape[2], {"EchoTime": 2}),
-                ututils.build_dummy_headers(shape[2], {"EchoTime": 10}),
-            ],
-            axis=-1,
-        )
-
-        # Reduce functions
-        mv = MedicalVolume(np.random.rand(*shape), np.eye(4), headers=headers)
-
-        mv2 = np.add.reduce(mv, -1)
-        assert np.all(mv2 == np.add.reduce(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = np.add.reduce(mv, axis=None)
-        assert np.all(mv2 == np.add.reduce(mv.volume, axis=None))
-        assert np.isscalar(mv2)
-
-        mv2 = np.sum(mv, axis=-1)
-        assert np.all(mv2 == np.sum(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = np.sum(mv)
-        assert np.all(mv2 == np.sum(mv.volume))
-        assert np.isscalar(mv2)
-
-        mv2 = mv.sum(axis=-1)
-        assert np.all(mv2 == np.sum(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = mv.sum()
-        assert np.all(mv2 == np.sum(mv.volume))
-        assert np.isscalar(mv2)
-
-        mv2 = np.mean(mv, axis=-1)
-        assert np.all(mv2 == np.mean(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = np.mean(mv)
-        assert np.all(mv2 == np.mean(mv.volume))
-        assert np.isscalar(mv2)
-
-        mv2 = mv.mean(axis=-1)
-        assert np.all(mv2 == np.mean(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = mv.mean()
-        assert np.all(mv2 == np.mean(mv.volume))
-        assert np.isscalar(mv2)
-
-        mv2 = np.std(mv, axis=-1)
-        assert np.all(mv2 == np.std(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = np.std(mv)
-        assert np.all(mv2 == np.std(mv.volume))
-        assert np.isscalar(mv2)
-
-        # Min/max functions
-        mv2 = np.amin(mv, axis=-1)
-        assert np.all(mv2 == np.amin(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = np.amin(mv)
-        assert np.all(mv2 == np.amin(mv.volume))
-        assert np.isscalar(mv2)
-
-        mv2 = np.amax(mv, axis=-1)
-        assert np.all(mv2 == np.amax(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = np.amax(mv)
-        assert np.all(mv2 == np.amax(mv.volume))
-        assert np.isscalar(mv2)
-
-        mv2 = np.argmin(mv, axis=-1)
-        assert np.all(mv2 == np.argmin(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = np.argmin(mv)
-        assert np.all(mv2 == np.argmin(mv.volume))
-
-        mv2 = np.argmax(mv, axis=-1)
-        assert np.all(mv2 == np.argmax(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = np.argmax(mv)
-        assert np.all(mv2 == np.argmax(mv.volume))
-
-        # NaN functions
-        vol_nan = np.ones(shape)
-        vol_nan[..., 1] = np.nan
-        mv = MedicalVolume(vol_nan, np.eye(4), headers=headers)
-
-        mv2 = np.nansum(mv, axis=-1)
-        assert np.all(mv2 == np.nansum(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = np.nansum(mv)
-        assert np.all(mv2 == np.nansum(mv.volume))
-        assert np.isscalar(mv2)
-
-        mv2 = np.nanmean(mv, axis=-1)
-        assert np.all(mv2 == np.nanmean(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = np.nanmean(mv)
-        assert np.all(mv2 == np.nanmean(mv.volume))
-        assert np.isscalar(mv2)
-
-        mv2 = np.nanstd(mv, axis=-1)
-        assert np.all(mv2 == np.nanstd(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = np.nanstd(mv)
-        assert np.all(mv2 == np.nanstd(mv.volume))
-        assert np.isscalar(mv2)
-
-        mv2 = np.nan_to_num(mv)
-        assert np.unique(mv2.volume).tolist() == [0, 1]
-        mv2 = np.nan_to_num(mv, copy=False)
-        assert id(mv2) == id(mv)
-
-        mv2 = np.nanmin(mv, axis=-1)
-        assert np.all(mv2 == np.nanmin(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = np.nanmin(mv)
-        assert np.all(mv2 == np.nanmin(mv.volume))
-        assert np.isscalar(mv2)
-
-        mv2 = np.nanmax(mv, axis=-1)
-        assert np.all(mv2 == np.nanmax(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = np.nanmax(mv)
-        assert np.all(mv2 == np.nanmax(mv.volume))
-        assert np.isscalar(mv2)
-
-        mv2 = np.nanargmin(mv, axis=-1)
-        assert np.all(mv2 == np.nanargmin(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = np.nanargmin(mv)
-        assert np.all(mv2 == np.nanargmin(mv.volume))
-
-        mv2 = np.nanargmax(mv, axis=-1)
-        assert np.all(mv2 == np.nanargmax(mv.volume, axis=-1))
-        assert mv2.shape == mv.shape[:3]
-        mv2 = np.nanargmax(mv)
-        assert np.all(mv2 == np.nanargmax(mv.volume))
-
-        # Round
-        shape = (10, 20, 30, 2)
-        affine = np.concatenate([np.random.rand(3, 4), [[0, 0, 0, 1]]], axis=0)
-        mv = MedicalVolume(np.random.rand(*shape), affine, headers=headers)
-
-        mv2 = mv.round()
-        assert np.allclose(mv2.affine, affine)
-        assert np.unique(mv2.volume).tolist() == [0, 1]
-
-        mv2 = mv.round(affine=True)
-        assert np.unique(mv2.affine).tolist() == [0, 1]
-        assert np.unique(mv2.volume).tolist() == [0, 1]
-
-        # Clip
-        shape = (10, 20, 30)
-        mv = MedicalVolume(np.random.rand(*shape), np.eye(4))
-
-        mv2 = np.clip(mv, 0.4, 0.6)
-        assert np.all((mv2.volume >= 0.4) & (mv2.volume <= 0.6))
-
-        mv_lower = MedicalVolume(np.ones(mv.shape) * 0.4, mv.affine)
-        mv_upper = MedicalVolume(np.ones(mv.shape) * 0.6, mv.affine)
-        mv2 = np.clip(mv, mv_lower, mv_upper)
-        assert np.all((mv2.volume >= 0.4) & (mv2.volume <= 0.6))
-
-        # Array like
-        shape = (10, 20, 30)
-        mv = MedicalVolume(np.random.rand(*shape), np.eye(4))
-
-        mv2 = np.zeros_like(mv)
-        assert np.all(mv2.volume == 0)
-
-        mv2 = np.ones_like(mv)
-        assert np.all(mv2.volume == 1)
-
-        # Shares memory
-        shape = (10, 20, 30, 2)
-        headers = np.stack(
-            [
-                ututils.build_dummy_headers(shape[2], {"EchoTime": 2}),
-                ututils.build_dummy_headers(shape[2], {"EchoTime": 10}),
-            ],
-            axis=-1,
-        )
-        mv = MedicalVolume(np.random.rand(*shape), np.eye(4), headers=headers)
-        mv2 = MedicalVolume(mv.A, affine=mv.affine, headers=mv.headers())
-        assert np.shares_memory(mv, mv)
-        assert np.shares_memory(mv, mv2)
-
-    def test_numpy_shaping(self):
-        """Test numpy shaping functions (stack, concatenate, etc.)."""
-        shape = (10, 20, 30, 2)
-        headers = np.stack(
-            [
-                ututils.build_dummy_headers(shape[2], {"EchoTime": 2}),
-                ututils.build_dummy_headers(shape[2], {"EchoTime": 10}),
-            ],
-            axis=-1,
-        )
-        vol = np.ones(shape)
-        mv_a = MedicalVolume(vol, np.eye(4), headers=headers)
-        mv_b = MedicalVolume(vol * 2, np.eye(4), headers=headers)
-        mv_c = MedicalVolume(vol * 3, np.eye(4), headers=headers)
-
-        assert mv_a.shape == vol.shape
-        assert mv_a.ndim == vol.ndim
-
-        # Stack
-        mv2 = np.stack([mv_a, mv_b, mv_c], axis=-1)
-        assert mv2.shape == (10, 20, 30, 2, 3)
-        assert mv2.headers() is not None
-        assert np.all(mv2.volume == np.stack([mv_a.volume, mv_b.volume, mv_c.volume], axis=-1))
-        mv2 = np.stack([mv_a, mv_b, mv_c], axis=-2)
-        assert mv2.shape == (10, 20, 30, 3, 2)
-        with self.assertRaises(ValueError):
-            mv2 = np.stack([mv_a, mv_b, mv_c], axis=0)
-        with self.assertRaises(TypeError):
-            mv2 = np.stack([mv_a, mv_b, mv_c], axis=(-1,))
-
-        # Expand dims
-        mv2 = np.expand_dims(mv_a, (-2, -3))
-        assert mv2.shape == (10, 20, 30, 1, 1, 2)
-        mv2 = np.expand_dims(mv_a, -1)
-        assert mv2.shape == (10, 20, 30, 2, 1)
-        with self.assertRaises(ValueError):
-            mv2 = np.expand_dims(mv_a, 0)
-
-        # Squeeze
-        mv_d = mv_a[..., :1]
-        assert mv_d.shape == (10, 20, 30, 1)
-        assert np.squeeze(mv_d).shape == (10, 20, 30)
-        assert np.squeeze(mv_d, axis=-1).shape == (10, 20, 30)
-        assert np.squeeze(mv_d, axis=3).shape == (10, 20, 30)
-        assert np.squeeze(mv_d, axis=3).shape == (10, 20, 30)
-
-        mv_d = mv_a[:1, :, :, :1]
-        assert np.squeeze(mv_d).shape == (1, 20, 30)
-        with self.assertRaises(ValueError):
-            np.squeeze(mv_d, axis=0)
-
-        # Concatenate
-        with self.assertRaises(ValueError):
-            np.concatenate([mv_a, mv_b], axis=0)
-        with self.assertRaises(TypeError):
-            np.concatenate([mv_a, mv_b], axis="-1")
-
-        mv2 = np.concatenate([mv_a, mv_b], axis=-1)
-        assert np.all(mv2.volume == np.concatenate([mv_a.volume, mv_b.volume], axis=-1))
-        assert mv2.headers().shape == (1, 1, 30, 4)
-
-        affine = np.eye(4)
-        affine[:3, 3] += [10, 0, 0]
-        mv_d = MedicalVolume(vol * 2, affine, headers=headers)
-        with self.assertWarns(UserWarning):
-            mv2 = np.concatenate([mv_a, mv_d], axis=0)
-        assert mv2.headers() is None
-        assert np.all(mv2.volume == np.concatenate([mv_a.volume, mv_d.volume], axis=0))
-
-        affine = np.eye(4)
-        affine[:3, 3] += [0, 0, 30]
-        mv_d = MedicalVolume(vol * 2, affine, headers=headers)
-        mv2 = np.concatenate([mv_a, mv_d], axis=-2)
-        assert np.all(mv2.volume == np.concatenate([mv_a.volume, mv_d.volume], axis=-2))
-        assert mv2.headers().shape == (1, 1, 60, 2)
-
-        affine = np.eye(4)
-        affine[:3, 3] += [0, 0, 30]
-        affine[:, 0] *= 0.5
-        mv_d = MedicalVolume(vol * 2, affine, headers=headers)
-        with self.assertRaises(ValueError):
-            mv2 = np.concatenate([mv_a, mv_d], axis=-2)
-
-        affine = np.eye(4)
-        affine[:3, 3] += [0, 0, 30]
-        mv_d = MedicalVolume(vol * 2, affine, headers=None)
-        mv2 = np.concatenate([mv_a, mv_d], axis=-2)
-        assert np.all(mv2.volume == np.concatenate([mv_a.volume, mv_d.volume], axis=-2))
-        assert mv2.headers() is None
+    def test_shape_attributes(self):
+        vol = np.ones((10, 20, 30, 2))
+        mv = MedicalVolume(vol, np.eye(4))
+        assert mv.shape == vol.shape
+        assert mv.ndim == vol.ndim
 
     def test_hdf5(self):
         shape = (10, 20, 30)
@@ -691,7 +409,7 @@ class TestMedicalVolume(unittest.TestCase):
         assert mv.to(Device(-1)) == mv
         assert mv.cpu() == mv
 
-    @ututils.requires_packages("cupy")
+    @unittest.skipIf(not env.cupy_available(), "cupy not available")
     def test_device_gpu(self):
         import cupy as cp
 
@@ -730,7 +448,7 @@ class TestMedicalVolume(unittest.TestCase):
         data = np.asarray(mv)
         assert np.shares_memory(data, mv.volume)
 
-    @ututils.requires_packages("cupy")
+    @unittest.skipIf(not env.cupy_available(), "cupy not available")
     def test_array_gpu(self):
         import cupy as cp
 
