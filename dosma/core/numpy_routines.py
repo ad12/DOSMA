@@ -29,6 +29,7 @@ __all__ = [
     "concatenate",
     "expand_dims",
     "squeeze",
+    "pad",
     "where",
     "all_np",
     "any_np",
@@ -456,7 +457,7 @@ def pad(x: MedicalVolume, pad_width, mode="constant", **kwargs):
     function provides some shortcuts for padding particular dimensions.
 
     Either ``None`` or ``0`` can be used to indicate a dimension should
-    not be padded. For example,:
+    not be padded. For example:
 
     >>> mv = MedicalVolume(np.ones(3,4,5), affine=np.eye(4))
     >>> pad(mv, (None, 0, (2,3)))  # dimensions 0 and 1 will not be padded
