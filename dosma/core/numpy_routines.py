@@ -29,6 +29,7 @@ __all__ = [
     "concatenate",
     "expand_dims",
     "squeeze",
+    "pad",
     "where",
     "all_np",
     "any_np",
@@ -445,6 +446,76 @@ def squeeze(x, axis: Union[int, Sequence[int]] = None):
     return x._partial_clone(volume=vol, headers=headers)
 
 
+@implements(np.pad)
+def pad(x: MedicalVolume, pad_width, mode="constant", **kwargs):
+    """Implementation of :func:`numpy.pad` for :class:`MedicalVolume`.
+
+    Padding a MedicalVolume can affect the affine matrix of the volume.
+    When spatial dimensions are padded, the scanner origin changes.
+
+    In addition to standard numpy syntax for ``pad_width``, this
+    function provides some shortcuts for padding particular dimensions.
+
+    Either ``None`` or ``0`` can be used to indicate a dimension should
+    not be padded. For example:
+
+    >>> mv = MedicalVolume(np.ones(3,4,5), affine=np.eye(4))
+    >>> pad(mv, (None, 0, (2,3)))  # dimensions 0 and 1 will not be padded
+    >>> pad(mv, ((0,0), (0,0), (2,3)))  # equivalent to previous, but in numpy syntax
+
+    Integers can also be used to indicate the dimension should be padded by the same
+    amount on both sides:
+
+    >>> mv = MedicalVolume(np.ones(3,4,5), affine=np.eye(4))
+    >>> pad(mv, (5, (1,2), (2,3)))  # dimension 0 padded by 5 on both sides
+    >>> pad(mv, ((5,5), (1,2), (2,3)))  # equivalent to previous, but in numpy syntax
+
+    ``pad_width`` can also be shorter than the total MedicalVolume dimensions.
+    In this case, the padding is applying in a broadcasting fashion. For example,
+    if the MedicalVolume is 3D, then specifying padding widths for only two
+    dimensions will pad the last two dimensions:
+
+    >>> mv = MedicalVolume(np.ones(3,4,5), affine=np.eye(4))
+    >>> pad(mv, (4, 6))  # last dimension padded by 6, second to last padded by 4
+    >>> pad(mv, ((0,0), (4,4), (6,6)))  # equivalent to previous, but in numpy syntax
+
+    Args:
+        x (MedicalVolume): The medical image.
+        pad_width (Union[Sequence, int]): Same as :func:`numpy.pad`.
+        mode (str): Same as :func:`numpy.pad`.
+        kwargs: Same as :func:`numpy.pad`.
+
+    Returns:
+        MedicalVolume: The padded medical image.
+
+    Note:
+        Currently, headers are not preserved upon padding. The returned medical image
+        will not have any headers. This may change in the future.
+
+    Examples:
+        >>> arr = np.random.rand(3,4,5)
+        >>> mv = MedicalVolume(arr, affine=np.eye(4))
+        >>> mv_pad = np.pad(mv, 1)  # pad all dimensions by 1
+    """
+    if _is_int(pad_width):
+        pad_width = ((pad_width,),) * x.ndim
+    if len(pad_width) < x.ndim:
+        pad_width = ((0,)) * (x.ndim - len(pad_width)) + tuple(pad_width)
+    pad_width = tuple((0,) if x is None else (x,) if _is_int(x) else x for x in pad_width)
+    pad_width = tuple(x * 2 if len(x) == 1 else x for x in pad_width)
+    assert all(len(x) == 2 for x in pad_width), pad_width
+
+    # Update scanner origin.
+    ijk = np.asarray([-p[0] for p in pad_width[:3]] + [0])
+    origin = x.affine @ ijk
+    affine = x.affine.copy()
+    affine[:, 3] = origin
+
+    arr = np.pad(x.A, pad_width, mode=mode, **kwargs)
+
+    return x._partial_clone(volume=arr, affine=affine, headers=None)
+
+
 @implements(np.where)
 def where(*args, **kwargs):
     """See :func:`numpy.where`."""
@@ -592,3 +663,9 @@ def _to_positive_axis(
     if not is_sequence:
         axis = axis[0]
     return axis
+
+
+def _is_int(x):
+    return isinstance(x, int) or (
+        np.isscalar(x) and hasattr(x, "dtype") and np.issubdtype(x.dtype, np.integer)
+    )

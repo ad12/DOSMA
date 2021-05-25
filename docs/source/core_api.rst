@@ -45,6 +45,7 @@ Numpy operations that are supported on MedicalVolumes.
    dosma.core.numpy_routines.nanstd
    dosma.core.numpy_routines.nansum
    dosma.core.numpy_routines.ones_like
+   dosma.core.numpy_routines.pad
    dosma.core.numpy_routines.shares_memory
    dosma.core.numpy_routines.squeeze
    dosma.core.numpy_routines.stack
