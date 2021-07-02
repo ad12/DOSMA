@@ -89,7 +89,7 @@ setup(
     extras_require={
         # TODO Issue #106: Fix to only import tensorflow version with fixed version
         # once keras import statements are properly handled.
-        "ai": ["tensorflow==2.4.1", "keras==2.4.3"],
+        "ai": ["tensorflow<=2.4.1", "keras<=2.4.3"],
         "dev": [
             "coverage",
             "flake8",
@@ -101,8 +101,8 @@ setup(
             "sphinx",
             "sphinxcontrib.bibtex",
             "m2r2",
-            "tensorflow",
-            "keras",
+            "tensorflow<=2.4.1",
+            "keras<=2.4.3",
             "sigpy",
         ],
         "docs": ["sphinx", "sphinxcontrib.bibtex", "m2r2"],
