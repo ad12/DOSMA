@@ -494,6 +494,11 @@ class TestDicomIO(ututils.TempPathMixin):
         mv2 = dr.load(filepath, sort_by="InstanceNumber")[0]
         assert mv2.is_identical(mv)
 
+        # bytes
+        with open(filepath, "rb") as f:
+            mv2 = dr.load(f)[0]
+        assert mv2.is_identical(mv)
+
     def test_save_different_bits(self):
         """Test writing volume where bit depth has changed."""
         filepath = get_testdata_file("MR_small.dcm")
