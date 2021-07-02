@@ -258,8 +258,7 @@ class DicomReader(DataReader):
             # We explicitly specify list/tuple because other objects can be sequences
             # (e.g. bytes) that we cannot thoroughly account for.
             lstFilesDCM = (
-                [path_or_bytes] if not isinstance(path_or_bytes, (list, tuple))
-                else path_or_bytes
+                [path_or_bytes] if not isinstance(path_or_bytes, (list, tuple)) else path_or_bytes
             )
 
         if self.num_workers:
