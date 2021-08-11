@@ -6,7 +6,6 @@ Attributes:
 import itertools
 import os
 import warnings
-from copy import deepcopy
 
 import numpy as np
 import pandas as pd
@@ -220,11 +219,12 @@ class PatellarCartilage(Tissue):
 
         self.__store_quant_vals__(maps, df, map_type)
 
-    def set_mask(self, mask):
-        msk = np.asarray(largest_cc(mask.volume), dtype=np.uint8)
-        mask_copy = deepcopy(mask)
-        mask_copy.volume = msk
-
+    def set_mask(self, mask, use_largest_cc: bool = True):
+        if use_largest_cc:
+            msk = np.asarray(largest_cc(mask.volume), dtype=np.uint8)
+        else:
+            msk = np.asarray(mask.volume, dtype=np.uint8)
+        mask_copy = mask._partial_clone(volume=msk)
         super().set_mask(mask_copy)
 
         self.split_regions(self.__mask__.volume)

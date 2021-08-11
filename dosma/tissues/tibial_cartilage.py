@@ -5,7 +5,6 @@ Attributes:
 """
 import os
 import warnings
-from copy import deepcopy
 
 import numpy as np
 import pandas as pd
@@ -258,8 +257,7 @@ class TibialCartilage(Tissue):
         self.__store_quant_vals__(maps, df, map_type)
 
     def set_mask(self, mask: MedicalVolume):
-        mask_copy = deepcopy(mask)
-
+        mask_copy = mask._partial_clone()
         super().set_mask(mask_copy)
 
         self.split_regions(self.__mask__.volume)

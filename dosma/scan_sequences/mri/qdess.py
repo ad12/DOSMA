@@ -203,12 +203,12 @@ class QDess(ScanSequence):
 
         # Simply math
         k = (
-            math.pow((math.sin(alpha / 2)), 2)
-            * (1 + math.exp(-TR / T1 - TR * math.pow(dkL, 2) * diffusivity))
-            / (1 - math.cos(alpha) * math.exp(-TR / T1 - TR * math.pow(dkL, 2) * diffusivity))
+            xp.power((xp.sin(alpha / 2)), 2)
+            * (1 + xp.exp(-TR / T1 - TR * xp.power(dkL, 2) * diffusivity))
+            / (1 - xp.cos(alpha) * xp.exp(-TR / T1 - TR * xp.power(dkL, 2) * diffusivity))
         )
 
-        c1 = (TR - Tg / 3) * (math.pow(dkL, 2)) * diffusivity
+        c1 = (TR - Tg / 3) * (xp.power(dkL, 2)) * diffusivity
 
         # T2 fit
         mask = xp.ones([r, c, num_slices])
@@ -226,7 +226,11 @@ class QDess(ScanSequence):
             lower, upper = nan_bounds
             t2map[(t2map < lower) | (t2map > upper)] = xp.nan
         if nan_to_num is not None:
-            t2map = xp.nan_to_num(t2map, nan=nan_to_num)
+            t2map = (
+                xp.nan_to_num(t2map)
+                if isinstance(nan_to_num, bool)
+                else xp.nan_to_num(t2map, nan=nan_to_num)
+            )
 
         if decimals is not None:
             t2map = xp.around(t2map, decimals)

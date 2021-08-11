@@ -217,6 +217,23 @@ class QuantitativeValue(ABC):
 
         return pd.DataFrame(metrics)
 
+    def to(self, device):
+        """Moves volumes of this scan onto the appropriate device.
+
+        This is an inplace operation. A new ScanSequence will not
+        be returned.
+
+        Args:
+            device: The device to move to.
+
+        Returns:
+            self
+        """
+        self.volumetric_map = self.volumetric_map.to(device)
+        self.additional_volumes = {k: v.to(device) for k, v in self.additional_volumes.items()}
+
+        return self
+
     @staticmethod
     def get_qv(qv_id: Union[int, str]):
         """Find QuantitativeValue enum using id or name.

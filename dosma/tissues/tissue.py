@@ -244,7 +244,7 @@ class Tissue(ABC):
             mask (MedicalVolume): Binary mask of segmented tissue.
         """
         assert type(mask) is MedicalVolume, "mask for tissue must be of type MedicalVolume"
-        mask.reformat(SAGITTAL, inplace=True)
+        mask = mask.reformat(SAGITTAL)
         self.__mask__ = mask
 
     def get_mask(self):

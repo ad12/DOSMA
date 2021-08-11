@@ -1,11 +1,11 @@
 import os
 import warnings
-from copy import deepcopy
 
 import numpy as np
 import pandas as pd
 import scipy.ndimage as sni
 
+from dosma.core.device import get_array_module
 from dosma.core.io.format_io import ImageDataFormat
 from dosma.core.med_volume import MedicalVolume
 from dosma.core.quant_vals import QuantitativeValueType
@@ -398,7 +398,7 @@ class FemoralCartilage(Tissue):
 
         self.__store_quant_vals__(maps, df, map_type)
 
-    def set_mask(self, mask: MedicalVolume):
+    def set_mask(self, mask: MedicalVolume, use_largest_cc: bool = True):
         """Set mask for tissue.
 
         Mask is cleaned by selecting the largest connected component from the mask.
@@ -407,9 +407,12 @@ class FemoralCartilage(Tissue):
         Args:
             mask (MedicalVolume): Binary mask of segmented tissue.
         """
-        msk = np.asarray(largest_cc(mask.volume), dtype=np.uint8)
-        mask_copy = deepcopy(mask)
-        mask_copy.volume = msk
+        xp = get_array_module(mask.A)
+        if use_largest_cc:
+            msk = xp.asarray(largest_cc(mask.A), dtype=xp.uint8)
+        else:
+            msk = xp.asarray(mask.A, dtype=xp.uint8)
+        mask_copy = mask._partial_clone(volume=msk)
 
         super().set_mask(mask_copy)
 
