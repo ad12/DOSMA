@@ -19,6 +19,7 @@ If you use these models, please reference both DOSMA and the original work.
    dosma.models.OAIUnet2D
    dosma.models.IWOAIOAIUnet2D
    dosma.models.IWOAIOAIUnet2DNormalized
+   dosma.models.StanfordQDessUNet2D
 
 
 OAI 2D U-Net
@@ -64,3 +65,18 @@ Aliases: :code:`iwoai-2019-t6-normalized`
     RMS-CV     0.019 +/- 0.011      0.048 +/- 0.029     0.076 +/- 0.061       0.045 +/- 0.025
     ASSD (mm)  0.174 +/- 0.020      0.270 +/- 0.166     0.243 +/- 0.106       0.344 +/- 0.111
     =========  ===================  ==================  ====================  ===============
+
+
+Stanford qDESS Knee Segmentation - 2D U-net
+--------------------------------------------------------------------------------
+This collection of models are trained on the 2021 Stanford qDESS Knee Dataset.
+Details of the different models that are trained are shown in the da
+
+
+   * ``qDESS_2021_v1-rms-unet2d-pc_fc_tc_men_weights.h5``: This is the baseline
+      model trained on the 2021 Stanford qDESS knee dataset (v1.0.0).
+   * ``qDESS_2021_v0_0_1-rms-pc_fc_tc_men_weights.h5``: This model is trained on the RSS
+      2021 Stanford qDESS knee dataset (v0.0.1).
+   * ``qDESS_2021_v0_0_1-traintest-rms-pc_fc_tc_men_weights.h5``: This model
+      is trained on both the train and test set of the 2021 Stanford qDESS knee
+      dataset (v0.0.1).
