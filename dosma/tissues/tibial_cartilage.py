@@ -3,6 +3,7 @@
 Attributes:
     BOUNDS (dict): Upper bounds for quantitative values.
 """
+from dosma.core.device import get_array_module
 import os
 import warnings
 
@@ -15,7 +16,7 @@ from dosma.core.quant_vals import QuantitativeValueType
 from dosma.defaults import preferences
 from dosma.tissues.tissue import Tissue
 from dosma.utils import io_utils
-
+from dosma.utils import geometry_utils
 import matplotlib.pyplot as plt
 
 # milliseconds
@@ -111,11 +112,12 @@ class TibialCartilage(Tissue):
             Cluster Analysis of T2 Relaxation Times from 3 Months to 18 Months Post-Surgery.
             28th Annual Meeting of ISMRM, Sydney, Australia 2020.
         """
-        center_of_mass = sni.measurements.center_of_mass(base_map)  # zero indexed
-        com_med_lat = int(np.ceil(center_of_mass[2]))
+        xp = get_array_module(base_map)
+        center_of_mass = geometry_utils.center_of_mass(base_map)  # zero indexed
+        com_med_lat = int(xp.ceil(center_of_mass[2]))
 
         # M/L
-        region_mask_med_lat = np.zeros(base_map.shape)
+        region_mask_med_lat = xp.zeros(base_map.shape)
         region_mask_med_lat[:, :, :com_med_lat] = (
             self._MEDIAL_KEY if self.medial_to_lateral else self._LATERAL_KEY
         )
@@ -126,25 +128,25 @@ class TibialCartilage(Tissue):
         # S/I
         locs = base_map.sum(axis=0).nonzero()
         voxels = base_map[:, locs[0], locs[1]]
-        com_sup_inf = np.asarray(
+        com_sup_inf = xp.asarray(
             [
-                int(np.ceil(sni.measurements.center_of_mass(voxels[:, i])[0]))
+                int(xp.ceil(geometry_utils.center_of_mass(voxels[:, i])[0]))
                 for i in range(voxels.shape[1])
             ]
         )
-        region_mask_sup_inf = np.full(base_map.shape, self._INFERIOR_KEY)
+        region_mask_sup_inf = xp.full(base_map.shape, self._INFERIOR_KEY)
         for i in range(len(com_sup_inf)):
-            region_mask_sup_inf[: com_sup_inf[i], locs[0][i], locs[1][i]] = self._SUPERIOR_KEY
+            region_mask_sup_inf[: com_sup_inf[i].item(), locs[0][i].item(), locs[1][i].item()] = self._SUPERIOR_KEY
 
         # A/C/P
-        region_mask_ant_post = np.zeros(base_map.shape)
+        region_mask_ant_post = xp.zeros(base_map.shape)
         for plateau in [slice(0, com_med_lat), slice(com_med_lat, None)]:
-            cum_ap = np.nonzero(base_map[..., plateau].sum(axis=(0, 2)))[0]
-            min_ap = np.min(cum_ap)
-            ap_range = np.max(cum_ap) - min_ap
+            cum_ap = xp.nonzero(base_map[..., plateau].sum(axis=(0, 2)))[0]
+            min_ap = xp.min(cum_ap)
+            ap_range = xp.max(cum_ap) - min_ap
             thresh1, thresh2 = (
-                int(np.ceil(min_ap + 1 / 3 * ap_range)),
-                int(np.ceil(min_ap + 2 / 3 * ap_range)),
+                int(xp.ceil(min_ap + 1 / 3 * ap_range)),
+                int(xp.ceil(min_ap + 2 / 3 * ap_range)),
             )
             region_mask_ant_post[:, :thresh1, plateau] = self._ANTERIOR_KEY
             region_mask_ant_post[:, thresh1:thresh2, plateau] = self._CENTRAL_KEY
@@ -158,7 +160,7 @@ class TibialCartilage(Tissue):
         #     region_mask_ant_post[:, :com_ant_post, plateau] = self._ANTERIOR_KEY
         #     region_mask_ant_post[:, com_ant_post:, plateau] = self._POSTERIOR_KEY
 
-        self.regions_mask = np.stack(
+        self.regions_mask = xp.stack(
             [region_mask_sup_inf, region_mask_ant_post, region_mask_med_lat], axis=-1
         )
 
@@ -189,10 +191,8 @@ class TibialCartilage(Tissue):
 
         for axial in [self._SUPERIOR_KEY, self._INFERIOR_KEY, self._TOTAL_AXIAL_KEY]:
             if axial == self._TOTAL_AXIAL_KEY:
-                axial_map = np.asarray(
-                    axial_region_mask == self._SUPERIOR_KEY, dtype=np.float32
-                ) + np.asarray(axial_region_mask == self._INFERIOR_KEY, dtype=np.float32)
-                axial_map = np.asarray(axial_map, dtype=np.bool)
+                axial_map = (axial_region_mask == self._SUPERIOR_KEY).astype(np.float32) + (axial_region_mask == self._INFERIOR_KEY).astype(np.float32)
+                axial_map = axial_map.astype(np.bool)
             else:
                 axial_map = axial_region_mask == axial
 
