@@ -110,13 +110,19 @@ class TestApplyWarp(util.TempPathMixin):
         for v in vols:
             expected.append(apply_warp(v, out_registration=out[0]))
 
+        # Multiple process (within apply warp)
+        num_workers = min(len(vols), util.num_workers())
+        outputs = apply_warp(vols, out_registration=out[0], num_workers=num_workers)
+        for mv_out, exp in zip(outputs, expected):
+            assert np.allclose(mv_out.volume, exp.volume)
+
         # Multiple process
         func = partial(apply_warp, out_registration=out[0])
-        with mp.Pool(min(len(vols), util.num_workers())) as p:
+        with mp.Pool(num_workers) as p:
             outputs = p.map(func, vols)
 
-        for out, exp in zip(outputs, expected):
-            assert np.allclose(out.volume, exp.volume)
+        for mv_out, exp in zip(outputs, expected):
+            assert np.allclose(mv_out.volume, exp.volume)
 
         shutil.rmtree(out_path)
 
