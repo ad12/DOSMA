@@ -61,7 +61,7 @@ setup(
     install_requires=[
         "matplotlib",
         "numpy",
-        "h5py<3.0.0",
+        "h5py",
         "natsort",
         "nested-lookup",
         "nibabel",

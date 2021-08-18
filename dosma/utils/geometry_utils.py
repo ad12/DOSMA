@@ -1,8 +1,10 @@
-from dosma.core.device import get_array_module
 import numpy as np
-from scipy import optimize
 import scipy.ndimage as sni
+from scipy import optimize
+
+from dosma.core.device import get_array_module
 from dosma.utils import env
+
 __all__ = ["circle_fit", "cart2pol"]
 
 
@@ -113,8 +115,10 @@ def center_of_mass(input, labels=None, index=None):
     _sni = sni
     if env.cupy_available():
         import cupy as cp
+
         if get_array_module(input) == cp:
             import cupyx.scipy.ndimage as csni
+
             _sni = csni
 
     return _sni.center_of_mass(input, labels=labels, index=index)

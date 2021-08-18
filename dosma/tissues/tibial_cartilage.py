@@ -3,20 +3,19 @@
 Attributes:
     BOUNDS (dict): Upper bounds for quantitative values.
 """
-from dosma.core.device import get_array_module
 import os
 import warnings
 
 import numpy as np
 import pandas as pd
-import scipy.ndimage as sni
 
+from dosma.core.device import get_array_module
 from dosma.core.med_volume import MedicalVolume
 from dosma.core.quant_vals import QuantitativeValueType
 from dosma.defaults import preferences
 from dosma.tissues.tissue import Tissue
-from dosma.utils import io_utils
-from dosma.utils import geometry_utils
+from dosma.utils import geometry_utils, io_utils
+
 import matplotlib.pyplot as plt
 
 # milliseconds
@@ -136,7 +135,9 @@ class TibialCartilage(Tissue):
         )
         region_mask_sup_inf = xp.full(base_map.shape, self._INFERIOR_KEY)
         for i in range(len(com_sup_inf)):
-            region_mask_sup_inf[: com_sup_inf[i].item(), locs[0][i].item(), locs[1][i].item()] = self._SUPERIOR_KEY
+            region_mask_sup_inf[
+                : com_sup_inf[i].item(), locs[0][i].item(), locs[1][i].item()
+            ] = self._SUPERIOR_KEY
 
         # A/C/P
         region_mask_ant_post = xp.zeros(base_map.shape)
@@ -191,7 +192,9 @@ class TibialCartilage(Tissue):
 
         for axial in [self._SUPERIOR_KEY, self._INFERIOR_KEY, self._TOTAL_AXIAL_KEY]:
             if axial == self._TOTAL_AXIAL_KEY:
-                axial_map = (axial_region_mask == self._SUPERIOR_KEY).astype(np.float32) + (axial_region_mask == self._INFERIOR_KEY).astype(np.float32)
+                axial_map = (axial_region_mask == self._SUPERIOR_KEY).astype(np.float32) + (
+                    axial_region_mask == self._INFERIOR_KEY
+                ).astype(np.float32)
                 axial_map = axial_map.astype(np.bool)
             else:
                 axial_map = axial_region_mask == axial
