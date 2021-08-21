@@ -4,8 +4,10 @@ import math
 import warnings
 from copy import deepcopy
 from typing import Sequence, Tuple
+from h5py._hl.dataset import Dataset
 
 import numpy as np
+import pydicom
 from pydicom.tag import Tag
 
 from dosma.core.med_volume import MedicalVolume
@@ -162,7 +164,7 @@ class QDess(ScanSequence):
             qv.T2: T2 fit map.
         """
 
-        if self.volumes is None or self.ref_dicom is None:
+        if self.volumes is None:
             raise ValueError("volumes and ref_dicom fields must be initialized")
 
         if (
@@ -174,7 +176,7 @@ class QDess(ScanSequence):
             )
 
         xp = self.volumes[0].device.xp
-        ref_dicom = self.ref_dicom
+        ref_dicom = self.ref_dicom if self.ref_dicom is not None else pydicom.Dataset()
 
         r, c, num_slices = self.volumes[0].volume.shape
         subvolumes = self.volumes
