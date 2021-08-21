@@ -4,7 +4,6 @@ import math
 import warnings
 from copy import deepcopy
 from typing import Sequence, Tuple
-from h5py._hl.dataset import Dataset
 
 import numpy as np
 import pydicom

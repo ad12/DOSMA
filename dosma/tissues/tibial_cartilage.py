@@ -13,7 +13,7 @@ from dosma.core.device import get_array_module
 from dosma.core.med_volume import MedicalVolume
 from dosma.core.quant_vals import QuantitativeValueType
 from dosma.defaults import preferences
-from dosma.tissues.tissue import Tissue
+from dosma.tissues.tissue import Tissue, largest_cc
 from dosma.utils import geometry_utils, io_utils
 
 import matplotlib.pyplot as plt
@@ -207,7 +207,7 @@ class TibialCartilage(Tissue):
                         * (sagittal_region_mask == sagittal)
                         * axial_map
                     )
-                    curr_region_mask[curr_region_mask == 0] = np.nan
+                    curr_region_mask = curr_region_mask[curr_region_mask != 0]
                     # discard all values that are 0
                     c_mean = np.nanmean(curr_region_mask)
                     c_std = np.nanstd(curr_region_mask)
@@ -259,8 +259,13 @@ class TibialCartilage(Tissue):
 
         self.__store_quant_vals__(maps, df, map_type)
 
-    def set_mask(self, mask: MedicalVolume):
-        mask_copy = mask._partial_clone()
+    def set_mask(self, mask: MedicalVolume, use_largest_ccs=False):
+        xp = get_array_module(mask.A)
+        if use_largest_ccs:
+            msk = xp.asarray(largest_cc(mask.A, num=2), dtype=xp.uint8)
+        else:
+            msk = xp.asarray(mask.A, dtype=xp.uint8)
+        mask_copy = mask._partial_clone(volume=msk)
         super().set_mask(mask_copy)
 
         self.split_regions(self.__mask__.volume)

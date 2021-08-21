@@ -2,7 +2,7 @@ import os
 from abc import ABC
 from collections import defaultdict
 from enum import Enum
-from typing import Dict, Tuple, Union
+from typing import Callable, Dict, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -148,6 +148,7 @@ class QuantitativeValue(ABC):
         labels: Dict[int, str] = None,
         bounds: Tuple[float, float] = None,
         closed: str = "right",
+        fns: Dict[str, Callable] = None,
     ) -> pd.DataFrame:
         """Compute scalar metrics for quantitative values.
 
@@ -199,21 +200,31 @@ class QuantitativeValue(ABC):
         else:
             labels = {-2: "total"}
 
+        if mask is not None:
+            # Do not modify original array.
+            mask = mask.copy()
+            mask[~valid_mask] = 0
+
+        if fns is None:
+            fns = {}
+
         metrics = defaultdict(list)
         for label, name in labels.items():
             if label == -2:
                 qv_region_vals = volume[valid_mask]  # Entire volume.
             elif label == -1:
-                qv_region_vals = volume[np.isin(mask, list(labels.keys())) & valid_mask]  # noqa
+                qv_region_vals = volume[mask > 0]  # noqa
             else:
-                qv_region_vals = volume[(mask == label) & valid_mask]
+                qv_region_vals = volume[mask == label]
             num_voxels = np.prod(qv_region_vals.shape)
 
-            metrics["Region"].append(name)
+            metrics["Category"].append(name)
             metrics["Mean"].append(np.nanmean(qv_region_vals))
             metrics["Std"].append(np.nanstd(qv_region_vals))
             metrics["Median"].append(np.nanmedian(qv_region_vals))
             metrics["# Voxels"].append(num_voxels)
+            for name, fn in fns.items():
+                metrics[name].append(fn(qv_region_vals))
 
         return pd.DataFrame(metrics)
 
