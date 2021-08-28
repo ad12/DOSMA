@@ -90,7 +90,7 @@ jobs:
           pip install torch
           pip install sigpy
           make dev
-          pip install -e '.[dev]'
+          pip install --upgrade -e '.[dev]'
       
       - name: Install Elastix
         run: |
