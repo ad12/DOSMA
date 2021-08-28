@@ -89,9 +89,9 @@ jobs:
           pip install tensorflow==2.4.1 keras
           pip install torch
           pip install sigpy
+          pip install -U --no-cache numpy==1.19.4
           make dev
           pip install -e '.[dev]'
-          pip install -U --no-cache numpy
       
       - name: Install Elastix
         run: |
