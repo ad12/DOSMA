@@ -71,7 +71,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.6", "3.7", "3.8"]
+        python-version: ["3.6", "3.8"]  # there are some issues with numpy multiarray in 3.7
                 
     steps:
       - uses: actions/checkout@v2
@@ -83,7 +83,6 @@ jobs:
                 
       - name: Install Dependencies
         run: |
-          pip install -U numpy==1.19.2
           python -m pip install --upgrade pip
           pip install tensorflow==2.4.1 keras
           pip install torch
