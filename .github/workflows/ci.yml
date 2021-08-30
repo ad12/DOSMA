@@ -33,7 +33,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           make dev
-
       - name: Lint with isort, black, docformatter, flake8
         run: |
           make lint
@@ -66,7 +65,6 @@ jobs:
       - name: Generate Docs
         run: |
           make build-docs
-
   Build:
     needs: Documentation
     runs-on: ${{ matrix.os }}
@@ -86,9 +84,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip uninstall numpy
-          pip install numpy==1.19.0
-          pip install tensorflow==2.4.1 keras==2.3.1
+          pip install tensorflow==2.4.1 keras
           pip install torch
           pip install sigpy
           make dev
