@@ -6,6 +6,7 @@ from copy import deepcopy
 from typing import Sequence, Tuple
 
 import numpy as np
+import pydicom
 from pydicom.tag import Tag
 
 from dosma.core.med_volume import MedicalVolume
@@ -162,7 +163,7 @@ class QDess(ScanSequence):
             qv.T2: T2 fit map.
         """
 
-        if self.volumes is None or self.ref_dicom is None:
+        if self.volumes is None:
             raise ValueError("volumes and ref_dicom fields must be initialized")
 
         if (
@@ -174,7 +175,7 @@ class QDess(ScanSequence):
             )
 
         xp = self.volumes[0].device.xp
-        ref_dicom = self.ref_dicom
+        ref_dicom = self.ref_dicom if self.ref_dicom is not None else pydicom.Dataset()
 
         r, c, num_slices = self.volumes[0].volume.shape
         subvolumes = self.volumes
@@ -203,12 +204,12 @@ class QDess(ScanSequence):
 
         # Simply math
         k = (
-            math.pow((math.sin(alpha / 2)), 2)
-            * (1 + math.exp(-TR / T1 - TR * math.pow(dkL, 2) * diffusivity))
-            / (1 - math.cos(alpha) * math.exp(-TR / T1 - TR * math.pow(dkL, 2) * diffusivity))
+            xp.power((xp.sin(alpha / 2)), 2)
+            * (1 + xp.exp(-TR / T1 - TR * xp.power(dkL, 2) * diffusivity))
+            / (1 - xp.cos(alpha) * xp.exp(-TR / T1 - TR * xp.power(dkL, 2) * diffusivity))
         )
 
-        c1 = (TR - Tg / 3) * (math.pow(dkL, 2)) * diffusivity
+        c1 = (TR - Tg / 3) * (xp.power(dkL, 2)) * diffusivity
 
         # T2 fit
         mask = xp.ones([r, c, num_slices])
@@ -226,7 +227,11 @@ class QDess(ScanSequence):
             lower, upper = nan_bounds
             t2map[(t2map < lower) | (t2map > upper)] = xp.nan
         if nan_to_num is not None:
-            t2map = xp.nan_to_num(t2map, nan=nan_to_num)
+            t2map = (
+                xp.nan_to_num(t2map)
+                if isinstance(nan_to_num, bool)
+                else xp.nan_to_num(t2map, nan=nan_to_num)
+            )
 
         if decimals is not None:
             t2map = xp.around(t2map, decimals)

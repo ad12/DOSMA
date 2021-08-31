@@ -133,10 +133,10 @@ def setup_logger(
         logger.addHandler(fh)
 
     if is_new_logger and name == "dosma":
-        logger.info("\n" * 4)
-        logger.info("==" * 40)
-        logger.info("Timestamp: %s" % strftime("%Y-%m-%d %H:%M:%S", localtime()))
-        logger.info("\n\n")
+        logger.debug("\n" * 4)
+        logger.debug("==" * 40)
+        logger.debug("Timestamp: %s" % strftime("%Y-%m-%d %H:%M:%S", localtime()))
+        logger.debug("\n\n")
 
     return logger
 

@@ -1,5 +1,6 @@
 import os
 from abc import ABC, abstractmethod
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -63,7 +64,7 @@ class Tissue(ABC):
         self.quantitative_values = []
 
     @abstractmethod
-    def split_regions(self, base_map: np.ndarray):
+    def split_regions(self, base_map: Union[np.ndarray, MedicalVolume]):
         """Split mask into anatomical regions.
 
         Args:
@@ -199,6 +200,16 @@ class Tissue(ABC):
         """
         pass
 
+    def save_quant_data(self, dirpath: str):
+        """Save quantitative data generated for this tissue.
+
+        Does not save mask or quantitative parameter map.
+
+        Args:
+            dirpath (str): Directory path to tissue data.
+        """
+        return self.__save_quant_data__(dirpath)
+
     def load_data(self, load_dir_path: str):
         """Load data for tissue.
 
@@ -244,7 +255,7 @@ class Tissue(ABC):
             mask (MedicalVolume): Binary mask of segmented tissue.
         """
         assert type(mask) is MedicalVolume, "mask for tissue must be of type MedicalVolume"
-        mask.reformat(SAGITTAL, inplace=True)
+        mask = mask.reformat(SAGITTAL)
         self.__mask__ = mask
 
     def get_mask(self):

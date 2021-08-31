@@ -6,12 +6,12 @@ Attributes:
 import itertools
 import os
 import warnings
-from copy import deepcopy
 
 import numpy as np
 import pandas as pd
 import scipy.ndimage as sni
 
+from dosma.core.device import get_array_module
 from dosma.core.quant_vals import QuantitativeValueType
 from dosma.defaults import preferences
 from dosma.tissues.tissue import Tissue, largest_cc
@@ -168,7 +168,7 @@ class PatellarCartilage(Tissue):
             sagittal_map = med_lat_map == sagittal
 
             curr_region_mask = quant_map_volume * axial_map * sagittal_map
-            curr_region_mask[curr_region_mask == 0] = np.nan
+            curr_region_mask = curr_region_mask[curr_region_mask != 0]
 
             # discard all values that are 0
             c_mean = np.nanmean(curr_region_mask)
@@ -220,11 +220,13 @@ class PatellarCartilage(Tissue):
 
         self.__store_quant_vals__(maps, df, map_type)
 
-    def set_mask(self, mask):
-        msk = np.asarray(largest_cc(mask.volume), dtype=np.uint8)
-        mask_copy = deepcopy(mask)
-        mask_copy.volume = msk
-
+    def set_mask(self, mask, use_largest_cc: bool = True):
+        xp = get_array_module(mask.A)
+        if use_largest_cc:
+            msk = xp.asarray(largest_cc(mask.A), dtype=xp.uint8)
+        else:
+            msk = xp.asarray(mask.A, dtype=xp.uint8)
+        mask_copy = mask._partial_clone(volume=msk)
         super().set_mask(mask_copy)
 
         self.split_regions(self.__mask__.volume)

@@ -154,6 +154,26 @@ class ScanSequence(ScanIOMixin):
 
         self.tissues.append(new_tissue)
 
+    def to(self, device):
+        """Moves volumes of this scan onto the appropriate device.
+
+        This is an inplace operation. A new ScanSequence will not
+        be returned.
+
+        Args:
+            device: The device to move to.
+
+        Returns:
+            self
+        """
+        if isinstance(self.volumes, MedicalVolume):
+            self.volumes = self.volumes.to(device)
+            return
+
+        self.volumes = [v.to(device) for v in self.volumes]
+
+        return self
+
 
 class NonTargetSequence(ScanSequence):
     """
