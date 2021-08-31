@@ -1,4 +1,5 @@
 import itertools
+import logging
 import multiprocessing as mp
 import os
 import platform
@@ -25,6 +26,7 @@ from dosma.utils import env
 __all__ = ["register", "apply_warp", "symlink_elastix", "unlink_elastix"]
 
 MedVolOrPath = Union[MedicalVolume, str]
+_logger = logging.getLogger(__name__)
 
 
 def register(
@@ -213,13 +215,14 @@ def register(
 
 
 def apply_warp(
-    moving: MedVolOrPath,
+    moving: Union[MedVolOrPath, Sequence[MedVolOrPath]],
     transform: Union[str, Sequence[str]] = None,
     out_registration: RegistrationOutputSpec = None,
-    output_path: str = None,
+    output_path: Union[str, Sequence[str]] = None,
     rtype: type = MedicalVolume,
     num_threads: int = 1,
     show_pbar: bool = False,
+    num_workers: int = 0,
 ) -> MedVolOrPath:
     """Apply transform(s) to moving image using transformix.
 
@@ -244,58 +247,61 @@ def apply_warp(
         MedVolOrPath: The medical volume or nifti file corresponding to the volume.
             See `rtype` for details.
     """
-    assert rtype in [MedicalVolume, str], rtype  # rtype must be MedicalVolume or str
-    has_output_path = bool(output_path)
-    if rtype == str and not has_output_path:
-        raise ValueError("`output_path` must be specified when `rtype=str`")
-    if not output_path:
-        # TODO: Add path generation that prevents collisions during multiprocessing.
-        # When multiprocessing executes rapidly and poor seed is set, the uuids have
-        # collided. To avoid this, we append the process name to the directory that is
-        # created.
-        output_path = os.path.join(
-            env.temp_dir(), f"apply_warp-{str(uuid.uuid1())}-{str(uuid.uuid4())}"
+    single_vol = isinstance(moving, (MedicalVolume, os.PathLike))
+    if single_vol:
+        if num_workers > 0:
+            _logger.warning("Ignoring `num_workers` - only single volume was detected")
+        return _apply_warp(
+            moving=moving,
+            transform=transform,
+            out_registration=out_registration,
+            output_path=output_path,
+            rtype=rtype,
+            num_threads=num_threads,
+            show_pbar=show_pbar,
         )
-        if not _is_main_process():
-            output_path += mp.current_process().name
-    output_path = os.path.abspath(output_path)
-    os.makedirs(output_path, exist_ok=True)
 
-    if not transform:
-        transform = out_registration.transform
-    elif isinstance(transform, str):
-        transform = [transform]
-    transform = [os.path.abspath(t) for t in transform]
+    num_volumes = len(moving)
+    seq_type = type(moving)
 
-    mv_filepath = os.path.join(output_path, "moving.nii.gz")
-    if isinstance(moving, MedicalVolume):
-        NiftiWriter().save(moving, mv_filepath)
-        moving = mv_filepath
+    if not output_path:
+        output_path = [None] * num_volumes
+    elif isinstance(output_path, (str, os.PathLike)):
+        output_path = [os.path.join(output_path, f"image-{idx}") for idx in range(num_volumes)]
+    elif not isinstance(output_path, Sequence) or len(output_path) != num_volumes:
+        raise ValueError(
+            "`output_path` must be a directory or list of directories " "of same length as `moving`"
+        )
 
-    transformix_path = _local_exe("transformix")  # noqa
-    cwd = _local_lib_dir()
-    for tf in tqdm(transform, disable=not show_pbar):
-        reg = ApplyWarp()
-        reg.inputs.moving_image = moving
-        reg.inputs.transform_file = tf
-        reg.inputs.output_path = output_path
-        reg.terminal_output = preferences.nipype_logging
-        reg.inputs.num_threads = num_threads
-        reg_output = reg.run(cwd=cwd)
-
-        moving = reg_output.outputs.warped_file
-
-    if rtype == MedicalVolume:
-        out = NiftiReader().load(moving)
+    warp_args = list(zip(moving, output_path))
+    if num_workers > 0:
+        func = partial(
+            _apply_warp_mp,
+            transform=transform,
+            out_registration=out_registration,
+            rtype=rtype,
+            num_threads=num_threads,
+            show_pbar=False,
+        )
+        max_workers = min(num_workers, len(warp_args))
+        out = process_map(
+            func, warp_args, max_workers=max_workers, tqdm_class=tqdm, disable=not show_pbar
+        )
     else:
-        out = moving
+        out = []
+        for mvg, out_path in tqdm(warp_args, disable=not show_pbar):
+            _out = _apply_warp(
+                moving=mvg,
+                output_path=out_path,
+                transform=transform,
+                out_registration=out_registration,
+                rtype=rtype,
+                num_threads=num_threads,
+                show_pbar=False,
+            )
+            out.append(_out)
 
-    if os.path.isfile(mv_filepath):
-        os.remove(mv_filepath)
-    if not has_output_path and os.path.isdir(output_path):
-        shutil.rmtree(output_path)
-
-    return out
+    return seq_type(out)
 
 
 def symlink_elastix(path: str = None, lib_only: bool = True, force: bool = False):
@@ -449,6 +455,75 @@ def _elastix_register_mp(args, **kwargs):
     return _elastix_register(
         moving=moving, moving_mask=moving_mask, output_path=output_path, **kwargs
     )
+
+
+def _apply_warp(
+    moving: MedVolOrPath,
+    output_path: str = None,
+    transform: Union[str, Sequence[str]] = None,
+    out_registration: RegistrationOutputSpec = None,
+    rtype: type = MedicalVolume,
+    num_threads: int = 1,
+    show_pbar: bool = False,
+) -> MedVolOrPath:
+    assert rtype in [MedicalVolume, str], rtype  # rtype must be MedicalVolume or str
+    has_output_path = bool(output_path)
+    if rtype == str and not has_output_path:
+        raise ValueError("`output_path` must be specified when `rtype=str`")
+    if not output_path:
+        # TODO: Add path generation that prevents collisions during multiprocessing.
+        # When multiprocessing executes rapidly and poor seed is set, the uuids have
+        # collided. To avoid this, we append the process name to the directory that is
+        # created.
+        output_path = os.path.join(
+            env.temp_dir(), f"apply_warp-{str(uuid.uuid1())}-{str(uuid.uuid4())}"
+        )
+        if not _is_main_process():
+            output_path += mp.current_process().name
+    output_path = os.path.abspath(output_path)
+    os.makedirs(output_path, exist_ok=True)
+
+    if not transform:
+        transform = out_registration.transform
+    elif isinstance(transform, str):
+        transform = [transform]
+    transform = [os.path.abspath(t) for t in transform]
+
+    mv_filepath = os.path.join(output_path, "moving.nii.gz")
+    if isinstance(moving, MedicalVolume):
+        NiftiWriter().save(moving, mv_filepath)
+        moving = mv_filepath
+
+    transformix_path = _local_exe("transformix")  # noqa
+    cwd = _local_lib_dir()
+    for tf in tqdm(transform, disable=not show_pbar):
+        reg = ApplyWarp()
+        reg.inputs.moving_image = moving
+        reg.inputs.transform_file = tf
+        reg.inputs.output_path = output_path
+        reg.terminal_output = preferences.nipype_logging
+        reg.inputs.num_threads = num_threads
+        reg_output = reg.run(cwd=cwd)
+
+        moving = reg_output.outputs.warped_file
+
+    if rtype == MedicalVolume:
+        out = NiftiReader().load(moving)
+    else:
+        out = moving
+
+    if os.path.isfile(mv_filepath):
+        os.remove(mv_filepath)
+    if not has_output_path and os.path.isdir(output_path):
+        shutil.rmtree(output_path)
+
+    return out
+
+
+def _apply_warp_mp(args, **kwargs):
+    """Reorder arguments for multiprocessing support."""
+    moving, output_path = args
+    return _apply_warp(moving=moving, output_path=output_path, **kwargs)
 
 
 def _write(vol: MedicalVolume, path: str):

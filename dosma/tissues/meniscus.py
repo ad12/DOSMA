@@ -4,18 +4,19 @@ Attributes:
     BOUNDS (dict): Upper bounds for quantitative values.
 """
 
+import itertools
 import os
 import warnings
-from copy import deepcopy
 
 import numpy as np
 import pandas as pd
 import scipy.ndimage as sni
 
+from dosma.core.device import get_array_module
 from dosma.core.med_volume import MedicalVolume
-from dosma.core.quant_vals import QuantitativeValueType
+from dosma.core.quant_vals import T2, QuantitativeValueType
 from dosma.defaults import preferences
-from dosma.tissues.tissue import Tissue
+from dosma.tissues.tissue import Tissue, largest_cc
 from dosma.utils import io_utils
 
 import matplotlib.pyplot as plt
@@ -60,9 +61,12 @@ class Meniscus(Tissue):
     _INFERIOR_KEY = 1
     _TOTAL_AXIAL_KEY = -1
 
-    def __init__(self, weights_dir: str = None, medial_to_lateral: bool = None):
+    def __init__(
+        self, weights_dir: str = None, medial_to_lateral: bool = None, split_ml_only: bool = False
+    ):
         super().__init__(weights_dir=weights_dir, medial_to_lateral=medial_to_lateral)
 
+        self.split_ml_only = split_ml_only
         self.regions_mask = None
 
     def unroll_axial(self, quant_map: np.ndarray):
@@ -94,6 +98,16 @@ class Meniscus(Tissue):
         return total, superior, inferior
 
     def split_regions(self, base_map):
+        """Split meniscus into subregions.
+
+        Center-of-mass (COM) is used to subdivide into
+        anterior/posterior, superior/inferior, and medial/lateral regions.
+
+        Note:
+            The anterior/posterior and superior/inferior subdivision may causes issues
+            with tilted mensici. This will be addressed in a later release. To avoid
+            computing metrics on these regions, set ``self.split_ml_only=True``.
+        """
         center_of_mass = sni.measurements.center_of_mass(base_map)  # zero indexed
 
         com_sup_inf = int(np.ceil(center_of_mass[0]))
@@ -120,7 +134,94 @@ class Meniscus(Tissue):
             [region_mask_sup_inf, region_mask_ant_post, region_mask_med_lat], axis=-1
         )
 
-    def __calc_quant_vals__(self, quant_map, map_type):
+    def __calc_quant_vals__(self, quant_map: MedicalVolume, map_type: QuantitativeValueType):
+        subject_pid = self.pid
+
+        # Reformats the quantitative map to the appropriate orientation.
+        super().__calc_quant_vals__(quant_map, map_type)
+
+        assert (
+            self.regions_mask is not None
+        ), "region_mask not initialized. Should be initialized when mask is set"
+
+        region_mask = self.regions_mask
+        axial_region_mask = self.regions_mask[..., 0]
+        coronal_region_mask = self.regions_mask[..., 1]
+        sagittal_region_mask = self.regions_mask[..., 2]
+
+        # Combine region mask into categorical mask.
+        axial_categories = [
+            (self._SUPERIOR_KEY, "superior"),
+            (self._INFERIOR_KEY, "inferior"),
+            (-1, "total"),
+        ]
+        coronal_categories = [
+            (self._ANTERIOR_KEY, "anterior"),
+            (self._POSTERIOR_KEY, "posterior"),
+            (-1, "total"),
+        ]
+        sagittal_categories = [(self._MEDIAL_KEY, "medial"), (self._LATERAL_KEY, "lateral")]
+        if self.split_ml_only:
+            axial_categories = [x for x in axial_categories if x[0] == -1]
+            coronal_categories = [x for x in coronal_categories if x[0] == -1]
+
+        categorical_mask = np.zeros(region_mask.shape[:-1])
+        base_mask = self.__mask__.A.astype(np.bool)
+        labels = {}
+        for idx, (
+            (axial, axial_name),
+            (coronal, coronal_name),
+            (sagittal, sagittal_name),
+        ) in enumerate(
+            itertools.product(axial_categories, coronal_categories, sagittal_categories)
+        ):
+            label = idx + 1
+            axial_map = np.asarray([True]) if axial == -1 else axial_region_mask == axial
+            coronal_map = np.asarray([True]) if coronal == -1 else coronal_region_mask == coronal
+            sagittal_map = sagittal_region_mask == sagittal
+            categorical_mask[base_mask & axial_map & coronal_map & sagittal_map] = label
+            labels[label] = f"{axial_name}-{coronal_name}-{sagittal_name}"
+
+        # TODO: Change this to be any arbitrary quantitative value type.
+        # Note, it does not matter what we wrap it in because the underlying operations
+        # are not specific to the value type.
+        t2 = T2(quant_map)
+        categorical_mask = MedicalVolume(categorical_mask, affine=quant_map.affine)
+        df = t2.to_metrics(categorical_mask, labels=labels, bounds=(0, np.inf), closed="neither")
+        df.insert(0, "Subject", subject_pid)
+
+        total, superior, inferior = self.unroll_axial(quant_map.volume)
+        qv_name = map_type.name
+        maps = [
+            {
+                "title": "%s superior" % qv_name,
+                "data": superior,
+                "xlabel": "Slice",
+                "ylabel": "Angle (binned)",
+                "filename": "%s_superior" % qv_name,
+                "raw_data_filename": "%s_superior.data" % qv_name,
+            },
+            {
+                "title": "%s inferior" % qv_name,
+                "data": inferior,
+                "xlabel": "Slice",
+                "ylabel": "Angle (binned)",
+                "filename": "%s_inferior" % qv_name,
+                "raw_data_filename": "%s_inferior.data" % qv_name,
+            },
+            {
+                "title": "%s total" % qv_name,
+                "data": total,
+                "xlabel": "Slice",
+                "ylabel": "Angle (binned)",
+                "filename": "%s_total" % qv_name,
+                "raw_data_filename": "%s_total.data" % qv_name,
+            },
+        ]
+
+        self.__store_quant_vals__(maps, df, map_type)
+
+    def __calc_quant_vals_old__(self, quant_map, map_type):
         subject_pid = self.pid
 
         super().__calc_quant_vals__(quant_map, map_type)
@@ -214,9 +315,13 @@ class Meniscus(Tissue):
 
         self.__store_quant_vals__(maps, df, map_type)
 
-    def set_mask(self, mask: MedicalVolume):
-        mask_copy = deepcopy(mask)
-
+    def set_mask(self, mask: MedicalVolume, use_largest_ccs: bool = False, ml_only: bool = False):
+        xp = get_array_module(mask.A)
+        if use_largest_ccs:
+            msk = xp.asarray(largest_cc(mask.A, num=2), dtype=xp.uint8)
+        else:
+            msk = xp.asarray(mask.A, dtype=xp.uint8)
+        mask_copy = mask._partial_clone(volume=msk)
         super().set_mask(mask_copy)
 
         self.split_regions(self.__mask__.volume)

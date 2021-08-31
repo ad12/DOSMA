@@ -1,11 +1,11 @@
 import os
 import warnings
-from copy import deepcopy
 
 import numpy as np
 import pandas as pd
 import scipy.ndimage as sni
 
+from dosma.core.device import get_array_module
 from dosma.core.io.format_io import ImageDataFormat
 from dosma.core.med_volume import MedicalVolume
 from dosma.core.quant_vals import QuantitativeValueType
@@ -135,6 +135,7 @@ class FemoralCartilage(Tissue):
         theta_bins = np.floor((theta - theta_min) / dtheta)
 
         # STEP 3: COMPUTE THRESHOLD RADII
+        # TODO: This step takes a long time
         rhos_threshold_volume = np.zeros(mask.shape)
         for curr_slice in range(num_slices):
             mask_slice = mask[..., curr_slice]
@@ -312,7 +313,11 @@ class FemoralCartilage(Tissue):
 
         # We have to call this every time we load a new quantitative map
         # mask = segmentation_mask * clipped_quant_map
-        regions_mask, theta_bins, _, _ = self.split_regions(quant_map.volume)
+        regions_mask, theta_bins, ml_boundary, acp_boundary = self.split_regions(quant_map.volume)
+        if self.ML_BOUNDARY is None:
+            self.ML_BOUNDARY = ml_boundary
+        if self.ACP_BOUNDARY is None:
+            self.ACP_BOUNDARY = acp_boundary
 
         total, superficial, deep = self.unroll(quant_map.volume, regions_mask, theta_bins)
 
@@ -398,7 +403,9 @@ class FemoralCartilage(Tissue):
 
         self.__store_quant_vals__(maps, df, map_type)
 
-    def set_mask(self, mask: MedicalVolume):
+    def set_mask(
+        self, mask: MedicalVolume, use_largest_cc: bool = True, split_regions: bool = True
+    ):
         """Set mask for tissue.
 
         Mask is cleaned by selecting the largest connected component from the mask.
@@ -407,20 +414,24 @@ class FemoralCartilage(Tissue):
         Args:
             mask (MedicalVolume): Binary mask of segmented tissue.
         """
-        msk = np.asarray(largest_cc(mask.volume), dtype=np.uint8)
-        mask_copy = deepcopy(mask)
-        mask_copy.volume = msk
+        xp = get_array_module(mask.A)
+        if use_largest_cc:
+            msk = xp.asarray(largest_cc(mask.A), dtype=xp.uint8)
+        else:
+            msk = xp.asarray(mask.A, dtype=xp.uint8)
+        mask_copy = mask._partial_clone(volume=msk)
 
         super().set_mask(mask_copy)
 
-        (
-            self.regions_mask,
-            self.theta_bins,
-            self.ML_BOUNDARY,
-            self.ACP_BOUNDARY,
-        ) = self.split_regions(  # noqa: E501
-            self.__mask__.volume
-        )
+        if split_regions:
+            (
+                self.regions_mask,
+                self.theta_bins,
+                self.ML_BOUNDARY,
+                self.ACP_BOUNDARY,
+            ) = self.split_regions(  # noqa: E501
+                self.__mask__.volume
+            )
 
     def __save_quant_data__(self, dirpath: str):
         """Save quantitative data and 2D visualizations of femoral cartilage.
