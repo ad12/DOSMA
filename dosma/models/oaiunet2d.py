@@ -1,7 +1,4 @@
-"""
-@author: Arjun Desai
-        (C) Stanford University, 2019
-"""
+"""Models trained on the Osteoarthritis Initiative (OAI) dataset(s)."""
 
 import os
 from copy import deepcopy

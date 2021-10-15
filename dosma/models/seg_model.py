@@ -1,9 +1,3 @@
-"""Abstract classes to wrap Keras model.
-
-T
-SegModel: Abstract wrapper for Keras model used for semantic segmentation.
-"""
-
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -65,6 +59,9 @@ class SegModel(ABC):
         """
         pass
 
+    def __call__(self, *args, **kwargs):
+        return self.generate_mask(*args, **kwargs)
+
     def __preprocess_volume__(self, volume: np.ndarray):
         """
         Preprocess volume prior to putting as input into segmentation network
@@ -87,9 +84,10 @@ class KerasSegModel(SegModel):
     Abstract wrapper for Keras model used for semantic segmentation
     """
 
-    def build_model(self, input_shape, weights_path):
+    def build_model(self, input_shape, weights_path=None):
         keras_model = self.__load_keras_model__(input_shape)
-        keras_model.load_weights(weights_path)
+        if weights_path:
+            keras_model.load_weights(weights_path)
 
         return keras_model
 

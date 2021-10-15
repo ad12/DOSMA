@@ -5,7 +5,7 @@ import os
 # Elastix files
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
-__OUT_DIR__ = os.path.abspath(os.path.join(__DIR__, "../.dosma/"))
+__OUT_DIR__ = os.path.abspath(os.path.expanduser("~/.dosma"))
 _DOSMA_ELASTIX_FOLDER = os.path.join(__DIR__, "resources/elastix")
 __PATH_TO_ELASTIX_FOLDER__ = os.path.join(__DIR__, "resources/elastix/params")
 
