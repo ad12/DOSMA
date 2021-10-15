@@ -162,4 +162,8 @@ setup(
         "Operating System :: OS Independent",
     ],
     extras_require=EXTRAS,
+    # $ setup.py publish support.
+    cmdclass={
+        "upload": UploadCommand,
+    },
 )
