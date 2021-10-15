@@ -26,7 +26,8 @@ __all__ = ["StanfordQDessUNet2D"]
 
 class StanfordQDessUNet2D(KerasSegModel):
     """
-    2D U-Net model trained on the 2021 Stanford qDESS Knee dataset.
+    Template for 2D U-Net models trained on the SKM-TEA dataset (previously
+    *2021 Stanford qDESS Knee* dataset).
 
     This model segments patellar cartilage ("pc"), femoral cartilage ("fc"),
     tibial cartilage ("tc"), and the meniscus ("men") from quantitative
@@ -36,26 +37,27 @@ class StanfordQDessUNet2D(KerasSegModel):
     There are a few weights files that are associated with this model.
     We provide a short description of each below:
 
-        * ``qDESS_2021_v1-rms-unet2d-pc_fc_tc_men_weights.h5``: This is the baseline
-            model trained on the 2021 Stanford qDESS knee dataset (v1.0.0).
-        * ``qDESS_2021_v0_0_1-rms-pc_fc_tc_men_weights.h5``: This model is trained on the RSS
+        *   ``qDESS_2021_v1-rms-unet2d-pc_fc_tc_men_weights.h5``: This is the baseline
+            model trained on the SKM-TEA dataset (v1.0.0).
+        *   ``qDESS_2021_v0_0_1-rms-pc_fc_tc_men_weights.h5``: This model is trained on the RSS
             2021 Stanford qDESS knee dataset (v0.0.1).
-        * ``qDESS_2021_v0_0_1-traintest-rms-pc_fc_tc_men_weights.h5``: This model
+        *   ``qDESS_2021_v0_0_1-traintest-rms-pc_fc_tc_men_weights.h5``: This model
             is trained on both the train and test set of the 2021 Stanford qDESS knee
             dataset (v0.0.1).
 
     Examples:
-        # Create model based on the volume's shape (SI, AP, 1).
+
+        >>> # Create model based on the volume's shape (SI, AP, 1).
         >>> model = StanfordQDessUNet2D((256, 256, 1), "/path/to/weights")
 
-        # Generate mask from root-sum-of-squares (rss) volume.
+        >>> # Generate mask from root-sum-of-squares (rss) volume.
         >>> model.generate_mask(rss)
 
-        # Generate mask from dual-echo volume `de_vol` - shape: (SI, AP, LR, 2)
+        >>> # Generate mask from dual-echo volume `de_vol` - shape: (SI, AP, LR, 2)
         >>> model.generate_mask(de_vol)
     """
 
-    ALIASES = ("stanford-qdess-2021-unet2d",)
+    ALIASES = ("stanford-qdess-2021-unet2d", "skm-tea-unet2d")
 
     sigmoid_threshold = 0.5
 
