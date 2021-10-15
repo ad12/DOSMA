@@ -2,7 +2,6 @@
 
 import os
 import sys
-from distutils.util import convert_path
 from shutil import rmtree
 from setuptools import Command, find_packages, setup
 
