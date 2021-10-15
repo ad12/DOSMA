@@ -281,7 +281,7 @@ class _Preferences(object):
             Preference keys with corresponding argparse kwarg dict
         """
         with open(_preferences_cmd_line_filepath) as f:
-            cmd_line_config = yaml.load(f)
+            cmd_line_config = yaml.safe_load(f)
 
         cmd_line_dict = {}
         for k in self.__key_list:
