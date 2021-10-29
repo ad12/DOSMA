@@ -27,14 +27,12 @@ These I/O tools create or write from the Dosma image class :class:`MedicalVolume
 For example to load a DICOM image series, which has multiple echos, with each echo corresponding to a volume,
 we can do:
 
->>> from dosma import DicomReader
->>> with DicomReader() as dr:
->>>   volumes = dr.load("/path/to/dicom/folder", group_by="EchoNumbers")
+>>> dr = dm.DicomReader(num_workers=1, verbose=True) 
+>>> dr.load("/path/to/dicom/folder", group_by="EchoNumbers")
 
 We can also load specific files in the image series:
 
->>> with DicomReader() as dr:
->>>   volumes = dr.load(["file1", "file2", ...], group_by="EchoNumbers")
+>>> dr.load(["file1", "file2", ...], group_by="EchoNumbers")
 
 DICOM image data often has associated metadata. :class:`MedicalVolume` makes it easy to get
 and set metadata:
@@ -48,9 +46,8 @@ and set metadata:
 
 Similarly, to load a NIfTI volume, we use the :class:`NiftiReader` class:
 
->>> from dosma import NiftiReader
->>> with NiftiReader() as nr:
->>>   volume = nr.load("/path/to/nifti/file")
+>>> nr = dm.NiftiReader()
+>>> volume = nr.load("/path/to/nifti/file")
 
 
 Reformatting Images
