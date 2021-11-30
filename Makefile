@@ -18,6 +18,10 @@ test-cov:
 	set -e
 	pytest tests/ --cov=./ --cov-report=xml
 
+test-like-ga:
+	set -e
+	DOSMA_UNITTEST_DISABLE_DATA=true pytest tests/
+
 build-docs:
 	set -e
 	mkdir -p docs/source/_static

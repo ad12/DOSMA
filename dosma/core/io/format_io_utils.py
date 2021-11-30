@@ -8,8 +8,11 @@ from typing import Union
 from dosma.core.io.dicom_io import DicomReader, DicomWriter
 from dosma.core.io.format_io import DataReader, DataWriter, ImageDataFormat
 from dosma.core.io.nifti_io import NiftiReader, NiftiWriter
+from dosma.core.med_volume import MedicalVolume
 
 __all__ = [
+    "read",
+    "write",
     "get_reader",
     "get_writer",
     "get_filepath_variations",
@@ -150,3 +153,59 @@ def generic_load(file_or_dir_path: Union[str, Path, os.PathLike], expected_num_v
         return vols[0]
 
     return vols
+
+
+def read(
+    path: Union[str, Path, os.PathLike],
+    data_format: ImageDataFormat = None,
+    unpack: bool = False,
+    **kwargs
+):
+    """Read MedicalVolume(s) from file.
+
+    Args:
+        path (str): File/directory path.
+        data_format (ImageDataFormat, optional): Data format (e.g. dicom, nifti, etc.).
+
+    Returns:
+        MedicalVolume | List[MedicalVolume]: Volume(s) loaded.
+
+    Raises:
+        FileNotFoundError: If file path or corresponding versions of file path not found.
+    """
+    if data_format is None:
+        data_format = ImageDataFormat.get_image_data_format(path)
+    elif isinstance(data_format, str):
+        data_format = ImageDataFormat[data_format]
+
+    out = get_reader(data_format).load(path, **kwargs)
+    if unpack and isinstance(out, (tuple, list)) and len(out) == 1:
+        out = out[0]
+    return out
+
+
+def write(
+    vol: MedicalVolume,
+    path: Union[str, Path, os.PathLike],
+    data_format: ImageDataFormat = None,
+    **kwargs
+):
+    """Write MedicalVolume to file.
+
+    Args:
+        vol (MedicalVolume): Volume to write.
+        path (str): File/directory path.
+        data_format (ImageDataFormat, optional): Data format (e.g. dicom, nifti, etc.).
+
+    Returns:
+        None
+
+    Raises:
+        FileNotFoundError: If file path or corresponding versions of file path not found.
+    """
+    if data_format is None:
+        data_format = ImageDataFormat.get_image_data_format(path)
+    elif isinstance(data_format, str):
+        data_format = ImageDataFormat[data_format]
+
+    get_writer(data_format).save(vol, path, **kwargs)

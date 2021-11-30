@@ -524,7 +524,7 @@ class TestDicomIO(ututils.TempPathMixin):
         out_dir = os.path.join(self.data_dirpath, "test_save_sort_by")
         dw = DicomWriter()
         dw.save(mv_base, out_dir, sort_by="InstanceNumber")
-        mv2 = dr.load(filepath)[0]
+        mv2 = dr.load(out_dir)[0]
         assert mv2.is_identical(mv_base)
 
         out_dir = os.path.join(self.data_dirpath, "test_save_no_headers")

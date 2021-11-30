@@ -166,6 +166,8 @@ class DataReader(_StateMixin):
         """
         pass  # pragma: no cover
 
+    read = load  # pragma: no cover
+
     def __call__(self, *args, **kwargs):
         """Alias for :meth:`self.load`."""
         return self.load(*args, **kwargs)
@@ -191,6 +193,8 @@ class DataWriter(_StateMixin):
             file_path (str): File path to save volume to.
         """
         pass  # pragma: no cover
+
+    write = save  # pragma: no cover
 
     def __call__(self, *args, **kwargs):
         """Alias for :meth:`self.save`."""

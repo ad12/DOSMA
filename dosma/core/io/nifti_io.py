@@ -60,6 +60,8 @@ class NiftiReader(DataReader):
     def __serializable_variables__(self) -> Collection[str]:
         return self.__dict__.keys()
 
+    read = load  # pragma: no cover
+
 
 class NiftiWriter(DataWriter):
     """A class for writing volumes in NIfTI format.
@@ -93,3 +95,5 @@ class NiftiWriter(DataWriter):
 
     def __serializable_variables__(self) -> Collection[str]:
         return self.__dict__.keys()
+
+    write = save  # pragma: no cover
