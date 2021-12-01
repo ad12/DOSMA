@@ -1158,6 +1158,9 @@ class MedicalVolume(NDArrayOperatorsMixin):
         return self._partial_clone(volume=volume, headers=headers)
 
     def __getitem__(self, _slice):
+        if isinstance(_slice, MedicalVolume):
+            _slice = _slice.reformat_as(self).A
+
         slicer = _SpatialFirstSlicer(self)
         try:
             _slice = slicer.check_slicing(_slice)

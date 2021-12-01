@@ -550,6 +550,14 @@ class TestMedicalVolume(unittest.TestCase):
         with self.assertRaises(ValueError):
             mv = MedicalVolume.from_torch(tensor, self._AFFINE, to_complex=True)
 
+    def test_indexing(self):
+        # Index medical volume with another medical volume.
+        mv = MedicalVolume(np.ones((10, 20, 30)), np.eye(4))
+        mv_index = MedicalVolume(np.random.rand(10, 20, 30) > 0.5, np.eye(4))
+        mv[mv_index] = 0
+
+        assert np.all(mv.A[mv_index.A] == 0)
+
 
 if __name__ == "__main__":
     unittest.main()
