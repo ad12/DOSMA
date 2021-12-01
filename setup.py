@@ -103,7 +103,7 @@ REQUIRED = [
     "packaging",
     "pandas",
     # TODO Issue #57: Remove pydicom upper bound (https://github.com/ad12/DOSMA/issues/57)
-    "pydicom>=1.6.0,<=2.0.0",
+    "pydicom>=1.6.0",
     "scikit-image",
     "scipy",
     "seaborn",
