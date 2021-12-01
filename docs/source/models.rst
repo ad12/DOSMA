@@ -67,23 +67,26 @@ Aliases: :code:`iwoai-2019-t6-normalized`
     =========  ===================  ==================  ====================  ===============
 
 
-Stanford qDESS Knee Segmentation - 2D U-net
+SKM-TEA qDESS Knee Segmentation - 2D U-net
 --------------------------------------------------------------------------------
-This collection of models are trained on the 2021 Stanford qDESS Knee Dataset.
+This collection of models are trained on the `SKM-TEA dataset <https://github.com/StanfordMIMI/skm-tea>`_
+(previously known as the *2021 Stanford qDESS Knee Dataset*).
 Details of the different models that are trained are shown in the training configurations
 distributed with the weights.
 
 
-   * ``qDESS_2021_v1-rms-unet2d-pc_fc_tc_men_weights.h5``: This is the baseline
-      RSS model trained on the 2021 Stanford qDESS knee dataset (v1.0.0).
+   *  ``qDESS_2021_v1-rms-unet2d-pc_fc_tc_men_weights.h5``: This is the baseline
+      RSS model trained on the SKM-TEA v1 dataset.
       Though the same hyperparameters were used, this model (trained with Tensorflow/Keras)
       performs better than the PyTorch implementation specified in the main paper.
       Results are shown in the table below.
-   * ``qDESS_2021_v0_0_1-rms-pc_fc_tc_men_weights.h5``: This model is trained on the RSS
+   *  ``qDESS_2021_v0_0_1-rms-pc_fc_tc_men_weights.h5``: This model is trained on the
       2021 Stanford qDESS knee dataset (v0.0.1).
-   * ``qDESS_2021_v0_0_1-traintest-rms-pc_fc_tc_men_weights.h5``: This model
+   *  ``qDESS_2021_v0_0_1-traintest-rms-pc_fc_tc_men_weights.h5``: This model
       is trained on both the train and test set of the 2021 Stanford qDESS knee
       dataset (v0.0.1).
+
+Aliases: :code:`stanford-qdess-2021-unet2d`, :code:`skm-tea-unet2d`
 
 
 .. table:: Mean +/- standard deviation performance summary on SKM-TEA v1 dataset.
