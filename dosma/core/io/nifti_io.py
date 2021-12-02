@@ -27,13 +27,14 @@ class NiftiReader(DataReader):
 
     data_format_code = ImageDataFormat.nifti
 
-    def load(self, file_path) -> MedicalVolume:
+    def load(self, file_path, mmap: bool = False) -> MedicalVolume:
         """Load volume from NIfTI file path.
 
         A NIfTI file should only correspond to one volume.
 
         Args:
             file_path (str): File path to NIfTI file.
+            mmap (bool): Whether to use memory mapping.
 
         Returns:
             MedicalVolume: Loaded volume.
@@ -55,6 +56,7 @@ class NiftiReader(DataReader):
             nib_img,
             affine_precision=AFFINE_DECIMAL_PRECISION,
             origin_precision=SCANNER_ORIGIN_DECIMAL_PRECISION,
+            mmap=mmap,
         )
 
     def __serializable_variables__(self) -> Collection[str]:

@@ -558,6 +558,62 @@ class TestMedicalVolume(unittest.TestCase):
 
         assert np.all(mv.A[mv_index.A] == 0)
 
+    def test_mmap_numpy(self):
+        shape = (5, 6, 7)
+
+        # Memmap should directly write to the file in r+ mode.
+        out_path = os.path.join(self._TEMP_PATH, "test.npy")
+        np.save(out_path, np.ones(shape))
+
+        arr = np.load(out_path, mmap_mode="r+")
+        mv = MedicalVolume(arr, np.eye(4))
+        assert mv.is_mmap
+
+        mv += 1
+        assert np.all(mv.A == 2)
+        arr2 = np.load(out_path)
+        assert np.all(arr2 == 2)
+
+        # Memmap should be read-only.
+        out_path = os.path.join(self._TEMP_PATH, "test2.npy")
+        np.save(out_path, np.ones(shape))
+
+        arr = np.load(out_path, mmap_mode="r")
+        mv = MedicalVolume(arr, np.eye(4))
+        assert mv.is_mmap
+
+        orientation = mv.orientation
+        mv = mv.reformat(orientation[::-1])
+        assert mv.orientation == orientation[::-1]
+        assert mv.shape == shape[::-1]
+
+        mv2 = mv[1:3]
+        assert np.all(mv2.A == mv.A[1:3])
+
+        with self.assertRaises(ValueError):
+            mv += 1
+
+    def test_mmap_nifti(self):
+        out_path = os.path.join(self._TEMP_PATH, "test.nii")
+        mv = MedicalVolume(np.ones((10, 20, 30)), np.eye(4))
+        mv.save_volume(out_path)
+
+        vol = nib.load(out_path)
+        assert isinstance(vol.dataobj.__array__(), np.memmap)
+        mv2 = MedicalVolume.from_nib(vol, mmap=True)
+        assert isinstance(mv2.A, np.memmap) and mv2.A.mode == "c"
+        assert mv2.is_mmap
+        assert mv2.is_identical(mv)
+
+        mv2 += 1
+        assert not mv2.is_mmap
+        assert np.all(mv2.A == 2)
+
+        mv2 = MedicalVolume.from_nib(vol, mmap=True)
+        assert mv2.is_mmap
+        mv2[1:4] = 0
+        assert not mv2.is_mmap
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -49,6 +49,13 @@ Similarly, to load a NIfTI volume, we use the :class:`NiftiReader` class:
 >>> nr = dm.NiftiReader()
 >>> volume = nr.load("/path/to/nifti/file")
 
+With NIfTI volumes stored in ``.nii`` (not ``.nii.gz``) files, we can also load
+the volume in memmap mode. This makes loading much faster and allows easy interaction
+with larger-than-memory arrays. Only when the volume is modified will the volume
+be loaded into memory and modified.
+
+>>> volume = nr.load("/path/to/nifti/file", memmap=True)
+
 
 Reformatting Images
 =========================
