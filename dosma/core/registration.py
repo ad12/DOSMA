@@ -409,7 +409,7 @@ def _elastix_register(
         if _use_mask and target_mask is not None:
             reg.inputs.fixed_mask = os.path.abspath(target_mask)
         if _use_mask and moving_mask is not None:
-            reg.inputs.target_mask = os.path.abspath(moving_mask)
+            reg.inputs.moving_mask = os.path.abspath(moving_mask)
         for k, v in kwargs.items():
             setattr(reg.inputs, k, v)
 
