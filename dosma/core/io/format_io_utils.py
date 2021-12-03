@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Union
+from typing import List, Union
 
 from dosma.core.io.dicom_io import DicomReader, DicomWriter
 from dosma.core.io.format_io import DataReader, DataWriter, ImageDataFormat
@@ -160,18 +160,26 @@ def read(
     data_format: ImageDataFormat = None,
     unpack: bool = False,
     **kwargs
-):
+) -> Union[MedicalVolume, List[MedicalVolume]]:
     """Read MedicalVolume(s) from file.
 
     Args:
         path (str): File/directory path.
-        data_format (ImageDataFormat, optional): Data format (e.g. dicom, nifti, etc.).
+        data_format (ImageDataFormat, optional): Data format
+            (e.g. ``'dicom'``, ``'nifti'``, etc.). Use this is disambiguate between different
+            data formats. If this function is not working, try using this argument.
+            If not provided, dosma will try to infer data format from file extension.
+        unpack (bool, optional): If ``True`` and only 1 volume is loaded, return a single
+            volume instead of a list of volumes. This only applied to dicom loading.
+        **kwargs: Additional keyword arguments passed to the data format reader.
 
     Returns:
         MedicalVolume | List[MedicalVolume]: Volume(s) loaded.
 
-    Raises:
-        FileNotFoundError: If file path or corresponding versions of file path not found.
+    Examples:
+        >>> dm.read("/path/to/multi-echo/dicom/folder", group_by="EchoNumbers")
+        >>> dm.read("/path/to/ct/dicom/folder")
+        >>> dm.read("/path/to/ct/nifti/file.nii.gz", mmap=True)
     """
     if data_format is None:
         data_format = ImageDataFormat.get_image_data_format(path)
@@ -189,16 +197,17 @@ def write(
     path: Union[str, Path, os.PathLike],
     data_format: ImageDataFormat = None,
     **kwargs
-):
+) -> None:
     """Write MedicalVolume to file.
 
     Args:
         vol (MedicalVolume): Volume to write.
         path (str): File/directory path.
-        data_format (ImageDataFormat, optional): Data format (e.g. dicom, nifti, etc.).
-
-    Returns:
-        None
+        data_format (ImageDataFormat, optional): Data format
+            (e.g. ``'dicom'``, ``'nifti'``, etc.). Use this is disambiguate between different
+            data formats. If this function is not working, try using this argument.
+            If not provided, dosma will try to infer data format from file extension.
+        **kwargs: Additional keyword arguments passed to the data format writer.
 
     Raises:
         FileNotFoundError: If file path or corresponding versions of file path not found.

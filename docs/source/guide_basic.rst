@@ -47,14 +47,19 @@ and set metadata:
 Similarly, to load a NIfTI volume, we use the :class:`NiftiReader` class:
 
 >>> nr = dm.NiftiReader()
->>> volume = nr.load("/path/to/nifti/file")
+>>> volume = nr.load("/path/to/nifti/file.nii.gz")
 
-With NIfTI volumes stored in ``.nii`` (not ``.nii.gz``) files, we can also load
-the volume in memmap mode. This makes loading much faster and allows easy interaction
+NIfTI volumes can also be loaded in memmap mode. This makes loading much faster and allows easy interaction
 with larger-than-memory arrays. Only when the volume is modified will the volume
 be loaded into memory and modified.
 
->>> volume = nr.load("/path/to/nifti/file", memmap=True)
+>>> volume = nr.load("/path/to/nifti/file", mmap=True)
+
+Images in all supported data formats can also be loaded and written using ``dosma.read`` and ``dosma.write``:
+
+>>> import dosma as dm
+>>> dm.load("/path/to/dicom/folder", group_by="EchoNumbers")
+>>> dm.load("/path/to/nifti/file.nii.gz", mmap=True)
 
 
 Reformatting Images
