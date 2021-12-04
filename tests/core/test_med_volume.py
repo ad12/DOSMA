@@ -9,6 +9,8 @@ import numpy as np
 import SimpleITK as sitk
 
 from dosma.core.device import Device
+from dosma.core.io.dicom_io import DicomReader
+from dosma.core.io.format_io import ImageDataFormat
 from dosma.core.io.nifti_io import NiftiReader, NiftiWriter
 from dosma.core.med_volume import MedicalVolume
 from dosma.utils import env
@@ -188,6 +190,34 @@ class TestMedicalVolume(unittest.TestCase):
         img = mv.to_sitk(vdim=-1)
         assert np.all(sitk.GetArrayViewFromImage(img) == 0)
         assert img.GetSize() == (10, 20, 1)
+
+    @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
+    def test_to_from_sitk_dicom_convention(self):
+        dp = ututils.get_scan_dirpath("qdess")
+        dirpath = ututils.get_read_paths(dp, ImageDataFormat.dicom)[0]
+
+        dr = DicomReader()
+        dr = DicomReader(group_by=None, sort_by="InstanceNumber", ignore_ext=False)
+        mv: MedicalVolume = dr.load(dirpath)[0]
+
+        reader = sitk.ImageSeriesReader()
+        dicom_names = reader.GetGDCMSeriesFileNames(dirpath)
+        reader.SetFileNames(dicom_names)
+        sitk_image = reader.Execute()
+
+        sitk_from_mv = mv.to_sitk(transpose_inplane=True)
+        img, expected = sitk_from_mv, sitk_image
+        assert np.allclose(sitk.GetArrayViewFromImage(img), sitk.GetArrayViewFromImage(expected))
+        assert img.GetSize() == mv.shape
+        assert np.allclose(img.GetOrigin(), expected.GetOrigin())
+        assert img.GetSpacing() == img.GetSpacing()
+        assert img.GetDirection() == expected.GetDirection()
+
+        mv_from_sitk = MedicalVolume.from_sitk(sitk_image, copy=True, transpose_inplane=True)
+        assert mv_from_sitk.is_identical(mv)
+
+        mv2 = MedicalVolume.from_sitk(sitk_from_mv, copy=True, transpose_inplane=True)
+        assert mv2.is_identical(mv)
 
     def test_from_nib(self):
         filepath = os.path.join(nib_testing.data_path, "example4d.nii.gz")

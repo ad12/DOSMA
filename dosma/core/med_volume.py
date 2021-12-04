@@ -494,7 +494,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
         return nib.Nifti1Image(self.A, self.affine.copy())
 
-    def to_sitk(self, vdim: int = None):
+    def to_sitk(self, vdim: int = None, transpose_inplane: bool = False):
         """Converts to SimpleITK Image.
 
         SimpleITK Image objects support vector pixel types, which are represented
@@ -503,11 +503,17 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
         MedicalVolume must be on cpu. Use ``self.cpu()`` to move.
 
+        SimpleITK loads DICOM files as individual slices that get stacked in ``(z, x, y)``
+        order. Thus, ``sitk.GetArrayFromImage`` returns an array in ``(y, x, z)`` order.
+        To return a SimpleITK Image that will follow this convention, set
+        ``transpose_inplace=True``. If you have been using SimpleITK to load DICOM files,
+        you will likely want to specify this parameter.
+
         Args:
             vdim (int, optional): The vector dimension.
-
-        Note:
-            Header information is not currently copied.
+            transpose_inplane (bool, optional): If ``True``, transpose inplane axes.
+                Recommended to be ``True`` for users who are familiar with SimpleITK's
+                DICOM loading convention.
 
         Returns:
             SimpleITK.Image
@@ -547,6 +553,11 @@ class MedicalVolume(NDArrayOperatorsMixin):
         img.SetOrigin(origin)
         img.SetSpacing(spacing)
         img.SetDirection(tuple(direction.flatten()))
+
+        if transpose_inplane:
+            pa = sitk.PermuteAxesImageFilter()
+            pa.SetOrder([1, 0, 2])
+            img = pa.Execute(img)
 
         return img
 
@@ -932,18 +943,28 @@ class MedicalVolume(NDArrayOperatorsMixin):
         return mv
 
     @classmethod
-    def from_sitk(cls, image, copy=False) -> "MedicalVolume":
+    def from_sitk(cls, image, copy=False, transpose_inplane: bool = False) -> "MedicalVolume":
         """Constructs MedicalVolume from SimpleITK.Image.
 
-        Note:
-            Metadata information is not copied.
+        Use ``transpose_inplane=True`` if the SimpleITK image was loaded with SimpleITK's
+        DICOM reader or if ``transpose_inplace=True`` was used to create the Image
+        with :meth:`to_sitk`. See the discussion of SimpleITK's data ordering convention
+        in :meth:`to_sitk` for more information.
+
+        If you are getting a segmentation fault, try using ``copy=True``.
 
         Args:
             image (SimpleITK.Image): The image.
             copy (bool, optional): If ``True``, copies array.
+            transpose_inplane (bool, optional): If ``True``, transposes the inplane axes.
+                Set this to ``True`` if the SimpleITK image was loaded with SimpleITK's
+                DICOM reader. May need to set ``copy=True`` to avoid segmentation fault.
 
         Returns:
             MedicalVolume
+
+        Note:
+            Metadata information is not copied.
         """
         if not env.sitk_available():
             raise ImportError("SimpleITK is not installed. Install it with `pip install simpleitk`")
@@ -951,6 +972,11 @@ class MedicalVolume(NDArrayOperatorsMixin):
         if len(image.GetSize()) < 3:
             raise ValueError("`image` must be 3D.")
         is_vector_image = image.GetNumberOfComponentsPerPixel() > 1
+
+        if transpose_inplane:
+            pa = sitk.PermuteAxesImageFilter()
+            pa.SetOrder([1, 0, 2])
+            image = pa.Execute(image)
 
         if copy:
             arr = sitk.GetArrayFromImage(image)
