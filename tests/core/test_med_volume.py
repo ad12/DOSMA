@@ -6,6 +6,7 @@ import h5py
 import nibabel as nib
 import nibabel.testing as nib_testing
 import numpy as np
+import pydicom.data as pydd
 import SimpleITK as sitk
 
 from dosma.core.device import Device
@@ -190,6 +191,14 @@ class TestMedicalVolume(unittest.TestCase):
         img = mv.to_sitk(vdim=-1)
         assert np.all(sitk.GetArrayViewFromImage(img) == 0)
         assert img.GetSize() == (10, 20, 1)
+
+        filepath = pydd.get_testdata_file("MR_small.dcm")
+        dr = DicomReader(group_by=None)
+        mv = dr.load(filepath)[0]
+        mv2 = MedicalVolume.from_sitk(
+            mv.to_sitk(transpose_inplane=True), copy=True, transpose_inplane=True
+        )
+        assert mv2.is_identical(mv)
 
     @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_to_from_sitk_dicom_convention(self):
