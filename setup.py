@@ -135,7 +135,7 @@ EXTRAS = {
         "sigpy",
     ],
     "ai": ["tensorflow<=2.4.1", "keras<=2.4.3"],
-    "docs": ["sphinx", "sphinxcontrib.bibtex", "m2r2"],
+    "docs": ["mistune>=0.8.1,<2.0.0", "sphinx", "sphinxcontrib.bibtex", "m2r2"],
 }
 
 with open("README.md", "r", encoding="utf-8") as fh:
