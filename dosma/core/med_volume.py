@@ -4,6 +4,7 @@ This module defines :class:`MedicalVolume`, which is a wrapper for nD volumes.
 """
 import warnings
 from copy import deepcopy
+from mmap import mmap
 from numbers import Number
 from typing import Sequence, Tuple, Union
 
@@ -75,7 +76,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
     >>> id(mv2) == id(mv)
     True
 
-    **BETA**: Medical volumes can interface with the gpu using the :mod:`cupy` library.
+    Medical volumes can interface with the gpu using the :mod:`cupy` library.
     Volumes can be moved between devices (see :class:`Device`) using the ``.to()`` method.
     Only the volume data will be moved to the gpu. Headers and affine matrix will remain on
     the cpu. The following code moves a MedicalVolume to gpu 0 and back to the cpu:
@@ -104,7 +105,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
     >>> cp.cuda.Device(1).use()
     >>> mv_gpu *= 2
 
-    **BETA**: MedicalVolumes also have a limited NumPy/CuPy-compatible interface.
+    MedicalVolumes also have a limited NumPy/CuPy-compatible interface.
     Standard numpy/cupy functions that preserve array shapes can be performed
     on MedicalVolume objects:
 
@@ -126,6 +127,21 @@ class MedicalVolume(NDArrayOperatorsMixin):
     >>> torch_tensor = mv.to_torch()  # Convert to torch tensor
     >>> mv_from_tensor = MedicalVolume.from_torch(torch_tensor, affine)
 
+    **ALPHA**: MedicalVolumes can also be used with memmapped arrays.
+    This makes loading much faster and allows interaction with larger-than-memory
+    arrays. Only when the volume is modified will the volume be loaded
+    into memory and modified. If you take a slice of the memmaped array, the underlying
+    array will also remain memmapped:
+
+    >>> arr = np.load("/path/to/volume.npy", mmap_mode="r")
+    >>> mv = MedicalVolume(arr, np.eye(4))
+    >>> mv.is_mmap  # returns True
+
+    We also preserve Nibabel's memmapping of certain file types (e.g. ``.nii``):
+
+    >>> nib_img = nibabel.load("path/to/volume.nii")
+    >>> mv = MedicalVolume.from_nib(nib_img, mmap=True)
+
     Args:
         volume (array-like): nD medical image.
         affine (array-like): 4x4 array corresponding to affine matrix transform in RAS+ coordinates.
@@ -134,8 +150,10 @@ class MedicalVolume(NDArrayOperatorsMixin):
     """
 
     def __init__(self, volume, affine, headers=None):
-        xp = get_array_module(volume)
-        self._volume = xp.asarray(volume)
+        if not isinstance(volume, np.memmap):
+            xp = get_array_module(volume)
+            volume = xp.asarray(volume)
+        self._volume = volume
         self._affine = np.array(affine)
         self._headers = self._validate_and_format_headers(headers) if headers is not None else None
 
@@ -476,7 +494,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
         return nib.Nifti1Image(self.A, self.affine.copy())
 
-    def to_sitk(self, vdim: int = None):
+    def to_sitk(self, vdim: int = None, transpose_inplane: bool = False):
         """Converts to SimpleITK Image.
 
         SimpleITK Image objects support vector pixel types, which are represented
@@ -485,11 +503,17 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
         MedicalVolume must be on cpu. Use ``self.cpu()`` to move.
 
+        SimpleITK loads DICOM files as individual slices that get stacked in ``(z, x, y)``
+        order. Thus, ``sitk.GetArrayFromImage`` returns an array in ``(y, x, z)`` order.
+        To return a SimpleITK Image that will follow this convention, set
+        ``transpose_inplace=True``. If you have been using SimpleITK to load DICOM files,
+        you will likely want to specify this parameter.
+
         Args:
             vdim (int, optional): The vector dimension.
-
-        Note:
-            Header information is not currently copied.
+            transpose_inplane (bool, optional): If ``True``, transpose inplane axes.
+                Recommended to be ``True`` for users who are familiar with SimpleITK's
+                DICOM loading convention.
 
         Returns:
             SimpleITK.Image
@@ -529,6 +553,11 @@ class MedicalVolume(NDArrayOperatorsMixin):
         img.SetOrigin(origin)
         img.SetSpacing(spacing)
         img.SetDirection(tuple(direction.flatten()))
+
+        if transpose_inplane:
+            pa = sitk.PermuteAxesImageFilter()
+            pa.SetOrder([1, 0, 2])
+            img = pa.Execute(img)
 
         return img
 
@@ -702,6 +731,10 @@ class MedicalVolume(NDArrayOperatorsMixin):
             else:
                 h[key].value = value
 
+    def materialize(self):
+        if not self.is_mmap:
+            return self
+
     def round(self, decimals=0, affine=False) -> "MedicalVolume":
         """Round array (and optionally affine matrix).
 
@@ -859,9 +892,16 @@ class MedicalVolume(NDArrayOperatorsMixin):
         """The ``dtype`` of the ndarray. Same as ``self.volume.dtype``."""
         return self._volume.dtype
 
+    @property
+    def is_mmap(self) -> bool:
+        """bool: Whether the volume is a memory-mapped array."""
+        # important to check if .base is a python mmap object, since a view of a mmap
+        # is also a memmap object, but should not be symlinked or copied
+        return isinstance(self.A, np.memmap) and isinstance(self.A.base, mmap)
+
     @classmethod
     def from_nib(
-        cls, image, affine_precision: int = None, origin_precision: int = None
+        cls, image, affine_precision: int = None, origin_precision: int = None, mmap: bool = False
     ) -> "MedicalVolume":
         """Constructs MedicalVolume from nibabel images.
 
@@ -871,6 +911,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
                 vectors in the affine matrix to this decimal precision.
             origin_precision (int, optional): If specified, rounds the scanner origin
                 in the affine matrix to this decimal precision.
+            mmap (bool, optional): If True, memory map the image.
 
         Returns:
             MedicalVolume: The medical image.
@@ -893,21 +934,37 @@ class MedicalVolume(NDArrayOperatorsMixin):
         if origin_precision:
             affine[:3, 3] = np.round(affine[:3, 3], origin_precision)
 
-        return cls(image.get_fdata(), affine)
+        data = image.dataobj.__array__() if mmap else image.get_fdata()
+        mv = cls(data, affine)
+        if mmap and not mv.is_mmap:
+            raise ValueError(
+                "Underlying array in the nibabel image is not mem-mapped. " "Please set mmap=False."
+            )
+        return mv
 
     @classmethod
-    def from_sitk(cls, image, copy=False) -> "MedicalVolume":
+    def from_sitk(cls, image, copy=False, transpose_inplane: bool = False) -> "MedicalVolume":
         """Constructs MedicalVolume from SimpleITK.Image.
 
-        Note:
-            Metadata information is not copied.
+        Use ``transpose_inplane=True`` if the SimpleITK image was loaded with SimpleITK's
+        DICOM reader or if ``transpose_inplace=True`` was used to create the Image
+        with :meth:`to_sitk`. See the discussion of SimpleITK's data ordering convention
+        in :meth:`to_sitk` for more information.
+
+        If you are getting a segmentation fault, try using ``copy=True``.
 
         Args:
             image (SimpleITK.Image): The image.
             copy (bool, optional): If ``True``, copies array.
+            transpose_inplane (bool, optional): If ``True``, transposes the inplane axes.
+                Set this to ``True`` if the SimpleITK image was loaded with SimpleITK's
+                DICOM reader. May need to set ``copy=True`` to avoid segmentation fault.
 
         Returns:
             MedicalVolume
+
+        Note:
+            Metadata information is not copied.
         """
         if not env.sitk_available():
             raise ImportError("SimpleITK is not installed. Install it with `pip install simpleitk`")
@@ -915,6 +972,11 @@ class MedicalVolume(NDArrayOperatorsMixin):
         if len(image.GetSize()) < 3:
             raise ValueError("`image` must be 3D.")
         is_vector_image = image.GetNumberOfComponentsPerPixel() > 1
+
+        if transpose_inplane:
+            pa = sitk.PermuteAxesImageFilter()
+            pa.SetOrder([1, 0, 2])
+            image = pa.Execute(image)
 
         if copy:
             arr = sitk.GetArrayFromImage(image)
@@ -1158,6 +1220,9 @@ class MedicalVolume(NDArrayOperatorsMixin):
         return self._partial_clone(volume=volume, headers=headers)
 
     def __getitem__(self, _slice):
+        if isinstance(_slice, MedicalVolume):
+            _slice = _slice.reformat_as(self).A
+
         slicer = _SpatialFirstSlicer(self)
         try:
             _slice = slicer.check_slicing(_slice)
@@ -1195,6 +1260,8 @@ class MedicalVolume(NDArrayOperatorsMixin):
             value = value._volume
         with self.device:
             self._volume[_slice] = value
+        if self.is_mmap and self._volume.mode == "c":
+            self._volume = np.asarray(self._volume)
 
     def __repr__(self) -> str:
         nl = "\n"
@@ -1205,47 +1272,37 @@ class MedicalVolume(NDArrayOperatorsMixin):
             f"origin={self.scanner_origin},{nltb}device={self.device}{nl})"
         )
 
-    def __iadd__(self, other):
+    def _iops(self, other, op):
+        """Helper function for i-type ops (__iadd__, __isub__, etc.)"""
         if isinstance(other, MedicalVolume):
             assert self.is_same_dimensions(other, err=True)
             other = other.volume
-        self._volume.__iadd__(other)
+
+        if isinstance(op, str):
+            op = getattr(self._volume, op)
+        op(other)
+
+        if self.is_mmap and self._volume.mode == "c":
+            self._volume = np.asarray(self._volume)
         return self
+
+    def __iadd__(self, other):
+        return self._iops(other, self._volume.__iadd__)
 
     def __ifloordiv__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        self._volume.__ifloordiv__(other)
-        return self
+        return self._iops(other, self._volume.__ifloordiv__)
 
     def __imul__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        self._volume.__imul__(other)
-        return self
+        return self._iops(other, self._volume.__imul__)
 
     def __ipow__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        self._volume.__ipow__(other)
-        return self
+        return self._iops(other, self._volume.__ipow__)
 
     def __isub__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        self._volume.__isub__(other)
-        return self
+        return self._iops(other, self._volume.__isub__)
 
     def __itruediv__(self, other):
-        if isinstance(other, MedicalVolume):
-            assert self.is_same_dimensions(other, err=True)
-            other = other.volume
-        self._volume.__itruediv__(other)
-        return self
+        return self._iops(other, self._volume.__itruediv__)
 
     def __array__(self):
         """Wrapper for performing numpy operations on MedicalVolume array.

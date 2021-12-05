@@ -89,6 +89,8 @@ Image I/O
    :toctree: generated
    :nosignatures:
 
+   dosma.read
+   dosma.write
    dosma.NiftiReader
    dosma.NiftiWriter
    dosma.DicomReader

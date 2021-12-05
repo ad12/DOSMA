@@ -318,6 +318,8 @@ class DicomReader(DataReader):
     def __serializable_variables__(self) -> Collection[str]:
         return self.__dict__.keys()
 
+    read = load  # pragma: no cover
+
 
 class DicomWriter(DataWriter):
     """A class for writing volumes in DICOM format.
@@ -486,6 +488,8 @@ class DicomWriter(DataWriter):
 
     def __serializable_variables__(self) -> Collection[str]:
         return self.__dict__.keys()
+
+    write = save  # pragma: no cover
 
 
 def to_RAS_affine(headers: List[pydicom.FileDataset], default_ornt: Tuple[str, str] = None):

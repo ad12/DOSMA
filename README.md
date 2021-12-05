@@ -51,9 +51,10 @@ DOSMA provides efficient readers for DICOM and NIfTI formats built on nibabel an
 parallel with multiple workers and structured into the appropriate 3D volume(s). For example, multi-echo and dynamic contrast-enhanced (DCE) MRI scans have multiple volumes acquired at different echo times and trigger times, respectively. These can be loaded into multiple volumes with ease:
 
 ```python
-dr = dosma.DicomReader(verbose=True, num_workers=8)
-multi_echo_scan = dr.load("/path/to/multi-echo/scan", group_by="EchoNumbers")
-dce_scan = dr.load("/path/to/dce/scan", group_by="TriggerTime")
+import dosma as dm
+
+multi_echo_scan = dm.load("/path/to/multi-echo/scan", group_by="EchoNumbers", num_workers=8, verbose=True)
+dce_scan = dm.load("/path/to/dce/scan", group_by="TriggerTime")
 ```
 
 ### Data-Embedded Medical Images
@@ -94,7 +95,7 @@ masks = model.generate_mask(mv)
 ```
 
 ### Parallelizable Operations
-DOSMA supports parallelization for curve fitting and image registration operations.
+DOSMA supports parallelization for compute-heavy operations, like curve fitting and image registration.
 Image registration is supported thru the [elastix/transformix](https://elastix.lumc.nl/download.php) libraries. For example we can use multiple workers to register volumes to a target, and use the registered outputs for per-voxel monoexponential fitting:
 
 ```python
