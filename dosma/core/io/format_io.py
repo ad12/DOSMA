@@ -33,7 +33,7 @@ class ImageDataFormat(enum.Enum):
     """Enum describing supported data formats for medical volume I/O."""
 
     nifti = 1, ("nii", "nii.gz")
-    dicom = 2, ("dcm",)
+    dicom = 2, ("dcm", "ima")
 
     def __new__(cls, key_code, extensions):
         """
@@ -58,7 +58,7 @@ class ImageDataFormat(enum.Enum):
             bool: True if file_path has valid extension, False otherwise.
         """
         file_path = str(file_path)
-        bool_list = [file_path.endswith(".%s" % ext) for ext in self.extensions]
+        bool_list = [file_path.lower().endswith(".%s" % ext.lower()) for ext in self.extensions]
 
         return bool(sum(bool_list))
 
