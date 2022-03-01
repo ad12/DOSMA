@@ -125,7 +125,7 @@ EXTRAS = {
         "flake8-bugbear",
         "flake8-comprehensions",
         "isort",
-        "black",
+        "black==21.4b2",
         "simpleitk",
         "sphinx",
         "sphinxcontrib.bibtex",
