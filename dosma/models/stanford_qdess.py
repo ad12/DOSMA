@@ -65,7 +65,7 @@ class StanfordQDessUNet2D(KerasSegModel):
         if type(input_shape) is not tuple or len(input_shape) != 3 or input_shape[2] != 1:
             raise ValueError("input_size must be a tuple of size (height, width, 1)")
 
-        nfeatures = [2 ** feat * 32 for feat in np.arange(6)]
+        nfeatures = [2**feat * 32 for feat in np.arange(6)]
         depth = len(nfeatures)
 
         conv_ptr = []
@@ -170,7 +170,7 @@ class StanfordQDessUNet2D(KerasSegModel):
 
         vol_copy = deepcopy(volume)
         if ndim == 4:
-            vol_copy = np.sqrt(np.sum(vol_copy ** 2, axis=-1))
+            vol_copy = np.sqrt(np.sum(vol_copy**2, axis=-1))
 
         # reorient to the sagittal plane
         vol_copy.reformat(SAGITTAL, inplace=True)

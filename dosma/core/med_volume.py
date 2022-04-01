@@ -848,7 +848,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
     def pixel_spacing(self):
         """tuple[float]: Pixel spacing in order of current orientation."""
         vecs = self._affine[:3, :3]
-        ps = tuple(np.sqrt(np.sum(vecs ** 2, axis=0)))
+        ps = tuple(np.sqrt(np.sum(vecs**2, axis=0)))
 
         assert len(ps) == 3, "Pixel spacing must have length of 3"
         return ps

@@ -687,8 +687,8 @@ def _update_np_dtype(arr: np.ndarray, bit_depth: int):
     dtype_dict = {
         8: [(np.int8, -128, 127), (np.uint8, 0, 255)],
         16: [
-            (np.uint16, 0, 2 ** 16 - 1),
-            (np.int16, -(2 ** 15), 2 ** 15),
+            (np.uint16, 0, 2**16 - 1),
+            (np.int16, -(2**15), 2**15),
             (np.float16, -6.55e4, 6.55e4 - 1),
         ],
     }

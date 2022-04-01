@@ -283,9 +283,9 @@ class QDess(ScanSequence):
         assert (~xp.iscomplex(echo1)).all() and (~xp.iscomplex(echo2)).all()
 
         if method == "rss":
-            vol = xp.sqrt(echo1 ** 2 + echo2 ** 2)
+            vol = xp.sqrt(echo1**2 + echo2**2)
         elif method == "rms":
-            vol = xp.sqrt((echo1 ** 2 + echo2 ** 2) / 2)
+            vol = xp.sqrt((echo1**2 + echo2**2) / 2)
         else:
             raise ValueError(f"`method={method}` is not supported")
 

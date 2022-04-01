@@ -935,11 +935,11 @@ def polyfit(
         xp = get_array_module(_y)
 
         _x = _x.flatten()
-        _xs = xp.stack([_x ** i for i in range(len(_popts) - 1, -1, -1)], axis=-1)
+        _xs = xp.stack([_x**i for i in range(len(_popts) - 1, -1, -1)], axis=-1)
         yhat = _xs @ _popts  # (M, K)
 
         residuals = yhat - _y
-        ss_res = xp.sum(residuals ** 2, axis=0)
+        ss_res = xp.sum(residuals**2, axis=0)
         ss_tot = xp.sum((_y - xp.mean(_y, axis=0, keepdims=True)) ** 2, axis=0)
         return 1 - (ss_res / (ss_tot + eps))
 
@@ -1030,7 +1030,7 @@ def _curve_fit(
         popt, _ = sop.curve_fit(func, _x, _y, p0=p0, ftol=ftol, **kwargs)
 
         residuals = _y - func(_x, *popt)
-        ss_res = np.sum(residuals ** 2)
+        ss_res = np.sum(residuals**2)
         ss_tot = np.sum((_y - np.mean(_y)) ** 2)
         r_squared = 1 - (ss_res / (ss_tot + eps))
 
@@ -1078,7 +1078,7 @@ def _polyfit(y, x, deg, y_bounds=None, xp=None, rcond=None, w=None, eps=1e-8):
         popt = xp.polyfit(_x, _y, deg, rcond=rcond, w=w)
 
         residuals = _y - xp.polyval(popt, _x)
-        ss_res = xp.sum(residuals ** 2)
+        ss_res = xp.sum(residuals**2)
         ss_tot = xp.sum((_y - xp.mean(_y)) ** 2)
         r_squared = 1 - (ss_res / (ss_tot + eps))
 
@@ -1178,7 +1178,7 @@ def __fit_mono_exp__(x, y, p0=None):  # pragma: no cover
     popt, _ = sop.curve_fit(func, x, y, p0=p0, maxfev=100, ftol=1e-5)
 
     residuals = y - func(x, popt[0], popt[1])
-    ss_res = np.sum(residuals ** 2)
+    ss_res = np.sum(residuals**2)
     ss_tot = np.sum((y - np.mean(y)) ** 2)
 
     r_squared = 1 - (ss_res / (ss_tot + __EPSILON__))
