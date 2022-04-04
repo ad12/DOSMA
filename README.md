@@ -125,12 +125,11 @@ a_fit, b_fit = popt[..., 0], popt[..., 1]
 ## Citation
 ```
 @inproceedings{desai2019dosma,
-   Title={DOSMA: A deep-learning, open-source framework for musculoskeletal MRI analysis.},
-   Author =  {Desai, Arjun D and Barbieri, Marco and Mazzoli, Valentina and Rubin, Elka and Black, Marianne S and Watkins, Lauren E and Gold, Garry E and Hargreaves, Brian A and Chaudhari, Akshay S},
-   Booktitle={Proc. Intl. Soc. Mag. Reson. Med},
-   Volume={27},
-   Number={1106},
-   Year={2019}
+  title={DOSMA: A deep-learning, open-source framework for musculoskeletal MRI analysis},
+  author={Desai, Arjun D and Barbieri, Marco and Mazzoli, Valentina and Rubin, Elka and Black, Marianne S and Watkins, Lauren E and Gold, Garry E and Hargreaves, Brian A and Chaudhari, Akshay S},
+  booktitle={Proc 27th Annual Meeting ISMRM, Montreal},
+  pages={1135},
+  year={2019}
 }
 ```
 

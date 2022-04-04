@@ -33,6 +33,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           make dev
+          pip install --upgrade click==8.0.2
       - name: Lint with isort, black, docformatter, flake8
         run: |
           make lint
