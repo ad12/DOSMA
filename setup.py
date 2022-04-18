@@ -126,6 +126,7 @@ EXTRAS = {
         "flake8-comprehensions",
         "isort",
         "black==21.4b2",
+        "click==8.0.2",
         "simpleitk",
         "sphinx",
         "sphinxcontrib.bibtex",
