@@ -218,3 +218,7 @@ def write(
         data_format = ImageDataFormat[data_format]
 
     get_writer(data_format).save(vol, path, **kwargs)
+
+
+load = read  # pragma: no cover
+save = write  # pragma: no cover
