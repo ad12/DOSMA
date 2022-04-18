@@ -292,7 +292,7 @@ class TestMedicalVolume(unittest.TestCase):
         assert np.all(mv2._volume == 2)
         assert np.all(out._volume == 0)
 
-        out = mv1 ** mv2
+        out = mv1**mv2
         assert np.all(mv1._volume == 1)
         assert np.all(mv2._volume == 2)
         assert np.all(out._volume == 1)

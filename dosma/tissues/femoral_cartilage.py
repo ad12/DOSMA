@@ -50,20 +50,20 @@ class FemoralCartilage(Tissue):
     # Keys correspond to integer representing bit location for each region
     # bit string: 'T D S M L A C P' (stored as integer)
     # Coronal Keys
-    _POSTERIOR_KEY = 2 ** 0
-    _CENTRAL_KEY = 2 ** 1
-    _ANTERIOR_KEY = 2 ** 2
+    _POSTERIOR_KEY = 2**0
+    _CENTRAL_KEY = 2**1
+    _ANTERIOR_KEY = 2**2
     _CORONAL_KEYS = [_POSTERIOR_KEY, _CENTRAL_KEY, _ANTERIOR_KEY]
 
     # Sagittal Keys
-    _MEDIAL_KEY = 2 ** 3
-    _LATERAL_KEY = 2 ** 4
+    _MEDIAL_KEY = 2**3
+    _LATERAL_KEY = 2**4
     _SAGITTAL_KEYS = [_MEDIAL_KEY, _LATERAL_KEY]
 
     # Axial Keys
-    _DEEP_KEY = 2 ** 5
-    _SUPERFICIAL_KEY = 2 ** 6
-    _TOTAL_AXIAL_KEY = 2 ** 7
+    _DEEP_KEY = 2**5
+    _SUPERFICIAL_KEY = 2**6
+    _TOTAL_AXIAL_KEY = 2**7
     _AXIAL_KEYS = [_DEEP_KEY, _SUPERFICIAL_KEY, _TOTAL_AXIAL_KEY]
 
     # Do not change order of below.

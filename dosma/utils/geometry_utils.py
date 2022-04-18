@@ -80,7 +80,7 @@ def cart2pol(x, y):
     Returns:
         tuple[float, float]: radius (rho) and angle (phi).
     """
-    rho = np.sqrt(x ** 2 + y ** 2)
+    rho = np.sqrt(x**2 + y**2)
     phi = np.arctan2(y, x)
 
     phi = phi * (180 / np.pi)  # degrees

@@ -53,7 +53,7 @@ class OAIUnet2D(KerasSegModel):
         if type(input_shape) is not tuple or len(input_shape) != 3 or input_shape[2] != 1:
             raise ValueError("input_size must be a tuple of size (height, width, 1)")
 
-        nfeatures = [2 ** feat * 32 for feat in np.arange(6)]
+        nfeatures = [2**feat * 32 for feat in np.arange(6)]
         depth = len(nfeatures)
 
         conv_ptr = []
@@ -198,7 +198,7 @@ class IWOAIOAIUnet2D(OAIUnet2D):
         if type(input_shape) is not tuple or len(input_shape) != 3 or input_shape[2] != 1:
             raise ValueError("input_size must be a tuple of size (height, width, 1)")
 
-        nfeatures = [2 ** feat * 32 for feat in np.arange(6)]
+        nfeatures = [2**feat * 32 for feat in np.arange(6)]
         depth = len(nfeatures)
 
         conv_ptr = []
