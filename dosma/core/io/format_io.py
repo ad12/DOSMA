@@ -33,7 +33,8 @@ class ImageDataFormat(enum.Enum):
     """Enum describing supported data formats for medical volume I/O."""
 
     nifti = 1, ("nii", "nii.gz")
-    dicom = 2, ("dcm", "ima")
+    dicom = 2, ("dcm", "ima", "dic")
+    zarr = 3, ("zarr")
 
     def __new__(cls, key_code, extensions):
         """
