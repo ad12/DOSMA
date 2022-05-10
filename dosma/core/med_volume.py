@@ -6,7 +6,7 @@ import warnings
 from copy import deepcopy
 from mmap import mmap
 from numbers import Number
-from typing import Sequence, Tuple, Union
+from typing import Sequence, Tuple, Union, Optional
 
 import nibabel as nib
 import numpy as np
@@ -20,6 +20,8 @@ from dosma.core.device import Device, cpu_device, get_array_module, get_device, 
 from dosma.core.io.format_io import ImageDataFormat
 from dosma.defaults import SCANNER_ORIGIN_DECIMAL_PRECISION
 from dosma.utils import env
+from dosma.utils.dicom import to_RAS_affine
+
 
 if env.sitk_available():
     import SimpleITK as sitk
@@ -27,6 +29,8 @@ if env.cupy_available():
     import cupy as cp
 if env.package_available("h5py"):
     import h5py
+if env.package_available("zarr"):
+    import zarr
 
 __all__ = ["MedicalVolume"]
 
@@ -147,12 +151,14 @@ class MedicalVolume(NDArrayOperatorsMixin):
         affine (array-like): 4x4 array corresponding to affine matrix transform in RAS+ coordinates.
             Must be on cpu (i.e. no ``cupy.ndarray``).
         headers (array-like[pydicom.FileDataset]): Headers for DICOM files.
+        lazy (bool, optional): Convert the volume to a NumPy or CuPy array.
     """
 
-    def __init__(self, volume, affine, headers=None):
-        if not isinstance(volume, np.memmap):
+    def __init__(self, volume, affine, headers=None, lazy=False):
+        if not isinstance(volume, np.memmap) and not lazy:
             xp = get_array_module(volume)
             volume = xp.asarray(volume)
+
         self._volume = volume
         self._affine = np.array(affine)
         self._headers = self._validate_and_format_headers(headers) if headers is not None else None
@@ -637,7 +643,50 @@ class MedicalVolume(NDArrayOperatorsMixin):
             tensor = tensor.contiguous()
         return tensor
 
-    def headers(self, flatten=False):
+    def to_zarr(
+        self,
+        headers_attr: Optional[str] = None,
+        mode: str = "w-",
+        chunks=None,
+        **kwargs,
+    ):
+        """Converts to Zarr store.
+
+        Args:
+            headers_attr (str, optional): Attribute key to store the headers of the `MedicalVolume`
+                in. If `None`, headers will not be saved.
+            mode ({'r', 'r+', 'a', 'w', 'w-'}, optional): Persistence mode: 'r' means read only
+                (must exist); 'r+' means read/write (must exist); 'a' means read/write (create if
+                doesn't exist); 'w' means create (overwrite if exists); 'w-' means create (fail if
+                exists). Default is _w-_ for safety reasons.
+            **kwargs: Additional parameters are passed through to `zarr.creation.open_array`.
+
+        Returns:
+            zarr.Array
+
+        Examples:
+            >>> mv = MedicalVolume(np.ones((10, 20, 30)), np.eye(4))
+            >>> store = zarr.ZipStore("/path/to/store")
+            >>> mv.to_zarr(store=store)
+
+            >>> # Save in existing store
+            >>> mv.to_zarr(store=store, path="/path/to/array")
+        """
+
+        if not env.package_available("zarr"):
+            raise ImportError(  # pragma: no cover
+                "zarr is not installed. Install it with `pip install zarr`. "
+            )
+
+        tensor = zarr.open_array(**{**kwargs, "shape": self.shape}, mode=mode)
+        tensor[:] = self._volume
+
+        if isinstance(headers_attr, str):
+            tensor.attrs[headers_attr] = self.headers(json_dict=True)
+
+        return tensor
+
+    def headers(self, flatten=False, json_dict=False):
         """Returns headers.
 
         If headers exist, they are currently stored as an array of
@@ -646,12 +695,19 @@ class MedicalVolume(NDArrayOperatorsMixin):
         Args:
             flatten (bool, optional): If ``True``, flattens header array
                 before returning.
+            json_dict (bool, optional): If ``True``, converts flattened headers to DICOM+JSON
+                Python dicts.
 
         Returns:
-            Optional[ndarray[pydicom.dataset.FileDataset]]: Array of headers (if they exist).
+            Optional[Union[ndarray[pydicom.dataset.FileDataset], Dict]]:
+                Array of headers (if they exist).
         """
         if flatten and self._headers is not None:
             return self._headers.flatten()
+
+        if json_dict and self._headers is not None:
+            return [h.to_json_dict() for h in self._headers.flatten()]
+
         return self._headers
 
     def get_metadata(self, key, dtype=None, default=np._NoValue):
@@ -848,7 +904,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
     def pixel_spacing(self):
         """tuple[float]: Pixel spacing in order of current orientation."""
         vecs = self._affine[:3, :3]
-        ps = tuple(np.sqrt(np.sum(vecs ** 2, axis=0)))
+        ps = tuple(np.sqrt(np.sum(vecs**2, axis=0)))
 
         assert len(ps) == 3, "Pixel spacing must have length of 3"
         return ps
@@ -898,6 +954,72 @@ class MedicalVolume(NDArrayOperatorsMixin):
         # important to check if .base is a python mmap object, since a view of a mmap
         # is also a memmap object, but should not be symlinked or copied
         return isinstance(self.A, np.memmap) and isinstance(self.A.base, mmap)
+
+    @property
+    def is_zarr(self) -> bool:
+        """bool: Whether the volume is an instance of a Zarr store"""
+
+        if not env.package_available("zarr"):
+            raise ImportError(  # pragma: no cover
+                "zarr is not installed. Install it with `pip install zarr`. "
+            )
+
+        return isinstance(self.A, zarr.Array)
+
+    @classmethod
+    def from_zarr(
+        cls,
+        store,
+        mode="r",
+        affine: Optional[np.ndarray] = None,
+        headers_attr: Optional[str] = None,
+        default_ornt: Tuple[str, str] = np._NoValue,
+        lazy: bool = False,
+        **kwargs,
+    ) -> "MedicalVolume":
+        """Constructs MedicalVolume from zarr arrays.
+
+        Args:
+            store (Store or string, optional):  Store or path to directory in file system or name of
+                zip file.
+            mode ({'r', 'r+', 'a', 'w', 'w-'}, optional): Persistence mode: 'r' means read only
+                (must exist); 'r+' means read/write (must exist); 'a' means read/write (create if
+                doesn't exist); 'w' means create (overwrite if exists); 'w-' means create (fail if
+                exists). Defaults to _r_ for safety reasons.
+            affine (array-like): See `MedicalVolume` class parameters.
+            headers (str, optional): Attribute key to retrieve the headers of the `MedicalVolume`
+                from. If `None`, headers will not be retrieved.
+            default_ornt (Tuple[str, str], optional): See `MedicalVolume` class parameters.
+            lazy (bool, optional): Convert the volume to a NumPy or CuPy array.
+            **kwargs: Additional parameters are passed through to `zarr.creation.open_array`.
+
+        Returns:
+            MedicalVolume: The medical image.
+
+        Examples:
+            >>> import zarr
+            >>> store = zarr.ZipStore('/path/to/store')
+            >>> zarr.save_array(store, np.zeros((10, 10)))
+            >>> MedicalVolume.from_zarr(store, headers=None)
+        """
+
+        if not env.package_available("zarr"):
+            raise ImportError(  # pragma: no cover
+                "zarr is not installed. Install it with `pip install zarr`. "
+            )
+
+        tensor = zarr.open_array(store, mode, **kwargs)
+        _affine = affine if affine is not None else np.eye(4)
+        _headers = None
+
+        if isinstance(headers_attr, str):
+            if headers_attr not in tensor.attrs:
+                raise KeyError(f"Attribute `{headers_attr}` does not exist on this zarr.Array.")
+
+            _headers = [pydicom.Dataset.from_json(h) for h in tensor.attrs.get(headers_attr)]
+            _affine = affine if affine is not None else to_RAS_affine(_headers, default_ornt)
+
+        return cls(tensor, _affine, _headers, lazy)
 
     @classmethod
     def from_nib(
