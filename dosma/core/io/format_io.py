@@ -34,7 +34,6 @@ class ImageDataFormat(enum.Enum):
 
     nifti = 1, ("nii", "nii.gz")
     dicom = 2, ("dcm", "ima", "dic")
-    zarr = 3, ("zarr")
 
     def __new__(cls, key_code, extensions):
         """
