@@ -459,6 +459,8 @@ class TestDicomIO(ututils.TempPathMixin):
         assert len(mv) == 1
         mv = mv[0]
         assert mv.shape == (arr.shape) + (1,)
+
+        delattr(mv_pydicom, "PixelData")
         assert self.are_equivalent_headers(mv.headers(flatten=True)[0], mv_pydicom)
 
         dw = DicomWriter()

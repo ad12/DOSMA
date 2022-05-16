@@ -8,6 +8,7 @@ import nibabel.testing as nib_testing
 import numpy as np
 import pydicom.data as pydd
 import SimpleITK as sitk
+import zarr
 
 from dosma.core.device import Device
 from dosma.core.io.dicom_io import DicomReader
@@ -200,6 +201,34 @@ class TestMedicalVolume(unittest.TestCase):
         )
         assert mv2.is_identical(mv)
 
+    def test_to_zarr(self):
+        arr = np.random.rand(10, 20, 30)
+        mv = MedicalVolume(arr, self._AFFINE)
+
+        # in-memory
+        assert isinstance(mv.to_zarr().store, zarr.storage.KVStore)
+
+        # persistence
+        store = os.path.join(ututils.TEMP_PATH, "mv_to_zarr")
+        mv_to_zarr = mv.to_zarr(store=store)
+        handle = zarr.open_array(store, mode="r")
+        assert mv_to_zarr.digest() == handle.digest()
+        assert np.allclose(mv, mv_to_zarr)
+
+        # affine and headers
+        filepath = pydd.get_testdata_file("MR_small.dcm")
+        dr = DicomReader(group_by=None)
+        mv = dr.load(filepath)[0]
+        mv.to_zarr(store, mode="w", affine_attr="affine", headers_attr="headers")
+
+        mv2 = MedicalVolume.from_zarr(store, affine_attr="affine", headers_attr="headers")
+        assert mv2.is_identical(mv)
+        assert mv2.headers(as_json_dict=True) == mv.headers(as_json_dict=True)
+
+        # overriding affine
+        mv3 = MedicalVolume.from_zarr(store, affine=np.eye(4), affine_attr="affine")
+        assert not np.allclose(mv.affine, mv3.affine)
+
     @unittest.skipIf(not ututils.is_data_available(), "unittest data is not available")
     def test_to_from_sitk_dicom_convention(self):
         dp = ututils.get_scan_dirpath("qdess")
@@ -292,7 +321,7 @@ class TestMedicalVolume(unittest.TestCase):
         assert np.all(mv2._volume == 2)
         assert np.all(out._volume == 0)
 
-        out = mv1 ** mv2
+        out = mv1**mv2
         assert np.all(mv1._volume == 1)
         assert np.all(mv2._volume == 2)
         assert np.all(out._volume == 1)
