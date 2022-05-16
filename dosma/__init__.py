@@ -8,7 +8,6 @@ from dosma.core import *  # noqa
 from dosma.defaults import preferences  # noqa
 from dosma.utils.collect_env import collect_env_info  # noqa
 from dosma.utils.env import debug  # noqa
-from dosma.utils.dicom import to_RAS_affine # noqa
 
 from dosma.core.med_volume import MedicalVolume  # noqa: F401
 from dosma.core.io.format_io_utils import read, write  # noqa: F401
