@@ -31,9 +31,10 @@ from tqdm.auto import tqdm
 from tqdm.contrib.concurrent import process_map
 
 from dosma.core import orientation as stdo
+from dosma.core.io.dicom_io_utils import to_RAS_affine
 from dosma.core.io.format_io import DataReader, DataWriter, ImageDataFormat
 from dosma.core.med_volume import MedicalVolume
-from dosma.utils import to_RAS_affine
+from dosma.defaults import AFFINE_DECIMAL_PRECISION, SCANNER_ORIGIN_DECIMAL_PRECISION
 
 __all__ = ["DicomReader", "DicomWriter"]
 
@@ -206,7 +207,6 @@ class DicomReader(DataReader):
         sort_by: Union[str, int, Sequence[Union[str, int]]] = np._NoValue,
         ignore_ext: bool = np._NoValue,
         default_ornt: Tuple[str, str] = np._NoValue,
-        keep_pixel_data: bool = False,
     ):
         """Load dicoms into ``MedicalVolume``s grouped by ``group_by`` tag(s).
 
@@ -229,7 +229,6 @@ class DicomReader(DataReader):
                 orientation cannot be determined from DICOM header. If not specified
                 and orientation cannot be determined, error will be raised.
                 Defaults to ``self.default_ornt``.
-            keep_pixel_data (bool): Keep the value of the PixelData attribute in the DICOM headers.
 
         Returns:
             list[MedicalVolume]: Different volumes grouped by the `group_by` DICOM tag.
@@ -302,8 +301,7 @@ class DicomReader(DataReader):
             dicom_data[val_groupby]["headers"].append(ds)
             dicom_data[val_groupby]["arr"].append(ds.pixel_array)
 
-            # Delete pixel data byte buffer from the DICOM header
-            if not keep_pixel_data and hasattr(ds, "PixelData"):
+            if hasattr(ds, "PixelData"):
                 delattr(ds, "PixelData")
 
         vols = []
