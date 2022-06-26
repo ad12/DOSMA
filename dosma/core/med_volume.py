@@ -690,7 +690,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
             tensor.attrs[affine_attr] = self.affine.tolist()
 
         if isinstance(headers_attr, str):
-            tensor.attrs[headers_attr] = self.headers(json_dict=True)
+            tensor.attrs[headers_attr] = self.headers(as_json_dict=True)
 
         return tensor
 
@@ -912,7 +912,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
     def pixel_spacing(self):
         """tuple[float]: Pixel spacing in order of current orientation."""
         vecs = self._affine[:3, :3]
-        ps = tuple(np.sqrt(np.sum(vecs**2, axis=0)))
+        ps = tuple(np.sqrt(np.sum(vecs ** 2, axis=0)))
 
         assert len(ps) == 3, "Pixel spacing must have length of 3"
         return ps
