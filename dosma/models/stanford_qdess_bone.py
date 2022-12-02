@@ -155,7 +155,7 @@ class StanfordQDessBoneUNet2D(SegModel):
 
         volume = skimage.transform.resize(
             image=volume,
-            output_shape=self.image_size + (volume.shape[-1]),
+            output_shape=self.image_size + (volume.shape[-1], ),
             order=3
         )
 
