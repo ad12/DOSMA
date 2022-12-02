@@ -97,7 +97,9 @@ class StanfordQDessBoneUNet2D(SegModel):
             raise ValueError("`volume` must either be 3D or 4D")
 
         vol_copy = deepcopy(volume)
+
         if ndim == 4:
+            # if 4D, assume last dimension is echo 1 and 2
             vol_copy = np.sqrt(np.sum(vol_copy ** 2, axis=-1))
 
         # reorient to the sagittal plane
@@ -108,7 +110,7 @@ class StanfordQDessBoneUNet2D(SegModel):
 
         # reshape volumes to be (slice, x, y, 1)
         v = np.transpose(vol, (2, 0, 1))
-        # v = np.expand_dims(v, axis=-1)
+        v = np.expand_dims(v, axis=1)
 
         mask = self.seg_model.predict(v, batch_size=self.batch_size, verbose=1)
 
