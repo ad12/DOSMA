@@ -74,7 +74,7 @@ class StanfordQDessBoneUNet2D(SegModel):
             Keras segmentation model
         """
 
-        model = load_model(model_path)
+        model = load_model(model_path, compile=False)
 
         return model
 
