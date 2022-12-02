@@ -1,9 +1,12 @@
 from dosma.models.seg_model import SegModel, whiten_volume
 from dosma.core.med_volume import MedicalVolume
+from dosma.defaults import preferences
+from dosma.core.orientation import SAGITTAL
+
 from keras.models import load_model
 from typing import Tuple
 
-from dosma.core.orientation import SAGITTAL
+
 from copy import deepcopy
 
 import numpy as np
@@ -47,13 +50,16 @@ class StanfordQDessBoneUNet2D(SegModel):
     ALIASES = ("stanford-qdess-2022-unet2d-bone", "skm-tea-unet2d-bone")
 
     def __init__(
-        self, 
+        self,
+        model_path: str,
         image_size: Tuple[int, int] = (384, 384),
-        *args, 
-        **kwargs
+        # *args, 
+        # **kwargs
     ):
+        self.batch_size = preferences.segmentation_batch_size
         self.image_size = image_size
-        super().__init__(*args, **kwargs)
+        self.seg_model = self.build_model(model_path=model_path)
+        # super().__init__(*args, **kwargs)
     
         
 
@@ -75,6 +81,7 @@ class StanfordQDessBoneUNet2D(SegModel):
     def generate_mask(
         self, 
         volume: MedicalVolume,
+        
         
     ):
         """Segment tissues.
