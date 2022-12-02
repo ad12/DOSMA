@@ -1,4 +1,4 @@
-from dosma.models import oaiunet2d, stanford_qdess, util
+from dosma.models import oaiunet2d, stanford_qdess, stanford_qdess_bone, util
 from dosma.models.oaiunet2d import *  # noqa
 from dosma.models.stanford_qdess import *  # noqa: F401, F403
 from dosma.models.util import *  # noqa
