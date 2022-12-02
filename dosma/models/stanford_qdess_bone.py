@@ -9,6 +9,7 @@ from copy import deepcopy
 import numpy as np
 import skimage
 
+__all__ = ["StanfordQDessBoneUNet2D"]
 
 class StanfordQDessBoneUNet2D(SegModel):
     """
