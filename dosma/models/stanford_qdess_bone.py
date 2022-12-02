@@ -107,7 +107,13 @@ class StanfordQDessBoneUNet2D(SegModel):
         # one-hot encode mask, reorder axes, and re-size to input shape
         mask = self.__postprocess_segmentation__(mask)
 
-        vols = {}
+        vol_cp = deepcopy(vol_copy)
+        vol_cp.volume = mask
+        # reorient to match with original volume
+        vol_cp.reformat(volume.orientation, inplace=True)
+        vols = {
+            "all": vol_cp
+        }
 
         for i, category in enumerate(["pc", "fc", "mtc", "ltc", "med_men", "lat_men", "fem", "tib", "pat"]):
             vol_cp = deepcopy(vol_copy)
@@ -128,6 +134,8 @@ class StanfordQDessBoneUNet2D(SegModel):
             vol_cp = deepcopy(vol_copy)
             vol_cp.volume = np.zeros_like(mask)
             vol_cp.volume[(vols[tissues[0]].volume == 1) + (vols[tissues[1]].volume == 1)] = 1
+            # reorient to match with original volume
+            vol_cp.reformat(volume.orientation, inplace=True)
             vols[tissue_name] = vol_cp
 
         return vols
