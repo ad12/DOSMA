@@ -80,9 +80,7 @@ class StanfordQDessBoneUNet2D(SegModel):
 
     def generate_mask(
         self, 
-        volume: MedicalVolume,
-        
-        
+        volume: MedicalVolume,        
     ):
         """Segment tissues.
 
@@ -108,17 +106,18 @@ class StanfordQDessBoneUNet2D(SegModel):
         vol = vol_copy.volume
         vol = self.__preprocess_volume__(vol)
 
-        # reshape volumes to be (slice, x, y, 1)
+        # reshape volumes to be (slice, 1, x, y)
         v = np.transpose(vol, (2, 0, 1))
         v = np.expand_dims(v, axis=1)
 
         mask = self.seg_model.predict(v, batch_size=self.batch_size, verbose=1)
 
+        # return mask
         # one-hot encode mask, reorder axes, and re-size to input shape
         mask = self.__postprocess_segmentation__(mask)
-
+        
         vol_cp = deepcopy(vol_copy)
-        vol_cp.volume = mask
+        vol_cp.volume = deepcopy(mask)
         # reorient to match with original volume
         vol_cp.reformat(volume.orientation, inplace=True)
         vols = {
@@ -138,7 +137,6 @@ class StanfordQDessBoneUNet2D(SegModel):
         tissues_to_combine = (
             (("lat_men", "med_men"), "men"),
             (("mtc", "ltc"), "tc"),
-
         )
         for tissues, tissue_name in tissues_to_combine:
             vol_cp = deepcopy(vol_copy)
@@ -163,13 +161,12 @@ class StanfordQDessBoneUNet2D(SegModel):
 
         return whiten_volume(volume, eps=1e-8)
 
-
     def __postprocess_segmentation__(self, mask: np.ndarray):
-        # reshape mask to be (x, y, slice, classes)
-        mask = np.transpose(mask, (1, 2, 0, 3))
-
-        # USE ARGMAX TO GET SINGLE VOLUME SEGMENTATION
-        mask = np.argmax(mask, axis=-1)
+        
+        # USE ARGMAX TO GET SINGLE VOLUME SEGMENTATION OF ALL TISSUES
+        mask = np.argmax(mask, axis=1)
+        # # reshape mask to be (x, y, slice)
+        mask = np.transpose(mask, (1, 2, 0))
 
         mask = skimage.transform.resize(
             image=mask,
