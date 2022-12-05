@@ -103,7 +103,7 @@ REQUIRED = [
     "packaging",
     "pandas",
     # TODO Issue #57: Remove pydicom upper bound (https://github.com/ad12/DOSMA/issues/57)
-    "pydicom>=1.6.0,<=2.0.0",
+    "pydicom>=1.6.0",
     "scikit-image",
     "scipy",
     "seaborn",
@@ -125,7 +125,8 @@ EXTRAS = {
         "flake8-bugbear",
         "flake8-comprehensions",
         "isort",
-        "black",
+        "black==21.4b2",
+        "click==8.0.2",
         "simpleitk",
         "sphinx",
         "sphinxcontrib.bibtex",
@@ -135,7 +136,7 @@ EXTRAS = {
         "sigpy",
     ],
     "ai": ["tensorflow<=2.4.1", "keras<=2.4.3"],
-    "docs": ["sphinx", "sphinxcontrib.bibtex", "m2r2"],
+    "docs": ["mistune>=0.8.1,<2.0.0", "sphinx", "sphinxcontrib.bibtex", "m2r2"],
 }
 
 with open("README.md", "r", encoding="utf-8") as fh:

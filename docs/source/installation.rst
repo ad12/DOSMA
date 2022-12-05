@@ -55,8 +55,10 @@ Registration
 Registration between scans in DOSMA is supported through Elastix and Transformix. If you plan on using the registration,
 follow the instructions below:
 
-1. Download `elastix <http://elastix.isi.uu.nl/download.php>`_
+1. Download `elastix <https://elastix.lumc.nl/download.php>`_
 2. Follow instructions on adding elastix/transformix to your system path
+
+On Ubuntu 18.04 Elastix version 5.0.1 does not work properly. Elastix 4.9.0 is recommended.
 
 If you are using a MacOS system, you may run into path issues with elastix (see
 `this discussion <https://github.com/almarklein/pyelastix/issues/9>`_). To fix

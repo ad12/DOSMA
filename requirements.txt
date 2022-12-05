@@ -7,7 +7,7 @@ nibabel
 nipype
 packaging
 pandas
-pydicom>=1.6.0,<=2.0.0
+pydicom>=1.6.0
 scikit-image
 scipy
 seaborn

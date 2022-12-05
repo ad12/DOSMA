@@ -58,7 +58,7 @@
 (ImageSampler "RandomCoordinate")
 (CheckNumberOfSamples "true")
 (NewSamplesEveryIteration "true")
-(FinalBSplineInterpolationOrder 0)
+(FinalBSplineInterpolationOrder 3)
 
 // *********************
 // * Output settings

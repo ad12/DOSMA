@@ -18,6 +18,10 @@ test-cov:
 	set -e
 	pytest tests/ --cov=./ --cov-report=xml
 
+test-like-ga:
+	set -e
+	DOSMA_UNITTEST_DISABLE_DATA=true pytest tests/
+
 build-docs:
 	set -e
 	mkdir -p docs/source/_static
@@ -26,8 +30,8 @@ build-docs:
 	cd docs && make html
 
 dev:
-	pip install black coverage isort flake8 flake8-bugbear flake8-comprehensions
-	pip install sphinx sphinx-rtd-theme recommonmark m2r2
+	pip install black==21.4b2 click==8.0.2 coverage isort flake8 flake8-bugbear flake8-comprehensions
+	pip install --upgrade mistune==0.8.4 sphinx sphinx-rtd-theme recommonmark m2r2
 	pip install -r docs/requirements.txt
 
 all: autoformat test build-docs
