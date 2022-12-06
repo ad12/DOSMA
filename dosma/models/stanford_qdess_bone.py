@@ -29,10 +29,19 @@ class StanfordQDessBoneUNet2D(SegModel):
         *   ``coarse_2d_sagittal_v1_11-18_Dec-04-2022.h5``: This is the baseline
             model trained on a subset of the SKM-TEA dataset (v1.0.0) with bone
             labels using the 2D network from Gatti et al. MAGMA, 2021.
+        * PROVIDE ANOTHER SET OF WEIGHTS USING SAME MODEL AS stanford_qdess        
     
-    By default this class will resample the input volume to the size of the
-    originally trained model (384x384) for segmentation and then re-sample the
-    outputted segmentation to match the original volume. 
+    By default this class will resample the input to be the size of the trained 
+    model (384x384) for segmentation and then will re-sample the outputted 
+    segmentation to match the original volume. 
+
+    By default, we y return the largest connected component of each tissue. This 
+    can be disabled by setting `connected_only=False` in the `model.generate_mask()`.
+
+    The output includes individual objects for each segmented tissue, including
+    separate medial/lateral segments of the meniscus and tibial cartilage. It also
+    includes a combined label for the meniscus and tibial cartilage, and a combined
+    label for all of the tissues in a single 3D mask. 
 
     Examples:
 
@@ -45,6 +54,9 @@ class StanfordQDessBoneUNet2D(SegModel):
         >>> # Generate mask from dual-echo volume `de_vol` - shape: (SI, AP, LR, 2)
         >>> model.generate_mask(de_vol)
 
+        >>> # Generate mask from rss volume without getting largest connected components.
+        >>> model.generate_mask(rss, connected_only=False)
+
     """
 
     ALIASES = ("stanford-qdess-2022-unet2d-bone", "skm-tea-unet2d-bone")
@@ -56,6 +68,14 @@ class StanfordQDessBoneUNet2D(SegModel):
         # *args, 
         # **kwargs
     ):
+        """
+        Args:
+            model_path (str): Path to model & weights file.
+            resample_images (bool): Whether or not to resample input volumes to 
+                match original model size. If False, will build new model specific
+                to loaded image and will load model weights only. Default: True.
+        """
+
         self.batch_size = preferences.segmentation_batch_size
         self.orig_model_image_size = (384, 384)
         self.resample_images = resample_images
@@ -69,7 +89,7 @@ class StanfordQDessBoneUNet2D(SegModel):
         Loads a segmentation model and its weights.
 
         Args:
-            weights_path:
+            model_path: Path to model & its weights.
 
         Returns:
             Keras segmentation model
@@ -93,6 +113,11 @@ class StanfordQDessBoneUNet2D(SegModel):
                 If the volume is 3D, it is assumed to be the root-sum-of-squares (RSS)
                 of the two qDESS echoes. If 4D, volume must be of the shape ``(..., 2)``,
                 where the last dimension corresponds to echo 1 and 2, respectively.
+            connected_only (bool): If True, only the largest connected component of
+                each tissue is returned. Default: True.
+        
+        Returns:
+            dict: Dictionary of segmented tissues.
         """
         ndim = volume.ndim
         if ndim not in (3, 4):
