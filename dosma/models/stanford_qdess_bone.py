@@ -1,24 +1,24 @@
-from dosma.models.seg_model import SegModel, whiten_volume
-from dosma.core.med_volume import MedicalVolume
-from dosma.defaults import preferences
-from dosma.core.orientation import SAGITTAL
-from dosma.tissues.tissue import Tissue, largest_cc
-
-from keras.models import load_model
-from typing import Tuple
-
-
 from copy import deepcopy
+from typing import Tuple
 
 import numpy as np
 import skimage
 
+from dosma.core.med_volume import MedicalVolume
+from dosma.core.orientation import SAGITTAL
+from dosma.defaults import preferences
+from dosma.models.seg_model import SegModel, whiten_volume
+from dosma.tissues.tissue import Tissue, largest_cc
+
+from keras.models import load_model
+
 __all__ = ["StanfordQDessBoneUNet2D"]
+
 
 class StanfordQDessBoneUNet2D(SegModel):
     """
     This model segments patellar cartilage ("pc"), femoral cartilage ("fc"),
-    tibial cartilage ("tc", "mtc", "ltc"), the meniscus ("men", "med_men", 
+    tibial cartilage ("tc", "mtc", "ltc"), the meniscus ("men", "med_men",
     "lat_men"), and bones ("fem", "tib", "pat") from quantitative
     double echo steady state (qDESS) knee scans. The segmentation is computed on
     the root-sum-of-squares (RSS) of the two echoes.
@@ -29,19 +29,19 @@ class StanfordQDessBoneUNet2D(SegModel):
         *   ``coarse_2d_sagittal_v1_11-18_Dec-04-2022.h5``: This is the baseline
             model trained on a subset of the SKM-TEA dataset (v1.0.0) with bone
             labels using the 2D network from Gatti et al. MAGMA, 2021.
-        * PROVIDE ANOTHER SET OF WEIGHTS USING SAME MODEL AS stanford_qdess        
-    
-    By default this class will resample the input to be the size of the trained 
-    model (384x384) for segmentation and then will re-sample the outputted 
-    segmentation to match the original volume. 
+        * PROVIDE ANOTHER SET OF WEIGHTS USING SAME MODEL AS stanford_qdess
 
-    By default, we y return the largest connected component of each tissue. This 
+    By default this class will resample the input to be the size of the trained
+    model (384x384) for segmentation and then will re-sample the outputted
+    segmentation to match the original volume.
+
+    By default, we y return the largest connected component of each tissue. This
     can be disabled by setting `connected_only=False` in the `model.generate_mask()`.
 
     The output includes individual objects for each segmented tissue, including
     separate medial/lateral segments of the meniscus and tibial cartilage. It also
     includes a combined label for the meniscus and tibial cartilage, and a combined
-    label for all of the tissues in a single 3D mask. 
+    label for all of the tissues in a single 3D mask.
 
     Examples:
 
@@ -65,13 +65,13 @@ class StanfordQDessBoneUNet2D(SegModel):
         self,
         model_path: str,
         resample_images: bool = True,
-        # *args, 
+        # *args,
         # **kwargs
     ):
         """
         Args:
             model_path (str): Path to model & weights file.
-            resample_images (bool): Whether or not to resample input volumes to 
+            resample_images (bool): Whether or not to resample input volumes to
                 match original model size. If False, will build new model specific
                 to loaded image and will load model weights only. Default: True.
         """
@@ -81,8 +81,6 @@ class StanfordQDessBoneUNet2D(SegModel):
         self.resample_images = resample_images
         self.seg_model = self.build_model(model_path=model_path)
         # super().__init__(*args, **kwargs)
-    
-        
 
     def build_model(self, model_path: str):
         """
@@ -97,12 +95,12 @@ class StanfordQDessBoneUNet2D(SegModel):
         if self.resample_images is True:
             model = load_model(model_path, compile=False)
         else:
-            raise Exception('Segmenting without resampling is not supported yet.')
+            raise Exception("Segmenting without resampling is not supported yet.")
 
         return model
 
     def generate_mask(
-        self, 
+        self,
         volume: MedicalVolume,
         connected_only: bool = True,
     ):
@@ -115,7 +113,7 @@ class StanfordQDessBoneUNet2D(SegModel):
                 where the last dimension corresponds to echo 1 and 2, respectively.
             connected_only (bool): If True, only the largest connected component of
                 each tissue is returned. Default: True.
-        
+
         Returns:
             dict: Dictionary of segmented tissues.
         """
@@ -127,7 +125,7 @@ class StanfordQDessBoneUNet2D(SegModel):
 
         if ndim == 4:
             # if 4D, assume last dimension is echo 1 and 2
-            vol_copy = np.sqrt(np.sum(vol_copy ** 2, axis=-1))
+            vol_copy = np.sqrt(np.sum(vol_copy**2, axis=-1))
 
         # reorient to the sagittal plane
         vol_copy.reformat(SAGITTAL, inplace=True)
@@ -144,24 +142,24 @@ class StanfordQDessBoneUNet2D(SegModel):
         # return mask
         # one-hot encode mask, reorder axes, and re-size to input shape
         mask = self.__postprocess_segmentation__(mask, connected_only=connected_only)
-        
+
         vol_cp = deepcopy(vol_copy)
         vol_cp.volume = deepcopy(mask)
         # reorient to match with original volume
         vol_cp.reformat(volume.orientation, inplace=True)
-        vols = {
-            "all": vol_cp
-        }
+        vols = {"all": vol_cp}
 
-        for i, category in enumerate(["pc", "fc", "mtc", "ltc", "med_men", "lat_men", "fem", "tib", "pat"]):
+        for i, category in enumerate(
+            ["pc", "fc", "mtc", "ltc", "med_men", "lat_men", "fem", "tib", "pat"]
+        ):
             vol_cp = deepcopy(vol_copy)
             vol_cp.volume = np.zeros_like(mask)
-            vol_cp.volume[mask == i+1] = 1
+            vol_cp.volume[mask == i + 1] = 1
 
             # reorient to match with original volume
             vol_cp.reformat(volume.orientation, inplace=True)
             vols[category] = vol_cp
-        
+
         # Create "tc", "men" labels from original models
         tissues_to_combine = (
             (("lat_men", "med_men"), "men"),
@@ -179,22 +177,20 @@ class StanfordQDessBoneUNet2D(SegModel):
 
     def __preprocess_volume__(self, volume: np.ndarray):
         # TODO: Remove epsilon if difference in performance difference is not large.
-        
+
         self.original_image_shape = volume.shape
 
         if self.resample_images is True:
             volume = skimage.transform.resize(
-                image=volume,
-                output_shape=self.orig_model_image_size + (volume.shape[-1], ),
-                order=3
+                image=volume, output_shape=self.orig_model_image_size + (volume.shape[-1],), order=3
             )
         else:
-            raise Exception('Segmenting without resampling is not supported yet.')
+            raise Exception("Segmenting without resampling is not supported yet.")
 
         return whiten_volume(volume, eps=1e-8)
 
     def __postprocess_segmentation__(self, mask: np.ndarray, connected_only: bool = True):
-        
+
         # USE ARGMAX TO GET SINGLE VOLUME SEGMENTATION OF ALL TISSUES
         mask = np.argmax(mask, axis=1)
         # # reshape mask to be (x, y, slice)
@@ -202,17 +198,16 @@ class StanfordQDessBoneUNet2D(SegModel):
 
         if self.resample_images is True:
             mask = skimage.transform.resize(
-                image=mask,
-                output_shape=self.original_image_shape,
-                order=0
+                image=mask, output_shape=self.original_image_shape, order=0
             )
         else:
-            raise Exception('Segmenting without resampling is not supported yet.')
+            raise Exception("Segmenting without resampling is not supported yet.")
 
         if connected_only is True:
             mask = get_connected_segments(mask)
 
         return mask
+
 
 def get_connected_segments(mask: np.ndarray) -> np.ndarray:
     """
@@ -236,5 +231,5 @@ def get_connected_segments(mask: np.ndarray) -> np.ndarray:
         mask_binary[mask == idx] = 1
         mask_binary_conected = np.asarray(largest_cc(mask_binary), dtype=np.uint8)
         mask_[mask_binary_conected == 1] = idx
-    
+
     return mask_
