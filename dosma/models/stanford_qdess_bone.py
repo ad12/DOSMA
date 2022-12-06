@@ -1,5 +1,4 @@
 from copy import deepcopy
-from typing import Tuple
 
 import numpy as np
 import skimage
@@ -8,7 +7,7 @@ from dosma.core.med_volume import MedicalVolume
 from dosma.core.orientation import SAGITTAL
 from dosma.defaults import preferences
 from dosma.models.seg_model import SegModel, whiten_volume
-from dosma.tissues.tissue import Tissue, largest_cc
+from dosma.tissues.tissue import largest_cc
 
 from keras.models import load_model
 
