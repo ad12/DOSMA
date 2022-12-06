@@ -17,35 +17,34 @@ __all__ = ["StanfordQDessBoneUNet2D"]
 
 class StanfordQDessBoneUNet2D(SegModel):
     """
-    Template for 2D U-Net models trained on the SKM-TEA dataset (previously
-    *2021 Stanford qDESS Knee* dataset).
-
     This model segments patellar cartilage ("pc"), femoral cartilage ("fc"),
-    tibial cartilage ("tc"), and the meniscus ("men") from quantitative
+    tibial cartilage ("tc", "mtc", "ltc"), the meniscus ("men", "med_men", 
+    "lat_men"), and bones ("fem", "tib", "pat") from quantitative
     double echo steady state (qDESS) knee scans. The segmentation is computed on
     the root-sum-of-squares (RSS) of the two echoes.
 
     There are a few weights files that are associated with this model.
     We provide a short description of each below:
 
-        *   ``qDESS_2021_v1-rms-unet2d-pc_fc_tc_men_weights.h5``: This is the baseline
-            model trained on the SKM-TEA dataset (v1.0.0).
-        *   ``qDESS_2021_v0_0_1-rms-pc_fc_tc_men_weights.h5``: This model is trained on the RSS
-            2021 Stanford qDESS knee dataset (v0.0.1).
-        *   ``qDESS_2021_v0_0_1-traintest-rms-pc_fc_tc_men_weights.h5``: This model
-            is trained on both the train and test set of the 2021 Stanford qDESS knee
-            dataset (v0.0.1).
+        *   ``coarse_2d_sagittal_v1_11-18_Dec-04-2022.h5``: This is the baseline
+            model trained on a subset of the SKM-TEA dataset (v1.0.0) with bone
+            labels using the 2D network from Gatti et al. MAGMA, 2021.
+    
+    By default this class will resample the input volume to the size of the
+    originally trained model (384x384) for segmentation and then re-sample the
+    outputted segmentation to match the original volume. 
 
     Examples:
 
-        >>> # Create model based on the volume's shape (SI, AP, 1).
-        >>> model = StanfordQDessUNet2D((256, 256, 1), "/path/to/weights")
+        >>> # Create model.
+        >>> model = StanfordQDessBoneUNet2D("/path/to/model.h5")
 
         >>> # Generate mask from root-sum-of-squares (rss) volume.
         >>> model.generate_mask(rss)
 
         >>> # Generate mask from dual-echo volume `de_vol` - shape: (SI, AP, LR, 2)
         >>> model.generate_mask(de_vol)
+
     """
 
     ALIASES = ("stanford-qdess-2022-unet2d-bone", "skm-tea-unet2d-bone")
@@ -53,12 +52,13 @@ class StanfordQDessBoneUNet2D(SegModel):
     def __init__(
         self,
         model_path: str,
-        image_size: Tuple[int, int] = (384, 384),
+        resample_images: bool = True,
         # *args, 
         # **kwargs
     ):
         self.batch_size = preferences.segmentation_batch_size
-        self.image_size = image_size
+        self.orig_model_image_size = (384, 384)
+        self.resample_images = resample_images
         self.seg_model = self.build_model(model_path=model_path)
         # super().__init__(*args, **kwargs)
     
@@ -74,8 +74,10 @@ class StanfordQDessBoneUNet2D(SegModel):
         Returns:
             Keras segmentation model
         """
-
-        model = load_model(model_path, compile=False)
+        if self.resample_images is True:
+            model = load_model(model_path, compile=False)
+        else:
+            raise Exception('Segmenting without resampling is not supported yet.')
 
         return model
 
@@ -155,13 +157,14 @@ class StanfordQDessBoneUNet2D(SegModel):
         
         self.original_image_shape = volume.shape
 
-        volume = skimage.transform.resize(
-            image=volume,
-            output_shape=self.image_size + (volume.shape[-1], ),
-            order=3
-        )
-
-        
+        if self.resample_images is True:
+            volume = skimage.transform.resize(
+                image=volume,
+                output_shape=self.orig_model_image_size + (volume.shape[-1], ),
+                order=3
+            )
+        else:
+            raise Exception('Segmenting without resampling is not supported yet.')
 
         return whiten_volume(volume, eps=1e-8)
 
@@ -172,11 +175,14 @@ class StanfordQDessBoneUNet2D(SegModel):
         # # reshape mask to be (x, y, slice)
         mask = np.transpose(mask, (1, 2, 0))
 
-        mask = skimage.transform.resize(
-            image=mask,
-            output_shape=self.original_image_shape,
-            order=0
-        )
+        if self.resample_images is True:
+            mask = skimage.transform.resize(
+                image=mask,
+                output_shape=self.original_image_shape,
+                order=0
+            )
+        else:
+            raise Exception('Segmenting without resampling is not supported yet.')
 
         if connected_only is True:
             mask = get_connected_segments(mask)
