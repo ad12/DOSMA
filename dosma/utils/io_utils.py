@@ -122,11 +122,12 @@ def save_tables(
     if len(data_frames) != len(sheet_names):
         raise ValueError("Number of data_frames and sheet_frames should be the same")
 
-    for i in range(len(data_frames)):
-        df = data_frames[i]
-        df.to_excel(writer, sheet_names[i], index=False)
+    with pd.ExcelWriter(file_path) as writer:
+        for i in range(len(data_frames)):
+            df = data_frames[i]
+            df.to_excel(writer, sheet_names[i], index=False)
 
-    writer.save()
+    # writer.book.save()
 
 
 def init_logger(log_file: str, debug: bool = False):  # pragma: no cover

@@ -533,7 +533,7 @@ class FemoralCartilage(Tissue):
         )
 
     def __binarize_region_mask__(self, region_mask, roi):
-        return np.asarray(np.bitwise_and(region_mask, roi) == roi, dtype=np.bool)
+        return np.asarray(np.bitwise_and(region_mask, roi) == roi, dtype=bool)
 
     def __split_mask__(self):
         assert (
