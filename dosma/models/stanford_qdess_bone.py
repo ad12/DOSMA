@@ -124,7 +124,7 @@ class StanfordQDessBoneUNet2D(SegModel):
 
         if ndim == 4:
             # if 4D, assume last dimension is echo 1 and 2
-            vol_copy = np.sqrt(np.sum(vol_copy**2, axis=-1))
+            vol_copy = np.sqrt(np.sum(vol_copy ** 2, axis=-1))
 
         # reorient to the sagittal plane
         vol_copy.reformat(SAGITTAL, inplace=True)
