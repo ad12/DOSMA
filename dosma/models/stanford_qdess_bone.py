@@ -205,6 +205,8 @@ class StanfordQDessBoneUNet2D(SegModel):
         if connected_only is True:
             mask = get_connected_segments(mask)
 
+        mask = mask.astype(np.uint8)
+
         return mask
 
 
