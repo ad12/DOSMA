@@ -223,12 +223,19 @@ class Mapss(ScanSequence):
         ys = [vol for _, vol in echo_info]
 
         # only calculate for focused region if a mask is available, this speeds up computation
-        mask = tissue.get_mask()
-        if mask_path is not None:
+        if tissue is not None:
+            mask = tissue.get_mask()
+        elif mask_path is not None:
             mask = (
                 fio_utils.generic_load(mask_path, expected_num_volumes=1)
                 if isinstance(mask_path, (str, os.PathLike))
                 else mask_path
+            )
+        else:
+            mask = MedicalVolume(
+                volume=np.zeros_like(self.volumes[0].volume),
+                affine=volumes[0].affine,
+                headers=deepcopy(volumes[0].headers())
             )
 
         mef = MonoExponentialFit(
