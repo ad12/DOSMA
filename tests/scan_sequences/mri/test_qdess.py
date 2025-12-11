@@ -7,11 +7,11 @@ from pydicom.tag import Tag
 
 from dosma.core.med_volume import MedicalVolume
 from dosma.core.quant_vals import QuantitativeValue
-from dosma.models.util import get_model
+from dosma.models.model_loading_util import get_model
 from dosma.scan_sequences.mri.qdess import QDess
 from dosma.tissues.femoral_cartilage import FemoralCartilage
 
-import keras.backend as K
+import tensorflow.keras.backend as K
 
 from ... import util
 
@@ -92,7 +92,7 @@ class QDessTest(util.ScanTest):
         """Test support for multiclass segmentation."""
         scan = self.SCAN_TYPE.from_dicom(self.dicom_dirpath, num_workers=util.num_workers())
         tissue = FemoralCartilage()
-        tissue.find_weights(SEGMENTATION_WEIGHTS_FOLDER),
+        tissue.find_weights(SEGMENTATION_WEIGHTS_FOLDER),  # noqa B018
         dims = scan.get_dimensions()
         input_shape = (dims[0], dims[1], 1)
         model = get_model(

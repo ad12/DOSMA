@@ -38,7 +38,7 @@ class MockScanIOMixin(ScanIOMixin):
 class TestScanIOMixin(ututils.TempPathMixin):
     def test_from_dicom(self):
         mr_dcm = get_testdata_file("MR_small.dcm")
-        fs = pydicom.read_file(mr_dcm)
+        fs = pydicom.dcmread(mr_dcm)
         arr = fs.pixel_array
 
         scan = MockScanIOMixin.from_dicom(mr_dcm, foo="foofoo", bar="barbar")

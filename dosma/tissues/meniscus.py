@@ -10,7 +10,12 @@ import warnings
 
 import numpy as np
 import pandas as pd
-import scipy.ndimage as sni
+import scipy
+
+if scipy.__version__ >= "2.0.0":
+    from scipy.ndimage import center_of_mass as c_of_m
+else:
+    from scipy.ndimage.measurements import center_of_mass as c_of_m
 
 from dosma.core.device import get_array_module
 from dosma.core.med_volume import MedicalVolume
@@ -108,7 +113,7 @@ class Meniscus(Tissue):
             with tilted mensici. This will be addressed in a later release. To avoid
             computing metrics on these regions, set ``self.split_ml_only=True``.
         """
-        center_of_mass = sni.measurements.center_of_mass(base_map)  # zero indexed
+        center_of_mass = c_of_m(base_map)  # zero indexed
 
         com_sup_inf = int(np.ceil(center_of_mass[0]))
         com_ant_post = int(np.ceil(center_of_mass[1]))
@@ -166,7 +171,7 @@ class Meniscus(Tissue):
             coronal_categories = [x for x in coronal_categories if x[0] == -1]
 
         categorical_mask = np.zeros(region_mask.shape[:-1])
-        base_mask = self.__mask__.A.astype(np.bool)
+        base_mask = self.__mask__.A.astype(bool)
         labels = {}
         for idx, (
             (axial, axial_name),
@@ -251,7 +256,7 @@ class Meniscus(Tissue):
                 axial_map = np.asarray(
                     axial_region_mask == self._SUPERIOR_KEY, dtype=np.float32
                 ) + np.asarray(axial_region_mask == self._INFERIOR_KEY, dtype=np.float32)
-                axial_map = np.asarray(axial_map, dtype=np.bool)
+                axial_map = np.asarray(axial_map, dtype=bool)
             else:
                 axial_map = axial_region_mask == axial
 
@@ -370,7 +375,8 @@ class Meniscus(Tissue):
                     else:
                         warnings.warn(
                             "%s: Pixel value exceeded upper bound (%0.1f). Using normalized scale."
-                            % (quant_val.name, upper_bound)
+                            % (quant_val.name, upper_bound),
+                            stacklevel=2,
                         )
                         plt.imshow(data_map, cmap="jet")
 

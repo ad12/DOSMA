@@ -36,8 +36,8 @@ def downsample_slice(img_array, ds_factor, is_mask=False):
     L = list(img_array)
 
     def grouper(iterable, n):
-        args = [iter(iterable)] * n
-        return itertools.zip_longest(fillvalue=0, *args)
+        args = [iter(iterable)] * n  # noqa B026
+        return itertools.zip_longest(fillvalue=0, *args)  # noqa B026
 
     final = np.array([sum(x) for x in grouper(L, ds_factor)])
     final = np.transpose(final, (1, 2, 0))

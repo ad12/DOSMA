@@ -30,6 +30,7 @@ build-docs:
 	cd docs && make html
 
 dev:
+	pip install pytest
 	pip install black==21.4b2 click==8.0.2 coverage isort flake8 flake8-bugbear flake8-comprehensions
 	pip install --upgrade mistune==0.8.4 sphinx sphinx-rtd-theme recommonmark m2r2
 	pip install -r docs/requirements.txt

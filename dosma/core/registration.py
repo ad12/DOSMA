@@ -328,7 +328,8 @@ def symlink_elastix(path: str = None, lib_only: bool = True, force: bool = False
     assert system in ["windows", "darwin", "linux"]
     if system != "darwin":
         warnings.warn(
-            f"Symlinking elastix/transformix paths not recommended for {system} " f"machines"
+            f"Symlinking elastix/transformix paths not recommended for {system} " f"machines",
+            stacklevel=2,
         )
 
     if path is None:

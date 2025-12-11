@@ -118,6 +118,7 @@ class QDess(ScanSequence):
         nan_bounds: Tuple[float, float] = (0, 100),
         nan_to_num: float = 0.0,
         decimals: int = 1,
+        spoiling: bool = True,
     ):
         """Generate 3D T2 map.
 
@@ -158,6 +159,8 @@ class QDess(ScanSequence):
                 will not be replaced.
             decimals (int): Number of decimal places to round to. If ``None``, values
                 will not be rounded.
+            spoiling (bool, optional): If ``True``, use spoiling parameters from dicom headers.
+                If ``False``, assume low-spoiling and use alternative equations.
 
         Returns:
             qv.T2: T2 fit map.
@@ -170,9 +173,15 @@ class QDess(ScanSequence):
             self.get_metadata(self.__GL_AREA_TAG__, gl_area) is None
             or self.get_metadata(self.__TG_TAG__, tg) is None
         ):
-            raise ValueError(
-                "Dicom headers do not contain tags for `gl_area` and `tg`. Please input manually"
+            # warning that spoiling parameters are not found in the dicom headers
+            warnings.warn(
+                "Dicom headers do not contain tags for `gl_area` and `tg`. " +
+                "Assuming low-spoiling, and thus dropping these parameters in " +
+                "The T2 fit. See: Sveinsson et al. " +
+                "A Simple Analytic Method for Estimating T2 in the Knee from DESS" +
+                "equations 6 & 7."
             )
+            spoiling = False
 
         xp = self.volumes[0].device.xp
         ref_dicom = self.ref_dicom if self.ref_dicom is not None else pydicom.Dataset()
@@ -187,39 +196,57 @@ class QDess(ScanSequence):
         # All timing in seconds
         TR = (float(ref_dicom.RepetitionTime) if tr is None else tr) * 1e-3
         TE = (float(ref_dicom.EchoTime) if te is None else te) * 1e-3
-        Tg = (float(ref_dicom[self.__TG_TAG__].value) if tg is None else tg) * 1e-6
         T1 = (float(tissue.T1_EXPECTED) if t1 is None else t1) * 1e-3
+        Tg = (float(ref_dicom[self.__TG_TAG__].value) if tg is None else tg) * 1e-6
+        GlArea = float(ref_dicom[self.__GL_AREA_TAG__].value) if gl_area is None else gl_area
+        if (Tg == 0) or (GlArea == 0):
+            warnings.warn(
+                "Dicom headers do not contain tags for `gl_area` and `tg`. " +
+                "Assuming low-spoiling, and thus dropping these parameters in " +
+                "The T2 fit. See: Sveinsson et al. " +
+                "A Simple Analytic Method for Estimating T2 in the Knee from DESS" +
+                "equations 6 & 7."
+            )
+            spoiling = False
 
         # Flip Angle (degree -> radians)
         alpha = float(ref_dicom.FlipAngle) if alpha is None else alpha
         alpha = math.radians(alpha)
         if np.allclose(math.sin(alpha / 2), 0):
-            warnings.warn("sin(flip angle) is close to 0 - t2 map may fail.")
+            warnings.warn("sin(flip angle) is close to 0 - t2 map may fail.", stacklevel=2)
 
-        GlArea = float(ref_dicom[self.__GL_AREA_TAG__].value) if gl_area is None else gl_area
-
-        Gl = GlArea / (Tg * 1e6) * 100
-        gamma = 4258 * 2 * math.pi  # Gamma, Rad / (G * s).
-        dkL = gamma * Gl * Tg
-
-        # Simply math
-        k = (
-            xp.power((xp.sin(alpha / 2)), 2)
-            * (1 + xp.exp(-TR / T1 - TR * xp.power(dkL, 2) * diffusivity))
-            / (1 - xp.cos(alpha) * xp.exp(-TR / T1 - TR * xp.power(dkL, 2) * diffusivity))
-        )
-
-        c1 = (TR - Tg / 3) * (xp.power(dkL, 2)) * diffusivity
-
-        # T2 fit
         mask = xp.ones([r, c, num_slices])
 
         ratio = mask * echo_2 / echo_1
         ratio = xp.nan_to_num(ratio)
+        
+        if spoiling:
+            
 
+            Gl = GlArea / (Tg * 1e6) * 100
+            gamma = 4258 * 2 * math.pi  # Gamma, Rad / (G * s).
+            dkL = gamma * Gl * Tg
+
+            # Simply math
+            k = (
+                xp.power((xp.sin(alpha / 2)), 2)
+                * (1 + xp.exp(-TR / T1 - TR * xp.power(dkL, 2) * diffusivity))
+                / (1 - xp.cos(alpha) * xp.exp(-TR / T1 - TR * xp.power(dkL, 2) * diffusivity))
+            )
+
+            c1 = (TR - Tg / 3) * (xp.power(dkL, 2)) * diffusivity
+            
+        else:
+            # T2 fit
+            k = (
+                xp.power((xp.sin(alpha / 2)), 2)
+                * (1 + xp.exp(-TR / T1))
+                / (1 - xp.cos(alpha) * xp.exp(-TR / T1))
+            )
+            c1 = 0 
+        
         # have to divide division into steps to avoid overflow error
         t2map = -2000 * (TR - TE) / (xp.log(abs(ratio) / k) + c1)
-
         t2map = xp.nan_to_num(t2map)
 
         # Filter calculated T2 values that are below 0ms and over 100ms

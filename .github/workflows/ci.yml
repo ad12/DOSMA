@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.6", "3.7", "3.8"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
         
     steps:
       - uses: actions/checkout@v2
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.6", "3.7", "3.8"]
+        python-version: ["3.8", "3.9", "3.10"]
                 
     steps:
       - uses: actions/checkout@v2
@@ -72,7 +72,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.6", "3.7", "3.8"]  # there are some issues with numpy multiarray in 3.7
+        python-version: ["3.7", "3.8", "3.9", "3.10"]  # there are some issues with numpy multiarray in 3.7
                 
     steps:
       - uses: actions/checkout@v2
@@ -83,15 +83,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
                 
       - name: Install Dependencies
-        # there are some issues with numpy multiarray in 3.7, affecting numba 0.54 installation
-        # SimpleITK 2.1.0 does not support non-orthonormal directions
         run: |
           python -m pip install --upgrade pip
-          pip install numba==0.53.1
-          pip install tensorflow==2.4.1 keras
+          pip install numba
+          pip install tensorflow>=2.0.0
           pip install torch
           pip install sigpy
-          pip install --upgrade simpleitk==2.0.2
+          pip install --upgrade simpleitk
           make dev
           pip install -e '.[dev]'
       
@@ -112,6 +110,7 @@ jobs:
           make test-cov
       
       - name: Upload to codecov.io
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         uses: codecov/codecov-action@v1
         with:
           file: ./coverage.xml

@@ -113,7 +113,9 @@ class ScanIOMixin(ABC):
 
         for k, v in data.items():
             if not hasattr(scan, k) and not force:
-                warnings.warn(f"{cls.__name__} does not have attribute {k}. Skipping...")
+                warnings.warn(
+                    f"{cls.__name__} does not have attribute {k}. Skipping...", stacklevel=2
+                )
                 continue
             scan.__setattr__(k, v)
 
@@ -213,7 +215,8 @@ class ScanIOMixin(ABC):
             return scan
         except Exception:
             warnings.warn(
-                f"Failed to load {cls.__name__} from data. Trying to load from dicom file."
+                f"Failed to load {cls.__name__} from data. Trying to load from dicom file.",
+                stacklevel=2,
             )
 
         data = cls._convert_attr_name(data)
@@ -238,7 +241,9 @@ class ScanIOMixin(ABC):
 
         for k, v in data.items():
             if not hasattr(scan, k):
-                warnings.warn(f"{cls.__name__} does not have attribute {k}. Skipping...")
+                warnings.warn(
+                    f"{cls.__name__} does not have attribute {k}. Skipping...", stacklevel=2
+                )
                 continue
             scan.__setattr__(k, v)
 
@@ -252,6 +257,7 @@ class ScanIOMixin(ABC):
             "save_data is deprecated since v0.0.13 and will no longer be "
             "available in v0.1. Use `save` instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.save(base_save_dirpath, data_format)
 
@@ -304,7 +310,7 @@ class ScanIOMixin(ABC):
                 paths = [paths[k] for k in keys]
             paths = [os.path.join(_path, f"{k}") for k, _path in zip(keys, paths)]
             values = self.save_custom_data(metadata.values(), paths, fname_fmt, **kwargs)
-            metadata = {k: v for k, v in zip(keys, values)}
+            metadata = dict(zip(keys, values))
         elif not isinstance(metadata, str) and isinstance(metadata, (Sequence, Set)):
             values = list(metadata)
             paths = [os.path.join(_path, "{:03d}".format(i)) for i, _path in enumerate(paths)]
@@ -388,7 +394,7 @@ class ScanIOMixin(ABC):
         if issubclass(dtype, Dict):
             keys = cls.load_custom_data(data.keys(), **kwargs)
             values = cls.load_custom_data(data.values(), **kwargs)
-            data = {k: v for k, v in zip(keys, values)}
+            data = dict(zip(keys, values))
         elif not issubclass(dtype, str) and issubclass(dtype, (list, tuple, set)):
             data = dtype([cls.load_custom_data(x, **kwargs) for x in data])
         else:

@@ -148,7 +148,7 @@ class ScanSequence(ScanIOMixin):
             ValueError: If tissue already exists in list.
                 For example, we cannot add FemoralCartilage twice to the list of tissues.
         """
-        contains_tissue = any([tissue.ID == new_tissue.ID for tissue in self.tissues])
+        contains_tissue = any(tissue.ID == new_tissue.ID for tissue in self.tissues)
         if contains_tissue:
             raise ValueError("Tissue already exists")
 
@@ -185,7 +185,7 @@ class NonTargetSequence(ScanSequence):
 
     @abstractmethod
     def interregister(self, target_path: str, mask_path: str = None):
-        """Register this scan to the target scan - save as parameter in scan (volumes, subvolumes, etc).
+        """Register scan to the target scan - save as parameter in scan (volumes, subvolumes, etc).
 
         We use the term *interregister* to refer to registration between volumes of different scans.
         Conversely, *intraregister* refers to registering volumes from the same scan.

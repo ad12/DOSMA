@@ -33,8 +33,8 @@ from typing import Sequence
 from dosma.core.io.format_io import ImageDataFormat
 from dosma.core.quant_vals import QuantitativeValueType as QV
 from dosma.defaults import preferences
+from dosma.models.model_loading_util import SUPPORTED_MODELS, get_model, model_from_config
 from dosma.models.seg_model import SegModel
-from dosma.models.util import SUPPORTED_MODELS, get_model, model_from_config
 from dosma.msk import knee
 from dosma.scan_sequences.mri.cones import Cones
 from dosma.scan_sequences.mri.cube_quant import CubeQuant
@@ -134,7 +134,8 @@ class CommandLineScanContainer:
         if (dicom_path is not None) and (not os.path.isdir(dicom_path)):
             if load_path is not None:
                 warnings.warn(
-                    "Dicom_path {} not found. Will load data from {}".format(dicom_path, load_path)
+                    "Dicom_path {} not found. Will load data from {}".format(dicom_path, load_path),
+                    stacklevel=2,
                 )
             else:
                 raise NotADirectoryError("{} is not a directory".format(dicom_path))

@@ -394,6 +394,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
             "`match_orientation` is deprecated and will be removed in v0.1. "
             "Use `mv.reformat_as(self, inplace=True)` instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         if not isinstance(mv, MedicalVolume):
             raise TypeError("`mv` must be a MedicalVolume.")
@@ -410,6 +411,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
             "`match_orientation_batch` is deprecated and will be removed in v0.1. "
             "Use `[x.reformat_as(self, inplace=True) for x in mvs]` instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         for mv in mvs:
             self.match_orientation(mv)
@@ -494,8 +496,24 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
         return nib.Nifti1Image(self.A, self.affine.copy())
 
-    def to_sitk(self, vdim: int = None, transpose_inplane: bool = False):
+    def to_sitk(
+        self,
+        image_orientation: str = "sagittal",
+        vdim: int = None,
+        transpose_inplane: bool = False,
+        flip_array_x: bool = False,
+        flip_array_y: bool = False,
+        flip_array_z: bool = False,
+    ):
         """Converts to SimpleITK Image.
+
+        SimpleITK loads DICOM files as individual slices that get stacked in ``(x, y, z)``
+        order where z is the slice dimension and x/y are the in-plane image dimensions.
+        However, ``sitk.GetArrayFromImage`` returns numpy arrays with the order
+        ``(z, y, x)``. Converting to a SimpleITK image using ``sitk.GetImagrFromArray``
+        also does this conversion (from z, y, x => x, y, z). This has to do with C++ and
+        numpy memory mapping. To facilitate converting MedicalVolume to SimpleITK Image,
+        the image_orientation must be specified. Be defauly, we assume sagittal orientation.
 
         SimpleITK Image objects support vector pixel types, which are represented
         as an extra dimension in numpy arrays. The vector dimension can be specified
@@ -503,17 +521,16 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
         MedicalVolume must be on cpu. Use ``self.cpu()`` to move.
 
-        SimpleITK loads DICOM files as individual slices that get stacked in ``(z, x, y)``
-        order. Thus, ``sitk.GetArrayFromImage`` returns an array in ``(y, x, z)`` order.
-        To return a SimpleITK Image that will follow this convention, set
-        ``transpose_inplace=True``. If you have been using SimpleITK to load DICOM files,
-        you will likely want to specify this parameter.
-
         Args:
+            image_orientation (str, optional): The image orientation. Options are
+                ``"sagittal"``, ``"coronal"``, and ``"axial"``. Default is ``"sagittal"``.
             vdim (int, optional): The vector dimension.
             transpose_inplane (bool, optional): If ``True``, transpose inplane axes.
                 Recommended to be ``True`` for users who are familiar with SimpleITK's
                 DICOM loading convention.
+            flip_array_x (bool, optional): If ``True``, flip array along x-axis.
+            flip_array_y (bool, optional): If ``True``, flip array along y-axis.
+            flip_array_z (bool, optional): If ``True``, flip array along z-axis.
 
         Returns:
             SimpleITK.Image
@@ -531,6 +548,15 @@ class MedicalVolume(NDArrayOperatorsMixin):
         if device != cpu_device:
             raise RuntimeError(f"MedicalVolume must be on cpu, got {self.device}")
 
+        if image_orientation.lower() == "sagittal":
+            self.reformat(("LR", "SI", "AP"), inplace=True)
+        elif image_orientation.lower() == "coronal":
+            self.reformat(("AP", "SI", "RL"), inplace=True)
+        elif image_orientation.lower() == "axial":
+            self.reformat(("IS", "AP", "RL"), inplace=True)
+        else:
+            raise ValueError(f"Unsupported image orientation: {image_orientation}")
+
         arr = self.volume
         ndim = arr.ndim
 
@@ -538,21 +564,27 @@ class MedicalVolume(NDArrayOperatorsMixin):
             if vdim < 0:
                 vdim = ndim + vdim
             axes = tuple(i for i in range(ndim) if i != vdim)[::-1] + (vdim,)
-        else:
-            axes = range(ndim)[::-1]
-        arr = np.transpose(arr, axes)
+            arr = np.transpose(arr, axes)
 
         affine = self.affine.copy()
         affine[:2] = -affine[:2]  # RAS+ -> LPS+
 
-        origin = tuple(affine[:3, 3])
-        spacing = self.pixel_spacing
+        # Swap columns to adjust from (z, y, x) -> (x, y, z) for SimpleITK
+        affine[:, :3] = affine[:, [2, 1, 0]]  # This swaps the columns
+
+        # Adjust origin and spacing for SimpleITK's expected order
+        origin = tuple(affine[:3, 3])  # origin stays the same.
+        spacing = self.pixel_spacing[::-1]  # Swap x, y, z -> z, y, x
         direction = affine[:3, :3] / np.asarray(spacing)
 
         img = sitk.GetImageFromArray(arr, isVector=vdim is not None)
         img.SetOrigin(origin)
         img.SetSpacing(spacing)
         img.SetDirection(tuple(direction.flatten()))
+
+        if any([flip_array_x, flip_array_y, flip_array_z]):
+            flip_logic = [flip_array_x, flip_array_y, flip_array_z]
+            img = sitk.Flip(img, flip_logic)
 
         if transpose_inplane:
             pa = sitk.PermuteAxesImageFilter()
@@ -601,7 +633,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
                     [[1., 1.],
                      [1., 1.]]], device="cuda:0", dtype=torch.float64)
             >>> # view complex array as real tensor
-            >>> mv = MedicalVolume(np.ones((3,4,5), dtype=np.complex), np.eye(4))
+            >>> mv = MedicalVolume(np.ones((3,4,5), dtype=complex), np.eye(4))
             >>> tensor = mv.to_torch(view_as_real)
             >>> tensor.shape
             (3, 4, 5, 2)
@@ -718,7 +750,8 @@ class MedicalVolume(NDArrayOperatorsMixin):
             self._headers = self._validate_and_format_headers([pydicom.Dataset()])
             warnings.warn(
                 "Headers were generated and may not contain all attributes "
-                "required to save the volume in DICOM format."
+                "required to save the volume in DICOM format.",
+                stacklevel=2,
             )
 
         VR_registry = {float: "DS", int: "IS", str: "LS"}
@@ -994,11 +1027,10 @@ class MedicalVolume(NDArrayOperatorsMixin):
         spacing = image.GetSpacing()
         direction = np.asarray(image.GetDirection()).reshape(-1, 3)
 
-        affine = np.zeros((4, 4))
+        affine = np.eye(4)
         affine[:3, :3] = direction * np.asarray(spacing)
         affine[:3, 3] = origin
         affine[:2] = -affine[:2]  # LPS+ -> RAS+
-        affine[3, 3] = 1
 
         return cls(arr, affine)
 
@@ -1067,7 +1099,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
 
         torch_version = env.get_version(torch)
         supports_cplx = version.Version(torch_version) >= _TORCH_COMPLEX_SUPPORT_VERSION
-        # Check if tensor needs to be converted to np.complex type.
+        # Check if tensor needs to be converted to `complex` type.
         # If tensor is of torch.complex64 or torch.complex128 dtype, then from_numpy will take
         # care of conversion to appropriate numpy dtype, and we do not need to do the to_complex
         # logic.
@@ -1243,7 +1275,7 @@ class MedicalVolume(NDArrayOperatorsMixin):
                     _slice_headers.append(0)
                 else:
                     _slice_headers.append(x)
-            headers = headers[_slice_headers]
+            headers = headers[tuple(_slice_headers)]
 
         affine = slicer.slice_affine(_slice)
         return self._partial_clone(volume=volume, affine=affine, headers=headers)

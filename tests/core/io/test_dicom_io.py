@@ -179,7 +179,7 @@ class TestDicomIO(ututils.TempPathMixin):
                 if not x.startswith(".") and x.endswith(".dcm")
             ]
         )
-        expected = pydicom.read_file(dcm_file, force=True)
+        expected = pydicom.dcmread(dcm_file, force=True)
         vol = self.dr.load(dcm_file)[0]
 
         assert vol.volume.ndim == 3
@@ -451,7 +451,7 @@ class TestDicomIO(ututils.TempPathMixin):
     def test_sample_pydicom_data(self):
         """Test DICOM reader with sample pydicom data."""
         filepath = get_testdata_file("MR_small.dcm")
-        mv_pydicom = pydicom.read_file(filepath)
+        mv_pydicom = pydicom.dcmread(filepath)
         arr = mv_pydicom.pixel_array
 
         dr = DicomReader(group_by=None)
@@ -466,7 +466,7 @@ class TestDicomIO(ututils.TempPathMixin):
         out_path = os.path.join(out_dir, "I0001.dcm")
         dw(mv, dir_path=out_dir)
 
-        mv_pydicom_loaded = pydicom.read_file(out_path)
+        mv_pydicom_loaded = pydicom.dcmread(out_path)
         assert np.all(mv_pydicom_loaded.pixel_array == arr)
         assert self.are_equivalent_headers(mv_pydicom_loaded, mv_pydicom)
 

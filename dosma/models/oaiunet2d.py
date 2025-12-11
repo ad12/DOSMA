@@ -6,9 +6,16 @@ from copy import deepcopy
 import numpy as np
 
 try:
-    from keras.layers import BatchNormalization as BN
-    from keras.layers import Concatenate, Conv2D, Conv2DTranspose, Dropout, Input, MaxPooling2D
-    from keras.models import Model
+    from tensorflow.keras.layers import BatchNormalization as BN
+    from tensorflow.keras.layers import (
+        Concatenate,
+        Conv2D,
+        Conv2DTranspose,
+        Dropout,
+        Input,
+        MaxPooling2D,
+    )
+    from tensorflow.keras.models import Model
 
     _SUPPORTS_KERAS = True
 except ImportError:  # pragma: no-cover
@@ -17,6 +24,7 @@ except ImportError:  # pragma: no-cover
 from dosma.core.med_volume import MedicalVolume
 from dosma.core.orientation import SAGITTAL
 from dosma.models.seg_model import KerasSegModel, whiten_volume
+from dosma.models.util import get_tensor_shape_as_list
 
 __all__ = ["OAIUnet2D", "IWOAIOAIUnet2D", "IWOAIOAIUnet2DNormalized"]
 
@@ -89,7 +97,9 @@ class OAIUnet2D(KerasSegModel):
             if depth_cnt < depth - 1:
 
                 # If size of input is odd, only do a 3x3 max pool
-                xres = conv.shape.as_list()[1]
+                shape_ = get_tensor_shape_as_list(conv)
+                xres = shape_[1]
+
                 if xres % 2 == 0:
                     pooling_size = (2, 2)
                 elif xres % 2 == 1:
@@ -100,7 +110,7 @@ class OAIUnet2D(KerasSegModel):
         # step up convolutional layers
         for depth_cnt in range(depth - 2, -1, -1):
 
-            deconv_shape = conv_ptr[depth_cnt].shape.as_list()
+            deconv_shape = get_tensor_shape_as_list(conv_ptr[depth_cnt])
             deconv_shape[0] = None
 
             # If size of input is odd, then do a 3x3 deconv
@@ -234,7 +244,8 @@ class IWOAIOAIUnet2D(OAIUnet2D):
             if depth_cnt < depth - 1:
 
                 # If size of input is odd, only do a 3x3 max pool
-                xres = conv.shape.as_list()[1]
+                shape_ = get_tensor_shape_as_list(conv)
+                xres = shape_[1]
                 if xres % 2 == 0:
                     pooling_size = (2, 2)
                 elif xres % 2 == 1:
@@ -245,7 +256,7 @@ class IWOAIOAIUnet2D(OAIUnet2D):
         # step up convolutional layers
         for depth_cnt in range(depth - 2, -1, -1):
 
-            deconv_shape = conv_ptr[depth_cnt].shape.as_list()
+            deconv_shape = get_tensor_shape_as_list(conv_ptr[depth_cnt])
             deconv_shape[0] = None
 
             # If size of input is odd, then do a 3x3 deconv

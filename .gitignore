@@ -55,3 +55,12 @@ docs/source/generated
 # coverage files
 .coverage
 coverage.xml
+
+# system files
+.DS_Store
+
+#nipype logfiles
+stdout.nipype
+
+# ignore "scratch" files used for testing / debugging
+**/scratch

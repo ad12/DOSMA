@@ -3,7 +3,12 @@ import warnings
 
 import numpy as np
 import pandas as pd
-import scipy.ndimage as sni
+import scipy
+
+if scipy.__version__ >= "2.0.0":
+    from scipy.ndimage import center_of_mass as c_of_m
+else:
+    from scipy.ndimage.measurements import center_of_mass as c_of_m
 
 from dosma.core.device import get_array_module
 from dosma.core.io.format_io import ImageDataFormat
@@ -164,7 +169,7 @@ class FemoralCartilage(Tissue):
 
         # medial/lateral division
         # take into account scanning direction
-        center_of_mass = sni.measurements.center_of_mass(mask)
+        center_of_mass = c_of_m(mask)
         com_slicewise = center_of_mass[-1]
         ml_volume = np.asarray(np.zeros(mask.shape), dtype=np.uint16)
 
@@ -479,7 +484,8 @@ class FemoralCartilage(Tissue):
                     else:
                         warnings.warn(
                             "%s: Pixel value exceeded upper bound (%0.1f). Using normalized scale."
-                            % (quant_val.name, upper_bound)
+                            % (quant_val.name, upper_bound),
+                            stacklevel=2,
                         )
                         plt.imshow(data_map, cmap="jet")
 
@@ -533,7 +539,7 @@ class FemoralCartilage(Tissue):
         )
 
     def __binarize_region_mask__(self, region_mask, roi):
-        return np.asarray(np.bitwise_and(region_mask, roi) == roi, dtype=np.bool)
+        return np.asarray(np.bitwise_and(region_mask, roi) == roi, dtype=bool)
 
     def __split_mask__(self):
         assert (

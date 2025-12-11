@@ -195,7 +195,7 @@ class TibialCartilage(Tissue):
                 axial_map = (axial_region_mask == self._SUPERIOR_KEY).astype(np.float32) + (
                     axial_region_mask == self._INFERIOR_KEY
                 ).astype(np.float32)
-                axial_map = axial_map.astype(np.bool)
+                axial_map = axial_map.astype(bool)
             else:
                 axial_map = axial_region_mask == axial
 
@@ -311,7 +311,8 @@ class TibialCartilage(Tissue):
                     else:
                         warnings.warn(
                             "%s: Pixel value exceeded upper bound (%0.1f). Using normalized scale."
-                            % (quant_val.name, upper_bound)
+                            % (quant_val.name, upper_bound),
+                            stacklevel=2,
                         )
                         plt.imshow(data_map, cmap="jet")
 

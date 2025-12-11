@@ -131,11 +131,10 @@ EXTRAS = {
         "sphinx",
         "sphinxcontrib.bibtex",
         "m2r2",
-        "tensorflow<=2.4.1",
-        "keras<=2.4.3",
+        "tensorflow>=2.0.0",
         "sigpy",
     ],
-    "ai": ["tensorflow<=2.4.1", "keras<=2.4.3"],
+    "ai": ["tensorflow>=2.0.0"],
     "docs": ["mistune>=0.8.1,<2.0.0", "sphinx", "sphinxcontrib.bibtex", "m2r2"],
 }
 

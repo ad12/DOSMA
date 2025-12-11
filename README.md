@@ -14,7 +14,7 @@ DOSMA is an AI-powered Python library for medical image analysis. This includes,
 We hope that this open-source pipeline will be useful for quick anatomy/pathology analysis and will serve as a hub for adding support for analyzing different anatomies and scan sequences.
 
 ## Installation
-DOSMA requires Python 3.6+. The core module depends on numpy, nibabel, nipype,
+DOSMA requires Python 3.7+. The core module depends on numpy, nibabel, nipype,
 pandas, pydicom, scikit-image, scipy, PyYAML, and tqdm.
 
 Additional AI features can be unlocked by installing tensorflow and keras. To
@@ -30,6 +30,24 @@ pip install dosma
 pip install dosma[ai]
 ```
 
+If you would like to install from source - to get the latest versions, or to build for your specific system: 
+
+If you would like to install from source then use: 
+
+```bash
+git clone git@github.com:ad12/DOSMA.git
+cd DOSMA
+pip install .
+```
+
+To get AI support: 
+
+```bash
+git clone git@github.com:ad12/DOSMA.git
+cd DOSMA
+pip install '.[ai]'
+```
+
 If you would like to contribute to DOSMA, we recommend you clone the repository and
 install DOSMA with `pip` in editable mode.
 
@@ -41,6 +59,10 @@ make dev
 ```
 
 To run tests, build documentation and contribute, run
+- If Elastix not installed, must indicate this to system by running the following on the commandline: 
+   `export "DOSMA_UNITTEST_DISABLE_ELASTIX=True"`
+- If test data not available add:
+   `export ""DOSMA_UNITTEST_DISABLE_DATA"=True"`
 ```bash
 make autoformat test build-docs
 ```

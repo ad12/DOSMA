@@ -95,7 +95,10 @@ def load_h5(file_path):
     data = {}
     with h5py.File(file_path, "r") as f:
         for key in f.keys():
-            data[key] = f.get(key).value
+            if h5py.version.version_tuple < (3, 0, 0):
+                data[key] = f.get(key).value
+            else:
+                data[key] = f[key][:]
 
     return data
 
@@ -126,7 +129,10 @@ def save_tables(
         df = data_frames[i]
         df.to_excel(writer, sheet_names[i], index=False)
 
-    writer.save()
+    if pd.__version__ >= "1.2.0":
+        writer.close()
+    else:
+        writer.save()
 
 
 def init_logger(log_file: str, debug: bool = False):  # pragma: no cover
@@ -142,6 +148,7 @@ def init_logger(log_file: str, debug: bool = False):  # pragma: no cover
         "init_logger is deprecated since v0.0.14 and will no longer be "
         "supported in v0.13. Use `dosma.setup_logger` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
 
     level = logging.DEBUG if debug else logging.INFO

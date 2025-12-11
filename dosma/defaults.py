@@ -85,7 +85,8 @@ class _Preferences(object):
             elif k not in target_keys and k in base_keys:
                 warnings.warn(
                     "Your preferences file may be outdated. "
-                    "Run `preferences.save()` to save your updated preferences."
+                    "Run `preferences.save()` to save your updated preferences.",
+                    stacklevel=2,
                 )
                 target[k] = base[k]
             else:
@@ -199,7 +200,7 @@ class _Preferences(object):
         val, subdict = self.__get(self.__config, key, prefix)
 
         # type of new value has to be the same type as old value
-        if type(value) != type(val):
+        if not isinstance(value, type(val)):
             try:
                 value = type(val)(value)
             except (ValueError, TypeError):

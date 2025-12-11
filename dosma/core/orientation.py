@@ -304,7 +304,7 @@ def to_affine(
     end_ornt = nibo.axcodes2ornt(orientation_standard_to_nib(orientation))
     ornt = nibo.ornt_transform(start_ornt, end_ornt)
 
-    transpose_idxs = ornt[:, 0].astype(np.int)
+    transpose_idxs = ornt[:, 0].astype(int)
     flip_idxs = ornt[:, 1]
 
     affine[:3] = affine[:3][transpose_idxs]

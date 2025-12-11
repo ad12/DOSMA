@@ -9,7 +9,7 @@ from dosma.models.oaiunet2d import IWOAIOAIUnet2D, IWOAIOAIUnet2DNormalized
 from dosma.models.seg_model import whiten_volume
 from dosma.tissues.femoral_cartilage import FemoralCartilage
 
-import keras.backend as K
+import tensorflow.keras.backend as K
 
 from .. import util
 
@@ -132,8 +132,8 @@ class TestIWOAIOAIUnet2DNormalized(unittest.TestCase):
         K.clear_session()
 
         for i, tissue in enumerate(classes):
-            pred = masks[tissue].volume.astype(np.bool)
-            gt = expected_seg[..., i].astype(np.bool)
+            pred = masks[tissue].volume.astype(bool)
+            gt = expected_seg[..., i].astype(bool)
             dice = 2 * np.sum(pred & gt) / np.sum(pred.astype(np.uint8) + gt.astype(np.uint8))
             # Zero-mean normalization of 32-bit vs 64-bit data results in slightly different
             # estimations of the mean and standard deviation.

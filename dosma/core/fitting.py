@@ -69,7 +69,8 @@ class _Fitter(ABC):
             if len(_out_ufuncs) > _func_nparams:
                 warnings.warn(
                     f"len(out_ufuncs)={len(_out_ufuncs)}, but only {_func_nparams} parameters. "
-                    f"Extra ufuncs will be ignored."
+                    f"Extra ufuncs will be ignored.",
+                    stacklevel=2,
                 )
 
         return _out_ufuncs
@@ -174,7 +175,7 @@ class _Fitter(ABC):
         svs = []
 
         if (not isinstance(y, (list, tuple))) or (
-            not all([isinstance(_y, MedicalVolume) for _y in y])
+            not all(isinstance(_y, MedicalVolume) for _y in y)
         ):
             raise TypeError("`y` must be sequence of MedicalVolumes.")
 
@@ -647,7 +648,8 @@ class MonoExponentialFit(_Fit):
         if y is not None:
             warnings.warn(
                 f"Setting `y` in the constructor can result in significant memory overhead. "
-                f"Specify `y` in `{type(self).__name__}.fit(y=...)` instead."
+                f"Specify `y` in `{type(self).__name__}.fit(y=...)` instead.",
+                stacklevel=2,
             )
             self._check_y(x, y)
         self.y = y
@@ -655,7 +657,8 @@ class MonoExponentialFit(_Fit):
         if mask is not None:
             warnings.warn(
                 f"Setting `mask` in the constructor can result in significant memory overhead. "
-                f"Specify `mask` in `{type(self).__name__}.fit(mask=...)` instead."
+                f"Specify `mask` in `{type(self).__name__}.fit(mask=...)` instead.",
+                stacklevel=2,
             )
         self.mask = mask
 
@@ -739,7 +742,7 @@ class MonoExponentialFit(_Fit):
         return tc_map, r_squared
 
     def _check_y(self, x, y):
-        if (not isinstance(y, Sequence)) or (not all([isinstance(sv, MedicalVolume) for sv in y])):
+        if (not isinstance(y, Sequence)) or (not all(isinstance(sv, MedicalVolume) for sv in y)):
             raise TypeError("`y` must be list of MedicalVolumes.")
 
         if any(x.device != cpu_device for x in y):
@@ -844,7 +847,9 @@ def curve_fit(
 
     oob = y_bounds is not None and ((y < y_bounds[0]).any() or (y > y_bounds[1]).any())
     if oob:
-        warnings.warn("Out of bounds values found. Failure in fit will result in np.nan")
+        warnings.warn(
+            "Out of bounds values found. Failure in fit will result in np.nan", stacklevel=2
+        )
 
     y_T = y.T
     if p0_seq:
@@ -963,7 +968,9 @@ def polyfit(
 
     oob = y_bounds is not None and ((y < y_bounds[0]).any() or (y > y_bounds[1]).any())
     if oob:
-        warnings.warn("Out of bounds values found. Failure in fit will result in np.nan")
+        warnings.warn(
+            "Out of bounds values found. Failure in fit will result in np.nan", stacklevel=2
+        )
 
     fitter = partial(
         _polyfit, x=x, deg=deg, y_bounds=y_bounds, rcond=rcond, w=w, eps=eps, xp=xp.__name__
@@ -1137,7 +1144,7 @@ def _format_p0(p0, param_args, N):
                 f"`p0` has unknown keys: {extra_keys}. "
                 f"Function signature has parameters {param_args}."
             )
-        p0_default = {p: 1.0 for p in param_args}
+        p0_default = {p: 1.0 for p in param_args}  # noqa C420
         # Update p0_default to keep the parameter keys in order.
         p0_default.update(p0)
         p0 = p0_default
@@ -1170,6 +1177,7 @@ def __fit_mono_exp__(x, y, p0=None):  # pragma: no cover
         "__fit_mono_exp__ is deprecated since v0.0.12 and will no longer be "
         "supported in v0.0.13. Use `curve_fit` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
 
     x = np.asarray(x)
@@ -1191,6 +1199,7 @@ def __fit_monoexp_tc__(x, ys, tc0, show_pbar=False):  # pragma: no cover
         "__fit_monoexp_tc__ is deprecated since v0.12 and will no longer be "
         "supported in v0.13. Use `curve_fit` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
 
     p0 = (1.0, -1 / tc0)
@@ -1203,7 +1212,8 @@ def __fit_monoexp_tc__(x, ys, tc0, show_pbar=False):  # pragma: no cover
         if (y < 0).any() and not warned_negative:
             warned_negative = True
             warnings.warn(
-                "Negative values found. Failure in monoexponential fit will result in np.nan"
+                "Negative values found. Failure in monoexponential fit will result in np.nan",
+                stacklevel=2,
             )
 
         # Skip any negative values or all values that are 0s

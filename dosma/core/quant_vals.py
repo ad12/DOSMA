@@ -92,7 +92,8 @@ class QuantitativeValue(ABC):
 
             warnings.warn(
                 "Due to bit depth issues, only nifti format is supported for quantitative values. "
-                "Writing as nifti file..."
+                "Writing as nifti file...",
+                stacklevel=2,
             )
             data_format = ImageDataFormat.nifti
 

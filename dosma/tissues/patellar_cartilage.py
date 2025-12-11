@@ -9,7 +9,12 @@ import warnings
 
 import numpy as np
 import pandas as pd
-import scipy.ndimage as sni
+import scipy
+
+if scipy.__version__ >= "2.0.0":
+    from scipy.ndimage import center_of_mass as c_of_m
+else:
+    from scipy.ndimage.measurements import center_of_mass as c_of_m
 
 from dosma.core.device import get_array_module
 from dosma.core.quant_vals import QuantitativeValueType
@@ -103,16 +108,13 @@ class PatellarCartilage(Tissue):
                 If `self.medial_to_lateral`, last dimension should be ML.
         """
         if np.sum(base_map) == 0:
-            warnings.warn("No mask for `%s` was found." % self.FULL_NAME)
+            warnings.warn("No mask for `%s` was found." % self.FULL_NAME, stacklevel=2)
 
         # Superficial/Deep (A/P)
         locs = base_map.sum(axis=1).nonzero()
         voxels = base_map[locs[0], :, locs[1]]
         com_sup_inf = np.asarray(
-            [
-                int(np.ceil(sni.measurements.center_of_mass(voxels[i, :])[0]))
-                for i in range(voxels.shape[0])
-            ]
+            [int(np.ceil(c_of_m(voxels[i, :])[0])) for i in range(voxels.shape[0])]
         )
         region_mask_sup_deep = np.full(base_map.shape, self._REGION_DEEP_KEY)
         for i in range(len(com_sup_inf)):
@@ -123,7 +125,7 @@ class PatellarCartilage(Tissue):
         # M/L
         cum_ml = np.nonzero(base_map.sum(axis=(0, 1)))[0]  # noqa: F841
         # midpoint_ml = int(np.ceil((np.min(cum_ml) + np.max(cum_ml)) / 2))
-        midpoint_ml = int(np.ceil(sni.measurements.center_of_mass(base_map)[2]))
+        midpoint_ml = int(np.ceil(c_of_m(base_map)[2]))
         region_mask_med_lat = np.full(base_map.shape, self._LATERAL_KEY)
         medial_span = slice(0, midpoint_ml) if self.medial_to_lateral else slice(midpoint_ml, None)
         region_mask_med_lat[:, :, medial_span] = self._MEDIAL_KEY
@@ -161,7 +163,7 @@ class PatellarCartilage(Tissue):
                 axial_map = np.asarray(
                     deep_superficial_map == self._REGION_SUPERFICIAL_KEY, dtype=np.float32
                 ) + np.asarray(deep_superficial_map == self._REGION_DEEP_KEY, dtype=np.float32)
-                axial_map = np.asarray(axial_map, dtype=np.bool)
+                axial_map = np.asarray(axial_map, dtype=bool)
             else:
                 axial_map = deep_superficial_map == axial
 
@@ -277,7 +279,8 @@ class PatellarCartilage(Tissue):
                     else:
                         warnings.warn(
                             "%s: Pixel value exceeded upper bound (%0.1f). Using normalized scale."
-                            % (quant_val.name, upper_bound)
+                            % (quant_val.name, upper_bound),
+                            stacklevel=2,
                         )
                         plt.imshow(data_map, cmap="jet")
 

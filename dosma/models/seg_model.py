@@ -1,12 +1,14 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
+from scipy.ndimage import binary_fill_holes
 
 from dosma.core.med_volume import MedicalVolume
 from dosma.defaults import preferences
+from dosma.tissues.tissue import largest_cc
 
 try:
-    import keras.backend as K
+    import tensorflow.keras.backend as K
 except ImportError:  # pragma: no cover
     pass
 
@@ -125,3 +127,53 @@ def whiten_volume(x: np.ndarray, eps: float = 0.0):
         raise ValueError(f"Input has {x.ndims} dimensions. Expected {__VOLUME_DIMENSIONS__}")
 
     return (x - np.mean(x)) / (np.std(x) + eps)
+
+
+# ============================ Postprocessing utils ============================
+def get_connected_segments(mask: np.ndarray) -> np.ndarray:
+    """
+    Get the connected segments in segmentation mask
+
+    Args:
+        mask (np.ndarray): 3D volume of all segmented tissues.
+
+    Returns:
+        np.ndarray: 3D volume with only the connected segments.
+    """
+
+    unique_tissues = np.unique(mask)
+
+    mask_ = np.zeros_like(mask)
+
+    for idx in unique_tissues:
+        if idx == 0:
+            continue
+        mask_binary = np.zeros_like(mask)
+        mask_binary[mask == idx] = 1
+        mask_binary_conected = np.asarray(largest_cc(mask_binary), dtype=np.uint8)
+        mask_[mask_binary_conected == 1] = idx
+
+    return mask_
+
+
+def fill_holes(mask: np.ndarray, label_idx=None) -> np.ndarray:
+    """
+    Fill holes in binary mask.
+
+    Args:
+        mask (np.ndarray): 3D volume of all segmented tissues.
+        label_idx (int, optional): Label index to fill holes in mask.
+
+    Returns:
+        np.ndarray: 3D volume with holes filled.
+    """
+
+    if label_idx is None:
+        assert len(np.unique(mask) == 2), "Mask should be binary"
+        mask_ = mask.copy()
+    else:
+        mask = (mask == label_idx).copy()
+
+    mask_ = binary_fill_holes(mask)
+
+    return mask_

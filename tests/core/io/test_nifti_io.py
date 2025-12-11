@@ -72,7 +72,7 @@ class TestNiftiIO(unittest.TestCase):
     def test_state(self):
         nr1 = NiftiReader()
         state_dict = nr1.state_dict()
-        state_dict = {k: "foo" for k in state_dict}
+        state_dict = {k: "foo" for k in state_dict}  # noqa C420
 
         nr2 = NiftiReader()
         nr2.load_state_dict(state_dict)
@@ -81,7 +81,7 @@ class TestNiftiIO(unittest.TestCase):
 
         nw1 = NiftiWriter()
         state_dict = nw1.state_dict()
-        state_dict = {k: "bar" for k in state_dict}
+        state_dict = {k: "bar" for k in state_dict}  # noqa C420
 
         nw2 = NiftiWriter()
         nw2.load_state_dict(state_dict)

@@ -30,7 +30,22 @@ TEMP_PATH = os.path.join(
     UNITTEST_SCANDATA_PATH, f"temp-{str(uuid.uuid1())}-{str(uuid.uuid4())}"
 )  # should be used when for writing with assert_raises clauses
 
-SCANS = ["qdess", "mapss", "cubequant", "cones"]
+SCANS = [
+    "qdess",
+    "mapss",
+    "cubequant",
+    "cones",
+    "15252_Ser10",
+    "12869304_axial",
+    "12869310_sag",
+    "12869311_cor",
+    "12869313_axial",
+    "12869314_cor",
+    "MTR_051",
+    "SER00003",
+    "SER00005",
+    "SER00007",
+]
 SCANS_INFO = {
     "mapss": {"expected_num_echos": 7},
     "qdess": {"expected_num_echos": 2},
@@ -109,7 +124,7 @@ def requires_packages(*packages):
 
     def _decorator(func):
         def _wrapper(*args, **kwargs):
-            if all([env.package_available(x) for x in packages]):
+            if all(env.package_available(x) for x in packages):
                 func(*args, **kwargs)
 
         return _wrapper

@@ -161,7 +161,7 @@ def nan_to_num(x, copy=True, nan=0.0, posinf=None, neginf=None):
         return x._partial_clone(volume=vol)
 
 
-@implements(np.around, np.round, np.round_)
+@implements(np.around, np.round)
 def around(x, decimals=0, affine=False):
     """Round medical image pixel data (and optionally affine) to the given number of decimals.
 
@@ -367,12 +367,13 @@ def concatenate(xs, axis: int = -1):
     else:
         headers = np.concatenate(headers, axis=axis)
         if headers.ndim != volume.ndim or any(
-            [hs != 1 and hs != vs for hs, vs in zip(headers.shape, volume.shape)]
+            hs != 1 and hs != vs for hs, vs in zip(headers.shape, volume.shape)
         ):
             warnings.warn(
                 "Got invalid headers shape ({}) given concatenated output shape ({}). "
                 "Expected header dimensions to be 1 or same as volume dimension for all axes. "
-                "Dropping all headers in concatenated output.".format(volume.shape, headers.shape)
+                "Dropping all headers in concatenated output.".format(volume.shape, headers.shape),
+                stacklevel=2,
             )
             headers = None
 

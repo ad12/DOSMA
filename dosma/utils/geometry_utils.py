@@ -1,5 +1,11 @@
 import numpy as np
-import scipy.ndimage as sni
+import scipy
+
+if scipy.__version__ >= "2.0.0":
+    from scipy.ndimage import center_of_mass as c_of_m
+else:
+    from scipy.ndimage.measurements import center_of_mass as c_of_m
+
 from scipy import optimize
 
 from dosma.core.device import get_array_module
@@ -112,13 +118,12 @@ def center_of_mass(input, labels=None, index=None):
     Note:
         This is adapted from scipy.ndimage to support cupy.
     """
-    _sni = sni
+    _c_of_m = c_of_m
     if env.cupy_available():
         import cupy as cp
 
         if get_array_module(input) == cp:
             import cupyx.scipy.ndimage as csni
 
-            _sni = csni
-
-    return _sni.center_of_mass(input, labels=labels, index=index)
+            _c_of_m = csni.center_of_mass
+    return _c_of_m(input, labels=labels, index=index)
